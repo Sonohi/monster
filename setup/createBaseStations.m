@@ -1,14 +1,14 @@
 function [stations] = createBaseStations (maBS, sfMa, miBS, sfMi)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE BASE STATIONS is used to generate a struct with all the base stations
-%
-%   Current function fingerprint
-%   maBS      ->  number of macro eNodeBs
-%   sfMa      ->  number of LTE subframes available for macro eNodeBs
-%   miBS      -> number of micro eNodeBs
-%   sfMa      ->  number of LTE subframes available for micro eNodeBs
-%
-%   stations  -> struct with all stations details and PDSCH
+%   CREATE BASE STATIONS is used to generate a struct with the base stations   %
+%                                                                              %
+%   Function fingerprint                                                       %
+%   maBS      ->  number of macro eNodeBs                                      %
+%   sfMa      ->  number of LTE subframes available for macro eNodeBs          %
+%   miBS      -> number of micro eNodeBs                                       %
+%   sfMa      ->  number of LTE subframes available for micro eNodeBs          %
+%                                                                              %
+%   stations  -> struct with all stations details and PDSCH                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %Initialise struct for base stations and PDSCH in FDD duplexing mode

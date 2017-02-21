@@ -1,0 +1,29 @@
+%	MAIN 
+% 
+%	numFrames			= number of LTE frames for which to run each sim
+
+clear
+clc
+close all
+addpath(genpath(mainF);
+
+numFrames = 10;
+
+%create base stations
+numSubFramesMacro = 50;
+numSubFramesMicro = 25;
+macroNum = 1;
+microNum = 5;
+stations = createBaseStations(macroNum, numSubFramesMacro, microNum, numSubFramesMicro);
+% and place them in the network
+
+%stations = placeNode(networkRadius, stations);
+
+	
+
+
+
+
+
+
+
