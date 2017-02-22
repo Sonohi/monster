@@ -1,4 +1,4 @@
-function [stations] = createBaseStations (maBS, sfMa, miBS, sfMi)
+function [stations] = createBaseStations (maBS, sfMa, miBS, sfMi, buildings)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE BASE STATIONS is used to generate a struct with the base stations   %
 %                                                                              %
@@ -7,12 +7,16 @@ function [stations] = createBaseStations (maBS, sfMa, miBS, sfMi)
 %   sfMa      ->  number of LTE subframes available for macro eNodeBs          %
 %   miBS      -> number of micro eNodeBs                                       %
 %   sfMa      ->  number of LTE subframes available for micro eNodeBs          %
+%   buildings -> building position matrix                                      %
 %                                                                              %
 %   stations  -> struct with all stations details and PDSCH                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	%Initialise struct for base stations and PDSCH in FDD duplexing mode
 	stations(maBS + miBS).DuplexMode = 'FDD';
+	
+	%Create position vectors for the macro and micro BSs
+	[macro_pos, micro_pos] = positionBaseStations(maBS, miBS, buildings);
 
 	for i = 1: (maBS + miBS)
 		%For now only 1 macro in the scenario and it's kept as first elem
@@ -55,6 +59,13 @@ function [stations] = createBaseStations (maBS, sfMa, miBS, sfMi)
 		stations(i).PDSCH.CSIMode = 'PUCCH 1-0';
 		stations(i).PDSCH.PMIMode = 'Wideband';
 		stations(i).PDSCH.CSI = 'On';
+		
+		%TODO is this possible in the struct? Is there a different position field?
+		if (i <= maBS),
+		    stations(i).Position = macro_pos(i, :);
+		else
+		    stations(i).Position = micro_pos(i - maBS, :);
+		end
 	end
 
 end
