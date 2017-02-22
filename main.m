@@ -28,3 +28,5 @@ stations = createBaseStations(macroNum, numSubFramesMacro, microNum, numSubFrame
 
 %Create channels
 channels = createChannels(stations, seed,  'fading'); % ['fading', 'mobility'] % TODO: move this to a channel config struct
+%Create channel estimator
+cec = createChEstimator();
