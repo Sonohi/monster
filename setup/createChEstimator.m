@@ -13,4 +13,4 @@ function [cec] = createChEstimator ()
   cec.InterpType = 'Cubic';            % 2D interpolation type
   cec.InterpWindow = 'Centered';       % Interpolation window type
   cec.InterpWinSize = 1;               % Interpolation window size
-end;
+end
