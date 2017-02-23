@@ -1,0 +1,28 @@
+FFPROBE analysis output
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'big_buck_bunny_1080p_h264.mov':
+  Metadata:
+    major_brand     : qt  
+    minor_version   : 537199360
+    compatible_brands: qt  
+    creation_time   : 2008-05-27 18:40:35
+    timecode        : 00:00:00:00
+  Duration: 00:09:56.46, start: 0.000000, bitrate: 9725 kb/s
+    Stream #0:0(eng): Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080, 9282 kb/s, 24 fps, 24 tbr, 2400 tbn, 4800 tbc (default)
+    Metadata:
+      creation_time   : 2008-05-27 18:40:35
+      handler_name    : Apple Alias Data Handler
+      encoder         : H.264
+    Stream #0:1(eng): Data: none (tmcd / 0x64636D74) (default)
+    Metadata:
+      creation_time   : 2008-05-27 18:40:35
+      handler_name    : Apple Alias Data Handler
+      timecode        : 00:00:00:00
+    Stream #0:2(eng): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, 5.1, fltp, 437 kb/s (default)
+    Metadata:
+      creation_time   : 2008-05-27 18:40:35
+      handler_name    : Apple Alias Data Handler
+
+Additional notes
+	Apparently CBR encoding (9725 kbps)
+	In CVS/JSON output, frames are interleaved
+	Overall bitrate is approx the summation of the bitrate of audio and video streams 9719 with offset 6 kbps for meta probably
