@@ -1,10 +1,7 @@
 %	MAIN
 %
 %	numFrames = number of LTE frames for which to run each sim
-
-
-addpath(genpath('setup'));
-addpath(genpath('mobility'));
+sonohi;
 
 clear;
 clc;
@@ -24,9 +21,9 @@ if (macroNum ~= 1)
 	return;
 end
 
-stations = createBaseStations(macroNum, numSubFramesMacro, microNum, numSubFramesMicro);
+%stations = createBaseStations(macroNum, numSubFramesMacro, microNum, numSubFramesMicro);
 
 %Create channels
-channels = createChannels(stations, seed,  'fading'); % ['fading', 'mobility'] % TODO: move this to a channel config struct
+%channels = createChannels(stations, seed,  'fading'); % ['fading', 'mobility'] % TODO: move this to a channel config struct
 %Create channel estimator
-cec = createChEstimator();
+%cec = createChEstimator();
