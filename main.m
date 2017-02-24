@@ -17,6 +17,10 @@ param.microNum = 5;
 param.seed = 122;
 param.buildings = load('mobility/buildings.txt');
 
+% Channel configuration
+param.Channel.mode = 'fading'; % ['mobility','fading'];
+
+
 %Guard for initial setup: exit of there's more than 1 macro BS
 if (param.macroNum ~= 1)
 	return;
@@ -25,6 +29,6 @@ end
 stations = createBaseStations(param);
 
 %Create channels
-channels = createChannels(stations, param.seed,  'fading'); % ['fading', 'mobility'] % TODO: move this to a channel config struct
+channels = createChannels(stations,param); %
 %Create channel estimator
-%cec = createChEstimator();
+cec = createChEstimator();

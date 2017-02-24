@@ -1,4 +1,4 @@
-function [channels] = createChannels (nodes, seed, mode)
+function [channels] = createChannels (nodes, param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE CHANNELS is used to generate a channel struct for the "nodes"       %
 %                                                                              %
@@ -15,13 +15,13 @@ function [channels] = createChannels (nodes, seed, mode)
     % TODO: Add generalized modes for channel settings
     % Generalized channel setting
     ofdmInfo                        = lteOFDMInfo(nodes(i));
-    channels(i).Seed                = seed + i;
+    channels(i).Seed                = param.seed + i;
     channels(i).NRxAnts             = 1;
     channels(i).NormalizeTxAnts     = 'On';
     channels(i).SamplingRate        = ofdmInfo.SamplingRate;
 
     % Model specific
-    switch mode
+    switch param.Channel.mode
 
       case 'fading'
         % Config for lteFadingChannel
