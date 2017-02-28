@@ -3,7 +3,7 @@
 %	numFrames = number of LTE frames for which to run each sim
 sonohi;
 
-clear;
+clearvars;
 clc;
 close all;
 
@@ -32,3 +32,5 @@ stations = createBaseStations(param);
 channels = createChannels(stations,param); %
 %Create channel estimator
 cec = createChEstimator();
+%Get traffic source data
+trSource = getTrafficData('traffic/bunnyDump.csv');
