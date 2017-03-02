@@ -1,29 +1,31 @@
 function [stations] = createBaseStations (param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE BASE STATIONS is used to generate a struct with the base stations                    %
-%                                                                                               %
-%   Function fingerprint                                                                        %
-%   param.macroNum      ->  number of macro eNodeBs                                             %
-%   param.numSubFramesMacro      ->  number of LTE subframes available for macro eNodeBs        %
-%   param.microNum      -> number of micro eNodeBs                                              %
-%   param.numSubFramesMacro      ->  number of LTE subframes available for micro eNodeBs        %
-%   buildings -> building position matrix                                                       %
-%                                                                                               %
-%   stations  -> struct with all stations details and PDSCH                                     %
+%   CREATE BASE STATIONS is used to generate a struct with the base stations   %
+%                                                                              %
+%   Function fingerprint                                                       %
+%   param.macroNum      		->  number of macro eNodeBs                        %
+%   param.numSubFramesMacro	->  number of LTE subframes for macro eNodeBs      %
+%   param.microNum      		-> 	number of micro eNodeBs                        %
+%   param.numSubFramesMacro ->  number of LTE subframes for micro eNodeBs	     %
+%   buildings 							-> building position matrix                        %
+%                                                                              %
+%   stations  							-> struct with all stations details and PDSCH      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	%Initialise struct for base stations and PDSCH in FDD duplexing mode
 	stations(param.macroNum + param.microNum).DuplexMode = 'FDD';
-	
+
 	%Create position vectors for the macro and micro BSs
 	[macro_pos, micro_pos] = positionBaseStations(param.macroNum, param.microNum, param.buildings);
 
 	for i = 1: (param.macroNum + param.microNum)
 		%For now only 1 macro in the scenario and it's kept as first elem
-		if(i == 1)
+		if(i <= param.macroNum)
+			stations(i).Position = macro_pos(i, :);
 			stations(i).NDLRB = param.numSubFramesMacro;
 			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMacro - 1)';
 		else
+			stations(i).Position = micro_pos(i - param.macroNum, :);
 			stations(i).NDLRB = param.numSubFramesMicro;
 			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMicro - 1)';
 		end
@@ -59,13 +61,6 @@ function [stations] = createBaseStations (param)
 		stations(i).PDSCH.CSIMode = 'PUCCH 1-0';
 		stations(i).PDSCH.PMIMode = 'Wideband';
 		stations(i).PDSCH.CSI = 'On';
-		
-		%TODO is this possible in the struct? Is there a different position field?
-		if (i <= param.macroNum)
-		    stations(i).Position = macro_pos(i, :);
-		else
-		    stations(i).Position = micro_pos(i - param.macroNum, :);
-		end
 	end
 
 end

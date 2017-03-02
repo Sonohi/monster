@@ -66,6 +66,9 @@ function [data] = getTrafficData (path)
   data.time = cell2mat(rawNumericColumns(:, 2));
   data.pos = cell2mat(rawNumericColumns(:, 3));
   data.size = cell2mat(rawNumericColumns(:, 4));
+  % Save to MAT file for faster access next round
+  save('traffic/trafficSource.mat', 'data');
+
 
 
 end
