@@ -3,9 +3,9 @@ function [stations] = createBaseStations (param)
 %   CREATE BASE STATIONS is used to generate a struct with the base stations   %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   param.macroNum      		->  number of macro eNodeBs                        %
+%   param.numMacro      		->  number of macro eNodeBs                        %
 %   param.numSubFramesMacro	->  number of LTE subframes for macro eNodeBs      %
-%   param.microNum      		-> 	number of micro eNodeBs                        %
+%   param.numMicro      		-> 	number of micro eNodeBs                        %
 %   param.numSubFramesMacro ->  number of LTE subframes for micro eNodeBs	     %
 %   buildings 							-> building position matrix                        %
 %                                                                              %
@@ -13,19 +13,19 @@ function [stations] = createBaseStations (param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	%Initialise struct for base stations and PDSCH in FDD duplexing mode
-	stations(param.macroNum + param.microNum).DuplexMode = 'FDD';
+	stations(param.numMacro + param.numMicro).DuplexMode = 'FDD';
 
 	%Create position vectors for the macro and micro BSs
-	[macro_pos, micro_pos] = positionBaseStations(param.macroNum, param.microNum, param.buildings);
+	[macro_pos, micro_pos] = positionBaseStations(param.numMacro, param.numMicro, param.buildings);
 
-	for i = 1: (param.macroNum + param.microNum)
+	for i = 1: (param.numMacro + param.numMicro)
 		%For now only 1 macro in the scenario and it's kept as first elem
-		if(i <= param.macroNum)
+		if(i <= param.numMacro)
 			stations(i).Position = macro_pos(i, :);
 			stations(i).NDLRB = param.numSubFramesMacro;
 			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMacro - 1)';
 		else
-			stations(i).Position = micro_pos(i - param.macroNum, :);
+			stations(i).Position = micro_pos(i - param.numMacro, :);
 			stations(i).NDLRB = param.numSubFramesMicro;
 			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMicro - 1)';
 		end
@@ -41,6 +41,7 @@ function [stations] = createBaseStations (param)
 		stations(i).Windowing = 0;
 		stations(i).DuplexMode = 'FDD';
 		stations(i).OCNG = 'OFF';
+		stations(i).Users = [];
 
 		%PDSCH (main downlink data channel config
 		%TODO check if this makes sense in the scenario
