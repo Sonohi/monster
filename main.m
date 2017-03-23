@@ -3,8 +3,7 @@
 %																																							 	%
 %   Simulation parameters                                                       %                    %
 %		reset 						-> 	resets the paths and refreshes them										%
-%		numFrames 				->	overall length of the simulation											%
-%													(1 frame = 10 ms = 10 scheduling rounds)							%
+%		schRounds 				->	overall length of the simulation											%
 %		numSubFramesMacro ->	bandwidth of macro cell																%
 %													(100 subframes = 20 MHz bandwidth)										%
 %		numSubFramesMicro ->	bandwidth of micro cell																%
@@ -26,7 +25,7 @@ close all;
 
 % Simulation parameters
 param.reset = 0;
-param.numFrames = 10;
+param.schRounds = 10;
 param.numSubFramesMacro = 50;
 param.numSubFramesMicro = 25;
 param.numMacro = 1;
@@ -64,6 +63,8 @@ if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
 else
 	trSource = load('traffic/trafficSource.mat', 'data');
 end
+% setup traffic queues
+trQueues = setupTrQueues(users);
 
 % Utilisation ranges
 if (param.utilLoThr > 0 && param.utilLoThr <= 100 && param.utilHiThr > 0 && ...
@@ -78,7 +79,7 @@ end
 % Main loop
 for (utilLoIx = 1: length(utilLo))
 	for (utilHiIx = 1:length(utilHi))
-		for (frameIx = 1:param.numFrames*10)
+		for (roundIx = 1:schRounds)
 			% In each scheduling round, check UEs associated with each station and
 			% allocate PRBs through the scheduling function per each station
 			for (stationIx = 1:length(stations))
@@ -86,27 +87,45 @@ for (utilLoIx = 1: length(utilLo))
 				assocUsers = checkAssociatedUsers(users, stations(stationIx));
 				% schedule the associated users for this round
 				schedule = allocatePRBs(stations(stationIx));
-				% setup current frame for serving eNodeB
-				stations(stationIx).NSubframe = frameIx;
-				% calculate the size of the coded transport block...
-				CodedTrBlkSizes = calcTrBlkSize(assocUsers(schedule(frameIx)),...
-					stations(stationIx));
-				% ...and the DLSCH size by creating a packet with random bits of that size
-				dlschTransportBlk = round(rand(1,CodedTrBlkSize));
-				% Obtain the number of transmit antennas.
-				p = lteDLResourceGridSize(stations(stationIx))(3);
-				% generate txWaveform
-		    txWaveforms(stationIx) = [lteRMCDLTool(stations(stationIx),dlschTransportBlk);...
-					zeros(25,P)];
-				% set channel init time
-				channels(stationIx).InitTime = frameIx/1000;
-				% pass the tx waveform through the LTE fading channel
-				rxWaveforms(stationIx) = lteFadingChannel(channels(stationIx),...
-					txWaveforms(stationIx));
-				% generate background noise
-				noise(stationIx) = No*complex(randn(size(rxWaveforms(stationIx))),...
-          randn(size(rxWaveforms(stationIx))));
+
+				% per each associated user, create the codeword
+				for (userIx = 1:length(assocUsers))
+					% find traffic queue for this user and generate transport block
+					% TODO is there a better way to get it???
+					for (i = 1:length(trQueues))
+						if (trQueues(i).UEID == assocUsers(userIx).UEID)
+							trQueues(i).qsz = updateTrQueue(trafficSource, roundIx, ...
+								trQueues(i).qsz);
+
+							[trBlkS(stationIx, userIx), trBlksInfo(stationIx, userIx)] = ...
+								createTrBlk(stations(stationIx), assocUsers(userIx), schedule,...
+									trQueues(i).qsz);
+						end
+					end
+
+					% generate codeword (RV defaulted to 0)
+					codewords(stationIx, userIx) = createCodeword(trBlkS(stationIx,...
+						userIx), 0, trBlksInfo(stationIx, userIx));
+				end
 			end
+
+
+			% setup current subframe for serving eNodeB
+			% stations(stationIx).NSubframe = subFrameIx;
+
+			% Obtain the number of transmit antennas.
+			% P = lteDLResourceGridSize(stations(stationIx)(3));
+			% generate txWaveform
+	    % txWaveforms(stationIx) = [lteOFDMModulate(stations(stationIx),dlschTransportBlk);...
+			% 	zeros(25,P)];
+			% set channel init time
+			% channels(stationIx).InitTime = subFrameIx/1000;
+			% pass the tx waveform through the LTE fading channel
+			% rxWaveforms(stationIx) = lteFadingChannel(channels(stationIx),...
+			% 	txWaveforms(stationIx));
+			% generate background AWGN
+			% noise(stationIx) = No*complex(randn(size(rxWaveforms(stationIx))),...
+      %   randn(size(rxWaveforms(stationIx))));
 
 			% After all stations computed the tx and estiamted rx waveforms, sum
 			% over all the rx waveforms and demodulate
@@ -121,15 +140,14 @@ for (utilLoIx = 1: length(utilLo))
 			% TODO do channel estimation for the received subframe
 			% for each station bla bla bla
 			% [estChannelGrid,noiseEst] = lteDLChannelEstimate(stations(stationIx),cec, ...
-      %		rxSubframe);
+      % 	rxSubframe);
 
 			% TODO compute sinr and estimate CQI based on the channel estimation
 			% for each station bla bla bla
 			% [cqi, sinr] = lteCQISelect(stations(stationIx),stations(stationIx).PDSCH,...
-			%		estChannelGrid,noiseEst);
+			% 	estChannelGrid,noiseEst);
 
 			% TODO Record stats and power consumed in this round
-
 		end
 	end
 end

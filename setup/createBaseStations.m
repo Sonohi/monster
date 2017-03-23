@@ -12,14 +12,15 @@ function [stations] = createBaseStations (param)
 %   stations  							-> struct with all stations details and PDSCH      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-	%Initialise struct for base stations and PDSCH in FDD duplexing mode
+	% Initialise struct for base stations and PDSCH in FDD duplexing mode
 	stations(param.numMacro + param.numMicro).DuplexMode = 'FDD';
 
-	%Create position vectors for the macro and micro BSs
-	[macro_pos, micro_pos] = positionBaseStations(param.numMacro, param.numMicro, param.buildings);
+	% Create position vectors for the macro and micro BSs
+	[macro_pos, micro_pos] = positionBaseStations(param.numMacro, param.numMicro, ...
+		param.buildings);
 
 	for i = 1: (param.numMacro + param.numMicro)
-		%For now only 1 macro in the scenario and it's kept as first elem
+		% For now only 1 macro in the scenario and it's kept as first elem
 		if(i <= param.numMacro)
 			stations(i).Position = macro_pos(i, :);
 			stations(i).NDLRB = param.numSubFramesMacro;
@@ -43,8 +44,8 @@ function [stations] = createBaseStations (param)
 		stations(i).OCNG = 'OFF';
 		stations(i).Users = [];
 
-		%PDSCH (main downlink data channel config
-		%TODO check if this makes sense in the scenario
+		% PDSCH (main downlink data channel) config
+		% default config overwritten by main loop
 		stations(i).PDSCH.TxScheme = 'Port0'; % PDSCH transmission mode 0
 		stations(i).PDSCH.Modulation = {'QPSK'};
 		stations(i).PDSCH.NLayers = 1;

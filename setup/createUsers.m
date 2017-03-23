@@ -13,6 +13,7 @@ function [users] = createUsers (param)
 	stations(param.numUsers).velocity = param.velocity;
 
 	for i = 1: (param.numUsers)
+		users(i).UEID			= i;
     users(i).Position = positionUser();
     users(i).Velocity = param.velocity;
 	end
