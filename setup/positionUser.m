@@ -8,6 +8,6 @@ function [pos] = positionUser()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Not a very interesting module for now, it is structured like this for scalability
 
-	pos = [0 0];
+	pos = [10 0];
 
 end

@@ -36,6 +36,8 @@ param.velocity = 3; %in km/h
 param.numUsers = 15;
 param.utilLoThr = 1;
 param.utilHiThr = 51;
+param.ulFreq = 1747.5;
+param.dlFreq = 1842.5;
 
 sonohi(param.reset);
 
@@ -79,12 +81,15 @@ end
 % Main loop
 for (utilLoIx = 1: length(utilLo))
 	for (utilHiIx = 1:length(utilHi))
-		for (roundIx = 1:schRounds)
+		for (roundIx = 1:param.schRounds)
 			% In each scheduling round, check UEs associated with each station and
 			% allocate PRBs through the scheduling function per each station
+			
+			% check which UEs are associated to which eNB
+			assocUsers = checkAssociatedUsers(users, stations, param);
+			
 			for (stationIx = 1:length(stations))
-				% check which UEs are associated with this eNB
-				assocUsers = checkAssociatedUsers(users, stations(stationIx));
+				
 				% schedule the associated users for this round
 				schedule = allocatePRBs(stations(stationIx));
 
