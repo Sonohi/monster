@@ -1,6 +1,6 @@
-function [alloc] = schedule(node)
+function [alloc] = allocatePRBs(node)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   SCHEDULE is used to return the allocation of PRBs of a node for a schedule %
+%   ALLOCATE PRBS is used to return the allocation of PRBs for a schedule 		 %
 %                                                                              %
 %   Function fingerprint                                                       %
 %   node  ->  the base station struct with current list of associated users    %

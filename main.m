@@ -84,12 +84,12 @@ for (utilLoIx = 1: length(utilLo))
 		for (roundIx = 1:param.schRounds)
 			% In each scheduling round, check UEs associated with each station and
 			% allocate PRBs through the scheduling function per each station
-			
+
 			% check which UEs are associated to which eNB
 			assocUsers = checkAssociatedUsers(users, stations, param);
-			
+
 			for (stationIx = 1:length(stations))
-				
+
 				% schedule the associated users for this round
 				schedule = allocatePRBs(stations(stationIx));
 

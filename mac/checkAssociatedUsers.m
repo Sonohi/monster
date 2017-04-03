@@ -14,7 +14,7 @@ d0=1; % m
 	for userIndex = 1:length(users)
 		% get UE position
 		uePos = users(userIndex).Position;
-		
+
 		for stationIndex = 1:length(stations)
 			bs = stations(stationIndex);
 			bsPos = bs.Position;
@@ -33,5 +33,8 @@ d0=1; % m
 			end
 		end
 	end
+
+	% TODO remove placeholder
+	nodeUsers = [];
 
 end

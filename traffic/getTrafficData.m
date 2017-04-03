@@ -10,7 +10,7 @@ function [data] = getTrafficData (path)
 %   data  ->  matrix with frameSizes                                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %select only certain columns with relevant data
-  formatSpec = '%*s%s%*s%*s%*s%*s%*s%*s%*s%*s%s%s%s%s%[^\n\r]';
+  formatSpec = '%*s%s%*s%*s%*s%s%*s%*s%*s%*s%*s%*s%*s%s%[^\n\r]';
   fileID = fopen(path,'r');
   dataArray = textscan(fileID, formatSpec, 'Delimiter', ',',  'ReturnOnError', false);
   fclose(fileID);
@@ -21,7 +21,7 @@ function [data] = getTrafficData (path)
   end
   numericData = NaN(size(dataArray{1},1),size(dataArray,2));
 
-  for col=[2,3,4,5]
+  for col=[2,3]
   	rawData = dataArray{col};
   	for row=1:size(rawData, 1);
   		regexstr = '(?<prefix>.*?)(?<numbers>([-]*(\d+[\,]*)+[\.]{0,1}\d*[eEdD]{0,1}[-+]*\d*[i]{0,1})|([-]*(\d+[\,]*)*[\.]{1,1}\d+[eEdD]{0,1}[-+]*\d*[i]{0,1}))(?<suffix>.*)';
@@ -48,7 +48,7 @@ function [data] = getTrafficData (path)
 
 
   % Split data into numeric and cell columns.
-  rawNumericColumns = raw(:, [2,3,4,5]);
+  rawNumericColumns = raw(:, [2,3]);
   rawCellColumns = raw(:, 1);
   % remove first and last rows in sources (labels)
   rawNumericColumns(1,:) = [];
@@ -62,10 +62,8 @@ function [data] = getTrafficData (path)
 
   % Fill in output data cell
   data.media = rawCellColumns(:, 1);
-  data.duration = cell2mat(rawNumericColumns(:, 1));
-  data.time = cell2mat(rawNumericColumns(:, 2));
-  data.pos = cell2mat(rawNumericColumns(:, 3));
-  data.size = cell2mat(rawNumericColumns(:, 4));
+  data.time = cell2mat(rawNumericColumns(:, 1));
+  data.size = cell2mat(rawNumericColumns(:, 2));
   % Save to MAT file for faster access next round
   save('traffic/trafficSource.mat', 'data');
 
