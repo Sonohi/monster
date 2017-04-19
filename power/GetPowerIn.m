@@ -1,8 +1,8 @@
-function [ Pin ] = GetPowerIn( rbUsed, rbMax,  bsType)
+function [ Pin ] = getPowerIn( rbUsed, rbMax,  bsType)
 %Compute P_in as in [1], according to the load and of the type of BS. The
 %type of BS specifies also P_max, the number of transceiver elements.
-%[1] Auer, G., Giannini, V., Desset, C., Godor, I., Skillermark, P., Olsson, 
-%M., Imran, M.A., Sabella, D., Gonzalez, M.J., Blume, O. and Fehske, A., 2011. 
+%[1] Auer, G., Giannini, V., Desset, C., Godor, I., Skillermark, P., Olsson,
+%M., Imran, M.A., Sabella, D., Gonzalez, M.J., Blume, O. and Fehske, A., 2011.
 %How much energy is needed to run a wireless network?. IEEE Wireless Communications, 18(5).
 
 switch bsType
@@ -48,4 +48,3 @@ else
     Pin = ntrx*P0 + deltaP*Pout;
 end
 end
-

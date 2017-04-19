@@ -24,7 +24,7 @@ clc;
 close all;
 
 % Simulation parameters
-param.reset = 0;
+param.reset = 1;
 param.schRounds = 10;
 param.numSubFramesMacro = 50;
 param.numSubFramesMicro = 25;
@@ -61,7 +61,7 @@ cec = createChEstimator();
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
-	trSource = getTrafficData('traffic/bunnyDump.csv');
+	trSource = getTrafficData('traffic/bunnyDump.csv', true);
 else
 	trSource = load('traffic/trafficSource.mat', 'data');
 end

@@ -1,15 +1,15 @@
-function [sz] = updateTrQueue(src, time)
+function [newQsz] = updateTrQueue(src, schRound, oldQsz)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   UPDATE TRAFFIC QUEUES is used to update the size of the traffic queues		 %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   src        ->  the base station serving the user                           %
-%   time       ->  the user allocated in the subframe                          %
-%   qsz        ->  current queue size                                          %
+%   src        ->  the source of traffic for the UE                            %
+%   schRound   ->  scheduling round                                            %
+%   oldQsz     ->  current queue size                                          %
 %                                                                              %
-%   sz	       ->  new queue size   						                               %
+%   newQsz	   ->  new queue size   						                               %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  newQsz = 0;
 
-  sz = 100;
 end;
