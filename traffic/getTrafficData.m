@@ -73,7 +73,7 @@ function [dataMat] = getTrafficData (path, sort)
   end
 
   % Save to MAT file for faster access next round
-  save('traffic/trafficSource.mat', 'dataMat');
+  save('traffic/trafficSource.mat');
 
 
 

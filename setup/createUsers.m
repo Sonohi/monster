@@ -16,6 +16,7 @@ function [users] = createUsers (param)
 		users(i).UEID			= i;
     users(i).Position = positionUser();
     users(i).Velocity = param.velocity;
+		users(i).queue		= struct('size', 0, 'time', 0, 'pkt', 0);
 	end
 
 end

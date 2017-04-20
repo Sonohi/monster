@@ -24,7 +24,7 @@ clc;
 close all;
 
 % Simulation parameters
-param.reset = 1;
+param.reset = 0;
 param.schRounds = 10;
 param.numSubFramesMacro = 50;
 param.numSubFramesMicro = 25;
@@ -65,8 +65,6 @@ if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
 else
 	trSource = load('traffic/trafficSource.mat', 'data');
 end
-% setup traffic queues
-trQueues = setupTrQueues(users);
 
 % Utilisation ranges
 if (param.utilLoThr > 0 && param.utilLoThr <= 100 && param.utilHiThr > 0 && ...
@@ -87,6 +85,7 @@ for (utilLoIx = 1: length(utilLo))
 
 			% check which UEs are associated to which eNB
 			assocUsers = checkAssociatedUsers(users, stations, param);
+			simTime = roundIx*10^-3;
 
 			for (stationIx = 1:length(stations))
 
@@ -95,22 +94,25 @@ for (utilLoIx = 1: length(utilLo))
 
 				% per each associated user, create the codeword
 				for (userIx = 1:length(assocUsers))
-					% find traffic queue for this user and generate transport block
-					% TODO is there a better way to get it???
-					for (i = 1:length(trQueues))
-						if (trQueues(i).UEID == assocUsers(userIx).UEID)
-							trQueues(i).qsz = updateTrQueue(trafficSource, roundIx, ...
-								trQueues(i).qsz);
+					% check if the UE has anything in the queue or if frame delivery expired
+					if (assocUsers(userIx).queue.size == 0 || ...
+							assocUsers(userIx).queue.time >= simTime)
+						% in this case, call the updateTrQueue
+						assocUsers(userIx).queue = updateTrQueue(src, roundIx,...
+							assocUsers(userIx).queue);
+					end;
 
-							[trBlkS(stationIx, userIx), trBlksInfo(stationIx, userIx)] = ...
-								createTrBlk(stations(stationIx), assocUsers(userIx), schedule,...
-									trQueues(i).qsz);
-						end
+					% if after the update, queue size is still 0, then the UE does not have
+					% anything to send, otherwise create TB
+					if (assocUsers(userIx).queue.size ~= 0)
+						[trBlkS(stationIx, userIx), trBlksInfo(stationIx, userIx)] = ...
+							createTrBlk(stations(stationIx), assocUsers(userIx), schedule,...
+								assocUsers(userIx).queue.size);
+
+						% generate codeword (RV defaulted to 0)
+						codewords(stationIx, userIx) = createCodeword(trBlkS(stationIx,...
+							userIx), 0, trBlksInfo(stationIx, userIx));
 					end
-
-					% generate codeword (RV defaulted to 0)
-					codewords(stationIx, userIx) = createCodeword(trBlkS(stationIx,...
-						userIx), 0, trBlksInfo(stationIx, userIx));
 				end
 			end
 
