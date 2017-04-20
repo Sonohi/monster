@@ -10,7 +10,8 @@ function [alloc] = allocatePRBs(node)
 %							--> MCS 	modulation and coding scheme decided									 %
 %							--> mOrd	modulation order as bits/OFDM symbol									 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-	alloc = [];
+	% reset the allocation
+	
+	alloc(1:node.NDLRB) = struct('UEID',0,'MCS',0,'mOrd',0);
 
 end

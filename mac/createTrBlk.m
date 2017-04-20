@@ -29,7 +29,11 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz)
 	if (numPRB ~= 0)
 		avMCS = round(avMCS/numPRB)
 		avMOrd = round(avMOrd/numPRB)
+	else
+		avMCS = 0;
+		avMOrd = 0;
 	end
+	
 
 	% the transport block is created of a size that is the minimum between the
 	% traffic queue size and the maximum size of the uncoded transport block

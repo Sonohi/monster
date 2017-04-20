@@ -61,9 +61,9 @@ cec = createChEstimator();
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
-	trSource = getTrafficData('traffic/bunnyDump.csv', true);
+	trSource = loadTrafficData('traffic/bunnyDump.csv', true);
 else
-	trSource = load('traffic/trafficSource.mat', 'data');
+	load('traffic/trafficSource.mat', 'trSource');
 end
 
 % Utilisation ranges
@@ -84,38 +84,43 @@ for (utilLoIx = 1: length(utilLo))
 			% allocate PRBs through the scheduling function per each station
 
 			% check which UEs are associated to which eNB
-			assocUsers = checkAssociatedUsers(users, stations, param);
+			users = checkAssociatedUsers(users, stations, param);
 			simTime = roundIx*10^-3;
 
 			for (stationIx = 1:length(stations))
-
 				% schedule the associated users for this round
-				schedule = allocatePRBs(stations(stationIx));
+				stations(stationIx).schedule = allocatePRBs(stations(stationIx));
+			end;
 
-				% per each associated user, create the codeword
-				for (userIx = 1:length(assocUsers))
-					% check if the UE has anything in the queue or if frame delivery expired
-					if (assocUsers(userIx).queue.size == 0 || ...
-							assocUsers(userIx).queue.time >= simTime)
-						% in this case, call the updateTrQueue
-						assocUsers(userIx).queue = updateTrQueue(src, roundIx,...
-							assocUsers(userIx).queue);
+			% per each user, create the codeword
+			for (userIx = 1:length(users))
+				% get the eNodeB thie UE is connected to
+				svIx = 0;
+				for (stationIx = 1:length(stations))
+					if (stations(stationIx).NCellID == users(userIx).eNodeB)
+						svIx = stationIx;
+						break;
 					end;
+				end;
 
-					% if after the update, queue size is still 0, then the UE does not have
-					% anything to send, otherwise create TB
-					if (assocUsers(userIx).queue.size ~= 0)
-						[trBlkS(stationIx, userIx), trBlksInfo(stationIx, userIx)] = ...
-							createTrBlk(stations(stationIx), assocUsers(userIx), schedule,...
-								assocUsers(userIx).queue.size);
+				% check if the UE has anything in the queue or if frame delivery expired
+				if (users(userIx).queue.size == 0 || users(userIx).queue.time >= simTime)
+					% in this case, call the updateTrQueue
+					users(userIx).queue = updateTrQueue(trSource, roundIx,	users(userIx).queue);
+				end;
 
-						% generate codeword (RV defaulted to 0)
-						codewords(stationIx, userIx) = createCodeword(trBlkS(stationIx,...
-							userIx), 0, trBlksInfo(stationIx, userIx));
-					end
+				% if after the update, queue size is still 0, then the UE does not have
+				% anything to send, otherwise create TB
+				if (users(userIx).queue.size ~= 0)
+					[trBlkS(svIx, userIx), trBlksInfo(svIx, userIx)] = ...
+						createTrBlk(stations(svIx), users(userIx), stations(svIx).schedule,...
+							users(userIx).queue.size);
+
+					% generate codeword (RV defaulted to 0)
+					codewords(svIx, userIx) = createCodeword(trBlkS(svIx,...
+						userIx), 0, trBlksInfo(svIx, userIx));
 				end
 			end
-
 
 			% setup current subframe for serving eNodeB
 			% stations(stationIx).NSubframe = subFrameIx;

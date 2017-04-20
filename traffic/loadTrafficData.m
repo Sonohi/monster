@@ -1,6 +1,6 @@
-function [dataMat] = getTrafficData (path, sort)
+function [trSource] = loadTrafficData (path, sort)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   GET TRAFFIC DATA is used to get a matrix of frame sizes                    %
+%   LOAD TRAFFIC DATA is used to get a matrix of frame sizes                   %
 %   currently the module is limited to model video streaming with frame sizes  %
 %   taken from the big buck bunny video                                        %
 %                                                                              %
@@ -8,7 +8,7 @@ function [dataMat] = getTrafficData (path, sort)
 %   path      ->  path where the CSV is located                                %
 %   sort      ->  true if it has to be sorted (e.g. interleaved A/V frames)    %
 %                                                                              %
-%   dataMat   ->  matrix with frameSizes                                       %
+%   trSource   ->  matrix with frameSizes                                      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %select only certain columns with relevant data
   formatSpec = '%*s%s%*s%*s%*s%s%*s%*s%*s%*s%*s%*s%*s%s%[^\n\r]';
@@ -64,16 +64,16 @@ function [dataMat] = getTrafficData (path, sort)
   dataCell = struct2cell(data);
   dataSize = size(dataCell);
   dataCell = reshape(dataCell, dataSize(1), []);
-  dataMat = cell2mat(dataCell');
+  trSource = cell2mat(dataCell');
 
   % Sort using the time column if it has to be shuffled (e.g. interleaved source)
   % first column is timestamp
   if (sort);
-    dataMat = sortrows(dataMat, 1);
+    trSource = sortrows(trSource, 1);
   end
 
   % Save to MAT file for faster access next round
-  save('traffic/trafficSource.mat');
+  save('traffic/trafficSource.mat', 'trSource');
 
 
 
