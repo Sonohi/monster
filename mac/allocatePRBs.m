@@ -11,7 +11,12 @@ function [alloc] = allocatePRBs(node)
 %							--> mOrd	modulation order as bits/OFDM symbol									 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% reset the allocation
-	
-	alloc(1:node.NDLRB) = struct('UEID',0,'MCS',0,'mOrd',0);
 
+	alloc(1:node.NDLRB) = struct('UEID',0,'MCS',0,'mOrd',0);
+	% TODO remove random allocation
+	for (ix = 1:node.NDLRB)
+		alloc(ix).UEID = randi([1,15]);
+		alloc(ix).MCS = randi([1,32]);
+		alloc(ix).modOrd = 2*randi([1,3]);
+	end
 end

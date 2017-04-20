@@ -1,14 +1,16 @@
-function [trBlk, info] = createTrBlk(node, user, sch, qsz)
+function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE TRANSPORT BLOCK  is used to return the TB the scheduling round			 %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   node        ->  the base station serving the user                          %
-%   user        ->  the user allocated in the subframe                         %
-%   sch  				->  schedule for staion                                        %
-%   qsz  				->  traffic queue size                                         %
+%   node        			->  the base station serving the user                    %
+%   user        			->  the user allocated in the subframe                   %
+%   sch  							->  schedule for staion                                  %
+%   qsz  							->  traffic queue size                                   %
+%   param.maxTBSize  	->  max size of a TB in LTE                              %
 %                                                                              %
-%   trBlk	      ->  transport block 						                               %
+%   trBlk	      			->  padded transport block 				                       %
+%   info 						  ->  actual size and rate matching                        %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -27,17 +29,20 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz)
 	% this shouldn't happen as we always schedule at least 1 PRB per user,
 	% otherwise it should not be in the list, but never know
 	if (numPRB ~= 0)
-		avMCS = round(avMCS/numPRB)
-		avMOrd = round(avMOrd/numPRB)
-	else
-		avMCS = 0;
-		avMOrd = 0;
+		avMCS = round(avMCS/numPRB);
+		avMOrd = round(avMOrd/numPRB);
 	end
-	
+
 
 	% the transport block is created of a size that is the minimum between the
 	% traffic queue size and the maximum size of the uncoded transport block
-	trBlk = randi([0 1], min(qsz, lteTBS(numPRB, avMCS)), 1);
-	info = lteTBS(numPRB, avMCS);
+	info.tbSize = min(qsz, lteTBS(numPRB, avMCS));
+	info.rateMatch = lteTBS(numPRB, avMCS);
+
+	trBlk = randi([0 1], info.tbSize, 1);
+	% pad the rest of the TB for storage with -1
+	padding(1:param.maxTBSize - info.tbSize, 1) = -1;
+	% concatenate the padding
+	trBlk = cat(1, trBlk, padding);
 
 end

@@ -38,6 +38,7 @@ param.utilLoThr = 1;
 param.utilHiThr = 51;
 param.ulFreq = 1747.5;
 param.dlFreq = 1842.5;
+param.maxTBSize = 97896;
 
 sonohi(param.reset);
 
@@ -49,15 +50,18 @@ if (param.numMacro ~= 1)
 	return;
 end
 
-%Create stations and users
+% Create stations and users
 stations = createBaseStations(param);
 users = createUsers(param);
 
 % Create channels
 channels = createChannels(stations,param);
 
-%Create channel estimator
+% Create channel estimator
 cec = createChEstimator();
+
+% Create structures to hold the transport blocks for transmission
+[trBlocks, trBlocksInfo] = initTrBlocks(param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
@@ -112,13 +116,13 @@ for (utilLoIx = 1: length(utilLo))
 				% if after the update, queue size is still 0, then the UE does not have
 				% anything to send, otherwise create TB
 				if (users(userIx).queue.size ~= 0)
-					[trBlkS(svIx, userIx), trBlksInfo(svIx, userIx)] = ...
+					[trBlocks(svIx, userIx, :), trBlocksInfo(svIx, userIx)] = ...
 						createTrBlk(stations(svIx), users(userIx), stations(svIx).schedule,...
-							users(userIx).queue.size);
+							users(userIx).queue.size, param);
 
 					% generate codeword (RV defaulted to 0)
-					codewords(svIx, userIx) = createCodeword(trBlkS(svIx,...
-						userIx), 0, trBlksInfo(svIx, userIx));
+					codewords(svIx, userIx, :) = createCodeword(trBlocks(svIx,...
+						userIx), 0, trBlocksInfo(svIx, userIx).rateMatch);
 				end
 			end
 
