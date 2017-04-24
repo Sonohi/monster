@@ -99,6 +99,7 @@ for (utilLoIx = 1: length(utilLo))
 			% per each user, create the codeword
 			for (userIx = 1:length(users))
 				% get the eNodeB thie UE is connected to
+				% TODO change loop to matrix operation
 				svIx = 0;
 				for (stationIx = 1:length(stations))
 					if (stations(stationIx).NCellID == users(userIx).eNodeB)
@@ -106,6 +107,8 @@ for (utilLoIx = 1: length(utilLo))
 						break;
 					end;
 				end;
+
+				% Check if this UE is scheduled otherwise skip
 
 				% check if the UE has anything in the queue or if frame delivery expired
 				if (users(userIx).queue.size == 0 || users(userIx).queue.time >= simTime)

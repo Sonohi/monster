@@ -10,7 +10,12 @@ function [users] = checkAssociatedUsers(users,stations,param)
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-d0=1; % m
+	% reset stations
+	for (ix = 1:length(stations))
+		stations(ix).Users(1:15) = 0;
+	end
+
+	d0=1; % m
 	for userIndex = 1:length(users)
 		% get UE position
 		uePos = users(userIndex).Position;
@@ -36,9 +41,18 @@ d0=1; % m
 				users(userIndex).eNodeB = stations(stationIndex).NCellID;
 				minLossDb = lossDb;
 			end
-
 		end
-
+		% Now that the assignement is done, write also on the side of the station
+		% TODO replace with matrix operation
+		for (ix = 1:length(stations))
+			if (stations(ix).NCellID == users(userIndex).eNodeB))
+				for (yx = 1:param.numUsers)
+					if (stations(ix).Users(yx) == 0)
+						stations(ix).Users(yx) = users(userIndex).UEID;
+						break;
+					end
+				end
+				break;
+			end
 	end
-
 end

@@ -42,7 +42,7 @@ function [stations] = createBaseStations (param)
 		stations(i).Windowing = 0;
 		stations(i).DuplexMode = 'FDD';
 		stations(i).OCNG = 'OFF';
-		stations(i).Users = [];
+		stations(i).Users = zeros(param.numUsers,1);
 
 		% PDSCH (main downlink data channel) config
 		% default config overwritten by main loop
