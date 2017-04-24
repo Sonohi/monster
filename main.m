@@ -88,7 +88,7 @@ for (utilLoIx = 1: length(utilLo))
 			% allocate PRBs through the scheduling function per each station
 
 			% check which UEs are associated to which eNB
-			users = checkAssociatedUsers(users, stations, param);
+			[users, stations] = checkAssociatedUsers(users, stations, param);
 			simTime = roundIx*10^-3;
 
 			for (stationIx = 1:length(stations))
@@ -109,24 +109,27 @@ for (utilLoIx = 1: length(utilLo))
 				end;
 
 				% Check if this UE is scheduled otherwise skip
+				if (checkUserSchedule(users(userIx), stations(svIx)))
+					% check if the UE has anything in the queue or if frame delivery expired
+					if (users(userIx).queue.size == 0 || users(userIx).queue.time >= simTime)
+						% in this case, call the updateTrQueue
+						users(userIx).queue = updateTrQueue(trSource, roundIx,	users(userIx).queue);
+					end;
 
-				% check if the UE has anything in the queue or if frame delivery expired
-				if (users(userIx).queue.size == 0 || users(userIx).queue.time >= simTime)
-					% in this case, call the updateTrQueue
-					users(userIx).queue = updateTrQueue(trSource, roundIx,	users(userIx).queue);
-				end;
+					% if after the update, queue size is still 0, then the UE does not have
+					% anything to send, otherwise create TB
+					if (users(userIx).queue.size ~= 0)
+						[trBlocks(svIx, userIx, :), trBlocksInfo(svIx, userIx)] = ...
+							createTrBlk(stations(svIx), users(userIx), stations(svIx).schedule,...
+								users(userIx).queue.size, param);
 
-				% if after the update, queue size is still 0, then the UE does not have
-				% anything to send, otherwise create TB
-				if (users(userIx).queue.size ~= 0)
-					[trBlocks(svIx, userIx, :), trBlocksInfo(svIx, userIx)] = ...
-						createTrBlk(stations(svIx), users(userIx), stations(svIx).schedule,...
-							users(userIx).queue.size, param);
-
-					% generate codeword (RV defaulted to 0)
-					codewords(svIx, userIx, :) = createCodeword(trBlocks(svIx,...
-						userIx), 0, trBlocksInfo(svIx, userIx).rateMatch);
+						% generate codeword (RV defaulted to 0)
+						codewords(svIx, userIx, :) = createCodeword(trBlocks(svIx,...
+							userIx), 0, trBlocksInfo(svIx, userIx).rateMatch);
+					end
 				end
+
+
 			end
 
 			% setup current subframe for serving eNodeB

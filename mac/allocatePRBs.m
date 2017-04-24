@@ -12,10 +12,10 @@ function [alloc] = allocatePRBs(station)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% reset the allocation
 	alloc(1:station.NDLRB) = struct('UEID',0,'MCS',0,'mOrd',0);
-	
+
 	% TODO remove random allocation
-	sz = length(station.Users)
-	for (ix = 1:node.NDLRB)
+	sz = length(station.Users);
+	for (ix = 1:station.NDLRB)
 		alloc(ix).UEID = station.Users(randi(sz));
 		alloc(ix).MCS = randi([1,32]);
 		alloc(ix).modOrd = 2*randi([1,3]);

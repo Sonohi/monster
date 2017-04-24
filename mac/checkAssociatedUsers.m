@@ -1,4 +1,4 @@
-function [users] = checkAssociatedUsers(users,stations,param)
+function [users, stations] = checkAssociatedUsers(users,stations,param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CHECK ASSOCIATED USERS links users to a BS (by distance???)                %
 %                                                                              %
@@ -45,7 +45,7 @@ function [users] = checkAssociatedUsers(users,stations,param)
 		% Now that the assignement is done, write also on the side of the station
 		% TODO replace with matrix operation
 		for (ix = 1:length(stations))
-			if (stations(ix).NCellID == users(userIndex).eNodeB))
+			if (stations(ix).NCellID == users(userIndex).eNodeB)
 				for (yx = 1:param.numUsers)
 					if (stations(ix).Users(yx) == 0)
 						stations(ix).Users(yx) = users(userIndex).UEID;
