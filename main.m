@@ -39,6 +39,7 @@ param.utilHiThr = 51;
 param.ulFreq = 1747.5;
 param.dlFreq = 1842.5;
 param.maxTBSize = 97896;
+param.maxCwdSize = 10^5;
 
 sonohi(param.reset);
 
@@ -60,8 +61,9 @@ channels = createChannels(stations,param);
 % Create channel estimator
 cec = createChEstimator();
 
-% Create structures to hold the transport blocks for transmission
+% Create structures to hold the transport blocks and codewords
 [trBlocks, trBlocksInfo] = initTrBlocks(param);
+[codewords, codewordsInfo] = initCwds(param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
@@ -124,8 +126,8 @@ for (utilLoIx = 1: length(utilLo))
 								users(userIx).queue.size, param);
 
 						% generate codeword (RV defaulted to 0)
-						codewords(svIx, userIx, :) = createCodeword(trBlocks(svIx,...
-							userIx), 0, trBlocksInfo(svIx, userIx).rateMatch);
+						[codewords(svIx, userIx, :), codewordsInfo(svIx, userIx)] = createCodeword(trBlocks(svIx,...
+							userIx, :), trBlocksInfo(svIx, userIx), param);
 					end
 				end
 

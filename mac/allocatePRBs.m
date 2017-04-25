@@ -6,12 +6,12 @@ function [alloc] = allocatePRBs(station)
 %   station		->  base station struct with current list of associated users    %
 %                                                                              %
 %   alloc			->  allocation array with: 																			 %
-%             		--> UEID	id of the UE scheduled in that slot                %
-%									--> MCS 	modulation and coding scheme decided							 %
-%									--> mOrd	modulation order as bits/OFDM symbol							 %
+%             		--> UEID		id of the UE scheduled in that slot              %
+%									--> MCS 		modulation and coding scheme decided						 %
+%									--> modOrd	modulation order as bits/OFDM symbol						 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	% reset the allocation
-	alloc(1:station.NDLRB) = struct('UEID',0,'MCS',0,'mOrd',0);
+	alloc(1:station.NDLRB) = struct('UEID',0,'MCS',0,'modOrd',0);
 
 	% TODO remove random allocation
 	sz = length(station.Users);

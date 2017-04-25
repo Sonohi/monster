@@ -14,6 +14,7 @@ function [tb, info] = initTrBlocks(param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	tb(1:param.numMacro + param.numMicro, 1:param.numUsers, 1:param.maxTBSize) = 0;
-  info(1:param.numMacro + param.numMicro, 1:param.numUsers ) = struct('tbSize',0,'rateMatch',0);
+  info(1:param.numMacro + param.numMicro, 1:param.numUsers ) = ...
+		struct('tbSize', 0, 'rateMatch', 0, 'rv', 0);
 
 end

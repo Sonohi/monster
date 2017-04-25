@@ -1,18 +1,20 @@
-function [cwd] = createCodeword(tb, rv, rm)
+function [cwd, cwdInfo] = createCodeword(tb, tbInfo, param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE CODEWORD  is used to complete the DL-SCH processing to a codeword	 %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   tb        ->  transport block                                              %
-%   rv        ->  redundacy version                                            %
-%   rm        ->  rate matching                                                %
+%   tb        					->  transport block                                    %
+%   tbInfo    					->  encoding info with RV, rate matching and size      %
+%   param.maxCwdSize    ->  max codeword size for padding						           %
 %                                                                              %
-%   cwd	      ->  codeword                                                     %
+%   cwd	      					->  codeword                                           %
+%   cwdInfo	  					->  codeword info struct akin to tbInfo                %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % perform CRC encoding with 24A poly
-  encTB = lteCRCEncode(tb, '24A');
+	% TB has to be a vector for the LTE library, extract the actual
+  encTB = lteCRCEncode(tb(1,1:tbInfo.rateMatch), '24A');
 
   % create code block segments
   cbs = lteCodeBlockSegment(encTB);
@@ -21,6 +23,11 @@ function [cwd] = createCodeword(tb, rv, rm)
   turboEncCbs = lteTurboEncode(cbs);
 
   % finally rate match and return codeword
-  cwd = lteRateMatchTurbo(turboEncCbs, rm, rv);
+  cwd = lteRateMatchTurbo(turboEncCbs, tbInfo.rateMatch, tbInfo.rv);
+
+	% perform the usual padding as the TB
+	cwdInfo.cwdSize = size(cwd);
+	padding(1:param.maxCwdSize - cwdInfo.cwdSize, 1) = -1;
+	cwd = cat(1, cwd, padding);
 
 end

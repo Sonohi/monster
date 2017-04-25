@@ -22,7 +22,7 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 		if (sch(ix).UEID == user.UEID)
 			numPRB = numPRB + 1;
 			avMCS = avMCS + sch(ix).MCS;
-			avMOrd = avMOrd + sch(ix).mOrd;
+			avMOrd = avMOrd + sch(ix).modOrd;
 		end
 	end
 
@@ -36,8 +36,10 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 
 	% the transport block is created of a size that is the minimum between the
 	% traffic queue size and the maximum size of the uncoded transport block
+	% the redundacy version (RV) is defaulted to 0
 	info.tbSize = min(qsz, lteTBS(numPRB, avMCS));
 	info.rateMatch = lteTBS(numPRB, avMCS);
+	info.rv = 0;
 
 	trBlk = randi([0 1], info.tbSize, 1);
 	% pad the rest of the TB for storage with -1
