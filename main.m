@@ -100,16 +100,9 @@ for (utilLoIx = 1: length(utilLo))
 
 			% per each user, create the codeword
 			for (userIx = 1:length(users))
-				% get the eNodeB thie UE is connected to
-				% TODO change loop to matrix operation
-				svIx = 0;
-				for (stationIx = 1:length(stations))
-					if (stations(stationIx).NCellID == users(userIx).eNodeB)
-						svIx = stationIx;
-						break;
-					end;
-				end;
-
+				% get the eNodeB thie UE is connected to            
+                svIx = find([stations.NCellID] == users(userIx).eNodeB);
+                
 				% Check if this UE is scheduled otherwise skip
 				if (checkUserSchedule(users(userIx), stations(svIx)))
 					% check if the UE has anything in the queue or if frame delivery expired
@@ -165,7 +158,6 @@ for (utilLoIx = 1: length(utilLo))
 			% for each station bla bla bla
 			% [estChannelGrid,noiseEst] = lteDLChannelEstimate(stations(stationIx),cec, ...
       % 	rxSubframe);
-
 			% TODO compute sinr and estimate CQI based on the channel estimation
 			% for each station bla bla bla
 			% [cqi, sinr] = lteCQISelect(stations(stationIx),stations(stationIx).PDSCH,...
