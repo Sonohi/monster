@@ -132,6 +132,23 @@ for (utilLoIx = 1: length(utilLo))
 						[symbols(svIx, userIx, :), symbolsInfo(svIx, userIx)] = createSymbols(...
 							stations(svIx), channels(svIx, userIx), codewords(svIx, userIx), ...
 							codewordsInfo(svIx, userIx));
+                        
+                        %Set modulation from MCS index
+                        %[itbs,modulation] = lteMCS(stations(svIx).schedule(1).MCS)
+                        %params = struct(); % Initialize the parameter structure
+                        % Bandwidth (NDLRB) must be greater than or equal to allocations
+                        %params.NDLRB = 50;                         % Set the bandwidth
+                        %params.PDSCH.Modulation = modulation;      % Set the modulation scheme
+                        %params.PDSCH.PRBSet = (0:params.NDLRB-1)'; % Full allocation
+                        %nrb = size(params.PDSCH.PRBSet,1);         % Get number of RBs allocated
+                        %get transport blocksize
+                        %tbs = double(lteTBS(nrb,itbs)); 
+                        % Now create the 'TrBlkSizes' vector with no transmission in subframe 5
+                        %params.PDSCH.TrBlkSizes = [ones(1,5)*tbs 0 ones(1,4)*tbs];
+                        % Now use lteRMCDL to populate other parameter fields
+                        %fullParams = lteRMCDL(params);
+                        %Now generate the waveform using the full parameter set 'fullparams'
+                        %[dlWaveform, dlGrid, dlParams] = lteRMCDLTool(fullParams,dataStream);
 
 					end
 				end
