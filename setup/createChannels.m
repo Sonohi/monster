@@ -10,32 +10,29 @@ function [channels] = createChannels (nodes, param)
 %   channels  ->  channel struct                                               %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  channels(length(nodes)).NormalizeTxAnts = 'On';
-  for i = 1:length(nodes)
-    % TODO: Add generalized modes for channel settings
-    % Generalized channel setting
-    ofdmInfo                        = lteOFDMInfo(nodes(i));
-    channels(i).Seed                = param.seed + i;
-    channels(i).NRxAnts             = 1;
-    channels(i).NormalizeTxAnts     = 'On';
-    channels(i).SamplingRate        = ofdmInfo.SamplingRate;
 
-    % Model specific
-    switch param.Channel.mode
+	% Model specific
+	switch param.Channel.mode
+		case 'fading'
+			% Config for lteFadingChannel
+			channels(1:length(nodes), 1:param.numUsers) = struct('NRxAnts',1,'NormalizeTxAnts', ...
+				'On', 'DelayProfile', 'ETU', 'DopplerFreq', 70, 'MIMOCorrelation', 'Low', ...
+				'NTerms', 16, 'ModelType', 'GMEDS', 'InitPhase', 'Random', 'NormalizePathGains', 'On');
 
-      case 'fading'
-        % Config for lteFadingChannel
-        channels(i).DelayProfile        ='ETU';
-        channels(i).DopplerFreq         = 70;
-        channels(i).MIMOCorrelation     = 'Low';
-        channels(i).NTerms              = 16;
-        channels(i).ModelType           = 'GMEDS';
-        channels(i).InitPhase           = 'Random';
-        channels(i).NormalizePathGains  = 'On';
+		case 'mobility'
+			% Config for lteMovingchannel
+			channels(1:length(nodes), 1:param.numUsers) = struct('NRxAnts',1,'NormalizeTxAnts', ...
+				'On', 'MovingScenario', 'Scenario1', 'InitTime', 0);
+	end
 
-      case 'mobility'
-        % Config for lteMovingchannel
-        channels(i).MovingScenario = 'Scenario1';
-        channels(i).InitTime = 0;
-    end
-  end
+	% TODO: Add generalized modes for channel settings
+	% Generalized channel setting
+	for (i = 1:length(nodes))
+		for (j = 1:param.numUsers)
+			ofdmInfo = lteOFDMInfo(nodes(i));
+			channels(i,j).Seed = param.seed + i;
+			channels(i,j).SamplingRate = ofdmInfo.SamplingRate;
+		end
+	end
+
+end

@@ -40,6 +40,7 @@ param.ulFreq = 1747.5;
 param.dlFreq = 1842.5;
 param.maxTBSize = 97896;
 param.maxCwdSize = 10^5;
+param.maxSymSize = 10^5;
 
 sonohi(param.reset);
 
@@ -64,6 +65,7 @@ cec = createChEstimator();
 % Create structures to hold the transport blocks and codewords
 [trBlocks, trBlocksInfo] = initTrBlocks(param);
 [codewords, codewordsInfo] = initCwds(param);
+[symbols, symbolsInfo] = initSyms(param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
@@ -126,16 +128,25 @@ for (utilLoIx = 1: length(utilLo))
 								users(userIx).queue.size, param);
 
 						% generate codeword (RV defaulted to 0)
-						[codewords(svIx, userIx, :), codewordsInfo(svIx, userIx)] = createCodeword(trBlocks(svIx,...
-							userIx, :), trBlocksInfo(svIx, userIx), param);
+						[codewords(svIx, userIx, :), codewordsInfo(svIx, userIx)] = ...
+							createCodeword(trBlocks(svIx,	userIx, :), trBlocksInfo(svIx, userIx), ...
+							param);
+
+						% finally, generate the arrays of complex symbols by setting the
+						% correspondent values per each eNodeB-UE pair
+						% setup current subframe for serving eNodeB
+						stations(svIx).NSubframe = roundIx;
+						[symbols(svIx, userIx, :), symbolsInfo(svIx, userIx)] = createSymbols(...
+							stations(svIx), channels(svIx, userIx), codewords(svIx, userIx), ...
+							codewordsInfo(svIx, userIx));
+
 					end
 				end
-
-
 			end
 
-			% setup current subframe for serving eNodeB
-			% stations(stationIx).NSubframe = subFrameIx;
+
+
+
 
 			% Obtain the number of transmit antennas.
 			% P = lteDLResourceGridSize(stations(stationIx)(3));
