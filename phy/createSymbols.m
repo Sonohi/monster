@@ -12,6 +12,7 @@ function [sym, symInfo] = createSymbols(station, ch, cwd, cwdnfo)
 % 	symInfo		-> symbols info for padding info																 %
 % 																																						 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% set the correct parameters for this UE
 	
 
 

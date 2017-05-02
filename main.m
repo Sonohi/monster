@@ -102,9 +102,9 @@ for (utilLoIx = 1: length(utilLo))
 
 			% per each user, create the codeword
 			for (userIx = 1:length(users))
-				% get the eNodeB thie UE is connected to            
-                svIx = find([stations.NCellID] == users(userIx).eNodeB);
-                
+				% get the eNodeB thie UE is connected to
+				svIx = find([stations.NCellID] == users(userIx).eNodeB);
+
 				% Check if this UE is scheduled otherwise skip
 				if (checkUserSchedule(users(userIx), stations(svIx)))
 					% check if the UE has anything in the queue or if frame delivery expired
