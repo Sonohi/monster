@@ -63,9 +63,9 @@ channels = createChannels(stations,param);
 cec = createChEstimator();
 
 % Create structures to hold the transport blocks and codewords
-[trBlocks, trBlocksInfo] = initTrBlocks(param);
-[codewords, codewordsInfo] = initCwds(param);
-[symbols, symbolsInfo] = initSyms(param);
+[tbs, tbsInfo] = initTrBlocks(param);
+[cwds, cwdsInfo] = initCwds(param);
+[syms, symsInfo] = initSyms(param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
@@ -114,45 +114,29 @@ for (utilLoIx = 1: length(utilLo))
 					end;
 
 					% if after the update, queue size is still 0, then the UE does not have
-					% anything to send, otherwise create TB
+					% anything to receive, otherwise create TB
 					if (users(userIx).queue.size ~= 0)
-						[trBlocks(svIx, userIx, :), trBlocksInfo(svIx, userIx)] = ...
-							createTrBlk(stations(svIx), users(userIx), stations(svIx).schedule,...
-								users(userIx).queue.size, param);
+						[tbs(svIx, userIx, :), tbsInfo(svIx, userIx)] = createTrBlk(stations(svIx), ...
+							users(userIx), stations(svIx).schedule, users(userIx).queue.size, param);
 
 						% generate codeword (RV defaulted to 0)
-						[codewords(svIx, userIx, :), codewordsInfo(svIx, userIx)] = ...
-							createCodeword(trBlocks(svIx,	userIx, :), trBlocksInfo(svIx, userIx), ...
-							param);
+						[cwds(svIx, userIx, :), cwdsInfo(svIx, userIx)] = createCodeword(...
+							tbs(svIx,	userIx, :), tbsInfo(svIx, userIx), param);
 
 						% finally, generate the arrays of complex symbols by setting the
 						% correspondent values per each eNodeB-UE pair
 						% setup current subframe for serving eNodeB
-						stations(svIx).NSubframe = roundIx;
-						[symbols(svIx, userIx, :), symbolsInfo(svIx, userIx)] = createSymbols(...
-							stations(svIx), channels(svIx, userIx), codewords(svIx, userIx), ...
-							codewordsInfo(svIx, userIx));
-                        
-                        %Set modulation from MCS index
-                        %[itbs,modulation] = lteMCS(stations(svIx).schedule(1).MCS)
-                        %params = struct(); % Initialize the parameter structure
-                        % Bandwidth (NDLRB) must be greater than or equal to allocations
-                        %params.NDLRB = 50;                         % Set the bandwidth
-                        %params.PDSCH.Modulation = modulation;      % Set the modulation scheme
-                        %params.PDSCH.PRBSet = (0:params.NDLRB-1)'; % Full allocation
-                        %nrb = size(params.PDSCH.PRBSet,1);         % Get number of RBs allocated
-                        %get transport blocksize
-                        %tbs = double(lteTBS(nrb,itbs)); 
-                        % Now create the 'TrBlkSizes' vector with no transmission in subframe 5
-                        %params.PDSCH.TrBlkSizes = [ones(1,5)*tbs 0 ones(1,4)*tbs];
-                        % Now use lteRMCDL to populate other parameter fields
-                        %fullParams = lteRMCDL(params);
-                        %Now generate the waveform using the full parameter set 'fullparams'
-                        %[dlWaveform, dlGrid, dlParams] = lteRMCDLTool(fullParams,dataStream);
-
+						if (length(cwds(svIx, userIx)) > 1)
+							stations(svIx).NSubframe = roundIx;
+							[syms(svIx, userIx, :), symsInfo(svIx, userIx)] = createSymbols(...
+								stations(svIx), users(userIx), cwds(svIx, userIx), ...
+								cwdsInfo(svIx, userIx), param);
+						end
 					end
 				end
-			end
+			end % end user loop
+
+			% Fill resource grid per each station and modulate
 
 
 

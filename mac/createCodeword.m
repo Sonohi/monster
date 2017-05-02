@@ -25,8 +25,8 @@ function [cwd, cwdInfo] = createCodeword(tb, tbInfo, param)
   % finally rate match and return codeword
   cwd = lteRateMatchTurbo(turboEncCbs, tbInfo.rateMatch, tbInfo.rv);
 
-	% perform the usual padding as the TB
-	cwdInfo.cwdSize = size(cwd);
+	% padding
+	cwdInfo.cwdSize = length(cwd);
 	padding(1:param.maxCwdSize - cwdInfo.cwdSize, 1) = -1;
 	cwd = cat(1, cwd, padding);
 
