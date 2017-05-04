@@ -152,8 +152,8 @@ for (utilLoIx = 1: length(utilLo))
 				end
 
 				% with the grid ready, generate the TX waveform
-				stations(sx).txWaveform = lteOFDMModulate(stations(sx), stations(sx).reGrid);
-			end;
+				[stations(sx).txWaveform, stations(sx).Waveforminfo] = lteOFDMModulate(stations(sx), stations(sx).reGrid);
+            end
 
 
 			% set channel init time
