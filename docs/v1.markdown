@@ -3,6 +3,10 @@
 
 v1. A MATLAB framework for modelling basic LTE communication systems.
 
+- Static 1 antenna configuration for eNB
+
 ### Future work to be considered
 
 - **MCS and PRB scheduling optimization**. The MCS allocation of v1 is considered conservative and based on simple measurements each scheduling round. See __[Ben Hassen, W., Afif, M., & Tabbane, S. (2014). An Adaptive PRB, Power and MCS Allocation Using AMC for MIMO-OFDMA Systems. Wireless Pers Commun, 75, 2549–2567. https://doi.org/10.1007/s11277-013-1487-z]__ for future optimization of MCS allocation
+
+- **Antenna configuration for eNB** Transmitted signal is statically configured using 1 antenna, this can be adjusted when computing the ResourceGrid size by the parameter `CellRefP` as given to the `lteDLResourceGrid` function which is used to map the modulated symbols.
