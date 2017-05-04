@@ -43,6 +43,8 @@ function [stations] = createBaseStations (param)
 		stations(i).DuplexMode = 'FDD';
 		stations(i).OCNG = 'OFF';
 		stations(i).Users = zeros(param.numUsers,1);
+		stations(i).reGrid = lteDLResourceGrid(stations(i));
+		stations(i).txWaveform = zeros(stations(i).NDLRB * 307.2, 1);
 
 		% PDSCH (main downlink data channel) config
 		% default config overwritten by main loop

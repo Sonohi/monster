@@ -14,6 +14,7 @@ function [syms, info] = initSyms(param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	syms(1:param.numMacro + param.numMicro, 1:param.numUsers, 1:param.maxSymSize) = 0;
-  info(1:param.numMacro + param.numMicro, 1:param.numUsers ) = struct('symSize',0);
+  info(1:param.numMacro + param.numMicro, 1:param.numUsers ) = struct(...
+		'symSize',0,'indexes',[]);
 
 end

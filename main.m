@@ -62,7 +62,7 @@ channels = createChannels(stations,param);
 % Create channel estimator
 cec = createChEstimator();
 
-% Create structures to hold the transport blocks and codewords
+% Create structures to hold processed data
 [tbs, tbsInfo] = initTrBlocks(param);
 [cwds, cwdsInfo] = initCwds(param);
 [syms, symsInfo] = initSyms(param);
@@ -136,17 +136,26 @@ for (utilLoIx = 1: length(utilLo))
 				end
 			end % end user loop
 
-			% Fill resource grid per each station and modulate
+			% the last step in the DL transmisison chain is to map the symbols to the
+			% resource grid and modulate the grid to get the TX waveform
+			for (sx = 1:length(stations))
+				% generate empty grid or clean the previous one
+				stations(sx).reGrid = lteDLResourceGrid(stations(sx));
+				% now for each list of user symbols, reshape them into the grid
+				for (ux = 1:param.numUsers)
+					sz = symsInfo(sx, ux).symSize;
+					ixs = symsInfo(sx, ux).indexes;
+					if (sz ~= 0)
+						stations(sx).reGrid(ixs, :) = ...
+							reshape(syms(sx, ux, 1:sz), [length(ixs), 14]);
+					end
+				end
+
+				% with the grid ready, generate the TX waveform
+				stations(sx).txWaveform = lteOFDMModulate(stations(sx), stations(sx).reGrid);
+			end;
 
 
-
-
-
-			% Obtain the number of transmit antennas.
-			% P = lteDLResourceGridSize(stations(stationIx)(3));
-			% generate txWaveform
-	    % txWaveforms(stationIx) = [lteOFDMModulate(stations(stationIx),dlschTransportBlk);...
-			% 	zeros(25,P)];
 			% set channel init time
 			% channels(stationIx).InitTime = subFrameIx/1000;
 			% pass the tx waveform through the LTE fading channel
