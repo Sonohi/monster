@@ -159,8 +159,11 @@ for (utilLoIx = 1: length(utilLo))
 					sz = symsInfo(sx, ux).symSize;
 					ixs = symsInfo(sx, ux).indexes;
 					if (sz ~= 0)
-						stations(sx).reGrid(ixs, :) = ...
-							reshape(syms(sx, ux, 1:sz), [length(ixs), 14]);
+						% TODO remove padding/truncating and find root cause why symbols are not
+						% int multiples of 14
+						tempSym(1:sz,1) = syms(sx, ux, 1:sz);
+						mapSym = mapSymbols(tempSym, length(ixs) * 14);
+						stations(sx).reGrid(ixs, :) = reshape(mapSym, [length(ixs), 14]);
 					end
 				end
 
