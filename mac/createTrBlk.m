@@ -1,4 +1,4 @@
-function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
+function [trBlk, info] = createTrBlk(node, user, sch, param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE TRANSPORT BLOCK  is used to return the TB the scheduling round			 %
 %                                                                              %
@@ -6,7 +6,6 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 %   node        			->  the base station serving the user                    %
 %   user        			->  the user allocated in the subframe                   %
 %   sch  							->  schedule for staion                                  %
-%   qsz  							->  traffic queue size                                   %
 %   param.maxTBSize  	->  max size of a TB in LTE                              %
 %                                                                              %
 %   trBlk	      			->  padded transport block 				                       %
@@ -18,6 +17,7 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 	numPRB = 0;
 	avMCS = 0;
 	avMOrd = 0;
+	qsz = user.queue.size;
 	for (ix = 1:length(sch))
 		if (sch(ix).UEID == user.UEID)
 			numPRB = numPRB + 1;
@@ -46,5 +46,8 @@ function [trBlk, info] = createTrBlk(node, user, sch, qsz, param)
 	padding(1:param.maxTBSize - info.tbSize, 1) = -1;
 	% concatenate the padding
 	trBlk = cat(1, trBlk, padding);
+
+	% update user queue by reducing the bits sent
+	user.queue.size = user.queue.size - info.tbSize;
 
 end

@@ -17,7 +17,7 @@ function [alloc] = allocatePRBs(station)
 	sz = length(station.Users);
 	for (ix = 1:station.NDLRB)
 		alloc(ix).UEID = station.Users(randi(sz));
-		alloc(ix).MCS = randi([1,32]);
+		alloc(ix).MCS = randi([1,28]);
 		alloc(ix).modOrd = 2*randi([1,3]);
 	end
 end

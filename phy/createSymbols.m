@@ -23,18 +23,28 @@ function [sym, symInfo] = createSymbols(station, user, cwd, cwdInfo, param)
 
 	% setup the PDSCH for this UE
 	station.PDSCH.Modulation = mod;	% conservative modulation choice from above
-	station.PDSCH.PRBSet = ixPRBs;	% set of assigned PRBs
+	station.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
 
 	% extract the codeword from the padded array
-	cwdEx(1:cwdInfo.cwdSize) = cwd(1:cwdInfo.cwdSize);
+	cwdEx(1:cwdInfo.cwdSize, 1) = cwd(1:cwdInfo.cwdSize,1);
 
 	% Get info and generate symbols
 	[pdschIxs, symInfo] = ltePDSCHIndices(station, station.PDSCH, station.PDSCH.PRBSet);
-	sym = ltePDSCH(station, station.PDSCH, cwdEx);
+	% error handling for symbol creation
+	% TODO try finding out errror root cause, e.g. invald TB size?
+	try
+		sym = ltePDSCH(station, station.PDSCH, cwdEx);
+	catch ME
+		fSpec = 'symbols generation failed for codewrod with length %i\n';
+		fprintf(fSpec, length(cwdEx));
+		sym = [];
+	end
+
 
 	% padding
 	symInfo.symSize = length(sym);
-	symInfo.indexes = pdschIxs;
+	symInfo.pdschIxs = pdschIxs;
+	symInfo.indexes = ixPRBs;
 	padding(1:param.maxSymSize - symInfo.symSize,1) = -1;
 	sym = cat(1, sym, padding);
 

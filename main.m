@@ -25,7 +25,7 @@ close all;
 
 % Simulation parameters
 param.reset = 0;
-param.schRounds = 10;
+param.schRounds = 1;
 param.numSubFramesMacro = 50;
 param.numSubFramesMicro = 25;
 param.numMacro = 1;
@@ -41,6 +41,7 @@ param.dlFreq = 1842.5;
 param.maxTBSize = 97896;
 param.maxCwdSize = 10^5;
 param.maxSymSize = 10^5;
+param.storeTxData = false;
 
 sonohi(param.reset);
 
@@ -62,9 +63,11 @@ channels = createChannels(stations,param);
 % Create channel estimator
 cec = createChEstimator();
 
-% Create structures to hold processed data
-[tbs, tbsInfo] = initTrBlocks(param);
-[cwds, cwdsInfo] = initCwds(param);
+% Create structures to hold transmission data
+if (param.storeTxData)
+	[tbs, tbsInfo] = initTrBlocks(param);
+	[cwds, cwdsInfo] = initCwds(param);
+end
 [syms, symsInfo] = initSyms(param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
@@ -82,7 +85,6 @@ if (param.utilLoThr > 0 && param.utilLoThr <= 100 && param.utilHiThr > 0 && ...
 else
 	return;
 end
-
 
 % Main loop
 for (utilLoIx = 1: length(utilLo))
@@ -115,22 +117,33 @@ for (utilLoIx = 1: length(utilLo))
 
 					% if after the update, queue size is still 0, then the UE does not have
 					% anything to receive, otherwise create TB
-					if (users(userIx).queue.size ~= 0)
-						[tbs(svIx, userIx, :), tbsInfo(svIx, userIx)] = createTrBlk(stations(svIx), ...
-							users(userIx), stations(svIx).schedule, users(userIx).queue.size, param);
+					if (users(userIx).queue.size > 0)
+						[tb, tbInfo] = createTrBlk(stations(svIx), users(userIx), ...
+							stations(svIx).schedule, param);
 
 						% generate codeword (RV defaulted to 0)
-						[cwds(svIx, userIx, :), cwdsInfo(svIx, userIx)] = createCodeword(...
-							tbs(svIx,	userIx, :), tbsInfo(svIx, userIx), param);
+						[cwd, cwdInfo] = createCodeword(tb, tbInfo, param);
 
 						% finally, generate the arrays of complex symbols by setting the
 						% correspondent values per each eNodeB-UE pair
 						% setup current subframe for serving eNodeB
-						if (length(cwds(svIx, userIx)) > 1)
+						if (cwdInfo.cwdSize ~= 0) % is this even necessary?
 							stations(svIx).NSubframe = roundIx;
-							[syms(svIx, userIx, :), symsInfo(svIx, userIx)] = createSymbols(...
-								stations(svIx), users(userIx), cwds(svIx, userIx), ...
-								cwdsInfo(svIx, userIx), param);
+							[sym, symInfo] = createSymbols(stations(svIx), users(userIx), cwd, ...
+								cwdInfo, param);
+						end
+
+						if(symInfo.symSize > 0)
+							syms(svIx, userIx, :) = sym;
+							symsInfo(svIx, userIx) = symInfo;
+						end
+
+						% Save to data structures
+						if (param.storeTxData)
+							tbs(svIx, userIx, :) = tb;
+							tbsInfo(svIx, userIx) = tbInfo;
+							cwds(svIx, userIx, :) = cwd;
+							cwdsInfo(svIx, userIx) = cwdInfo;
 						end
 					end
 				end

@@ -14,7 +14,7 @@ function [cwd, cwdInfo] = createCodeword(tb, tbInfo, param)
 
   % perform CRC encoding with 24A poly
 	% TB has to be a vector for the LTE library, extract the actual
-  encTB = lteCRCEncode(tb(1,1:tbInfo.rateMatch), '24A');
+  encTB = lteCRCEncode(tb(1:tbInfo.rateMatch,1), '24A');
 
   % create code block segments
   cbs = lteCodeBlockSegment(encTB);
