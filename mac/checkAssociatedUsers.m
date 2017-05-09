@@ -1,54 +1,54 @@
-function [users, stations] = checkAssociatedUsers(users,stations,param)
+function [Users, Stations] = checkAssociatedUsers(Users,Stations,Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CHECK ASSOCIATED USERS links users to a BS (by distance???)                %
+%   CHECK ASSOCIATED USERS links Users to a BS									               %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   users   ->  struct with all the suers in the network                       %
+%   Users   ->  struct with all the suers in the network                       %
 %   node    ->  base station struct                                            %
 %                                                                              %
-%   nodeUsers ->  users indexes associated with node                           %
+%   nodeUsers ->  Users indexes associated with node                           %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	% reset stations
-	for (ix = 1:length(stations))
-		stations(ix).Users(1:15) = 0;
+	for (iStation = 1:length(Stations))
+		Stations(iStation).Users(1:Param.numUsers) = 0;
 	end
 
 	d0=1; % m
-	for userIndex = 1:length(users)
+	for (iUser = 1:length(Users))
 		% get UE position
-		uePos = users(userIndex).Position;
+		uePos = Users(iUser).position;
 		minLossDb = 200;
-		for stationIndex = 1:length(stations)
-			bs = stations(stationIndex);
+		for (iStation = 1:length(Stations))
+			bs = Stations(iStation);
 			bsPos = bs.Position;
 			dist = sqrt((bsPos(1)-uePos(1))^2 + (bsPos(2)-uePos(2))^2 );
 			% compute pathloss
-			if (bs.NDLRB == param.numSubFramesMacro)
+			if (bs.NDLRB == Param.numSubFramesMacro)
 				% macro
 				gamma = 4.5;
-				lossDb = pathloss(param.dlFreq, gamma, d0, dist);
-			elseif (bs.NDLRB == param.numSubFramesMicro)
+				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
+			elseif (bs.NDLRB == Param.numSubFramesMicro)
 				% micro
 				gamma = 3;
-				lossDb = pathloss(param.dlFreq, gamma, d0, dist);
+				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
 			else
 				error('Unrecognized eNB');
 			end
 			% check if this is the minimum so far
 			if (lossDb < minLossDb)
-				users(userIndex).eNodeB = stations(stationIndex).NCellID;
+				Users(iUser).eNodeB = Stations(iStation).NCellID;
 				minLossDb = lossDb;
 			end
 		end
 		% Now that the assignement is done, write also on the side of the station
 		% TODO replace with matrix operation
-		for (ix = 1:length(stations))
-			if (stations(ix).NCellID == users(userIndex).eNodeB)
-				for (yx = 1:param.numUsers)
-					if (stations(ix).Users(yx) == 0)
-						stations(ix).Users(yx) = users(userIndex).UEID;
+		for (iStation = 1:length(Stations))
+			if (Stations(iStation).NCellID == Users(iUser).eNodeB)
+				for (iUser = 1:Param.numUsers)
+					if (Stations(iStation).Users(iUser) == 0)
+						Stations(iStation).Users(iUser) = Users(iUser).ueId;
 						break;
 					end
 				end

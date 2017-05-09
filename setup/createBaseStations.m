@@ -1,70 +1,71 @@
-function [stations] = createBaseStations (param)
+function [Stations] = createBaseStations (Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE BASE STATIONS is used to generate a struct with the base stations   %
+%   CREATE BASE Stations is used to generate a struct with the base Stations   %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   param.numMacro      		->  number of macro eNodeBs                        %
-%   param.numSubFramesMacro	->  number of LTE subframes for macro eNodeBs      %
-%   param.numMicro      		-> 	number of micro eNodeBs                        %
-%   param.numSubFramesMacro ->  number of LTE subframes for micro eNodeBs	     %
+%   Param.numMacro      		->  number of macro eNodeBs                        %
+%   Param.numSubFramesMacro	->  number of LTE subframes for macro eNodeBs      %
+%   Param.numMicro      		-> 	number of micro eNodeBs                        %
+%   Param.numSubFramesMacro ->  number of LTE subframes for micro eNodeBs	     %
 %   buildings 							-> building position matrix                        %
 %                                                                              %
-%   stations  							-> struct with all stations details and PDSCH      %
+%   Stations  							-> struct with all Stations details and PDSCH      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-	% Initialise struct for base stations and PDSCH in FDD duplexing mode
-	stations(param.numMacro + param.numMicro).DuplexMode = 'FDD';
+	% Initialise struct for base Stations and PDSCH in FDD duplexing mode
+	Stations(Param.numMacro + Param.numMicro).DuplexMode = 'FDD';
 
 	% Create position vectors for the macro and micro BSs
-	[macro_pos, micro_pos] = positionBaseStations(param.numMacro, param.numMicro, ...
-		param.buildings);
+	[macroPos, microPos] = positionBaseStations(Param.numMacro, Param.numMicro, ...
+		Param.buildings);
 
-	for i = 1: (param.numMacro + param.numMicro)
+	for (iStation = 1: (Param.numMacro + Param.numMicro))
 		% For now only 1 macro in the scenario and it's kept as first elem
-		if(i <= param.numMacro)
-			stations(i).Position = macro_pos(i, :);
-			stations(i).NDLRB = param.numSubFramesMacro;
-			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMacro - 1)';
+		if (iStation <= Param.numMacro)
+			Stations(iStation).Position = macroPos(iStation, :);
+			Stations(iStation).NDLRB = Param.numSubFramesMacro;
+			Stations(iStation).PDSCH.PRBSet = (0:Param.numSubFramesMacro - 1)';
 		else
-			stations(i).Position = micro_pos(i - param.numMacro, :);
-			stations(i).NDLRB = param.numSubFramesMicro;
-			stations(i).PDSCH.PRBSet = (0:param.numSubFramesMicro - 1)';
+			Stations(iStation).Position = microPos(iStation - Param.numMacro, :);
+			Stations(iStation).NDLRB = Param.numSubFramesMicro;
+			Stations(iStation).PDSCH.PRBSet = (0:Param.numSubFramesMicro - 1)';
 		end
-		stations(i).NCellID = i;
-		stations(i).CellRefP = 1;
-		stations(i).CyclicPrefix = 'Normal';
-		stations(i).CFI = 2;
-		stations(i).PHICHDuration = 'Normal';
-		stations(i).Ng = 'Sixth';
-		stations(i).NFrame = 0;
-		stations(i).TotSubframes = 1;
-		stations(i).OCNG = 'On';
-		stations(i).Windowing = 0;
-		stations(i).DuplexMode = 'FDD';
-		stations(i).OCNG = 'OFF';
-		stations(i).Users = zeros(param.numUsers,1);
-		stations(i).reGrid = lteDLResourceGrid(stations(i));
-		stations(i).txWaveform = zeros(stations(i).NDLRB * 307.2, 1);
+		Stations(iStation).NCellID = iStation;
+		Stations(iStation).CellRefP = 1;
+		Stations(iStation).CyclicPrefix = 'Normal';
+		Stations(iStation).CFI = 2;
+		Stations(iStation).PHICHDuration = 'Normal';
+		Stations(iStation).Ng = 'Sixth';
+		Stations(iStation).NFrame = 0;
+		Stations(iStation).TotSubframes = 1;
+		Stations(iStation).OCNG = 'On';
+		Stations(iStation).Windowing = 0;
+		Stations(iStation).DuplexMode = 'FDD';
+		Stations(iStation).OCNG = 'OFF';
+		Stations(iStation).Users = zeros(Param.numUsers,1);
+		Stations(iStation).Schedule(1:Stations(iStation).NDLRB,1) = struct('ueId',0,'mcs',0,'modOrd',0);
+		Stations(iStation).ReGrid = lteDLResourceGrid(Stations(iStation));
+		Stations(iStation).TxWaveform = zeros(Stations(iStation).NDLRB * 307.2, 1);
 
 		% PDSCH (main downlink data channel) config
 		% default config overwritten by main loop
-		stations(i).PDSCH.TxScheme = 'Port0'; % PDSCH transmission mode 0
-		stations(i).PDSCH.Modulation = {'QPSK'};
-		stations(i).PDSCH.NLayers = 1;
-		stations(i).PDSCH.Rho = -3;
-		stations(i).PDSCH.RNTI = 1;
-		stations(i).PDSCH.RVSeq = [0 1 2 3];
-		stations(i).PDSCH.RV = 0;
-		stations(i).PDSCH.NHARQProcesses = 8;
-		stations(i).PDSCH.NTurboDecIts = 5;
-		stations(i).PDSCH.PRBSet = (0:param.numSubFramesMacro-1)';
+		Stations(iStation).PDSCH.TxScheme = 'Port0'; % PDSCH transmission mode 0
+		Stations(iStation).PDSCH.Modulation = {'QPSK'};
+		Stations(iStation).PDSCH.NLayers = 1;
+		Stations(iStation).PDSCH.Rho = -3;
+		Stations(iStation).PDSCH.RNTI = 1;
+		Stations(iStation).PDSCH.RVSeq = [0 1 2 3];
+		Stations(iStation).PDSCH.RV = 0;
+		Stations(iStation).PDSCH.NHARQProcesses = 8;
+		Stations(iStation).PDSCH.NTurboDecIts = 5;
+		Stations(iStation).PDSCH.PRBSet = (0:Param.numSubFramesMacro-1)';
 		% Table A.3.3.1.1-2, TS36.101
-		stations(i).PDSCH.TrBlkSizes = [8760 8760 8760 8760 8760 0 8760 8760 8760 8760];
+		Stations(iStation).PDSCH.TrBlkSizes = [8760 8760 8760 8760 8760 0 8760 8760 8760 8760];
 		% Table A.3.3.1.1-2, TS36.101
-		stations(i).PDSCH.CodedTrBlkSizes = [27600 27600 27600 27600 27600 0 27600 27600 27600 27600];
-		stations(i).PDSCH.CSIMode = 'PUCCH 1-0';
-		stations(i).PDSCH.PMIMode = 'Wideband';
-		stations(i).PDSCH.CSI = 'On';
+		Stations(iStation).PDSCH.CodedTrBlkSizes = [27600 27600 27600 27600 27600 0 27600 27600 27600 27600];
+		Stations(iStation).PDSCH.CSIMode = 'PUCCH 1-0';
+		Stations(iStation).PDSCH.PMIMode = 'Wideband';
+		Stations(iStation).PDSCH.CSI = 'On';
 	end
 
 end

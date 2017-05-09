@@ -8,6 +8,6 @@ function [pos] = positionUser()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Not a very interesting module for now, it is structured like this for scalability
 
-	pos = [10 0];
+	pos = [randi([1,10]) randi([1,10])];
 
 end

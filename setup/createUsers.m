@@ -1,23 +1,20 @@
-function [users] = createUsers (param)
+function [Users] = createUsers (Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE USERS is used to generate a struct with the users                   %
+%   CREATE Users is used to generate a struct with the Users                   %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   param.numUsers  ->  number of UEs                                          %
-%   param.velocity  ->  number of LTE subframes for macro eNodeBs              %
+%   Param.numUsers  ->  number of UEs                                          %
+%   Param.velocity  ->  number of LTE subframes for macro eNodeBs              %
 %                                                                              %
-%   users  					-> struct with all users details                           %
+%   Users  					-> struct with all Users details                           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Not a very interesting module for now, it is structured like this for scalability
 	% Initialise struct
-	stations(param.numUsers).velocity = param.velocity;
+	Users(1:Param.numUsers) = struct('position', positionUser(), 'velocity',Param.velocity,...
+		'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0)
 
-	for i = 1: (param.numUsers)
-		users(i).UEID			= i;
-    users(i).Position = positionUser();
-    users(i).Velocity = param.velocity;
-		users(i).queue		= struct('size', 0, 'time', 0, 'pkt', 0);
-		users(i).eNodeB		= 0;
+	for iUser = 1: (Param.numUsers)
+		Users(iUser).ueId			= i;
 	end
 
 end

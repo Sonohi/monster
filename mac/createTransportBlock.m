@@ -1,15 +1,15 @@
-function [trBlk, info] = createTrBlk(node, user, sch, param)
+function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CREATE TRANSPORT BLOCK  is used to return the TB the scheduling round			 %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   node        			->  the base station serving the user                    %
-%   user        			->  the user allocated in the subframe                   %
+%   Station        		->  the base station serving the User                    %
+%   User        			->  the User allocated in the subframe                   %
 %   sch  							->  schedule for staion                                  %
-%   param.maxTBSize  	->  max size of a TB in LTE                              %
+%   Param.maxTBSize  	->  max size of a TB in LTE                              %
 %                                                                              %
-%   trBlk	      			->  padded transport block 				                       %
-%   info 						  ->  actual size and rate matching                        %
+%   tb	      				->  padded transport block 				                       %
+%   TbInfo 						->  actual size and rate matching                        %
 %                                                                              %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -17,16 +17,17 @@ function [trBlk, info] = createTrBlk(node, user, sch, param)
 	numPRB = 0;
 	avMCS = 0;
 	avMOrd = 0;
-	qsz = user.queue.size;
-	for (ix = 1:length(sch))
-		if (sch(ix).UEID == user.UEID)
+	qsz = User.queue.size;
+	sch = Station.Schedule;
+	for (iPrb = 1:length(sch))
+		if (sch(iPrb).ueId == User.ueId)
 			numPRB = numPRB + 1;
-			avMCS = avMCS + sch(ix).MCS;
-			avMOrd = avMOrd + sch(ix).modOrd;
+			avMCS = avMCS + sch(iPrb).mcs;
+			avMOrd = avMOrd + sch(iPrb).modOrd;
 		end
 	end
 
-	% this shouldn't happen as we always schedule at least 1 PRB per user,
+	% this shouldn't happen as we always schedule at least 1 PRB per User,
 	% otherwise it should not be in the list, but never know
 	if (numPRB ~= 0)
 		avMCS = round(avMCS/numPRB);
@@ -37,17 +38,17 @@ function [trBlk, info] = createTrBlk(node, user, sch, param)
 	% the transport block is created of a size that is the minimum between the
 	% traffic queue size and the maximum size of the uncoded transport block
 	% the redundacy version (RV) is defaulted to 0
-	info.tbSize = min(qsz, lteTBS(numPRB, avMCS));
-	info.rateMatch = lteTBS(numPRB, avMCS);
-	info.rv = 0;
+	TbInfo.tbSize = min(qsz, lteTBS(numPRB, avMCS));
+	TbInfo.rateMatch = lteTBS(numPRB, avMCS);
+	TbInfo.rv = 0;
 
-	trBlk = randi([0 1], info.tbSize, 1);
+	tb = randi([0 1], TbInfo.tbSize, 1);
 	% pad the rest of the TB for storage with -1
-	padding(1:param.maxTBSize - info.tbSize, 1) = -1;
+	padding(1:Param.maxTbSize - TbInfo.tbSize, 1) = -1;
 	% concatenate the padding
-	trBlk = cat(1, trBlk, padding);
+	tb = cat(1, tb, padding);
 
-	% update user queue by reducing the bits sent
-	user.queue.size = user.queue.size - info.tbSize;
+	% update User queue by reducing the bits sent
+	User.queue.size = User.queue.size - TbInfo.tbSize;
 
 end

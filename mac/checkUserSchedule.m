@@ -1,18 +1,18 @@
-function [sch] = checkUserSchedule(user, station)
+function [sch] = checkUserSchedule(User, Station)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   CHECK USER SCHEDULE is used to check if a user is scheduled in the round	 %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   user			->  user to check																						     %
-%   station		->  associated station																			     %
+%   User			->  User to check																						     %
+%   Station		->  associated Station																			     %
 %                                                                              %
 %   sch			->  boolean with answer 																					 %
 %																																							 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	sch = false;
-	for (ix = 1:length(station.schedule))
-		if (station.schedule(ix).UEID == user.UEID)
+	for (iPRB = 1:length(Station.Schedule))
+		if (Station.Schedule(iPRB).ueId == User.ueId)
 			sch = true;
 			break;
 		end

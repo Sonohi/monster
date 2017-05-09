@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   MAIN 																										          					%
 %																																							 	%
-%   Simulation parameters                                                       %                    %
+%   Simulation Parameters                                                       %                    %
 %		reset 						-> 	resets the paths and refreshes them										%
 %		schRounds 				->	overall length of the simulation											%
 %		numSubFramesMacro ->	bandwidth of macro cell																%
@@ -11,8 +11,8 @@
 %		numMicro					-> 	number of micro cells																	%
 %		seed							-> 	seed for channel																			%
 %		buildings					->	file path for coordinates of Manhattan grid						%
-%		velocity					->	velocity of users																			%
-%		numUsers					-> 	number of users																				%
+%		velocity					->	velocity of Users																			%
+%		numUsers					-> 	number of Users																				%
 %		utilLoThr					->	lower threshold of utilisation												%
 %		utilHiThr					->	upper threshold of utilisation												%
 %		Channel.mode			->	channel model to be used															%
@@ -23,127 +23,128 @@ clearvars;
 clc;
 close all;
 
-% Simulation parameters
-param.reset = 0;
-param.schRounds = 1;
-param.numSubFramesMacro = 50;
-param.numSubFramesMicro = 25;
-param.numMacro = 1;
-param.numMicro = 5;
-param.seed = 122;
-param.buildings = load('mobility/buildings.txt');
-param.velocity = 3; %in km/h
-param.numUsers = 15;
-param.utilLoThr = 1;
-param.utilHiThr = 51;
-param.ulFreq = 1747.5;
-param.dlFreq = 1842.5;
-param.maxTBSize = 97896;
-param.maxCwdSize = 10^5;
-param.maxSymSize = 10^5;
-param.storeTxData = false;
+% Simulation Parameters
+Param.reset = 0;
+Param.schRounds = 1;
+Param.numSubFramesMacro = 50;
+Param.numSubFramesMicro = 25;
+Param.numMacro = 1;
+Param.numMicro = 5;
+Param.seed = 122;
+Param.buildings = load('mobility/buildings.txt');
+Param.velocity = 3; %in km/h
+Param.numUsers = 15;
+Param.utilLoThr = 1;
+Param.utilHiThr = 51;
+Param.ulFreq = 1747.5;
+Param.dlFreq = 1842.5;
+Param.maxTbSize = 97896;
+Param.maxCwdSize = 10^5;
+Param.maxSymSize = 10^5;
+Param.storeTxData = true;
+Param.scheduling = 'random';
 
-sonohi(param.reset);
+sonohi(Param.reset);
 
 % Channel configuration
-param.Channel.mode = 'fading'; % ['mobility','fading'];
+Param.channel.mode = 'fading'; % ['mobility','fading'];
 
 % Guard for initial setup: exit of there's more than 1 macro BS
-if (param.numMacro ~= 1)
+if (Param.numMacro ~= 1)
 	return;
 end
 
-% Create stations and users
-stations = createBaseStations(param);
-users = createUsers(param);
+% Create Stations and Users
+Stations = createBaseStations(Param);
+Users = createUsers(Param);
 
-% Create channels
-channels = createChannels(stations,param);
+% Create Channels
+Channels = createChannels(Stations,Param);
 
 % Create channel estimator
-cec = createChEstimator();
+ChannelEstimator = createChannelEstimator();
 
 % Create structures to hold transmission data
-if (param.storeTxData)
-	[tbs, tbsInfo] = initTrBlocks(param);
-	[cwds, cwdsInfo] = initCwds(param);
+if (Param.storeTxData)
+	[tbMatrix, tbMatrixInfo] = initTbMatrix(Param);
+	[cwdMatrix, cwdMatrixInfo] = initCwdMatrix(Param);
 end
-[syms, symsInfo] = initSyms(param);
+[symMatrix, symMatrixInfo] = initSymMatrix(Param);
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
-if (exist('traffic/trafficSource.mat', 'file') ~= 2 || param.reset)
+if (exist('traffic/trafficSource.mat', 'file') ~= 2 || Param.reset)
 	trSource = loadTrafficData('traffic/bunnyDump.csv', true);
 else
 	load('traffic/trafficSource.mat', 'trSource');
 end
 
 % Utilisation ranges
-if (param.utilLoThr > 0 && param.utilLoThr <= 100 && param.utilHiThr > 0 && ...
-	 	param.utilHiThr <= 100)
-	utilLo = 1:param.utilLoThr;
-	utilHi = param.utilHiThr:100;
+if (Param.utilLoThr > 0 && Param.utilLoThr <= 100 && Param.utilHiThr > 0 && ...
+	 	Param.utilHiThr <= 100)
+	utilLo = 1:Param.utilLoThr;
+	utilHi = Param.utilHiThr:100;
 else
 	return;
 end
 
 % Main loop
-for (utilLoIx = 1: length(utilLo))
-	for (utilHiIx = 1:length(utilHi))
-		for (roundIx = 1:param.schRounds)
+for (iUtilLo = 1: length(utilLo))
+	for (iUtilHi = 1:length(utilHi))
+		for (iRound = 1:Param.schRounds)
 			% In each scheduling round, check UEs associated with each station and
 			% allocate PRBs through the scheduling function per each station
 
 			% check which UEs are associated to which eNB
-			[users, stations] = checkAssociatedUsers(users, stations, param);
-			simTime = roundIx*10^-3;
+			[Users, Stations] = checkAssociatedUsers(Users, Stations, Param);
+			simTime = iRound*10^-3;
 
-			for (stationIx = 1:length(stations))
-				% schedule the associated users for this round
-				stations(stationIx).schedule = allocatePRBs(stations(stationIx));
+			for (iStation = 1:length(Stations))
+				% schedule the associated Users for this round
+				Stations(iStation) = allocatePRBs(Stations(iStation), Param);
 			end;
 
 			% per each user, create the codeword
-			for (userIx = 1:length(users))
+			for (iUser = 1:length(Users))
 				% get the eNodeB thie UE is connected to
-				svIx = find([stations.NCellID] == users(userIx).eNodeB);
+				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
 
 				% Check if this UE is scheduled otherwise skip
-				if (checkUserSchedule(users(userIx), stations(svIx)))
+				if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
 					% check if the UE has anything in the queue or if frame delivery expired
-					if (users(userIx).queue.size == 0 || users(userIx).queue.time >= simTime)
+					if (Users(iUser).queue.size == 0 || Users(iUser).queue.time >= simTime)
 						% in this case, call the updateTrQueue
-						users(userIx).queue = updateTrQueue(trSource, roundIx,	users(userIx).queue);
+						Users(iUser).queue = updateTrQueue(trSource, iRound,	Users(iUser).queue);
 					end;
 
 					% if after the update, queue size is still 0, then the UE does not have
 					% anything to receive, otherwise create TB
-					if (users(userIx).queue.size > 0)
-						[tb, tbInfo] = createTrBlk(stations(svIx), users(userIx), ...
-							stations(svIx).schedule, param);
+					if (Users(iUser).queue.size > 0)
+						[tb, TbInfo] = createTransportBlock(Stations(iServingStation), Users(iUser), ...
+							Param);
 
 						% generate codeword (RV defaulted to 0)
-						[cwd, cwdInfo] = createCodeword(tb, tbInfo, param);
+						[cwd, CwdInfo] = createCodeword(tb, TbInfo, Param);
 
 						% finally, generate the arrays of complex symbols by setting the
 						% correspondent values per each eNodeB-UE pair
 						% setup current subframe for serving eNodeB
-						if (cwdInfo.cwdSize ~= 0) % is this even necessary?
-							stations(svIx).NSubframe = roundIx;
-							[sym, symInfo] = createSymbols(stations(svIx), users(userIx), cwd, ...
-								cwdInfo, param);
+						if (CwdInfo.cwdSize ~= 0) % is this even necessary?
+							Stations(iServingStation).NSubframe = iRound;
+							[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
+								CwdInfo, Param);
 						end
 
-						if(symInfo.symSize > 0)
-							syms(svIx, userIx, :) = sym;
-							symsInfo(svIx, userIx) = symInfo;
+						if (SymInfo.symSize > 0)
+							symMatrix(iServingStation, iUser, :) = sym;
+							symMatrixInfo(iServingStation, iUser) = SymInfo;
 						end
 
 						% Save to data structures
-						if (param.storeTxData)
-							tbs(svIx, userIx, :) = tb;
-							tbsInfo(svIx, userIx) = tbInfo;
-							cwds(svIx, userIx, :) = cwd;
-							cwdsInfo(svIx, userIx) = cwdInfo;
+						if (Param.storeTxData)
+							tbMatrix(iServingStation, iUser, :) = tb;
+							tbMatrixInfo(iServingStation, iUser) = TbInfo;
+							cwdMatrix(iServingStation, iUser, :) = cwd;
+							cwdMatrixInfo(iServingStation, iUser) = CwdInfo;
 						end
 					end
 				end
@@ -151,37 +152,37 @@ for (utilLoIx = 1: length(utilLo))
 
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
-			for (sx = 1:length(stations))
+			for (iStation = 1:length(Stations))
 				% generate empty grid or clean the previous one
-				stations(sx).reGrid = lteDLResourceGrid(stations(sx));
+				Stations(iStation).ResourceGrid = lteDLResourceGrid(Stations(iStation));
 				% now for each list of user symbols, reshape them into the grid
-				for (ux = 1:param.numUsers)
-					sz = symsInfo(sx, ux).symSize;
-					ixs = symsInfo(sx, ux).indexes;
+				for (iUser = 1:Param.numUsers)
+					sz = symMatrixInfo(iStation, iUser).symSize;
+					ixs = symMatrixInfo(iStation, iUser).indexes;
 					if (sz ~= 0)
-						% TODO remove padding/truncating and find root cause why symbols are not
-						% int multiples of 14
-						tempSym(1:sz,1) = syms(sx, ux, 1:sz);
+						% TODO revise padding/truncating (why symbols are not int multiples of 14?)
+						tempSym(1:sz,1) = symMatrix(iStation, iUser, 1:sz);
 						mapSym = mapSymbols(tempSym, length(ixs) * 14);
-						stations(sx).reGrid(ixs, :) = reshape(mapSym, [length(ixs), 14]);
+						Stations(iStation).ResourceGrid(ixs, :) = reshape(mapSym, [length(ixs), 14]);
 					end
 				end
 
 				% with the grid ready, generate the TX waveform
-				[stations(sx).txWaveform, stations(sx).Waveforminfo] = lteOFDMModulate(stations(sx), stations(sx).reGrid);
-            end
+				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
+					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
+      end
 
 
 			% set channel init time
-			% channels(stationIx).InitTime = subFrameIx/1000;
+			% Channels(iStation).InitTime = subFrameIx/1000;
 			% pass the tx waveform through the LTE fading channel
-			% rxWaveforms(stationIx) = lteFadingChannel(channels(stationIx),...
-			% 	txWaveforms(stationIx));
+			% rxWaveforms(iStation) = lteFadingChannel(Channels(iStation),...
+			% 	TxWaveforms(iStation));
 			% generate background AWGN
-			% noise(stationIx) = No*complex(randn(size(rxWaveforms(stationIx))),...
-      %   randn(size(rxWaveforms(stationIx))));
+			% noise(iStation) = No*complex(randn(size(rxWaveforms(iStation))),...
+      %   randn(size(rxWaveforms(iStation))));
 
-			% After all stations computed the tx and estiamted rx waveforms, sum
+			% After all Stations computed the tx and estiamted rx waveforms, sum
 			% over all the rx waveforms and demodulate
 			% TODO UE-specific summation with rx waveforms scaled by pathloss factor
 			% for each user bla bla bla
@@ -189,15 +190,15 @@ for (utilLoIx = 1: length(utilLo))
 
 			% TODO demodulate rx waveform per each station again
 			% for each station bla bla bla
-			% rxSubFrame = lteOFDMDemodulate(stations(stationIx), rxWaveform)
+			% rxSubFrame = lteOFDMDemodulate(Stations(iStation), rxWaveform)
 
 			% TODO do channel estimation for the received subframe
 			% for each station bla bla bla
-			% [estChannelGrid,noiseEst] = lteDLChannelEstimate(stations(stationIx),cec, ...
+			% [estChannelGrid,noiseEst] = lteDLChannelEstimate(Stations(iStation),ChannelEstimator, ...
       % 	rxSubframe);
 			% TODO compute sinr and estimate CQI based on the channel estimation
 			% for each station bla bla bla
-			% [cqi, sinr] = lteCQISelect(stations(stationIx),stations(stationIx).PDSCH,...
+			% [cqi, sinr] = lteCQISelect(Stations(iStation),Stations(iStation).PDSCH,...
 			% 	estChannelGrid,noiseEst);
 
 			% TODO Record stats and power consumed in this round
