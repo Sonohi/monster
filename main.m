@@ -170,11 +170,22 @@ for (iUtilLo = 1: length(utilLo))
 				% with the grid ready, generate the TX waveform
 				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
-      end
+                
+                %Set channel inialization time to be based on the subFrame
+                % TODO, use this property for subframe indexing?
+                Channels(iStation).InitTime = Stations(iStation).NSubframe/1000;
+                
+                
+                
+                
+                
+                
+            end
 
-
-			% set channel init time
-			% Channels(iStation).InitTime = subFrameIx/1000;
+            %Pass through channel
+            %Stations.RxWaveform = propagateChannel(Param,Channels,Stations.TxWaveform);
+            
+            
 			% pass the tx waveform through the LTE fading channel
 			% rxWaveforms(iStation) = lteFadingChannel(Channels(iStation),...
 			% 	TxWaveforms(iStation));
