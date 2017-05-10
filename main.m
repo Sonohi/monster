@@ -153,6 +153,9 @@ for (iUtilLo = 1: length(utilLo))
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
 			for (iStation = 1:length(Stations))
+                % Get associated user that is scheduled
+                schUser = Stations(iStation).Schedule(iRound).ueId;
+                
 				% generate empty grid or clean the previous one
 				Stations(iStation).ResourceGrid = lteDLResourceGrid(Stations(iStation));
 				% now for each list of user symbols, reshape them into the grid
@@ -168,22 +171,21 @@ for (iUtilLo = 1: length(utilLo))
 				end
 
 				% with the grid ready, generate the TX waveform
+                % Currently the waveform is given per station, i.e. same
+                % for all associated users. 
 				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
                 
                 %Set channel inialization time to be based on the subFrame
                 % TODO, use this property for subframe indexing?
-                Channels(iStation).InitTime = Stations(iStation).NSubframe/1000;
+                %Stations(iStation).channels(schUser).InitTime = Stations(iStation).NSubframe/1000;
                 
-                
-                
-                
-                
-                
+                %Propagate waveform for scheduled user
+                %Stations.RxWaveform = Stations(iStation).channel(schUser).propagate(Stations(iStation).TxWaveform);
+            
             end
 
-            %Pass through channel
-            %Stations.RxWaveform = propagateChannel(Param,Channels,Stations.TxWaveform);
+           
             
             
 			% pass the tx waveform through the LTE fading channel
