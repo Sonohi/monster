@@ -47,7 +47,7 @@ Param.scheduling = 'random';
 sonohi(Param.reset);
 
 % Channel configuration
-Param.channel.mode = 'fading'; % ['mobility','fading'];
+Param.channel.mode = 'mobility'; % ['mobility','fading'];
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
@@ -59,7 +59,7 @@ Stations = createBaseStations(Param);
 Users = createUsers(Param);
 
 % Create Channels
-Channels = createChannels(Stations,Param);
+Stations = createChannels(Stations,Param);
 
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();

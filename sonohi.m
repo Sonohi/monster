@@ -19,11 +19,12 @@ if ~OHI || resetFlag % Check if previous initialization was successful
     root = root(1:find(root==filesep,1,'last')-1); % Get directory of this file
     setpref('sonohi','sonohiRootFolder',root);
 
+    
     fprintf(1,'Initializing Sonohi. Adding directories to path:\n');
     fprintf('-> %s\n',root);
     addpath(root);
 
-    dirs = {'mac', 'mobility', 'phy', 'power', 'setup', 'traffic','utils'};
+    dirs = {'mac', 'mobility', 'phy', 'power', 'setup', 'traffic','utils', 'ch'};
 
     for i=1:numel(dirs)
         add = [root filesep dirs{i}];
