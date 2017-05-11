@@ -47,7 +47,7 @@ Param.scheduling = 'random';
 sonohi(Param.reset);
 
 % Channel configuration
-Param.channel.mode = 'fading'; % ['mobility','fading'];
+Param.channel.mode = 'mobility'; % ['mobility','fading'];
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
@@ -59,7 +59,7 @@ Stations = createBaseStations(Param);
 Users = createUsers(Param);
 
 % Create Channels
-Channels = createChannels(Stations,Param);
+Stations = createChannels(Stations,Param);
 
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();
@@ -153,6 +153,9 @@ for (iUtilLo = 1: length(utilLo))
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
 			for (iStation = 1:length(Stations))
+                % Get associated user that is scheduled
+                schUser = Stations(iStation).Schedule(iRound).ueId;
+
 				% generate empty grid or clean the previous one
 				Stations(iStation).ResourceGrid = lteDLResourceGrid(Stations(iStation));
 				% now for each list of user symbols, reshape them into the grid
@@ -168,6 +171,8 @@ for (iUtilLo = 1: length(utilLo))
 				end
 
 				% with the grid ready, generate the TX waveform
+                % Currently the waveform is given per station, i.e. same
+                % for all associated users.
 				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
 
