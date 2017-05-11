@@ -1,6 +1,6 @@
-function [Users, Stations] = checkAssociatedUsers(Users,Stations,Param)
+function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CHECK ASSOCIATED USERS links Users to a BS									               %
+%   REFRESH USERS ASSOCIATION links Users to a BS								               %
 %                                                                              %
 %   Function fingerprint                                                       %
 %   Users   		->  struct with all the suers in the network                   %
@@ -12,7 +12,9 @@ function [Users, Stations] = checkAssociatedUsers(Users,Stations,Param)
 
 	% reset stations
 	for (iStation = 1:length(Stations))
-		Stations(iStation).Users(1:Param.numUsers) = 0;
+		Stations(iStation).Users(1:Param.numUsers) = struct('velocity',Param.velocity,...
+			'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', false,...
+			'ueId', 0, 'position', [0 0]);
 	end
 
 	d0=1; % m
@@ -47,8 +49,8 @@ function [Users, Stations] = checkAssociatedUsers(Users,Stations,Param)
 		for (iStation = 1:length(Stations))
 			if (Stations(iStation).NCellID == Users(iUser).eNodeB)
 				for (iUser = 1:Param.numUsers)
-					if (Stations(iStation).Users(iUser) == 0)
-						Stations(iStation).Users(iUser) = Users(iUser).ueId;
+					if (Stations(iStation).Users(iUser).ueId == 0)
+						Stations(iStation).Users(iUser) = Users(iUser);
 						break;
 					end
 				end

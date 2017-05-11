@@ -42,8 +42,12 @@ function [Stations] = createBaseStations (Param)
 		Stations(iStation).Windowing = 0;
 		Stations(iStation).DuplexMode = 'FDD';
 		Stations(iStation).OCNG = 'OFF';
-		Stations(iStation).Users = zeros(Param.numUsers,1);
-		Stations(iStation).Schedule(1:Stations(iStation).NDLRB,1) = struct('ueId',0,'mcs',0,'modOrd',0);
+		Stations(iStation).Users(1:Param.numUsers) = struct('velocity',Param.velocity,...
+			'queue', struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', false,...
+			'ueId', 0, 'position', [0 0], 'wCqi',6);
+		Stations(iStation).Schedule(1:Stations(iStation).NDLRB,1) = struct('ueId',0,...
+			'mcs',0,'modOrd',0);
+		Stations(iStation).rrNext = struct('ueId',0,'index',1);
 		Stations(iStation).ReGrid = lteDLResourceGrid(Stations(iStation));
 		Stations(iStation).TxWaveform = zeros(Stations(iStation).NDLRB * 307.2, 1);
 

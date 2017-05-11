@@ -42,7 +42,8 @@ Param.maxTbSize = 97896;
 Param.maxCwdSize = 10^5;
 Param.maxSymSize = 10^5;
 Param.storeTxData = true;
-Param.scheduling = 'random';
+Param.scheduling = 'roundRobin';
+Param.prbSym = 160;
 
 sonohi(Param.reset);
 
@@ -95,12 +96,18 @@ for (iUtilLo = 1: length(utilLo))
 			% allocate PRBs through the scheduling function per each station
 
 			% check which UEs are associated to which eNB
-			[Users, Stations] = checkAssociatedUsers(Users, Stations, Param);
+			[Users, Stations] = refreshUsersAssociation(Users, Stations, Param);
 			simTime = iRound*10^-3;
 
 			for (iStation = 1:length(Stations))
-				% schedule the associated Users for this round
-				Stations(iStation) = allocatePRBs(Stations(iStation), Users, Param);
+
+				% Update RLC transmission queues for the connected users
+				Stations(iStation).Users = updateTrQueue(trSource, iRound, Stations(iStation).Users);
+
+				% schedule only if at least 1 user is associated
+				if (Stations(iStation).Users(1).ueId ~= 0)
+					Stations(iStation) = schedule(Stations(iStation), Param);
+				end
 			end;
 
 			% per each user, create the codeword
@@ -110,43 +117,35 @@ for (iUtilLo = 1: length(utilLo))
 
 				% Check if this UE is scheduled otherwise skip
 				if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
-					% check if the UE has anything in the queue or if frame delivery expired
-					if (Users(iUser).queue.size == 0 || Users(iUser).queue.time >= simTime)
-						% in this case, call the updateTrQueue
-						Users(iUser).queue = updateTrQueue(trSource, iRound,	Users(iUser).queue);
-					end;
+					% generate transport block for the user
+					[tb, TbInfo] = createTransportBlock(Stations(iServingStation), Users(iUser), ...
+						Param);
 
-					% if after the update, queue size is still 0, then the UE does not have
-					% anything to receive, otherwise create TB
-					if (Users(iUser).queue.size > 0)
-						[tb, TbInfo] = createTransportBlock(Stations(iServingStation), Users(iUser), ...
-							Param);
+					% generate codeword (RV defaulted to 0)
+					[cwd, CwdInfo] = createCodeword(tb, TbInfo, Param);
 
-						% generate codeword (RV defaulted to 0)
-						[cwd, CwdInfo] = createCodeword(tb, TbInfo, Param);
-
-						% finally, generate the arrays of complex symbols by setting the
-						% correspondent values per each eNodeB-UE pair
-						% setup current subframe for serving eNodeB
-						if (CwdInfo.cwdSize ~= 0) % is this even necessary?
-							Stations(iServingStation).NSubframe = iRound;
-							[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
-								CwdInfo, Param);
-						end
-
-						if (SymInfo.symSize > 0)
-							symMatrix(iServingStation, iUser, :) = sym;
-							symMatrixInfo(iServingStation, iUser) = SymInfo;
-						end
-
-						% Save to data structures
-						if (Param.storeTxData)
-							tbMatrix(iServingStation, iUser, :) = tb;
-							tbMatrixInfo(iServingStation, iUser) = TbInfo;
-							cwdMatrix(iServingStation, iUser, :) = cwd;
-							cwdMatrixInfo(iServingStation, iUser) = CwdInfo;
-						end
+					% finally, generate the arrays of complex symbols by setting the
+					% correspondent values per each eNodeB-UE pair
+					% setup current subframe for serving eNodeB
+					if (CwdInfo.cwdSize ~= 0) % is this even necessary?
+						Stations(iServingStation).NSubframe = iRound;
+						[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
+							CwdInfo, Param);
 					end
+
+					if (SymInfo.symSize > 0)
+						symMatrix(iServingStation, iUser, :) = sym;
+						symMatrixInfo(iServingStation, iUser) = SymInfo;
+					end
+
+					% Save to data structures
+					if (Param.storeTxData)
+						tbMatrix(iServingStation, iUser, :) = tb;
+						tbMatrixInfo(iServingStation, iUser) = TbInfo;
+						cwdMatrix(iServingStation, iUser, :) = cwd;
+						cwdMatrixInfo(iServingStation, iUser) = CwdInfo;
+					end
+
 				end
 			end % end user loop
 
