@@ -100,7 +100,7 @@ for (iUtilLo = 1: length(utilLo))
 
 			for (iStation = 1:length(Stations))
 				% schedule the associated Users for this round
-				Stations(iStation) = allocatePRBs(Stations(iStation), Param);
+				Stations(iStation) = allocatePRBs(Stations(iStation), Users, Param);
 			end;
 
 			% per each user, create the codeword
@@ -170,17 +170,19 @@ for (iUtilLo = 1: length(utilLo))
 				% with the grid ready, generate the TX waveform
 				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
+
+				% Now for each UE - eNodeB pair filter through the channel
+				for (iUser = 1:length(Users))
+					Channels(iStation, iUser).InitTime = iRound/1000;
+					[Users(iUser).rxWaveform, Users(iUser).Waveforminfo] = ...
+						lteFadingChannel(Channels(iStation, iUser), Stations(iStation).TxWaveform);
+					% generate background AWGN
+					Users(iUser).noise = No*complex(randn(length(Users(iUser).rxWaveform)),...
+		        randn(length(Users(iUser).rxWaveform)));
+				end
       end
 
-
-			% set channel init time
-			% Channels(iStation).InitTime = subFrameIx/1000;
-			% pass the tx waveform through the LTE fading channel
-			% rxWaveforms(iStation) = lteFadingChannel(Channels(iStation),...
-			% 	TxWaveforms(iStation));
-			% generate background AWGN
-			% noise(iStation) = No*complex(randn(size(rxWaveforms(iStation))),...
-      %   randn(size(rxWaveforms(iStation))));
+			% The first step at the DL receiver is to
 
 			% After all Stations computed the tx and estiamted rx waveforms, sum
 			% over all the rx waveforms and demodulate

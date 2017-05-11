@@ -3,8 +3,8 @@ function [Users, Stations] = checkAssociatedUsers(Users,Stations,Param)
 %   CHECK ASSOCIATED USERS links Users to a BS									               %
 %                                                                              %
 %   Function fingerprint                                                       %
-%   Users   ->  struct with all the suers in the network                       %
-%   node    ->  base station struct                                            %
+%   Users   		->  struct with all the suers in the network                   %
+%   Stations		->  base station struct                                        %
 %                                                                              %
 %   nodeUsers ->  Users indexes associated with node                           %
 %                                                                              %

@@ -10,11 +10,12 @@ function [Users] = createUsers (Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % Not a very interesting module for now, it is structured like this for scalability
 	% Initialise struct
-	Users(1:Param.numUsers) = struct('position', positionUser(), 'velocity',Param.velocity,...
-		'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0)
+	Users(1:Param.numUsers) = struct('velocity',Param.velocity,...
+		'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', false);
 
 	for iUser = 1: (Param.numUsers)
-		Users(iUser).ueId			= i;
+		Users(iUser).ueId	= iUser;
+		Users(iUser).position = positionUser();
 	end
 
 end

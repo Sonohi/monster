@@ -35,7 +35,7 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	try
 		sym = ltePDSCH(Station, Station.PDSCH, cwdEx);
 	catch ME
-		fSpec = 'symbols generation failed for codewrod with length %i\n';
+		fSpec = 'symbols generation failed for codeword with length %i\n';
 		fprintf(fSpec, length(cwdEx));
 		sym = [];
 	end

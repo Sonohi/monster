@@ -1,4 +1,4 @@
-function [Station] = allocatePRBs(Station, Param)
+function [Station] = allocatePRBs(Station, Users, Param)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   ALLOCATE PRBS is used to return the allocation of PRBs for a schedule 		 %
 %                                                                              %
@@ -16,13 +16,13 @@ function [Station] = allocatePRBs(Station, Param)
 
 	switch (Param.scheduling)
 		case 'roundrobin'
+
 		case 'random'
 			for (ix = 1:Station.NDLRB)
 				Station.Schedule(ix).ueId = Station.Users(randi(sz));
 				Station.Schedule(ix).mcs = randi([1,28]);
 				Station.Schedule(ix).modOrd = 2*randi([1,3]);
 			end
-		case 'proportionalfair'
 		case 'supermegacool'
 	end
 
