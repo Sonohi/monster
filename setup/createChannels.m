@@ -12,12 +12,13 @@ function Stations = createChannels (Stations, Param)
 
 	for (iStation = 1:length(Stations))
 		for (iUser = 1:Param.numUsers)
-            Stations(iStation).channel(iUser) = ChBulk_v1(Param);
+            Stations(iStation).Channel(iUser) = ChBulk_v1(Param);
 			OfdmInfo = lteOFDMInfo(Stations(iStation));
-			set(Stations(iStation).channel(iUser),...
-                'Seed',Param.seed + iStation,...
-                'SamplingRate',OfdmInfo.SamplingRate,...
-                'User',iUser);
+            
+            
+            Stations(iStation).Channel(iUser).Seed = Param.seed + iStation;
+            Stations(iStation).Channel(iUser).SamplingRate = OfdmInfo.SamplingRate;
+            Stations(iStation).Channel(iUser).User = iUser;
 
 		end
 	end

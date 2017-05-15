@@ -1,4 +1,4 @@
-classdef ChBulk_v1 < matlab.mixin.SetGet
+classdef ChBulk_v1 < handle
     properties
         NRxAnts;
         NormalizeTxAnts;
@@ -58,8 +58,8 @@ classdef ChBulk_v1 < matlab.mixin.SetGet
         
         
         % Function for setting sampling rate (given by OFDM info of eNB)
-        function obj = set.SamplingRate(obj,sampling_rate)
-            obj.SamplingRate = sampling_rate;
+        function obj = set.SamplingRate(obj,SamplingRate)
+            obj.SamplingRate = SamplingRate;
         end
         
         % Function for setting Seed
@@ -72,15 +72,20 @@ classdef ChBulk_v1 < matlab.mixin.SetGet
             obj.User = userID;
         end
         
+        % Function for setting InitTime
+        function obj = set.InitTime(obj,InitTime)
+            obj.InitTime = InitTime;
+        end
+        
         
         % Propagate
         function out = propagate(obj,signal)
             warning off MATLAB:structOnObject
             switch obj.Mode
                 case 'fading'
-                out = lteFadingChannel(struct(obj),signal)
+                out = lteFadingChannel(struct(obj),signal);
                 case 'mobility'
-                out = lteMovingChannel(struct(obj),signal) 
+                out = lteMovingChannel(struct(obj),signal);
             end
             
         end
