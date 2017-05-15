@@ -14,7 +14,7 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 	for (iStation = 1:length(Stations))
 		Stations(iStation).Users(1:Param.numUsers) = struct('velocity',Param.velocity,...
 			'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', false,...
-			'ueId', 0, 'position', [0 0]);
+			'ueId', 0, 'position', [0 0], 'wCqi', 6);
 	end
 
 	d0=1; % m

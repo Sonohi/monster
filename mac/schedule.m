@@ -26,25 +26,25 @@ function [Station] = schedule(Station, Param)
 			prbsAv = Station.NDLRB;
 			iUser = Station.rrNext.index;
 			while (iUser <= sz && maxRounds > 0)
-				User = Station.Users(iUSer);
-				if (prsbAv > 0)
+				User = Station.Users(iUser);
+				if (prbsAv > 0)
 					if (~User.scheduled && User.queue.size > 0)
 						modOrd = cqi2modOrd(User.wCqi);
 						prbsNeed = ceil(User.queue.size/(modOrd * Param.prbSym));
-						prbSch = 0;
+						prbsSch = 0;
 						if (prbsNeed >= prbsAv)
-							prbSch = prbsAv;
+							prbsSch = prbsAv;
 						else
-							prbSch = prbsNeed;
+							prbsSch = prbsNeed;
 						end
-						prbsAv = prbsAv - prbSch;
+						prbsAv = prbsAv - prbsSch;
 						Station.Users(iUser).scheduled = true;
 						iUser = iUser + 1;
 						% write to schedule struct
 						for (iPrb = 1:Station.NDLRB)
 							if (Station.Schedule(iPrb).ueId == 0)
 								mcs = cqi2mcs(User.wCqi);
-								for (iSch = 1:prbSch)
+								for (iSch = 1:prbsSch)
 									Station.Schedule(iPrb + iSch) = struct('ueId', User.ueId,...
 										'mcs', mcs, 'modOrd', modOrd);
 								end
@@ -53,8 +53,8 @@ function [Station] = schedule(Station, Param)
 						end
 					end
 					maxRounds = maxRounds -1;
-				end
 				else
+					% Keep track of the next user to be scheduled in the next round
 					if (iUser + 1 > sz || Station.Users(iUser + 1).ueId == 0)
 						Station.rrNext.ueId = Station.Users(1).ueId;
 						Station.rrNext.index = 1;
@@ -62,6 +62,8 @@ function [Station] = schedule(Station, Param)
 						Station.rrNext.ueId = Station.Users(iUser + 1).ueId;
 						Station.rrNext.index = iUser + 1;
 					end
+					% in both cases, stop the loop
+					iUser = sz +1;
 				end
 			end
 
@@ -71,7 +73,7 @@ function [Station] = schedule(Station, Param)
 				Station.Schedule(ix).mcs = randi([1,28]);
 				Station.Schedule(ix).modOrd = 2*randi([1,3]);
 			end
-		case 'supermegacool'
+
 	end
 
 
