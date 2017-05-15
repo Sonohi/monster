@@ -153,7 +153,7 @@ for (iUtilLo = 1: length(utilLo))
 			% resource grid and modulate the grid to get the TX waveform
 			for (iStation = 1:length(Stations))
                 % Get associated user that is scheduled
-                
+
                 schUser = Stations(iStation).Schedule(iRound).ueId;
 
 				% generate empty grid or clean the previous one
@@ -176,31 +176,37 @@ for (iUtilLo = 1: length(utilLo))
 				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
 
-				% Now for each UE - eNodeB pair filter through the channel
-				for (iUser = 1:length(Users))
-					Stations(iStation).Channel(iUser).InitTime = iRound/1000;
-                    
-                    % Pass through channel model
-                    Users(iUser).rxWaveform = ...
-                        Stations(iStation).Channel(iUser).propagate(Stations(iStation).TxWaveform);
-						
-                    
-                    %TODO
-                    %Compute power from eNB and calculate transmission SNR
-                    
-                    %Normalize power for AWGN impairment
-                    %N0 = 1/(sqrt(2.0*Stations(iStation).CellRefP*double(Stations(iStation).Waveforminfo.Nfft))*SNR);
-                    
-                    % Add AWGN in time domain
-                    %noise = No*complex(randn(length(Users(iUser).rxWaveform)),...
-                    %randn(length(Users(iUser).rxWaveform)));
-                    
-                   
-					
-				end
       end
 
-			% The first step at the DL receiver is to
+			% Once all eNodeBs have created and stored their txWaveforms, we can go
+			% through the UEs and compute the rxWaveforms
+			for (iUser = 1:length(Users))
+				% find serving eNodeB
+				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
+				Stations(iServingStation).Channel(iUser).InitTime = iRound/1000;
+				Users(iUser).rxWaveform = ...
+					Stations(iServingStation).Channel(iUser).propagate(Stations(iServingStation).TxWaveform);
+
+				%TODO
+				%Compute power from eNB and calculate transmission SNR
+
+				%Normalize power for AWGN impairment
+				%N0 = 1/(sqrt(2.0*Stations(iStation).CellRefP*double(Stations(iStation).Waveforminfo.Nfft))*SNR);
+
+				% Add AWGN in time domain
+				%noise = No*complex(randn(length(Users(iUser).rxWaveform)),...
+				%randn(length(Users(iUser).rxWaveform)));
+
+				% calculate the overall received waveform for this user by doing a summation
+				% of the interfering ones
+				for (iStation = 1:length(Stations))
+					if (iStation ~= iServingStation)
+						k = getScalingFactor(Stations(iStation), Users(iUser));
+						Users(iUser).rxWaveform = Users(iUser).rxWaveform + ...
+							k*Stations(iStation).Channel(iUser).propagate(Stations(iStation).TxWaveform);
+					end
+				end
+			end
 
 			% After all Stations computed the tx and estiamted rx waveforms, sum
 			% over all the rx waveforms and demodulate
