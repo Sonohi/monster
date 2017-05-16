@@ -48,7 +48,7 @@ Param.prbSym = 160;
 sonohi(Param.reset);
 
 % Channel configuration
-Param.channel.mode = 'mobility'; % ['mobility','fading'];
+Param.channel.mode = 'macro_METIS'; % ['mobility_matlab','fading_matlab'];
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
@@ -183,9 +183,9 @@ for (iUtilLo = 1: length(utilLo))
 			for (iUser = 1:length(Users))
 				% find serving eNodeB
 				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
-				Stations(iServingStation).Channel(iUser).InitTime = iRound/1000;
+				Stations(iServingStation).Channel.InitTime = iRound/1000;
 				Users(iUser).rxWaveform = ...
-					Stations(iServingStation).Channel(iUser).propagate(Stations(iServingStation).TxWaveform);
+					Stations(iServingStation).Channel.propagate(Stations(iServingStation),Users(iUser));
 
 				%TODO
 				%Compute power from eNB and calculate transmission SNR
@@ -203,7 +203,7 @@ for (iUtilLo = 1: length(utilLo))
 					if (iStation ~= iServingStation)
 						k = getScalingFactor(Stations(iStation), Users(iUser));
 						Users(iUser).rxWaveform = Users(iUser).rxWaveform + ...
-							k*Stations(iStation).Channel(iUser).propagate(Stations(iStation).TxWaveform);
+							k*Stations(iStation).Channel(iUser).propagate(Stations(iServingStation),Users(iUser));
 					end
 				end
 			end

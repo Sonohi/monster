@@ -1,5 +1,11 @@
 classdef ChBulk_v1 < handle
     properties
+        User;
+        InitTime;
+        Seed;
+        Mode;
+        Tx_pos;
+        SamplingRate;
         NRxAnts;
         NormalizeTxAnts;
         DelayProfile;
@@ -10,23 +16,20 @@ classdef ChBulk_v1 < handle
         InitPhase;
         Random;
         NormalizePathGains;
-        Mode;
-        SamplingRate;
-        Seed;
         MovingScenario;
-        InitTime;
-        User;
     end
+    
    
     methods
         % Constructor
-        function obj = ChBulk_v1(param)
-            
+        function obj = ChBulk_v1(param,station)
+            obj.Mode = param.channel.mode;
+            obj.Tx_pos = station.Position;
             switch param.channel.mode
                 
                 % Standard mobility case ref:
                 % [https://se.mathworks.com/help/lte/ref/ltemovingchannel.html]
-                case 'mobility'
+                case 'mobility_matlab'
                     obj.NRxAnts = 1;
                     obj.NormalizeTxAnts = 'On';
                     obj.DelayProfile = 'ETU';
@@ -36,13 +39,12 @@ classdef ChBulk_v1 < handle
                     obj.ModelType = 'GMEDS';
                     obj.InitPhase = 'Random';
                     obj.NormalizePathGains = 'On';
-                    obj.Mode = param.channel.mode;
                     obj.MovingScenario = 'Scenario1';
                     obj.InitTime = 0;
                 
                 % Standard fading channel ref:
                 % [https://se.mathworks.com/help/lte/ref/ltefadingchannel.html]
-                case 'fading'
+                case 'fading_matlab'
                     obj.NRxAnts = 1;
                     obj.DelayProfile = 'EPA';
                     obj.MIMOCorrelation = 'Low';
@@ -51,6 +53,15 @@ classdef ChBulk_v1 < handle
                     obj.NTerms = 16;
                     obj.NormalizeTxAnts = 'On';
                     obj.NormalizePathGains = 'On';
+                    
+                case 'macro_METIS'
+                 
+                    
+                case 'micro_METIS'
+             
+
+                    
+                
             end
                 
                 
@@ -79,13 +90,34 @@ classdef ChBulk_v1 < handle
         
         
         % Propagate
-        function out = propagate(obj,signal)
+        function out = propagate(obj,tx,rx)
             warning off MATLAB:structOnObject
             switch obj.Mode
                 case 'fading'
-                out = lteFadingChannel(struct(obj),signal);
+                    out = lteFadingChannel(struct(obj),station.TxWaveform);
                 case 'mobility'
-                out = lteMovingChannel(struct(obj),signal);
+                    out = lteMovingChannel(struct(obj),station.TxWaveform);
+                case 'macro_METIS'
+                    % Get position and configuration of eNB (tx)
+                    
+                    
+                    % Get position of user
+                    user_pos = rx.position;
+                    
+                    % Compute FPL given distance and BS configuration
+                    
+                    % Compute Multiple screen diffraction loss (Lmsd)
+                    
+                    % Compute Diffraction from the rootop down to the street level (Lrts)
+  
+                    % Combine signal
+                    
+                    out = tx.TxWaveform;
+                    
+                    
+                case 'micro_METIS'
+                    
+                    out = tx.TxWaveform;
             end
             
         end
