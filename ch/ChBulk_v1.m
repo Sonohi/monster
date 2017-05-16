@@ -44,10 +44,7 @@ classdef ChBulk_v1 < handle
             out_s = tworaychannel(signal,pos_base,pos_mobile,vel_base,vel_mobile);
 
             % Total path loss
-            L_2ray = pow2db(bandpower(signal))-pow2db(bandpower(out_s));
-            L_fpsl = free_space_path_loss(obj,distance);
-            
-            loss = L_fpsl+L_2ray;
+            loss = pow2db(bandpower(signal))-pow2db(bandpower(out_s));
         end
         
         function loss = free_space_path_loss(obj,distance)

@@ -1,4 +1,4 @@
-function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings)
+function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings,draw)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %   POSITION BASE STATIONS is used to set up the physical location of BSs      %
 %                                                                              %
@@ -16,9 +16,24 @@ function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings)
 	microPos = zeros(miBS, 2);
 
 	%Find simulation area
-	area = [min(buildings(1, :)), min(buildings(2, :)), max(buildings(3, :)), ...
-		max(buildings(4, :))];
+	area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
+		max(buildings(:, 4))];
 
+    % Draw grid
+    if draw
+        figure 
+        rectangle('Position',area)
+        hold on
+        for i = 1:length(buildings(:,1))
+            x0 = buildings(i,1);
+            y0 = buildings(i,2);
+            x = buildings(i,3)-x0;
+            y = buildings(i,4)-y0;
+            rectangle('Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9])
+        end
+    end
+    
+    
 	%TODO Macro BS positioning
 
 	%Micro BS positioning
@@ -47,6 +62,9 @@ function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings)
 	    end
 	  end
 	  microPos(i, :) = [x y];
+      if draw
+         rectangle('Position',[x y 5 5],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5])
+      end
 	end
 
 end

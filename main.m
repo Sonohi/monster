@@ -25,6 +25,7 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
+Param.draw = 1; % Enable plots
 Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
