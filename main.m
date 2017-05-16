@@ -152,9 +152,9 @@ for (iUtilLo = 1: length(utilLo))
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
 			for (iStation = 1:length(Stations))
-                % Get associated user that is scheduled
 
-                schUser = Stations(iStation).Schedule(iRound).ueId;
+        % Get associated user that is scheduled
+        schUser = Stations(iStation).Schedule(iRound).ueId;
 
 				% generate empty grid or clean the previous one
 				Stations(iStation).ResourceGrid = lteDLResourceGrid(Stations(iStation));
@@ -206,28 +206,30 @@ for (iUtilLo = 1: length(utilLo))
 							k*Stations(iStation).Channel(iUser).propagate(Stations(iStation).TxWaveform);
 					end
 				end
+
+				% Now, demodulate the overall received waveform for users that should
+				% receive a TB
+				if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
+					rxSubFrame = lteOFDMDemodulate(Stations(iServingStation), ...
+						Users(iUser).rxWaveform);
+
+					% Estimate channel for the received subframe
+					[estChannelGrid, noiseEst] = lteDLChannelEstimate(Stations(iServingStation),...
+						ChannelEstimator, rxSubframe);
+
+					% finally, get the value of the sinr for this subframe and the corresponing
+					% CQI that should be used for the next round
+
+					% TODO revise if PDSCH settings should be edited to meet the scheduling
+					% details of this user
+					[cqi, sinr] = lteCQISelect(Stations(iServingStation), ...
+						Stations(iServingStation).PDSCH, estChannelGrid, noiseEst);
+
+					Users(iUser).wCqi = cqi;
+
+					% TODO Record stats and power consumed in this round
+				end
 			end
-
-			% After all Stations computed the tx and estiamted rx waveforms, sum
-			% over all the rx waveforms and demodulate
-			% TODO UE-specific summation with rx waveforms scaled by pathloss factor
-			% for each user bla bla bla
-			% rxWaveform = k_i * rxWaveforms(i) + noise
-
-			% TODO demodulate rx waveform per each station again
-			% for each station bla bla bla
-			% rxSubFrame = lteOFDMDemodulate(Stations(iStation), rxWaveform)
-
-			% TODO do channel estimation for the received subframe
-			% for each station bla bla bla
-			% [estChannelGrid,noiseEst] = lteDLChannelEstimate(Stations(iStation),ChannelEstimator, ...
-      % 	rxSubframe);
-			% TODO compute sinr and estimate CQI based on the channel estimation
-			% for each station bla bla bla
-			% [cqi, sinr] = lteCQISelect(Stations(iStation),Stations(iStation).PDSCH,...
-			% 	estChannelGrid,noiseEst);
-
-			% TODO Record stats and power consumed in this round
 		end
 	end
 end

@@ -44,7 +44,7 @@ function [Station] = schedule(Station, Param)
 						for (iPrb = 1:Station.NDLRB)
 							if (Station.Schedule(iPrb).ueId == 0)
 								mcs = cqi2mcs(User.wCqi);
-								for (iSch = 1:prbsSch)
+								for (iSch = 0:prbsSch-1)
 									Station.Schedule(iPrb + iSch) = struct('ueId', User.ueId,...
 										'mcs', mcs, 'modOrd', modOrd);
 								end
@@ -69,7 +69,7 @@ function [Station] = schedule(Station, Param)
 
 		case 'random'
 			for (ix = 1:Station.NDLRB)
-				Station.Schedule(ix).ueId = Station.Users(randi(sz));
+				Station.Schedule(ix).ueId = Station.Users(randi(sz)).ueId;
 				Station.Schedule(ix).mcs = randi([1,28]);
 				Station.Schedule(ix).modOrd = 2*randi([1,3]);
 			end
