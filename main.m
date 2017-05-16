@@ -48,7 +48,7 @@ Param.prbSym = 160;
 sonohi(Param.reset);
 
 % Channel configuration
-Param.channel.mode = 'macro_METIS'; % ['mobility_matlab','fading_matlab'];
+Param.channel.mode = 'linear'; 
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
@@ -203,7 +203,7 @@ for (iUtilLo = 1: length(utilLo))
 					if (iStation ~= iServingStation)
 						k = getScalingFactor(Stations(iStation), Users(iUser));
 						Users(iUser).rxWaveform = Users(iUser).rxWaveform + ...
-							k*Stations(iStation).Channel(iUser).propagate(Stations(iServingStation),Users(iUser));
+							k*Stations(iStation).Channel.propagate(Stations(iServingStation),Users(iUser));
 					end
 				end
 			end
