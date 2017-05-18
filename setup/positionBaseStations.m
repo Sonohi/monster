@@ -19,7 +19,11 @@ function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings)
 	area = [min(buildings(1, :)), min(buildings(2, :)), max(buildings(3, :)), ...
 		max(buildings(4, :))];
 
-	%TODO Macro BS positioning
+	% Macro BS positioned at centre with single BS
+	% TODO extend at multiple macro
+	if (maBS == 1)
+		macroPos(maBS, :) = [0 0];
+	end
 
 	%Micro BS positioning
 	for (i = 1 : miBS),
