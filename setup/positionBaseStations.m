@@ -36,28 +36,33 @@ function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings,draw
 	% Macro BS positioned at centre with single BS
 	% TODO extend at multiple macro
 	if (maBS == 1)
-		macroPos(maBS, :) = [0 0];
+		xc = (area(3) - area(1))/2;
+		yc = (area(4) - area(2))/2;
+		macroPos(maBS, :) = [xc yc];
+		if draw
+			 rectangle('Position',[xc yc 5 5],'Curvature',[1 1],'EdgeColor','r','FaceColor','r')
+		end
 	end
 
 	%Micro BS positioning
-	for (i = 1 : miBS),
+	for (i = 1 : miBS)
 	  valid = false;
-	  while (~valid),
+	  while (~valid)
 	    x = rand * (area(3) + area(1)) - area(1);
 	    y = rand * (area(4) + area(2)) - area(2);
-	    for (b = 1 : length(buildings(:, 1))),
+	    for (b = 1 : length(buildings(:, 1)))
 	      if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
 	        valid = true;
 	      end
 	    end
-	    for (m = 1 : maBS),
+	    for (m = 1 : maBS)
 	      d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
 	      if (d < 20)
 	        valid = false;
 	      end
 	    end
 
-	    for (m = 1 : i - 1),
+	    for (m = 1 : i - 1)
 	      d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
 	      if (d < 20)
 	        valid = false;

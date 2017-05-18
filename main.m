@@ -48,6 +48,9 @@ Param.prbSym = 160;
 
 sonohi(Param.reset);
 
+% Disable warnings about casting classes to struct
+w = warning('off', 'all');
+
 % Channel configuration
 Param.channel.mode = 'linear'; 
 

@@ -71,6 +71,7 @@ classdef BaseStation < handle
 		function obj = initResourceGrid(obj)
 			str = lteDLResourceGrid(struct(obj));
 			obj.ReGrid = str;
+			
 		end
 
 		% set PDSCH
