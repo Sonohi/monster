@@ -1,15 +1,14 @@
 function [macroPos, microPos] = positionBaseStations (maBS, miBS, buildings,draw)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   POSITION BASE STATIONS is used to set up the physical location of BSs      %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   maBS      ->  number of macro base stations                                %
-%   miBS      ->  number of micro base stations                                %
-%   buildings ->  building position matrix                                     %
-%                                                                              %
-%   macroPos ->  positions of the macro base stations                        	 %
-%   microPos ->  positions of the micro base stations                          %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   POSITION BASE STATIONS is used to set up the physical location of BSs
+%
+%   Function fingerprint
+%   maBS      ->  number of macro base stations
+%   miBS      ->  number of micro base stations
+%   buildings ->  building position matrix
+%
+%   macroPos ->  positions of the macro base stations
+%   microPos ->  positions of the micro base stations
 
 	%Create position vectors
 	macroPos = zeros(maBS, 2);

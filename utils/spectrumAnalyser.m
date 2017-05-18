@@ -1,12 +1,11 @@
 function [] = spectrumAnalyser(samplingRate, waveform)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   SPECTRUM ANALYSER  is used to generate a cool fig of a OFDM waveform			 %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   samplingRate  			->  sampling rate	                                     %
-%   waveform   					->  waveform																		       %
-%                                                                              %                                                                              %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   SPECTRUM ANALYSER  is used to generate a cool fig of a OFDM waveform
+%
+%   Function fingerprint
+%   samplingRate  			->  sampling rate
+%   waveform   					->  waveform																		                                                                                     %
+
 	spectrumPlotTx = dsp.SpectrumAnalyzer;
 	spectrumPlotTx.SampleRate = samplingRate;
 	spectrumPlotTx.SpectrumType = 'Power density';
@@ -23,4 +22,5 @@ function [] = spectrumAnalyser(samplingRate, waveform)
 	spectrumPlotTx.Title = 'Test Model E-TM1.1, 5 MHz Signal Spectrum';
 	spectrumPlotTx.ShowLegend = false;
 	spectrumPlotTx(waveform);
+	
 end

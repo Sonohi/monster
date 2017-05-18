@@ -1,15 +1,15 @@
 function [trSource] = loadTrafficData (path, sort)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   LOAD TRAFFIC DATA is used to get a matrix of frame sizes                   %
-%   currently the module is limited to model video streaming with frame sizes  %
-%   taken from the big buck bunny video                                        %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   path      ->  path where the CSV is located                                %
-%   sort      ->  true if it has to be sorted (e.g. interleaved A/V frames)    %
-%                                                                              %
-%   trSource   ->  matrix with frameSizes                                      %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   LOAD TRAFFIC DATA is used to get a matrix of frame sizes
+%   currently the module is limited to model video streaming with frame sizes
+%   taken from the big buck bunny video
+%
+%   Function fingerprint
+%   path      ->  path where the CSV is located
+%   sort      ->  true if it has to be sorted (e.g. interleaved A/V frames)
+%
+%   trSource   ->  matrix with frameSizes
+
   %select only certain columns with relevant data
   formatSpec = '%*s%s%*s%*s%*s%s%*s%*s%*s%*s%*s%*s%*s%s%[^\n\r]';
   fileID = fopen(path,'r');

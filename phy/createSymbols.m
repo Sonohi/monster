@@ -1,18 +1,17 @@
 function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 	CREATE SYMBOLS is used to generate the arrays of complex symbols 					 %
-% 																																						 %
-%   Function fingerprint                                                       %
-%   Station							-> 	the eNodeB processing the codeword                 %
-%   User								->	the UE for this codeword                           %
-%   cwd    							->	codeword to be processed                           %
-%   CwdInfo							->	codeword info for processing                       %
-%   Param.maxSymSize		->  max size of a list of symbols for padding          %
-% 																																						 %
-% 	sym									-> symbols padded																			 %
-% 	SymInfo							-> symbols info for padding info											 %
-% 																																						 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 	CREATE SYMBOLS is used to generate the arrays of complex symbols
+%
+%   Function fingerprint
+%   Station							-> 	the eNodeB processing the codeword
+%   User								->	the UE for this codeword
+%   cwd    							->	codeword to be processed
+%   CwdInfo							->	codeword info for processing
+%   Param.maxSymSize		->  max size of a list of symbols for padding
+%
+% 	sym									-> symbols padded
+% 	SymInfo							-> symbols info for padding info
+
 	% find all the PRBs assigned to this UE to find the most conservative MCS (min)
 	sch = Station.Schedule;
 	ixPRBs = find([sch.ueId] == User.ueId);

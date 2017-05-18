@@ -1,14 +1,7 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   BASE STATION defines a class for eNodeB
-%
-% 	Properties
-%
-%		Methods
-%
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 
-classdef BaseStation < handle
+classdef EvolvedNodeB
+	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties
 		NCellID;
 		DuplexMode;
@@ -29,11 +22,12 @@ classdef BaseStation < handle
 		ReGrid;
 		TxWaveform;
 		PDSCH;
+		Channel;
 	end
 
 	methods
 		% Constructor
-		function obj = BaseStation(Param, bsClass, cellId)
+		function obj = EvolvedNodeB(Param, bsClass, cellId)
 			switch bsClass
 				case 'macro'
 					obj.NDLRB = Param.numSubFramesMacro;
@@ -52,18 +46,30 @@ classdef BaseStation < handle
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('ueId',0,'index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
-			obj = initUsers(obj, Param);
-			obj = initSchedule(obj);
-			obj = initSchedule(obj);
+			obj = resetUsers(obj, Param);
+			obj = resetSchedule(obj);
 			obj = initResourceGrid(obj);
 			obj = initPDSCH(obj);
 		end
 
 		% Posiiton base station
-		function obj = set.Position(obj, pos)
+		function obj = setPosition(obj, pos)
 			obj.Position = pos;
 		end
 
+		% reset users
+		function obj = resetUsers(obj, Param)
+			temp(1:Param.numUsers) = struct('velocity', Param.velocity,...
+				'queue', struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', ...
+				false, 'ueId', 0, 'position', [0 0], 'wCqi',6);
+			obj.Users = temp;
+		end
+
+		% reset schedule
+		function obj = resetSchedule(obj)
+			temp(1:obj.NDLRB,1) = struct('ueId', 0, 'mcs', 0, 'modOrd', 0);
+			obj.Schedule = temp;
+		end
 	end
 
 	methods (Access = private)
@@ -71,7 +77,6 @@ classdef BaseStation < handle
 		function obj = initResourceGrid(obj)
 			str = lteDLResourceGrid(struct(obj));
 			obj.ReGrid = str;
-			
 		end
 
 		% set PDSCH
@@ -81,20 +86,6 @@ classdef BaseStation < handle
 				'NTurboDecIts', 5, 'PRBSet', (0:obj.NDLRB-1)', 'TrBlkSizes', [], ...
 				'CodedTrBlkSizes', [], 'CSIMode', 'PUCCH 1-0', 'PMIMode', 'Wideband', 'CSI', 'On');
 			obj.PDSCH = ch;
-		end
-
-		% init users
-		function obj = initUsers(obj, Param)
-			temp(1:Param.numUsers) = struct('velocity', Param.velocity,...
-				'queue', struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', ...
-				false, 'ueId', 0, 'position', [0 0], 'wCqi',6);
-			obj.Users = temp;
-		end
-
-		% init schedule
-		function obj = initSchedule(obj)
-			temp(1:obj.NDLRB,1) = struct('ueId', 0, 'mcs', 0, 'modOrd', 0);
-			obj.Schedule = temp;
 		end
 
 	end

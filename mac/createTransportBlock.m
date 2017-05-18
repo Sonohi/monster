@@ -1,17 +1,15 @@
 function [tb, TbInfo] = createTransportBlock(Station, User, Param)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE TRANSPORT BLOCK  is used to return the TB the scheduling round			 %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   Station        		->  the base station serving the User                    %
-%   User        			->  the User allocated in the subframe                   %
-%   sch  							->  schedule for staion                                  %
-%   Param.maxTBSize  	->  max size of a TB in LTE                              %
-%                                                                              %
-%   tb	      				->  padded transport block 				                       %
-%   TbInfo 						->  actual size and rate matching                        %
-%                                                                              %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   CREATE TRANSPORT BLOCK  is used to return the TB the scheduling round
+%
+%   Function fingerprint
+%   Station        		->  the base station serving the User
+%   User        			->  the User allocated in the subframe
+%   sch  							->  schedule for staion
+%   Param.maxTBSize  	->  max size of a TB in LTE
+%
+%   tb	      				->  padded transport block
+%   TbInfo 						->  actual size and rate matching
 
 	% get a single MCS and modulation order across all the PRBs assigned to a UE
 	numPRB = 0;

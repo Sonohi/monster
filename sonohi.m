@@ -24,7 +24,8 @@ if ~OHI || resetFlag % Check if previous initialization was successful
     fprintf('-> %s\n',root);
     addpath(root);
 
-    dirs = {'bs', 'ch', 'mac', 'mobility', 'phy', 'power', 'rlc', 'setup', 'traffic'};
+    dirs = {'ch', 'enb', 'mac', 'mobility', 'phy', 'power', 'rlc', 'setup', 'traffic', ...
+						'ue'};
 
     for i=1:numel(dirs)
         add = [root filesep dirs{i}];

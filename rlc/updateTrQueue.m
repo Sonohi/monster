@@ -1,15 +1,14 @@
 function [Users] = updateTrQueue(src, schRound, Users)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   UPDATE TRAFFIC QUEUE is used to update the struct modelling the trx queue  %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   src        ->  traffic source as time and size of packets                  %
-%   schRound   ->  scheduling round                                            %
-%   Users      ->  users connected to a eNodeB					                       %
-%                                                                              %
-%   Users			 ->  updated UE structs								                           %
-%                                                                              %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   UPDATE TRAFFIC QUEUE is used to update the struct modelling the trx queue
+%
+%   Function fingerprint
+%   src        ->  traffic source as time and size of packets
+%   schRound   ->  scheduling round
+%   Users      ->  users connected to a eNodeB
+%
+%   Users			 ->  updated UE structs
+
   % if the size of the queue is 0 and the simulation time is not beyond the tx
   % deadline, then update the queue
 	simTime = schRound*10^-3;

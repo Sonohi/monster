@@ -1,20 +1,16 @@
 function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   REFRESH USERS ASSOCIATION links Users to a BS								               %
-%                                                                              %
-%   Function fingerprint                                                       %
-%   Users   		->  struct with all the suers in the network                   %
-%   Stations		->  base station struct                                        %
-%                                                                              %
-%   nodeUsers ->  Users indexes associated with node                           %
-%                                                                              %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   REFRESH USERS ASSOCIATION links UEs to a eNodeB
+%
+%   Function fingerprint
+%   Users   		->  array of UEs
+%   Stations		->  array of eNodeBs
+%
+%   nodeUsers ->  Users indexes associated with node
 
 	% reset stations
 	for (iStation = 1:length(Stations))
-		Stations(iStation).Users(1:Param.numUsers) = struct('velocity',Param.velocity,...
-			'queue',  struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', false,...
-			'ueId', 0, 'position', [0 0], 'wCqi', 6);
+		Stations(iStation) = resetUsers(Stations(iStation), Param);
 	end
 
 	d0=1; % m

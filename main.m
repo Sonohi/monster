@@ -1,23 +1,20 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   MAIN 																										          					%
-%																																							 	%
-%   Simulation Parameters                                                       %                    %
-%		reset 						-> 	resets the paths and refreshes them										%
-%		schRounds 				->	overall length of the simulation											%
-%		numSubFramesMacro ->	bandwidth of macro cell																%
-%													(100 subframes = 20 MHz bandwidth)										%
-%		numSubFramesMicro ->	bandwidth of micro cell																%
-%		numMacro 					->	number of macro cells																	%
-%		numMicro					-> 	number of micro cells																	%
-%		seed							-> 	seed for channel																			%
-%		buildings					->	file path for coordinates of Manhattan grid						%
-%		velocity					->	velocity of Users																			%
-%		numUsers					-> 	number of Users																				%
-%		utilLoThr					->	lower threshold of utilisation												%
-%		utilHiThr					->	upper threshold of utilisation												%
-%		Channel.mode			->	channel model to be used															%
-%																																								%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   MAIN
+%
+%   Simulation Parameters
+%		reset 						-> 	resets the paths and refreshes them
+%		schRounds 				->	overall length of the simulation
+%		numSubFramesMacro ->	bandwidth of macro cell
+%													(100 subframes = 20 MHz bandwidth)
+%		numSubFramesMicro ->	bandwidth of micro cell
+%		numMacro 					->	number of macro cells
+%		numMicro					-> 	number of micro cells
+%		seed							-> 	seed for channel
+%		buildings					->	file path for coordinates of Manhattan grid
+%		velocity					->	velocity of Users
+%		numUsers					-> 	number of Users
+%		utilLoThr					->	lower threshold of utilisation
+%		utilHiThr					->	upper threshold of utilisation
+%		Channel.mode			->	channel model to be used
 
 clearvars;
 clc;
@@ -25,7 +22,7 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
-Param.draw = 1; % Enable plots
+Param.draw = 0; % Enable plots
 Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
@@ -52,7 +49,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'linear'; 
+Param.channel.mode = 'linear';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)

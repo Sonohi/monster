@@ -1,11 +1,11 @@
 function [ChannelEstimator] = createChannelEstimator ()
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%   CREATE CHANNELS is used to generate a channel struct for the "nodes"       %
-%                                                                              %
-%   Function fingerprint                                                       %
-%                                                                              %
-%   channels  ->  channel struct                                               %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%   CREATE CHANNELS is used to generate a channel struct for the "nodes"
+%
+%   Function fingerprint
+%
+%   channels  ->  channel struct
+
   ChannelEstimator = struct;                        % Channel estimation config structure
   ChannelEstimator.PilotAverage = 'UserDefined';    % Type of pilot symbol averaging
   ChannelEstimator.FreqWindow = 31;                 % Frequency window size
