@@ -11,8 +11,7 @@ function Stations = createChannels (Stations, Param)
     %Channels = struct(zeros(length(Stations),Param.numUsers));
 
 	for (iStation = 1:length(Stations))
-         % TODO change class to be a dependency of station and user such
-         % that each station user pair has a predefined channel
+         % TODO change class to be a dependency of station 
         Stations(iStation).Channel = ChBulk_v1(Param,Stations(iStation));
         Stations(iStation).Channel.Seed = Param.seed + iStation;
         OfdmInfo = lteOFDMInfo(Stations(iStation));
