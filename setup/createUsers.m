@@ -10,7 +10,7 @@ function [Users] = createUsers (Param)
 
 	for iUser = 1: (Param.numUsers)
 		Users(iUser) = UserEquipment(Param, iUser);
-		Users(iUser).position = positionUser();
+		Users(iUser).Position = positionUser(Param);
 	end
 
 end

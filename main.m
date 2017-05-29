@@ -42,6 +42,8 @@ Param.maxSymSize = 10^5;
 Param.storeTxData = true;
 Param.scheduling = 'roundRobin';
 Param.prbSym = 160;
+Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), max(Param.buildings(:, 3)), ...
+		max(Param.buildings(:, 4))];
 
 sonohi(Param.reset);
 
@@ -158,7 +160,7 @@ for (iUtilLo = 1: length(utilLo))
         schUser = Stations(iStation).Schedule(iRound).ueId;
 
 				% generate empty grid or clean the previous one
-				Stations(iStation).ResourceGrid = lteDLResourceGrid(Stations(iStation));
+				Stations(iStation).ReGrid = lteDLResourceGrid(Stations(iStation));
 				% now for each list of user symbols, reshape them into the grid
 				for (iUser = 1:Param.numUsers)
 					sz = symMatrixInfo(iStation, iUser).symSize;
@@ -174,8 +176,8 @@ for (iUtilLo = 1: length(utilLo))
 				% with the grid ready, generate the TX waveform
                 % Currently the waveform is given per station, i.e. same
                 % for all associated users.
-				[Stations(iStation).TxWaveform, Stations(iStation).Waveforminfo] = ...
-					lteOFDMModulate(Stations(iStation), Stations(iStation).ResourceGrid);
+				[Stations(iStation).TxWaveform, Stations(iStation).WaveformInfo] = ...
+					lteOFDMModulate(Stations(iStation), Stations(iStation).ReGrid);
 
       end
 
@@ -185,8 +187,8 @@ for (iUtilLo = 1: length(utilLo))
 				% find serving eNodeB
 				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
 				Stations(iServingStation).Channel.InitTime = iRound/1000;
-				Users(iUser).rxWaveform = ...
-					Stations(iServingStation).Channel.propagate(Stations(iServingStation),Users(iUser));
+				%Users(iUser).rxWaveform = ...
+				%	Stations(iServingStation).Channel.propagate(Stations(iServingStation),Users(iUser));
 
 				%TODO
 				%Compute power from eNB and calculate transmission SNR

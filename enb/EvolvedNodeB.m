@@ -21,6 +21,7 @@ classdef EvolvedNodeB
 		RrNext;
 		ReGrid;
 		TxWaveform;
+        WaveformInfo
 		PDSCH;
 		Channel;
 	end
@@ -68,9 +69,12 @@ classdef EvolvedNodeB
 
 		% reset users
 		function obj = resetUsers(obj, Param)
-			temp(1:Param.numUsers) = struct('velocity', Param.velocity,...
-				'queue', struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', ...
-				false, 'ueId', 0, 'position', [0 0], 'wCqi',6);
+            
+            temp(1:Param.numUsers) = UserEquipment(Param,0)
+            
+			%temp(1:Param.numUsers) = struct('velocity', Param.velocity,...
+				%'queue', struct('size', 0, 'time', 0, 'pkt', 0), 'eNodeB', 0, 'scheduled', ...
+				%false, 'ueId', 0, 'Position', [0; 0], 'wCqi',6);
 			obj.Users = temp;
 		end
 

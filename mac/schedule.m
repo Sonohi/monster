@@ -17,14 +17,14 @@ function [Station] = schedule(Station, Param)
 
 	switch (Param.scheduling)
 		case 'roundRobin'
-			if (Station.rrNext.ueId == 0)
-				Station.rrNext.ueId = Station.Users(1).ueId;
-				Station.rrNext.index = 1;
+			if (Station.RrNext.ueId == 0)
+				Station.RrNext.ueId = Station.Users(1).ueId;
+				Station.RrNext.index = 1;
 			end
 
 			maxRounds = sz;
 			prbsAv = Station.NDLRB;
-			iUser = Station.rrNext.index;
+			iUser = Station.RrNext.index;
 			while (iUser <= sz && maxRounds > 0)
 				User = Station.Users(iUser);
 				if (prbsAv > 0)
@@ -56,11 +56,11 @@ function [Station] = schedule(Station, Param)
 				else
 					% Keep track of the next user to be scheduled in the next round
 					if (iUser + 1 > sz || Station.Users(iUser + 1).ueId == 0)
-						Station.rrNext.ueId = Station.Users(1).ueId;
-						Station.rrNext.index = 1;
+						Station.RrNext.ueId = Station.Users(1).ueId;
+						Station.RrNext.index = 1;
 					else
-						Station.rrNext.ueId = Station.Users(iUser + 1).ueId;
-						Station.rrNext.index = iUser + 1;
+						Station.RrNext.ueId = Station.Users(iUser + 1).ueId;
+						Station.RrNext.index = iUser + 1;
 					end
 					% in both cases, stop the loop
 					iUser = sz +1;

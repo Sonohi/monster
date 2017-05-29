@@ -16,7 +16,7 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 	d0=1; % m
 	for (iUser = 1:length(Users))
 		% get UE position
-		uePos = Users(iUser).position;
+		uePos = Users(iUser).Position;
 		minLossDb = 200;
 		for (iStation = 1:length(Stations))
 			bs = Stations(iStation);

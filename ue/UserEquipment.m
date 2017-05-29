@@ -8,7 +8,7 @@ classdef UserEquipment
 		queue;
 		eNodeB;
 		scheduled;
-		position;
+		Position;
 		wCqi;
 	end
 
@@ -24,8 +24,8 @@ classdef UserEquipment
 		end
 
 		% Posiiton UE
-		function obj = set.position(obj, pos)
-			obj.position = pos;
+		function obj = set.Position(obj, pos)
+			obj.Position = pos;
 		end
 
 	end

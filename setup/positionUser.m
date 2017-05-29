@@ -1,4 +1,4 @@
-function [pos] = positionUser()
+function [pos] = positionUser(Param)
 
 %   POSITION USERS is used to drop the UEs in the network
 %
@@ -8,6 +8,6 @@ function [pos] = positionUser()
 
   % Not a very interesting module for now, it is structured like this for scalability
 
-	pos = [randi([1,10]) randi([1,10])];
+	pos = [randi([Param.area(1),Param.area(3)]) randi([Param.area(2),Param.area(4)])];
 
 end
