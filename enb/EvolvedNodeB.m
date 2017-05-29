@@ -43,6 +43,7 @@ classdef EvolvedNodeB
 			obj.NFrame = 0;
 			obj.TotSubframes = 1;
 			obj.OCNG = 'On';
+            obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('ueId',0,'index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
@@ -50,12 +51,20 @@ classdef EvolvedNodeB
 			obj = resetSchedule(obj);
 			obj = initResourceGrid(obj);
 			obj = initPDSCH(obj);
+            
+            % Construct channel
+            obj.Channel = ChBulk_v1(Param);
 		end
 
 		% Posiiton base station
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
-		end
+            
+            % Set position for channel configuration.
+            obj.Channel.Tx_pos = pos;
+        end
+        
+
 
 		% reset users
 		function obj = resetUsers(obj, Param)

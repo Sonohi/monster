@@ -1,4 +1,13 @@
-classdef ChBulk_v1 < handle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   Channel model class
+%
+%   Currently implemented:
+%       FSPL
+%       Multipath fading
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+classdef ChBulk_v1
     properties (Access = private)
         c = physconst('lightspeed');
     end
@@ -22,6 +31,7 @@ classdef ChBulk_v1 < handle
         NormalizePathGains;
         MovingScenario;
         CarrierFrequency;
+        winnerConfig;
     end
     
     
@@ -56,9 +66,8 @@ classdef ChBulk_v1 < handle
     
     methods
         % Constructor
-        function obj = ChBulk_v1(param,station)
+        function obj = ChBulk_v1(param)
             obj.Mode = param.channel.mode;
-            obj.Tx_pos = station.Position;
             obj.CarrierFrequency = 1900e6; % Default 1900 MHz
             switch param.channel.mode
                 
@@ -96,7 +105,10 @@ classdef ChBulk_v1 < handle
              
 
                 case 'multipath_matlab'
-                    
+               
+                case 'winner'
+                    % 16 elements with a radius of 30cm (base station)
+                    obj.winnerConfig.Antenna = winner2.AntennaArray('UCA', 16, 0.3);
                     
                 
             end
@@ -124,6 +136,13 @@ classdef ChBulk_v1 < handle
         function obj = set.InitTime(obj,InitTime)
             obj.InitTime = InitTime;
         end
+        
+        function obj = set.Tx_pos(obj,Tx_pos)
+            obj.Tx_pos = Tx_pos;
+        end
+
+            
+            
         
         
         % Propagate
