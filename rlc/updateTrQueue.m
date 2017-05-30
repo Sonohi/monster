@@ -9,21 +9,21 @@ function [newQueue] = updateTrQueue(src, simTime, User)
 %
 %   newQueue	 ->  updated queue
 
-% if the size of the queue is 0 and the simulation time is not beyond the tx
-% deadline, then update the queue
-if (User.Queue.Size <= 0 && simTime >= User.Queue.Time)
-	newQueue = User.Queue;
-	newQueue.Size = 0;
-	for (ix = 1:length(src))
-		if (src(ix, 1) <= simTime)
-			% increase frame size and update frame delivery deadline
-			newQueue.Size = newQueue.Size + src(ix, 2);
-			newQueue.Time = src(ix, 1);
-		else
-			% stamp the packet id in the queue and exit
-			newQueue.Pkt = newQueue.Pkt + 1;
-			break;
+	% if the size of the queue is 0 and the simulation time is not beyond the tx
+	% deadline, then update the queue
+	if (User.Queue.Size <= 0 && simTime >= User.Queue.Time)
+		newQueue = User.Queue;
+		newQueue.Size = 0;
+		for (ix = 1:length(src))
+			if (src(ix, 1) <= simTime)
+				% increase frame size and update frame delivery deadline
+				newQueue.Size = newQueue.Size + src(ix, 2);
+				newQueue.Time = src(ix, 1);
+			else
+				% stamp the packet id in the queue and exit
+				newQueue.Pkt = newQueue.Pkt + 1;
+				break;
+			end;
 		end;
 	end;
-end;
 end

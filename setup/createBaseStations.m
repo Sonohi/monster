@@ -1,4 +1,4 @@
-function [Stations] = createBaseStations (Param)
+function [Stations, h] = createBaseStations (Param)
 
 %   CREATE BASE Stations is used to generate a struct with the base Stations
 %
@@ -12,9 +12,9 @@ function [Stations] = createBaseStations (Param)
 %   Stations  							-> struct with all Stations details and PDSCH
 
 	% Create position vectors for the macro and micro BSs
-	[macroPos, microPos] = positionBaseStations(Param.numMacro, Param.numMicro, ...
+	[macroPos, microPos, h] = positionBaseStations(Param.numMacro, Param.numMicro, ...
 		Param.buildings, Param.draw);
-
+    
 	for (iStation = 1: (Param.numMacro + Param.numMicro))
 		% For now only 1 macro in the scenario and it's kept as first elem
 		if (iStation <= Param.numMacro)

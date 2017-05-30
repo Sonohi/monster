@@ -24,7 +24,7 @@ if ~OHI || resetFlag % Check if previous initialization was successful
     fprintf('-> %s\n',root);
     addpath(root);
 
-    dirs = {'ch', 'enb', 'mac', 'mobility', 'phy', 'power', 'rlc', 'setup', 'traffic', ...
+    dirs = {'utils', 'ch', 'enb', 'mac', 'mobility', 'phy', 'power', 'rlc', 'setup', 'traffic', ...
 						'ue'};
 
     for i=1:numel(dirs)
