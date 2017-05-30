@@ -24,6 +24,7 @@ classdef EvolvedNodeB
     WaveformInfo;
 		PDSCH;
 		Channel;
+		NSubframe;
 	end
 
 	methods
@@ -48,7 +49,7 @@ classdef EvolvedNodeB
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
-			obj = resetUsers(obj, Param);
+			obj.Users = zeros(Param.numUsers, 1);
 			obj = resetSchedule(obj);
 			obj = initResourceGrid(obj);
 			obj = initPDSCH(obj);
@@ -65,14 +66,18 @@ classdef EvolvedNodeB
 
 		% reset users
 		function obj = resetUsers(obj, Param)
-      temp(1:Param.numUsers) = UserEquipment(Param,0);
-			obj.Users = temp;
+			obj.Users = zeros(Param.numUsers, 1);
 		end
 
 		% reset schedule
 		function obj = resetSchedule(obj)
 			temp(1:obj.NDLRB,1) = struct('UeId', 0, 'Mcs', 0, 'ModOrd', 0);
 			obj.Schedule = temp;
+		end
+
+		% set subframre number
+		function obj = set.NSubframe(obj, num)
+			obj.NSubframe =  num;
 		end
 	end
 

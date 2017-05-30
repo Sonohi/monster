@@ -45,8 +45,8 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 		for (iStation = 1:length(Stations))
 			if (Stations(iStation).NCellID == Users(iUser).ENodeB)
 				for (iUser = 1:Param.numUsers)
-					if (Stations(iStation).Users(iUser).UeId == 0)
-						Stations(iStation).Users(iUser) = Users(iUser);
+					if (Stations(iStation).Users(iUser) == 0)
+						Stations(iStation).Users(iUser) = Users(iUser).UeId;
 						break;
 					end
 				end

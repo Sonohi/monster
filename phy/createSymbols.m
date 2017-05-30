@@ -12,27 +12,29 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 % 	sym									-> symbols padded
 % 	SymInfo							-> symbols info for padding info
 
+	% cast eNodeB object to struct for the processing
+	enb = struct(Station);
 	% find all the PRBs assigned to this UE to find the most conservative MCS (min)
-	sch = Station.Schedule;
-	ixPRBs = find([sch.ueId] == User.UeId);
+	sch = enb.Schedule;
+	ixPRBs = find([sch.UeId] == User.UeId);
 	listMCS = [sch(ixPRBs).Mcs];
 
 	% get the correct Parameters for this UE
 	[~, mod, ~] = lteMCS(min(listMCS));
 
 	% setup the PDSCH for this UE
-	Station.PDSCH.Modulation = mod;	% conservative modulation choice from above
-	Station.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+	enb.PDSCH.Modulation = mod;	% conservative modulation choice from above
+	enb.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
 
 	% extract the codeword from the padded array
 	cwdEx(1:CwdInfo.cwdSize, 1) = cwd(1:CwdInfo.cwdSize,1);
 
 	% Get info and generate symbols
-	[pdschIxs, SymInfo] = ltePDSCHIndices(Station, Station.PDSCH, Station.PDSCH.PRBSet);
+	[pdschIxs, SymInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
 	% error handling for symbol creation
 	% TODO try finding out errror root cause, e.g. invald TB size?
 	try
-		sym = ltePDSCH(Station, Station.PDSCH, cwdEx);
+		sym = ltePDSCH(enb, enb.PDSCH, cwdEx);
 	catch ME
 		fSpec = 'symbols generation failed for codeword with length %i\n';
 		fprintf(fSpec, length(cwdEx));

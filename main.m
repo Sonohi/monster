@@ -102,14 +102,17 @@ for (iUtilLo = 1: length(utilLo))
 			[Users, Stations] = refreshUsersAssociation(Users, Stations, Param);
 			simTime = iRound*10^-3;
 
+			% Update RLC transmission queues for the users and reset the scheduled flag
+			for (iUser = 1:length(Users))
+				queue = updateTrQueue(trSource, simTime, Users(iUser));
+				Users(iUser) = setQueue(Users(iUser), queue);
+				Users(iUser) = setScheduled(Users(iUser), false);
+			end;
+
 			for (iStation = 1:length(Stations))
-
-				% Update RLC transmission queues for the connected users
-				Stations(iStation).Users = updateTrQueue(trSource, iRound, Stations(iStation).Users);
-
 				% schedule only if at least 1 user is associated
-				if (Stations(iStation).Users(1).UeId ~= 0)
-					Stations(iStation) = schedule(Stations(iStation), Param);
+				if (Stations(iStation).Users(1) ~= 0)
+					Stations(iStation) = schedule(Stations(iStation), Users, Param);
 				end
 			end;
 
