@@ -49,8 +49,8 @@ classdef ChBulk_v2
                         cfgLayout.Stations(i).Pos(1:2) = Stations(i).Position;
                      end
                      
-                     for i = 1:length(Users)
-                        cfgLayout.Stations(i).Pos(1:2) = Users(i).Position; 
+                     for ii = 1:length(Users)
+                        cfgLayout.Stations(ii+length(Stations)).Pos(1:2) = Users(ii).Position; 
                      end
                      
                      % Each link is assigned with one propagation scenario, 
@@ -59,7 +59,7 @@ classdef ChBulk_v2
                      % (NLOS) is modelled for each link.
                      
                      for i = 1:numLinks
-                         cfgLayout.Pairing(:,i) = [i; Stations(i).Schedule(iRound).ueId+length(Stations)];
+                         cfgLayout.Pairing(:,i) = [i; Stations(i).Schedule(iRound).UeId+length(Stations)];
                      end
                      
                      cfgLayout.ScenarioVector = [11*ones(1,numLinks)]; % 6 for B4, 11 for C2 and 13 for C4
@@ -72,21 +72,12 @@ classdef ChBulk_v2
                     BSPos = cell2mat({cfgLayout.Stations(1:numBSSect).Pos});
                     MSPos = cell2mat({cfgLayout.Stations(numBSSect+1:end).Pos});
 
-                    scrsz = get(groot, 'ScreenSize');
-                    figSize = min(scrsz([3,4]))/2.3;
-                    figure('Position', [scrsz(3)*.5-figSize/2,scrsz(4)*.7-figSize/2,figSize,figSize]);
-                    hold on; grid on;
-                    hBS = plot(BSPos(1,:), BSPos(2,:), 'or');   % Plot BS
-                    hMS = plot(MSPos(1,:), MSPos(2,:), 'xb');   % Plot MS
+
                     for linkIdx = 1:numLinks  % Plot links
                         pairStn = cfgLayout.Pairing(:,linkIdx);
                         pairPos = cell2mat({cfgLayout.Stations(pairStn).Pos});
-                        plot(pairPos(1,:), pairPos(2,:), '-b');
+                        plot(pairPos(1,:), pairPos(2,:), '-.b');
                     end
-                    xlim([0 300]); ylim([0 300]);
-                    xlabel('X Position (meters)'); ylabel('Y Position (meters)')
-                    legend([hBS, hMS], 'BS', 'MS', 'location', 'northwest');
-               
                      
                      
                  case 'linear'

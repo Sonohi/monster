@@ -158,7 +158,7 @@ for (iUtilLo = 1: length(utilLo))
 			for (iStation = 1:length(Stations))
 
 				% Get associated user that is scheduled
-				schUser = Stations(iStation).Schedule(iRound).ueId;
+				schUser = Stations(iStation).Schedule(iRound).UeId;
 
 				% generate empty grid or clean the previous one
 				Stations(iStation).ReGrid = lteDLResourceGrid(Stations(iStation));

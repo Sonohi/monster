@@ -28,7 +28,7 @@ function [Station] = schedule(Station, Param)
 			while (iUser <= sz && maxRounds > 0)
 				User = Station.Users(iUser);
 				if (prbsAv > 0)
-					if (~User.scheduled && User.Queue.Size > 0)
+					if (~User.Scheduled && User.Queue.Size > 0)
 						modOrd = cqi2modOrd(User.WCqi);
 						prbsNeed = ceil(User.Queue.Size/(modOrd * Param.prbSym));
 						prbsSch = 0;

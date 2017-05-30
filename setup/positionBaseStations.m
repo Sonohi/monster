@@ -42,8 +42,18 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
 		yc = (area(4) - area(2))/2;
 		macroPos(maBS, :) = [xc yc];
 		if draw
-             text(xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
-			 rectangle('Position',[xc yc 5 5],'Curvature',[1 1],'EdgeColor','r','FaceColor','r')
+            text(xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
+            [im, map, alpha] = imread('utils/images/basestation.png');
+            % For some magical reason the image is rotated 180 degrees.
+            im = imrotate(im,180);
+            alpha = imrotate(alpha,180);
+            % Scale size of figure
+            scale = 40;
+            ylength = length(im(:,1,1))/scale;
+            xlength = length(im(1,:,1))/scale;
+            % Position and set alpha from png image
+            f = imagesc([xc-xlength xc+xlength],[yc yc+ylength*2],im);
+            set(f, 'AlphaData', alpha);
 		end
 	end
 

@@ -15,7 +15,7 @@ function [Users] = updateTrQueue(src, schRound, Users)
 	for (iUser = 1:length(Users))
 		if (Users(iUser).UeId ~= 0)
 			queue = Users(iUser).Queue;
-  		if (queue.Size <= 0 && simTime >= queue.time)
+  		if (queue.Size <= 0 && simTime >= queue.Time)
     		newQueue = queue;
     		newQueue.Size = 0;
     		for (ix = 1:length(src))
