@@ -22,7 +22,7 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
-Param.draw = 0; % Enable plots
+Param.draw = 1; % Enable plots
 Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
@@ -51,7 +51,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'linear';
+Param.channel.mode = 'winner2';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
@@ -59,11 +59,12 @@ if (Param.numMacro ~= 1)
 end
 
 % Create Stations and Users
-Stations = createBaseStations(Param);
+[Stations, Param.AreaPlot] = createBaseStations(Param);
 Users = createUsers(Param);
 
-% Create Channels
-Stations = createChannels(Stations,Param);
+% Create Channel scenario
+Channel = ChBulk_v2(Param);
+%Stations = createChannels(Stations,Param);
 
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();
@@ -183,6 +184,12 @@ for (iUtilLo = 1: length(utilLo))
 
 			% Once all eNodeBs have created and stored their txWaveforms, we can go
 			% through the UEs and compute the rxWaveforms
+            
+            % Model propagation channel
+            Channel.traverse(Stations,Users,iRound)
+            
+            
+            
 			for (iUser = 1:length(Users))
 				% find serving eNodeB
 				iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
