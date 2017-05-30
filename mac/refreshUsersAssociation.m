@@ -36,16 +36,16 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 			end
 			% check if this is the minimum so far
 			if (lossDb < minLossDb)
-				Users(iUser).eNodeB = Stations(iStation).NCellID;
+				Users(iUser).ENodeB = Stations(iStation).NCellID;
 				minLossDb = lossDb;
 			end
 		end
 		% Now that the assignement is done, write also on the side of the station
 		% TODO replace with matrix operation
 		for (iStation = 1:length(Stations))
-			if (Stations(iStation).NCellID == Users(iUser).eNodeB)
+			if (Stations(iStation).NCellID == Users(iUser).ENodeB)
 				for (iUser = 1:Param.numUsers)
-					if (Stations(iStation).Users(iUser).ueId == 0)
+					if (Stations(iStation).Users(iUser).UeId == 0)
 						Stations(iStation).Users(iUser) = Users(iUser);
 						break;
 					end

@@ -14,8 +14,8 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 
 	% find all the PRBs assigned to this UE to find the most conservative MCS (min)
 	sch = Station.Schedule;
-	ixPRBs = find([sch.ueId] == User.ueId);
-	listMCS = [sch(ixPRBs).mcs];
+	ixPRBs = find([sch.ueId] == User.UeId);
+	listMCS = [sch(ixPRBs).Mcs];
 
 	% get the correct Parameters for this UE
 	[~, mod, ~] = lteMCS(min(listMCS));

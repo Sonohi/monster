@@ -13,23 +13,23 @@ function [Users] = updateTrQueue(src, schRound, Users)
   % deadline, then update the queue
 	simTime = schRound*10^-3;
 	for (iUser = 1:length(Users))
-		if (Users(iUser).ueId ~= 0)
-			queue = Users(iUser).queue;
-  		if (queue.size <= 0 && simTime >= queue.time)
+		if (Users(iUser).UeId ~= 0)
+			queue = Users(iUser).Queue;
+  		if (queue.Size <= 0 && simTime >= queue.time)
     		newQueue = queue;
-    		newQueue.size = 0;
+    		newQueue.Size = 0;
     		for (ix = 1:length(src))
       		if (src(ix, 1) <= simTime)
 		        % increase frame size and update frame delivery deadline
-		        newQueue.size = newQueue.size + src(ix, 2);
-		        newQueue.time = src(ix, 1);
+		        newQueue.Size = newQueue.Size + src(ix, 2);
+		        newQueue.Time = src(ix, 1);
 		      else
 		        % stamp the packet id in the queue and exit
-		        newQueue.pkt = newQueue.pkt + 1;
+		        newQueue.Pkt = newQueue.Pkt + 1;
 		        break;
       		end;
 					% Update struct
-					Users(iUser).queue = newQueue;
+					Users(iUser).Queue = newQueue;
     		end;
 			end;
 		end;

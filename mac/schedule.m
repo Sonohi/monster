@@ -12,25 +12,25 @@ function [Station] = schedule(Station, Param)
 %									--> modOrd	modulation order as bits/OFDM symbol
 
 	% reset the allocation
-	Station.Schedule(1:Station.NDLRB) = struct('ueId',0,'mcs',0,'modOrd',0);
+	Station.Schedule(1:Station.NDLRB) = struct('UeId',0,'Mcs',0,'ModOrd',0);
 	sz = length(Station.Users);
 
 	switch (Param.scheduling)
 		case 'roundRobin'
-			if (Station.RrNext.ueId == 0)
-				Station.RrNext.ueId = Station.Users(1).ueId;
-				Station.RrNext.index = 1;
+			if (Station.RrNext.UeId == 0)
+				Station.RrNext.UeId = Station.Users(1).UeId;
+				Station.RrNext.Index = 1;
 			end
 
 			maxRounds = sz;
 			prbsAv = Station.NDLRB;
-			iUser = Station.RrNext.index;
+			iUser = Station.RrNext.Index;
 			while (iUser <= sz && maxRounds > 0)
 				User = Station.Users(iUser);
 				if (prbsAv > 0)
-					if (~User.scheduled && User.queue.size > 0)
-						modOrd = cqi2modOrd(User.wCqi);
-						prbsNeed = ceil(User.queue.size/(modOrd * Param.prbSym));
+					if (~User.scheduled && User.Queue.Size > 0)
+						modOrd = cqi2modOrd(User.WCqi);
+						prbsNeed = ceil(User.Queue.Size/(modOrd * Param.prbSym));
 						prbsSch = 0;
 						if (prbsNeed >= prbsAv)
 							prbsSch = prbsAv;
@@ -38,15 +38,15 @@ function [Station] = schedule(Station, Param)
 							prbsSch = prbsNeed;
 						end
 						prbsAv = prbsAv - prbsSch;
-						Station.Users(iUser).scheduled = true;
+						Station.Users(iUser).Scheduled = true;
 						iUser = iUser + 1;
 						% write to schedule struct
 						for (iPrb = 1:Station.NDLRB)
-							if (Station.Schedule(iPrb).ueId == 0)
-								mcs = cqi2mcs(User.wCqi);
+							if (Station.Schedule(iPrb).UeId == 0)
+								mcs = cqi2mcs(User.WCqi);
 								for (iSch = 0:prbsSch-1)
-									Station.Schedule(iPrb + iSch) = struct('ueId', User.ueId,...
-										'mcs', mcs, 'modOrd', modOrd);
+									Station.Schedule(iPrb + iSch) = struct('UeId', User.UeId,...
+										'Mcs', mcs, 'ModOrd', modOrd);
 								end
 								break;
 							end
@@ -55,12 +55,12 @@ function [Station] = schedule(Station, Param)
 					maxRounds = maxRounds -1;
 				else
 					% Keep track of the next user to be scheduled in the next round
-					if (iUser + 1 > sz || Station.Users(iUser + 1).ueId == 0)
-						Station.RrNext.ueId = Station.Users(1).ueId;
-						Station.RrNext.index = 1;
+					if (iUser + 1 > sz || Station.Users(iUser + 1).UeId == 0)
+						Station.RrNext.UeId = Station.Users(1).UeId;
+						Station.RrNext.Index = 1;
 					else
-						Station.RrNext.ueId = Station.Users(iUser + 1).ueId;
-						Station.RrNext.index = iUser + 1;
+						Station.RrNext.UeId = Station.Users(iUser + 1).UeId;
+						Station.RrNext.Index = iUser + 1;
 					end
 					% in both cases, stop the loop
 					iUser = sz +1;
@@ -69,9 +69,9 @@ function [Station] = schedule(Station, Param)
 
 		case 'random'
 			for (ix = 1:Station.NDLRB)
-				Station.Schedule(ix).ueId = Station.Users(randi(sz)).ueId;
-				Station.Schedule(ix).mcs = randi([1,28]);
-				Station.Schedule(ix).modOrd = 2*randi([1,3]);
+				Station.Schedule(ix).UeId = Station.Users(randi(sz)).UeId;
+				Station.Schedule(ix).Mcs = randi([1,28]);
+				Station.Schedule(ix).ModOrd = 2*randi([1,3]);
 			end
 
 	end

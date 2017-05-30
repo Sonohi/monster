@@ -43,7 +43,7 @@ Param.storeTxData = true;
 Param.scheduling = 'roundRobin';
 Param.prbSym = 160;
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), max(Param.buildings(:, 3)), ...
-		max(Param.buildings(:, 4))];
+	max(Param.buildings(:, 4))];
 
 sonohi(Param.reset);
 
@@ -84,7 +84,7 @@ end
 
 % Utilisation ranges
 if (Param.utilLoThr > 0 && Param.utilLoThr <= 100 && Param.utilHiThr > 0 && ...
-	 	Param.utilHiThr <= 100)
+		Param.utilHiThr <= 100)
 	utilLo = 1:Param.utilLoThr;
 	utilHi = Param.utilHiThr:100;
 else
@@ -108,7 +108,7 @@ for (iUtilLo = 1: length(utilLo))
 				Stations(iStation).Users = updateTrQueue(trSource, iRound, Stations(iStation).Users);
 
 				% schedule only if at least 1 user is associated
-				if (Stations(iStation).Users(1).ueId ~= 0)
+				if (Stations(iStation).Users(1).UeId ~= 0)
 					Stations(iStation) = schedule(Stations(iStation), Param);
 				end
 			end;
@@ -116,7 +116,7 @@ for (iUtilLo = 1: length(utilLo))
 			% per each user, create the codeword
 			for (iUser = 1:length(Users))
 				% get the eNodeB thie UE is connected to
-				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
+				iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 
 				% Check if this UE is scheduled otherwise skip
 				if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
@@ -156,8 +156,8 @@ for (iUtilLo = 1: length(utilLo))
 			% resource grid and modulate the grid to get the TX waveform
 			for (iStation = 1:length(Stations))
 
-        % Get associated user that is scheduled
-        schUser = Stations(iStation).Schedule(iRound).ueId;
+				% Get associated user that is scheduled
+				schUser = Stations(iStation).Schedule(iRound).ueId;
 
 				% generate empty grid or clean the previous one
 				Stations(iStation).ReGrid = lteDLResourceGrid(Stations(iStation));
@@ -174,20 +174,20 @@ for (iUtilLo = 1: length(utilLo))
 				end
 
 				% with the grid ready, generate the TX waveform
-                % Currently the waveform is given per station, i.e. same
-                % for all associated users.
+				% Currently the waveform is given per station, i.e. same
+				% for all associated users.
 				[Stations(iStation).TxWaveform, Stations(iStation).WaveformInfo] = ...
 					lteOFDMModulate(Stations(iStation), Stations(iStation).ReGrid);
 
-      end
+			end
 
 			% Once all eNodeBs have created and stored their txWaveforms, we can go
 			% through the UEs and compute the rxWaveforms
 			for (iUser = 1:length(Users))
 				% find serving eNodeB
-				iServingStation = find([Stations.NCellID] == Users(iUser).eNodeB);
+				iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 				Stations(iServingStation).Channel.InitTime = iRound/1000;
-				%Users(iUser).rxWaveform = ...
+				%Users(iUser).RxWaveform = ...
 				%	Stations(iServingStation).Channel.propagate(Stations(iServingStation),Users(iUser));
 
 				%TODO

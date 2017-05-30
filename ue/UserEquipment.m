@@ -3,24 +3,26 @@
 classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
-		ueId;
-		velocity;
-		queue;
-		eNodeB;
-		scheduled;
+		ENodeB;
 		Position;
-		wCqi;
+		Queue;
+		RxWaveform;
+		Scheduled;
+		UeId;
+		Velocity;
+		WCqi;
 	end
 
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
-			obj.ueId = userId;
-			obj.velocity = Param.velocity;
-			obj.queue = struct('size', 0, 'time', 0, 'pkt', 0);
-			obj.eNodeB = 0;
-			obj.scheduled = false;
-			obj.wCqi;
+			obj.ENodeB = 0;
+			obj.Queue = struct('Size', 0, 'Time', 0, 'Pkt', 0);
+			obj.RxWaveform = zeros(Param.numSubFramesMacro * 307.2, 1);
+			obj.Scheduled = false;
+			obj.UeId = userId;
+			obj.Velocity = Param.velocity;
+			obj.WCqi;
 		end
 
 		% Posiiton UE

@@ -15,13 +15,13 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 	numPRB = 0;
 	avMCS = 0;
 	avMOrd = 0;
-	qsz = User.queue.size;
+	qsz = User.Queue.Size;
 	sch = Station.Schedule;
 	for (iPrb = 1:length(sch))
-		if (sch(iPrb).ueId == User.ueId)
+		if (sch(iPrb).UeId == User.UeId)
 			numPRB = numPRB + 1;
-			avMCS = avMCS + sch(iPrb).mcs;
-			avMOrd = avMOrd + sch(iPrb).modOrd;
+			avMCS = avMCS + sch(iPrb).Mcs;
+			avMOrd = avMOrd + sch(iPrb).ModOrd;
 		end
 	end
 
@@ -47,6 +47,6 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 	tb = cat(1, tb, padding);
 
 	% update User queue by reducing the bits sent
-	User.queue.size = User.queue.size - TbInfo.tbSize;
+	User.Queue.Size = User.Queue.Size - TbInfo.tbSize;
 
 end

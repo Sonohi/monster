@@ -11,7 +11,7 @@ function [sch] = checkUserSchedule(User, Station)
 
 	sch = false;
 	for (iPRB = 1:length(Station.Schedule))
-		if (Station.Schedule(iPRB).ueId == User.ueId && User.queue.size > 0)
+		if (Station.Schedule(iPRB).UeId == User.UeId && User.Queue.Size > 0)
 			sch = true;
 			break;
 		end
