@@ -39,10 +39,6 @@ classdef UserEquipment
 		function obj = setScheduled(obj, status)
 			obj.Scheduled = status;
 		end
-
 	end
 
-	methods (Access = private)
-
-	end
 end

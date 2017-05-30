@@ -51,7 +51,7 @@ classdef EvolvedNodeB
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
 			obj = resetSchedule(obj);
-			obj = initResourceGrid(obj);
+			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
       % Construct channel
       obj.Channel = ChBulk_v1(Param);
@@ -79,15 +79,22 @@ classdef EvolvedNodeB
 		function obj = set.NSubframe(obj, num)
 			obj.NSubframe =  num;
 		end
-	end
 
-	methods (Access = private)
-		% Set resource grid for eNOdeB
-		function obj = initResourceGrid(obj)
-			str = lteDLResourceGrid(struct(obj));
+		% Set resource grid for eNodeB
+		function obj = resetResourceGrid(obj)
+			str = lteDLResourceGrid(cast2Struct(obj));
 			obj.ReGrid = str;
 		end
 
+		% modulate TX waveform
+		function obj = modulateTxWaveform(obj)
+			enb = cast2Struct(obj);
+			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
+		end
+
+	end
+
+	methods (Access = private)
 		% set PDSCH
 		function obj = initPDSCH(obj)
 			ch = struct('TxScheme', 'Port0', 'Modulation', {'QPSK'}, 'NLayers', 1, ...
@@ -95,6 +102,11 @@ classdef EvolvedNodeB
 				'NTurboDecIts', 5, 'PRBSet', (0:obj.NDLRB-1)', 'TrBlkSizes', [], ...
 				'CodedTrBlkSizes', [], 'CSIMode', 'PUCCH 1-0', 'PMIMode', 'Wideband', 'CSI', 'On');
 			obj.PDSCH = ch;
+		end
+
+		% cast object to struct
+		function enbStruct = cast2Struct(obj)
+			enbStruct = struct(obj);
 		end
 
 	end

@@ -33,7 +33,9 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
           y = buildings(i,4)-y0;
           rectangle('Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9])
       end
-  end
+	else
+		h = [];
+	end
 
 	% Macro BS positioned at centre with single BS
 	% TODO extend at multiple macro
@@ -85,7 +87,7 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
 	  microPos(i, :) = [x y];
       if draw
          text(x,y-6,strcat('Micro BS (',num2str(round(x)),', ',num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9)
-			 
+
          rectangle('Position',[x y 5 5],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5])
       end
 	end
