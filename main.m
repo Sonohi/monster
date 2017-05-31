@@ -22,13 +22,17 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
-Param.draw = 0; % Enable plots
+Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
 Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
 Param.numMicro = 5;
+Param.MacroHeight = 35; %Given in meters
+Param.MicroHeight = 30; 
+Param.UEHeight = 1.5;
+Param.BuildingHeight = [10,30]; % Height interval
 Param.seed = 122;
 Param.buildings = load('mobility/buildings.txt');
 Param.velocity = 3; % in km/h
@@ -44,6 +48,7 @@ Param.scheduling = 'roundRobin';
 Param.prbSym = 160;
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), max(Param.buildings(:, 3)), ...
 	max(Param.buildings(:, 4))];
+Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 
 sonohi(Param.reset);
 
@@ -51,7 +56,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'winner2';
+Param.channel.mode = 'eHATA';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)
