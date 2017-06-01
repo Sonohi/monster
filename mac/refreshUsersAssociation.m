@@ -46,9 +46,9 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 		% TODO replace with matrix operation
 		for (iStation = 1:length(Stations))
 			if (Stations(iStation).NCellID == Users(iUser).ENodeB)
-				for (iUser = 1:Param.numUsers)
-					if (Stations(iStation).Users(iUser) == 0)
-						Stations(iStation).Users(iUser) = Users(iUser).UeId;
+				for (ix = 1:Param.numUsers)
+					if (Stations(iStation).Users(ix) == 0)
+						Stations(iStation).Users(ix) = Users(iUser).UeId;
 						break;
 					end
 				end
