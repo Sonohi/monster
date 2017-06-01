@@ -29,8 +29,8 @@ classdef ChBulk_v2
              
              switch obj.Mode
                  case 'winner2'
-
-
+                    
+                     disp('Setting up WINNER II channel model...')
                      % Construct anteanna array, eNB and users
                      AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
                      AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
@@ -45,8 +45,10 @@ classdef ChBulk_v2
                      range = max(obj.Area);
 
                      % Assuming one antenna port, number of links are equal to
-                     % number of base stations
-                     numLinks = length(Stations);
+                     % number of users scheuled in the given round
+                     
+                     users  = [Stations.Users];
+                     numLinks = nnz(users);
 
 
                      cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
@@ -59,6 +61,7 @@ classdef ChBulk_v2
                      
                      for i = 1:length(Stations)
                         cfgLayout.Stations(i).Pos(1:2) = Stations(i).Position(1:2);
+
                      end
                      
                      for ii = 1:length(Users)
@@ -70,12 +73,43 @@ classdef ChBulk_v2
                      % and C4 (Urban macro outdoor to indoor). Non-line-of-sight 
                      % (NLOS) is modelled for each link.
                      
-                     for i = 1:numLinks
-                         cfgLayout.Pairing(:,i) = [i; Stations(i).Schedule(iRound).UeId+length(Stations)];
+                     % For each station create pairing based on associated
+                     % users.
+                     nlink=1;
+                     for i = 1:length(Stations)
+                         for ii = 1:nnz(users(:,i))
+                            cfgLayout.Pairing(:,nlink) = [i; users(ii,i)+length(Stations)];
+                            nlink = nlink+1;
+                         end
                      end
+ 
+                    
+                    % Loop through pairings and set Scenarios based on
+                    % station type
+                    
+                    for i = 1:numLinks
+                        
+                        c_bs = Stations(cfgLayout.Pairing(1,i));
+                        c_ms = Users(cfgLayout.Pairing(2,i)-length(Stations));
+                        if c_bs.bsClass == 'micro'
+                            cfgLayout.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+                            cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                        else
+                            if obj.getDistance(c_bs.Position,c_ms.Position) < 50
+                                cfgLayout.ScenarioVector(i) = 6; % B5d NLOS hotspot metropol
+                                cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+                            else    
+                                cfgLayout.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
+                                cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                            end
+                        end
+                        
+                        
+                    end
+             
                      
-                     cfgLayout.ScenarioVector = [11*ones(1,numLinks)]; % 6 for B4, 11 for C2 and 13 for C4
-                     cfgLayout.PropagConditionVector = [zeros(1,numLinks)];  % 0 for NLOS
+                    %cfgLayout.ScenarioVector = [11*ones(1,numLinks)]; % 6 for B4, 11 for C2 and 13 for C4
+                    %cfgLayout.PropagConditionVector = [zeros(1,numLinks)];  % 0 for NLOS
                         
                     numBSSect = sum(cfgLayout.NofSect);
                     numMS = length(useridx);
@@ -90,21 +124,75 @@ classdef ChBulk_v2
                         pairPos = cell2mat({cfgLayout.Stations(pairStn).Pos});
                         plot(pairPos(1,:), pairPos(2,:), '-.b');
                     end
-                     
-                    frameLen = 1600;   % Number of samples generated
-
+                    
+                    % Number of samples must be identical for all waveforms
+                    
+                    t = [Stations.WaveformInfo];
+                    SamplingRates = [t.SamplingRate];
+                    Nfftsize = [t.Nfft];
+                    frameLen = SamplingRates./double(Nfftsize);
+                    
+                    if numel(unique(frameLen)) ~= 1
+                        msgID = 'CH:SamplingRateNfft';
+                        msg = 'Number of time samples are not identical';
+                        baseException = MException(msgID,msg);
+                        throw(baseException)
+                    end
+                    
+                    
+                   
                     cfgWim = winner2.wimparset;
-                    cfgWim.NumTimeSamples      = frameLen;
+                    cfgWim.NumTimeSamples      = frameLen(1);
                     cfgWim.IntraClusterDsUsed  = 'yes';
-                    cfgWim.CenterFrequency     = 1.9e9;
+                    cfgWim.CenterFrequency     = 1.9e9; % 1.9 GHz
                     cfgWim.UniformTimeSampling = 'no';
                     cfgWim.ShadowingModelUsed  = 'yes';
                     cfgWim.PathLossModelUsed   = 'yes';
                     cfgWim.RandomSeed          = 31415926;  % For repeatability
                     WINNERChan = comm.WINNER2Channel(cfgWim, cfgLayout);
-                    chanInfo = info(WINNERChan)                    
-                    txSig = cellfun(@(x) [ones(1,x);zeros(frameLen-1,x)], ...
-                            num2cell(chanInfo.NumBSElements)', 'UniformOutput', false);
+                    chanInfo = info(WINNERChan);                    
+                    %txSig = cellfun(@(x) [ones(1,x);zeros(frameLen-1,x)], ...
+                    %        num2cell(chanInfo.NumBSElements)', 'UniformOutput', false);
+                    
+                        
+                    % Each BS transmit same waveform toward all pairings.
+                    % Thus, waveform per basestation is repeated given the
+                    % association
+                     for i = 1:numLinks
+                        txSig{i,1} = Stations(cfgLayout.Pairing(1,i)).TxWaveform;
+                     end
+                     
+                    %txSig = 
+                    
+                    disp('Processing signal...')
+                    rxSig = WINNERChan(txSig);
+                    
+                    figure
+                    hold on;
+                    for linkIdx = 1:numLinks
+                        delay = chanInfo.ChannelFilterDelay(linkIdx);
+                        stem(((0:(frameLen(1)-1))-delay)/chanInfo.SampleRate(linkIdx), ...
+                            abs(rxSig{linkIdx}(:,1)));
+                    end
+                    maxX = max((cell2mat(cellfun(@(x) find(abs(x) < 1e-8, 1, 'first'), ...
+                        rxSig.', 'UniformOutput', false)) - chanInfo.ChannelFilterDelay)./ ...
+                        chanInfo.SampleRate);
+                    minX = -max(chanInfo.ChannelFilterDelay./chanInfo.SampleRate);
+                    xlim([minX, maxX]);
+                    xlabel('Time (s)'); ylabel('Magnitude');
+                    legend('Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5', 'Link 6');
+                    title('Impulse Response at First Receive Antenna');
+                    
+
+                    SA = dsp.SpectrumAnalyzer( ...
+                        'Name',         'Frequency response', ...
+                        'SpectrumType', 'Power density', ...
+                        'SampleRate',   chanInfo.SampleRate(3), ...
+                        'Title',        'Frequency Response', ...
+                        'ShowLegend',   true, ...
+                        'ChannelNames', {'Link 3','Link 4'});
+
+                    SA(cell2mat(cellfun(@(x) x(:,1), rxSig(3:4,1)', 'UniformOutput', false)));
 
                  case 'eHATA'
 
