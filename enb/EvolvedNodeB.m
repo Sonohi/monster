@@ -25,6 +25,8 @@ classdef EvolvedNodeB
 		PDSCH;
 		Channel;
 		NSubframe;
+        bsClass;
+        Freq;
 	end
 
 	methods
@@ -35,7 +37,8 @@ classdef EvolvedNodeB
 					obj.NDLRB = Param.numSubFramesMacro;
 				case 'micro'
 					obj.NDLRB = Param.numSubFramesMicro;
-			end
+            end
+            obj.bsClass = bsClass;
 			obj.NCellID = cellId;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
@@ -50,6 +53,7 @@ classdef EvolvedNodeB
 			obj.RrNext = struct('UeId',0,'Index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
+            obj.Freq = Param.freq;
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
@@ -86,7 +90,9 @@ classdef EvolvedNodeB
 		% modulate TX waveform
 		function obj = modulateTxWaveform(obj)
 			enb = cast2Struct(obj);
+            % Assume lossless transmitter           
 			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
+            obj.WaveformInfo.SNR = 40;
 		end
 
 	end

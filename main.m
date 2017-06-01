@@ -49,6 +49,9 @@ Param.prbSym = 160;
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), max(Param.buildings(:, 3)), ...
 	max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
+Param.freq = 1900; %Given in MHz
+
+
 
 sonohi(Param.reset);
 
@@ -56,7 +59,8 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'eHATA';
+Param.channel.mode = 'winner2';
+Param.channel.region = 'DenseUrban';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
 if (Param.numMacro ~= 1)

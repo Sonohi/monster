@@ -23,17 +23,19 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 			bsPos = bs.Position;
 			dist = sqrt((bsPos(1)-uePos(1))^2 + (bsPos(2)-uePos(2))^2 );
 			% compute pathloss
-			if (bs.NDLRB == Param.numSubFramesMacro)
-				% macro
-				gamma = 4.5;
-				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
-			elseif (bs.NDLRB == Param.numSubFramesMicro)
-				% micro
-				gamma = 3;
-				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
-			else
-				error('Unrecognized eNB');
-			end
+% 			if (bs.NDLRB == Param.numSubFramesMacro)
+% 				% macro
+% 				gamma = 4.5;
+% 				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
+% 			elseif (bs.NDLRB == Param.numSubFramesMicro)
+% 				% micro
+% 				gamma = 3;
+% 				lossDb = pathloss(Param.dlFreq, gamma, d0, dist);
+% 			else
+% 				error('Unrecognized eNB');
+% 			end
+            [lossDb, ~] = ExtendedHata_MedianBasicPropLoss(Stations(iStation).Freq, ...
+                        dist/1e3, bsPos(3), uePos(3), Param.channel.region);
 			% check if this is the minimum so far
 			if (lossDb < minLossDb)
 				Users(iUser).ENodeB = Stations(iStation).NCellID;
