@@ -1,6 +1,6 @@
 function [Station] = schedule(Station, Users, Param)
 
-%   ALLOCATE PRBS is used to return the allocation of PRBs for a schedule
+%   SCHEDULE is used to return the allocation of PRBs for a schedule
 %
 %   Function fingerprint
 %   Station					->  base Station
