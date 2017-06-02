@@ -43,13 +43,10 @@ classdef ChBulk_v2
                      useridx = repmat(2,1,length(Users));
 
                      range = max(obj.Area);
-
                      % Assuming one antenna port, number of links are equal to
                      % number of users scheuled in the given round
-                     
                      users  = [Stations.Users];
                      numLinks = nnz(users);
-
 
                      cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
     
@@ -106,10 +103,7 @@ classdef ChBulk_v2
                         
                         
                     end
-             
-                     
-                    %cfgLayout.ScenarioVector = [11*ones(1,numLinks)]; % 6 for B4, 11 for C2 and 13 for C4
-                    %cfgLayout.PropagConditionVector = [zeros(1,numLinks)];  % 0 for NLOS
+            
                         
                     numBSSect = sum(cfgLayout.NofSect);
                     numMS = length(useridx);
@@ -125,24 +119,14 @@ classdef ChBulk_v2
                         plot(pairPos(1,:), pairPos(2,:), '-.b');
                     end
                     
-                    % Number of samples must be identical for all waveforms
+                    % Number of samples for computing frequency reponse and
+                    % channel coffecients
                     
-                    t = [Stations.WaveformInfo];
-                    SamplingRates = [t.SamplingRate];
-                    Nfftsize = [t.Nfft];
-                    frameLen = SamplingRates./double(Nfftsize);
+                    frameLen = 1600;
                     
-                    if numel(unique(frameLen)) ~= 1
-                        msgID = 'CH:SamplingRateNfft';
-                        msg = 'Number of time samples are not identical';
-                        baseException = MException(msgID,msg);
-                        throw(baseException)
-                    end
-                    
-                    
-                   
                     cfgWim = winner2.wimparset;
-                    cfgWim.NumTimeSamples      = frameLen(1);
+                    cfgWim.NumTimeSamples      = frameLen;
+                    cfgWim.SampleDensity = 20;
                     cfgWim.IntraClusterDsUsed  = 'yes';
                     cfgWim.CenterFrequency     = 1.9e9; % 1.9 GHz
                     cfgWim.UniformTimeSampling = 'no';
@@ -150,21 +134,46 @@ classdef ChBulk_v2
                     cfgWim.PathLossModelUsed   = 'yes';
                     cfgWim.RandomSeed          = 31415926;  % For repeatability
                     WINNERChan = comm.WINNER2Channel(cfgWim, cfgLayout);
-                    chanInfo = info(WINNERChan);                    
-                    %txSig = cellfun(@(x) [ones(1,x);zeros(frameLen-1,x)], ...
-                    %        num2cell(chanInfo.NumBSElements)', 'UniformOutput', false);
+                    chanInfo = info(WINNERChan);
+                    
+                    txSig = cellfun(@(x) [ones(1,x);zeros(frameLen-1,x)], ...
+                            num2cell(chanInfo.NumBSElements)', 'UniformOutput', false);
                     
                         
                     % Each BS transmit same waveform toward all pairings.
                     % Thus, waveform per basestation is repeated given the
                     % association
-                     for i = 1:numLinks
-                        txSig{i,1} = Stations(cfgLayout.Pairing(1,i)).TxWaveform;
-                     end
+%                      for i = 1:numLinks
+%                         txSig{i,1} = Stations(cfgLayout.Pairing(1,i)).TxWaveform;
+%                      end
                      
-                    %txSig = 
+
+                    disp('Determining frequency response...')
                     
-                    disp('Processing signal...')
+                    %Generate two sets of coefficients
+                    [H1,~,finalCond] = winner2.wim(cfgWim,cfgLayout);
+                    [H2,~,finalCond] = winner2.wim(cfgWim,cfgLayout,finalCond);
+                    % Concat in time domain, result is Nl by 1 cell array
+                    % where Nl is the number of links in the system
+                    
+                    % Each element contains a NR by NT by NP by NS array
+                    % where 
+                    % NR(i) is the number of receive antenna elements at MS for the ith link.
+                    % NT(i) is the number of transmit antenna elements at BS for the ith link.
+                    % NP(i) is the number of paths for the ith link.
+                    % NS is the number of time samples given by
+                    % cfgWim.NumTimeSamples. Since two sets are generated
+                    % this is 2*NumTimeSamples.
+                    H = cellfun(@(x,y) cat(4,x,y), H1, H2, 'UniformOutput', false);
+                    
+                   
+                    figure;
+                    Ts = finalCond.delta_t(1);  % Sample time for the 1st link
+                    plot(Ts*(0:2*cfgWim.NumTimeSamples-1),abs(squeeze(H{3}(1,1,1,:))));
+                    xlabel('Time (s)');
+                    ylabel('Amplitude');
+                    title('First Path Coefficient of 1st Link, 1st Tx and 1st Rx');
+                    
                     rxSig = WINNERChan(txSig);
                     
                     figure
@@ -190,9 +199,9 @@ classdef ChBulk_v2
                         'SampleRate',   chanInfo.SampleRate(3), ...
                         'Title',        'Frequency Response', ...
                         'ShowLegend',   true, ...
-                        'ChannelNames', {'Link 3','Link 4'});
+                        'ChannelNames', {'Link 1','Link 2','Link 3','Link 4'});
 
-                    SA(cell2mat(cellfun(@(x) x(:,1), rxSig(3:4,1)', 'UniformOutput', false)));
+                    SA(cell2mat(cellfun(@(x) x(:,1), rxSig(1:4,1)', 'UniformOutput', false)));
 
                  case 'eHATA'
 
