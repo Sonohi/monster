@@ -6,6 +6,7 @@ classdef ChBulk_v2
         Area;
         Mode;
         Buildings;
+        Draw;
     end
     
     methods(Static)
@@ -19,6 +20,7 @@ classdef ChBulk_v2
              obj.Area = Param.area;
              obj.Mode = Param.channel.mode;
              obj.Buildings = Param.buildings;
+             obj.Draw = Param.draw;
          end
          
   
@@ -112,21 +114,24 @@ classdef ChBulk_v2
                     BSPos = cell2mat({cfgLayout.Stations(1:numBSSect).Pos});
                     MSPos = cell2mat({cfgLayout.Stations(numBSSect+1:end).Pos});
 
-
+                    
                     for linkIdx = 1:numLinks  % Plot links
                         pairStn = cfgLayout.Pairing(:,linkIdx);
                         pairPos = cell2mat({cfgLayout.Stations(pairStn).Pos});
-                        plot(pairPos(1,:), pairPos(2,:), '-.b');
+                        if obj.Draw
+                            plot(pairPos(1,:), pairPos(2,:),'LineWidth',1,'Color',[0,0,0.7,0.3]);
+                        end
                     end
+                    
                     
                     % Number of samples for computing frequency reponse and
                     % channel coffecients
                     
-                    frameLen = 1600;
+                    frameLen = 2000;
                     
                     cfgWim = winner2.wimparset;
                     cfgWim.NumTimeSamples      = frameLen;
-                    cfgWim.SampleDensity = 20;
+                    %cfgWim.SampleDensity = 20;
                     cfgWim.IntraClusterDsUsed  = 'yes';
                     cfgWim.CenterFrequency     = 1.9e9; % 1.9 GHz
                     cfgWim.UniformTimeSampling = 'no';
@@ -148,60 +153,58 @@ classdef ChBulk_v2
 %                      end
                      
 
-                    disp('Determining frequency response...')
-                    
-                    %Generate two sets of coefficients
-                    [H1,~,finalCond] = winner2.wim(cfgWim,cfgLayout);
-                    [H2,~,finalCond] = winner2.wim(cfgWim,cfgLayout,finalCond);
-                    % Concat in time domain, result is Nl by 1 cell array
-                    % where Nl is the number of links in the system
-                    
-                    % Each element contains a NR by NT by NP by NS array
-                    % where 
-                    % NR(i) is the number of receive antenna elements at MS for the ith link.
-                    % NT(i) is the number of transmit antenna elements at BS for the ith link.
-                    % NP(i) is the number of paths for the ith link.
-                    % NS is the number of time samples given by
-                    % cfgWim.NumTimeSamples. Since two sets are generated
-                    % this is 2*NumTimeSamples.
-                    H = cellfun(@(x,y) cat(4,x,y), H1, H2, 'UniformOutput', false);
-                    
-                   
-                    figure;
-                    Ts = finalCond.delta_t(1);  % Sample time for the 1st link
-                    plot(Ts*(0:2*cfgWim.NumTimeSamples-1),abs(squeeze(H{3}(1,1,1,:))));
-                    xlabel('Time (s)');
-                    ylabel('Amplitude');
-                    title('First Path Coefficient of 1st Link, 1st Tx and 1st Rx');
+                    disp('Calculating channel...')
                     
                     rxSig = WINNERChan(txSig);
                     
-                    figure
-                    hold on;
-                    for linkIdx = 1:numLinks
-                        delay = chanInfo.ChannelFilterDelay(linkIdx);
-                        stem(((0:(frameLen(1)-1))-delay)/chanInfo.SampleRate(linkIdx), ...
-                            abs(rxSig{linkIdx}(:,1)));
-                    end
-                    maxX = max((cell2mat(cellfun(@(x) find(abs(x) < 1e-8, 1, 'first'), ...
-                        rxSig.', 'UniformOutput', false)) - chanInfo.ChannelFilterDelay)./ ...
-                        chanInfo.SampleRate);
-                    minX = -max(chanInfo.ChannelFilterDelay./chanInfo.SampleRate);
-                    xlim([minX, maxX]);
-                    xlabel('Time (s)'); ylabel('Magnitude');
-                    legend('Link 1', 'Link 2', 'Link 3', 'Link 4', 'Link 5', 'Link 6');
-                    title('Impulse Response at First Receive Antenna');
                     
+                    if obj.Draw
+                    
+                        figure
+                        hold on;
+                        for linkIdx = 1:2
+                            delay = chanInfo.ChannelFilterDelay(linkIdx);
+                            stem(((0:(frameLen(1)-1))-delay)/chanInfo.SampleRate(linkIdx), ...
+                                abs(rxSig{linkIdx}(:,1)));
+                        end
+                        maxX = max((cell2mat(cellfun(@(x) find(abs(x) < 1e-8, 1, 'first'), ...
+                            rxSig.', 'UniformOutput', false)) - chanInfo.ChannelFilterDelay)./ ...
+                            chanInfo.SampleRate);
+                        minX = -max(chanInfo.ChannelFilterDelay./chanInfo.SampleRate);
+                        xlim([minX, maxX]);
+                        xlabel('Time (s)'); ylabel('Magnitude');
+                        legend('Link 1', 'Link 2');
+                        title('Impulse Response of first two links');
 
-                    SA = dsp.SpectrumAnalyzer( ...
-                        'Name',         'Frequency response', ...
-                        'SpectrumType', 'Power density', ...
-                        'SampleRate',   chanInfo.SampleRate(3), ...
-                        'Title',        'Frequency Response', ...
-                        'ShowLegend',   true, ...
-                        'ChannelNames', {'Link 1','Link 2','Link 3','Link 4'});
 
-                    SA(cell2mat(cellfun(@(x) x(:,1), rxSig(1:4,1)', 'UniformOutput', false)));
+                        SA = dsp.SpectrumAnalyzer( ...
+                            'Name',         'Frequency response', ...
+                            'SpectrumType', 'Power density', ...
+                            'SampleRate',   chanInfo.SampleRate(3), ...
+                            'Title',        'Frequency Response', ...
+                            'ShowLegend',   true, ...
+                            'ChannelNames', {'Link 1','Link 2','Link 3','Link 4'});
+
+                        SA(cell2mat(cellfun(@(x) x(:,1), rxSig(1:4,1)', 'UniformOutput', false)));
+                    end
+                    
+                    
+                    % Applying impulse response of the channel to each
+                    % link.
+                    
+                    % Normalize power of impulse response
+                    rxSig = cellfun(@(x) x./mean(x), rxSig, 'UniformOutput', false);
+                    % Normalize power of Tx signals to 1
+                    for station = 1:length(Stations)
+                       Stations(station).TxWaveform =  Stations(station).TxWaveform./mean(Stations(station).TxWaveform)
+                    end
+                    
+                    % Apply Channel
+                    
+                    
+                    
+                    
+                    
 
                  case 'eHATA'
 

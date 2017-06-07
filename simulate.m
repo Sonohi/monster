@@ -108,8 +108,14 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Currently the waveform is given per station, i.e. same
 			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
+            
 
-		end
+
+        end
+        
+        if Param.draw
+             constellationDiagram(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft)
+        end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms

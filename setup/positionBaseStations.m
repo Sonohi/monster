@@ -89,7 +89,7 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
         text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
 				 	num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
 
-        rectangle('Position',[x y 5 5],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+        rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
       end
 	end
 
