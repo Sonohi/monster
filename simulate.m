@@ -108,70 +108,41 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Currently the waveform is given per station, i.e. same
 			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
-            
 
 
-        end
-        
-        if Param.draw
-             constellationDiagram(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft)
-        end
+    end
+
+    if Param.draw
+      constellationDiagram(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft)
+    end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
 
-		% Model propagation channel
-		Channel.traverse(Stations,Users,iRound)
-
 		for (iUser = 1:length(Users))
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
-			Stations(iServingStation).Channel.InitTime = iRound/1000;
-			%Users(iUser).RxWaveform = ...
-			%	Stations(iServingStation).Channel.propagate(Stations(iServingStation),Users(iUser));
 
-			%TODO
-			%Compute power from eNB and calculate transmission SNR
-
-			%Normalize power for AWGN impairment
-			%N0 = 1/(sqrt(2.0*Stations(iStation).CellRefP*double(Stations(iStation).Waveforminfo.Nfft))*SNR);
-
-			% Add AWGN in time domain
-			%noise = No*complex(randn(length(Users(iUser).rxWaveform)),...
-			%randn(length(Users(iUser).rxWaveform)));
-
-			% calculate the overall received waveform for this user by doing a summation
-			% of the interfering ones
-			for (iStation = 1:length(Stations))
-				if (iStation ~= iServingStation)
-					k = getScalingFactor(Stations(iStation), Users(iUser));
-					Users(iUser).rxWaveform = Users(iUser).rxWaveform + ...
-						k*Stations(iStation).Channel.propagate(Stations(iServingStation),Users(iUser));
-				end
-			end
+			% TODO remove B2B testing
+			Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
-				rxSubFrame = lteOFDMDemodulate(Stations(iServingStation), ...
-					Users(iUser).rxWaveform);
+				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iStation));
 
 				% Estimate channel for the received subframe
-				[estChannelGrid, noiseEst] = lteDLChannelEstimate(Stations(iServingStation),...
-					ChannelEstimator, rxSubframe);
+				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
+					ChannelEstimator);
+
 
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
-				% TODO revise if PDSCH settings should be edited to meet the scheduling
-				% details of this user
-				[cqi, sinr] = lteCQISelect(Stations(iServingStation), ...
-					Stations(iServingStation).PDSCH, estChannelGrid, noiseEst);
-
-				Users(iUser).wCqi = cqi;
-
-				% TODO Record stats and power consumed in this round
+				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation)); 
 			end
 		end
-	end % end
+
+
+	end % end round
 end

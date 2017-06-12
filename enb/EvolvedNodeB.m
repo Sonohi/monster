@@ -90,9 +90,14 @@ classdef EvolvedNodeB
 		% modulate TX waveform
 		function obj = modulateTxWaveform(obj)
 			enb = cast2Struct(obj);
-            % Assume lossless transmitter           
+      % Assume lossless transmitter
 			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
-            obj.WaveformInfo.SNR = 40;
+      obj.WaveformInfo.SNR = 40;
+		end
+
+		% cast object to struct
+		function enbStruct = cast2Struct(obj)
+			enbStruct = struct(obj);
 		end
 
 	end
@@ -107,10 +112,7 @@ classdef EvolvedNodeB
 			obj.PDSCH = ch;
 		end
 
-		% cast object to struct
-		function enbStruct = cast2Struct(obj)
-			enbStruct = struct(obj);
-		end
+
 
 	end
 end

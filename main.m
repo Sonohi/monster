@@ -92,17 +92,12 @@ else
 	return;
 end
 
-% check if we are running the batched version
-
-	% Create struct to pass data to the simulation function
-	simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
-									'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
-	% Main loop
-	% TODO remove loops and add batch call
+% Create struct to pass data to the simulation function
+simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
+								'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
+% Main loop
 for (iUtilLo = 1: length(utilLo))
-    for (iUtilHi = 1:length(utilHi))
-        simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
-    end;
+  for (iUtilHi = 1:length(utilHi))
+      simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
+  end;
 end;
-
-
