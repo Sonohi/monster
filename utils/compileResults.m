@@ -12,8 +12,10 @@ function out = compileResults(Param, utilLoList, utilHiList)
 	resultFiles = dir(filePattern);
 
 	% allocate struct to hold compiled data
-	out = struct('cqi', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds), ...
-		'sinr', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds));
+	out = struct(...
+		'cqi', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds), ...
+		'sinr', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds),...
+		'util', zeros(length(utilLoList), length(utilHiList), Param.numMacro + Param.numMicro, Param.schRounds));
 
 	for iFile = 1:length(resultFiles)
 		fileName = fullfile('results', resultFiles(iFile).name);
@@ -25,6 +27,7 @@ function out = compileResults(Param, utilLoList, utilHiList)
 
 		out.cqi(iUtilLo, iUtilHi, :, :) = fileData.Results.cqi;
 		out.sinr(iUtilLo, iUtilHi, :, :) = fileData.Results.sinr;
+		out.util(iUtilLo, iUtilHi, :, :) = fileData.Results.util;
 
 	end
 

@@ -25,9 +25,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 	% create a string to mark the output of this simulation
 	outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
-	Results = struct('sinr', zeros(Param.numUsers,Param.schRounds), 'cqi', ...
-		zeros(Param.numUsers,Param.schRounds), 'info', struct('utilLo', utilLo, ...
-		'utilHi', utilHi));
+	Results = struct(...
+		'sinr', zeros(Param.numUsers,Param.schRounds),...
+		'cqi', 	zeros(Param.numUsers,Param.schRounds), ...
+		'util', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
+		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
 
 	for iRound = 1:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
@@ -44,10 +46,15 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			Users(iUser) = setScheduled(Users(iUser), false);
 		end;
 
-		for (iStation = 1:length(Stations))
+		for iStation = 1:length(Stations)
 			% schedule only if at least 1 user is associated
-			if (Stations(iStation).Users(1) ~= 0)
+			if Stations(iStation).Users(1) ~= 0
 				Stations(iStation) = schedule(Stations(iStation), Users, Param);
+
+				sch = [Stations(iStation).Schedule.UeId];
+				utilPercent = 100*max(find(sch))/length(sch);
+				% store eNodeB-space results
+				Results.util(iStation, iRound) = utilPercent;
 			end
 		end;
 
@@ -111,13 +118,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Currently the waveform is given per station, i.e. same
 			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
-
-
 		end
 
     if Param.draw
       constellationDiagram(Stations(1,1).TxWaveform, ...
-		  Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft);
+		  	Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft);
     end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
@@ -144,10 +149,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation));
 
-				% store results
+				% store UE-space results
 				Results.sinr(iUser, iRound) = Users(iUser).Sinr;
 				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
 			end
+
 		end
 	end % end round
 

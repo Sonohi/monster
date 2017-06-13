@@ -22,9 +22,9 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
-Param.draw = 0; % Enable plots
+Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 1;
+Param.schRounds = 10;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -38,7 +38,7 @@ Param.buildings = load('mobility/buildings.txt');
 Param.velocity = 3; % in km/h
 Param.numUsers = 15;
 Param.utilLoThr = 1;
-Param.utilHiThr = 99;
+Param.utilHiThr = 100;
 Param.ulFreq = 1747.5;
 Param.dlFreq = 1842.5;
 Param.maxTbSize = 97896;

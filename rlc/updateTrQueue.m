@@ -11,8 +11,8 @@ function [newQueue] = updateTrQueue(src, simTime, User)
 
 	% if the size of the queue is 0 and the simulation time is not beyond the tx
 	% deadline, then update the queue
+	newQueue = User.Queue;
 	if (User.Queue.Size <= 0 && simTime >= User.Queue.Time)
-		newQueue = User.Queue;
 		newQueue.Size = 0;
 		for (ix = 1:length(src))
 			if (src(ix, 1) <= simTime)
