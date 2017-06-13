@@ -9,24 +9,26 @@ function simulate(Param, DataIn, utilLo, utilHi)
 	%   utilLo		-> 	value of low utilisation for this simulation
 	%		utilHi		->	value for high utilisation for this simulation
 
-		trSource = DataIn.trSource;
-		Stations = DataIn.Stations;
-		Users = DataIn.Users;
-		Channel = DataIn.Channel;
-		ChannelEstimator = DataIn.ChannelEstimator;
+	trSource = DataIn.trSource;
+	Stations = DataIn.Stations;
+	Users = DataIn.Users;
+	Channel = DataIn.Channel;
+	ChannelEstimator = DataIn.ChannelEstimator;
 
-		% Create structures to hold transmission data
-		if (Param.storeTxData)
-			[tbMatrix, tbMatrixInfo] = initTbMatrix(Param);
-			[cwdMatrix, cwdMatrixInfo] = initCwdMatrix(Param);
-		end
-		[symMatrix, symMatrixInfo] = initSymMatrix(Param);
+	% Create structures to hold transmission data
+	if (Param.storeTxData)
+		[tbMatrix, tbMatrixInfo] = initTbMatrix(Param);
+		[cwdMatrix, cwdMatrixInfo] = initCwdMatrix(Param);
+	end
+	[symMatrix, symMatrixInfo] = initSymMatrix(Param);
 
-		% create a string to mark the output of this simulation
-		outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
+	% create a string to mark the output of this simulation
+	outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
+	Results = struct('sinr', zeros(Param.numUsers,Param.schRounds), 'cqi', ...
+		zeros(Param.numUsers,Param.schRounds));
 
-	for (iRound = 1:Param.schRounds)
+	for iRound = 1:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
 		% allocate PRBs through the scheduling function per each station
 
@@ -35,7 +37,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		simTime = iRound*10^-3;
 
 		% Update RLC transmission queues for the users and reset the scheduled flag
-		for (iUser = 1:length(Users))
+		for iUser = 1:length(Users)
 			queue = updateTrQueue(trSource, simTime, Users(iUser));
 			Users(iUser) = setQueue(Users(iUser), queue);
 			Users(iUser) = setScheduled(Users(iUser), false);
@@ -49,12 +51,12 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		end;
 
 		% per each user, create the codeword
-		for (iUser = 1:length(Users))
+		for iUser = 1:length(Users)
 			% get the eNodeB thie UE is connected to
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 
 			% Check if this UE is scheduled otherwise skip
-			if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
+			if checkUserSchedule(Users(iUser), Stations(iServingStation))
 				% generate transport block for the user
 				[tb, TbInfo] = createTransportBlock(Stations(iServingStation), Users(iUser), ...
 					Param);
@@ -65,19 +67,19 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				% finally, generate the arrays of complex symbols by setting the
 				% correspondent values per each eNodeB-UE pair
 				% setup current subframe for serving eNodeB
-				if (CwdInfo.cwdSize ~= 0) % is this even necessary?
+				if CwdInfo.cwdSize ~= 0 % is this even necessary?
 					Stations(iServingStation).NSubframe = iRound;
 					[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
 						CwdInfo, Param);
 				end
 
-				if (SymInfo.symSize > 0)
+				if SymInfo.symSize > 0
 					symMatrix(iServingStation, iUser, :) = sym;
 					symMatrixInfo(iServingStation, iUser) = SymInfo;
 				end
 
 				% Save to data structures
-				if (Param.storeTxData)
+				if Param.storeTxData
 					tbMatrix(iServingStation, iUser, :) = tb;
 					tbMatrixInfo(iServingStation, iUser) = TbInfo;
 					cwdMatrix(iServingStation, iUser, :) = cwd;
@@ -129,21 +131,25 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
-			if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
+			if checkUserSchedule(Users(iUser), Stations(iServingStation))
 				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iServingStation));
 
 				% Estimate channel for the received subframe
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
 					ChannelEstimator);
 
-
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
-				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation)); 
+				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation));
+
+				% store results
+				Results.sinr(iUser, iRound) = Users(iUser).Sinr;
+				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
 			end
 		end
-
-
 	end % end round
+
+	% Once this simulation set is done, save the output
+  save(strcat('results/', outPrexif, '.mat'), 'Results');
 end
