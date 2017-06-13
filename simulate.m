@@ -26,7 +26,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 	outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
 	Results = struct('sinr', zeros(Param.numUsers,Param.schRounds), 'cqi', ...
-		zeros(Param.numUsers,Param.schRounds));
+		zeros(Param.numUsers,Param.schRounds), 'info', struct('utilLo', utilLo, ...
+		'utilHi', utilHi));
 
 	for iRound = 1:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and

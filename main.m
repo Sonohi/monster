@@ -38,7 +38,7 @@ Param.buildings = load('mobility/buildings.txt');
 Param.velocity = 3; % in km/h
 Param.numUsers = 15;
 Param.utilLoThr = 1;
-Param.utilHiThr = 51;
+Param.utilHiThr = 99;
 Param.ulFreq = 1747.5;
 Param.dlFreq = 1842.5;
 Param.maxTbSize = 97896;
@@ -96,8 +96,14 @@ end
 simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
 								'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
 % Main loop
-for (iUtilLo = 1: length(utilLo))
-  for (iUtilHi = 1:length(utilHi))
+for iUtilLo = 1: length(utilLo)
+  for iUtilHi = 1:length(utilHi)
       simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
   end;
 end;
+
+% compile all results files and do some plots
+compileResults(Param, utilLo, utilHi);
+if Param.draw
+	plotResults(Param, utilLo, utilHi);
+end
