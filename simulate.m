@@ -89,11 +89,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 		% the last step in the DL transmisison chain is to map the symbols to the
 		% resource grid and modulate the grid to get the TX waveform
-		for (iStation = 1:length(Stations))
+		for iStation = 1:length(Stations)
 			% generate empty grid or clean the previous one
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
 			% now for each list of user symbols, reshape them into the grid
-			for (iUser = 1:Param.numUsers)
+			for iUser = 1:Param.numUsers
 				sz = symMatrixInfo(iStation, iUser).symSize;
 				ixs = symMatrixInfo(iStation, iUser).indexes;
 				if (sz ~= 0)
@@ -110,16 +110,17 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
 
 
-    end
+		end
 
     if Param.draw
-      constellationDiagram(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft)
+      constellationDiagram(Stations(1,1).TxWaveform, ...
+		  Stations(1,1).WaveformInfo.SamplingRate/Stations(1,1).WaveformInfo.Nfft);
     end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
 
-		for (iUser = 1:length(Users))
+		for iUser = 1:length(Users)
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 
@@ -129,7 +130,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if (checkUserSchedule(Users(iUser), Stations(iServingStation)))
-				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iStation));
+				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iServingStation));
 
 				% Estimate channel for the received subframe
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...

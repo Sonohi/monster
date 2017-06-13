@@ -22,7 +22,7 @@ close all;
 
 % Simulation Parameters
 Param.reset = 0;
-Param.draw = 1; % Enable plots
+Param.draw = 0; % Enable plots
 Param.storeTxData = 0;
 Param.schRounds = 1;
 Param.numSubFramesMacro = 50;

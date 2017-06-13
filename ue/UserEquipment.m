@@ -48,21 +48,21 @@ classdef UserEquipment
 		function obj = demodulateRxWaveform(obj, enbObj)
 			ue = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
-      obj.RxSubFrame = lteOFDMDemodulate(enb, ue.RxWaveform);
+			obj.RxSubFrame = lteOFDMDemodulate(enb, ue.RxWaveform);
 		end
 
 		% estimate channel
 		function obj = estimateChannel(obj, enbObj, cec)
 			ue = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
-      [obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
+			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
 		end
 
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			ue = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
-      [obj.WCqi, obj.Sinr] = lteCQISelect(enb, enb.PDSCH, ue.EstChannelGrid, ue.NoiseEst);
+			[obj.WCqi, obj.Sinr] = lteCQISelect(enb, enb.PDSCH, ue.EstChannelGrid, ue.NoiseEst);
 		end
 
 	end
