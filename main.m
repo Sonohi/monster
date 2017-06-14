@@ -24,7 +24,7 @@ close all;
 Param.reset = 0;
 Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 10;
+Param.schRounds = 5;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -105,5 +105,5 @@ end;
 % compile all results files and do some plots
 compileResults(Param, utilLo, utilHi);
 if Param.draw
-	plotResults(Param, utilLo, utilHi);
+	plotResults(Param, Stations, Users);
 end
