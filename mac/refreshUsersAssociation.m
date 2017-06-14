@@ -20,7 +20,7 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 		minLossDb = 200;
 		for (iStation = 1:length(Stations))
 			bs = Stations(iStation);
-			if bs.Active
+			if bs.Status ~= string('inactive')
 				bsPos = bs.Position;
 				dist = sqrt((bsPos(1)-uePos(1))^2 + (bsPos(2)-uePos(2))^2 );
 				[lossDb, ~] = ExtendedHata_MedianBasicPropLoss(Stations(iStation).Freq, ...

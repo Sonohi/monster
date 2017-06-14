@@ -55,6 +55,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				utilPercent = 100*max(find(sch))/length(sch);
 				% store eNodeB-space results
 				Results.util(iStation, iRound) = utilPercent;
+				% Check utilisation metrics and change status if needed
+				Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent);
 			end
 		end;
 

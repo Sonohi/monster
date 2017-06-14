@@ -27,7 +27,7 @@ classdef EvolvedNodeB
 		NSubframe;
 		BsClass;
 		Freq;
-		Active;
+		Status;
 		Neighbours;
 	end
 
@@ -59,7 +59,7 @@ classdef EvolvedNodeB
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
-			obj.Active = 1;
+			obj.Status = string('active');
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 		end
 
@@ -122,6 +122,10 @@ classdef EvolvedNodeB
 					end
 				end
 			end
+		end
+
+		% check utilisation wrapper
+		function obj = checkUtilisation(obj, util)
 
 		end
 
