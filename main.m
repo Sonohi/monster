@@ -46,10 +46,11 @@ Param.maxCwdSize = 10^5;
 Param.maxSymSize = 10^5;
 Param.scheduling = 'roundRobin';
 Param.prbSym = 160;
-Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), max(Param.buildings(:, 3)), ...
-	max(Param.buildings(:, 4))];
+Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
+	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 Param.freq = 1900; %Given in MHz
+Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
 
 sonohi(Param.reset);
 

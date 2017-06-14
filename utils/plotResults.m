@@ -67,4 +67,22 @@ function plotResults(Param, Stations, Users)
 	end
 	legend('show')
 
+	% SINR/CQI plot
+	figure('Name', 'UE SINR/CQI');
+	title('UE SINR/CQI');
+	xlabel('UE CQI');
+	ylabel('UE SINR');
+	for iUser = 1: Param.numUsers
+		hold on;
+		x(:,1) = cqi(1,1,iUser, :);
+		y(:,1) = sinr(1,1,iUser, :);
+		plot(x, y, ...
+			'Color', rand(1,3),...
+			'LineStyle', char(lineStyle(randi(length(lineStyle)))),...
+			'Marker', char(markerStyle(randi(length(markerStyle)))),...
+			'LineWidth', 2,...
+			'DisplayName', strcat('UE ', num2str(Users(iUser).UeId)));
+	end
+	legend('show')
+
 end

@@ -21,24 +21,26 @@ classdef EvolvedNodeB
 		RrNext;
 		ReGrid;
 		TxWaveform;
-        WaveformInfo;
+		WaveformInfo;
 		PDSCH;
 		Channel;
 		NSubframe;
-        bsClass;
-        Freq;
+		BsClass;
+		Freq;
+		Active;
+		Neighbours;
 	end
 
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Param, bsClass, cellId)
-			switch bsClass
+		function obj = EvolvedNodeB(Param, BsClass, cellId)
+			switch BsClass
 				case 'macro'
 					obj.NDLRB = Param.numSubFramesMacro;
 				case 'micro'
 					obj.NDLRB = Param.numSubFramesMicro;
             end
-            obj.bsClass = bsClass;
+            obj.BsClass = BsClass;
 			obj.NCellID = cellId;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
@@ -57,7 +59,8 @@ classdef EvolvedNodeB
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
-
+			obj.Active = 1;
+			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 		end
 
 		% Posiiton base station
@@ -93,6 +96,33 @@ classdef EvolvedNodeB
       % Assume lossless transmitter
 			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
       obj.WaveformInfo.SNR = 40;
+		end
+
+		% create list of neighbours
+		function obj = setNeighbours(obj, Stations, Param)
+			% the macro eNodeB has neighbours all the micro
+			if obj.BsClass == 'macro'
+				obj.Neighbours(1:Param.numMicro) = find([Stations.NCellID] ~= obj.NCellID);
+			% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
+			% in a circle of radius Param.nboRadius
+			else
+				for iStation = 1:length(Stations)
+					if Stations(iStation).BsClass == 'macro'
+						% insert in array at lowest index with 0
+						ix = min(find(not(obj.Neighbours)));
+						obj.Neighbours(ix) = Stations(iStation).NCellID;
+					elseif Stations(iStation).NCellID ~= obj.NCellID
+						pos = obj.Position(1:2);
+						nboPos = Stations(iStation).Position(1:2);
+						dist = pdist(cat(1, pos, nboPos));
+						if dist <= Param.nboRadius
+							ix = min(find(not(obj.Neighbours)));
+							obj.Neighbours(ix) = Stations(iStation).NCellID;
+						end
+					end
+				end
+			end
+
 		end
 
 		% cast object to struct

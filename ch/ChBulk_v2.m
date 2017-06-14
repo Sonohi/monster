@@ -90,7 +90,7 @@ classdef ChBulk_v2
                         
                         c_bs = Stations(cfgLayout.Pairing(1,i));
                         c_ms = Users(cfgLayout.Pairing(2,i)-length(Stations));
-                        if c_bs.bsClass == 'micro'
+                        if c_bs.BsClass == 'micro'
                             cfgLayout.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
                             cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
                         else
