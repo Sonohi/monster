@@ -53,10 +53,13 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 				sch = [Stations(iStation).Schedule.UeId];
 				utilPercent = 100*max(find(sch))/length(sch);
+				
 				% store eNodeB-space results
 				Results.util(iStation, iRound) = utilPercent;
+
 				% Check utilisation metrics and change status if needed
-				Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent);
+				Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
+					Param, utilLo, utilHi, Stations);
 			end
 		end;
 

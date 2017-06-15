@@ -51,7 +51,7 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 Param.freq = 1900; %Given in MHz
 Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
-Param.hysteresis = 2; % number of scheduling rounds used for hysteresis in BS switching
+Param.hystMax = 2; % number of scheduling rounds used for hysteresis in BS switching
 
 sonohi(Param.reset);
 
@@ -96,12 +96,13 @@ end
 
 % Create struct to pass data to the simulation function
 simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
-								'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
+	'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
+	
 % Main loop
 for iUtilLo = 1: length(utilLo)
-  for iUtilHi = 1:length(utilHi)
-      simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
-  end;
+	for iUtilHi = 1:length(utilHi)
+		simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
+	end;
 end;
 
 % compile all results files and do some plots

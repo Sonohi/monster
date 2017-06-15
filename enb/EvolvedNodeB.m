@@ -29,6 +29,7 @@ classdef EvolvedNodeB
 		Freq;
 		Status;
 		Neighbours;
+		HystCount;
 	end
 
 	methods
@@ -61,6 +62,7 @@ classdef EvolvedNodeB
 			obj = initPDSCH(obj);
 			obj.Status = string('active');
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
+			obj.HystCount = 0;
 		end
 
 		% Posiiton base station
@@ -125,7 +127,47 @@ classdef EvolvedNodeB
 		end
 
 		% check utilisation wrapper
-		function obj = checkUtilisation(obj, util)
+		function obj = checkUtilisation(obj, util, Param, loThr, hiThr, Stations)
+
+			% overload
+			if util >= hiThr
+				obj.Status = string('overload');
+				obj.HystCount = obj.HystCount + 1;
+				if obj.HystCount >= Param.hystMax
+					% The overload has exceeded the hysteresis guard, so find an inactive
+					% neighbour that is micro to activate
+					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
+
+					% Loop the neighbours to find an inactive one
+					for iNbo = 1:length(nboMicroIxs)
+						if nboMicroIxs(iNbo) ~= 0
+							% find this neighbour in the stations
+							nboIx = find([Stations.NCellID] == obj.Neighbours(nboMicroIxs(iNbo)));
+
+							% Check if it can be activated
+							if (~isempty(nboIx) && Stations(nboIx).Status == string('inactive'))
+								Stations(nboIx).Status = string('active');
+								Stations(nboIx).HystCount = 0;
+								break;
+							end
+						end
+					end
+				end
+
+			% underload
+			elseif util <= loThr
+				obj.HystCount = obj.HystCount + 1;
+				if obj.HystCount >= Param.hystMax
+					% the underload has exceeded the hysteresis guard, so change status
+					obj.Status = string('inactive');
+				end
+
+			% normal operative range
+			else
+				obj.Status = string('active');
+				obj.HystCount = 0;
+
+			end
 
 		end
 
