@@ -50,18 +50,24 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% schedule only if at least 1 user is associated
 			if Stations(iStation).Users(1) ~= 0
 				Stations(iStation) = schedule(Stations(iStation), Users, Param);
-
-				sch = [Stations(iStation).Schedule.UeId];
-				utilPercent = 100*max(find(sch))/length(sch);
-				
-				% store eNodeB-space results
-				Results.util(iStation, iRound) = utilPercent;
-
-				% Check utilisation metrics and change status if needed
-				Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
-					Param, utilLo, utilHi, Stations);
 			end
-		end;
+
+			% Check utilisation
+			sch = [Stations(iStation).Schedule.UeId];
+			utilPercent = 100*find(sch, 1, 'last' )/length(sch);
+
+			% check utilPercent and cahnge to 0 if null
+			if isempty(utilPercent)
+				utilPercent = 0;
+			end
+			
+			% store eNodeB-space results
+			Results.util(iStation, iRound) = utilPercent;
+
+			% Check utilisation metrics and change status if needed
+			Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
+				Param, utilLo, utilHi, Stations);
+		end
 
 		% per each user, create the codeword
 		for iUser = 1:length(Users)

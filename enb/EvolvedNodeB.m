@@ -111,14 +111,14 @@ classdef EvolvedNodeB
 				for iStation = 1:length(Stations)
 					if Stations(iStation).BsClass == 'macro'
 						% insert in array at lowest index with 0
-						ix = min(find(not(obj.Neighbours)));
+						ix = find(not(obj.Neighbours), 1 );
 						obj.Neighbours(ix) = Stations(iStation).NCellID;
 					elseif Stations(iStation).NCellID ~= obj.NCellID
 						pos = obj.Position(1:2);
 						nboPos = Stations(iStation).Position(1:2);
 						dist = pdist(cat(1, pos, nboPos));
 						if dist <= Param.nboRadius
-							ix = min(find(not(obj.Neighbours)));
+							ix = find(not(obj.Neighbours), 1 );
 							obj.Neighbours(ix) = Stations(iStation).NCellID;
 						end
 					end
