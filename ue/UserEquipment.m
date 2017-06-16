@@ -10,6 +10,7 @@ classdef UserEquipment
 		Queue;
 		RxWaveform;
 		RxSubFrame;
+        EqSubFrame;
 		Scheduled;
 		Sinr;
 		UeId;
@@ -60,7 +61,7 @@ classdef UserEquipment
         
         % equalizer
         function obj = equalize(obj)
-           obj.RxSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst); 
+           obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst); 
         end
 
 		% select CQI

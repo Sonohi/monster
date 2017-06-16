@@ -135,7 +135,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% through the UEs and compute the rxWaveforms
         
         if ~strcmp(Param.channel.mode,'B2B')
-           %[Stations, Users] = Channel.traverse(Stations,Users); 
+           [Stations, Users] = Channel.traverse(Stations,Users); 
         end
         
 
@@ -166,16 +166,35 @@ function simulate(Param, DataIn, utilLo, utilHi)
 					ChannelEstimator);
                 if Param.draw
                     est_SubFrame = reshape(Users(iUser).RxSubFrame,length(Users(iUser).RxSubFrame(:,1))*length(Users(iUser).RxSubFrame(1,:)),1);
-                    constellationDiagram(est_SubFrame,1)
-                    hPlotDLResourceGrid(struct(Stations(iServingStation)),Users(iUser).RxSubFrame)
+                    constellationDiagram(est_SubFrame,1);
+                    hPlotDLResourceGrid(struct(Stations(iServingStation)),Users(iUser).RxSubFrame);
                 end
+                
+                % Calculate error 
+                rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
                 
                 % Perform equalization to account for phase noise (needs
                 % SNR)
                 if ~strcmp(Param.channel.mode,'B2B')
                     Users(iUser) = equalize(Users(iUser));
+                    eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
                 end
-                
+
+                EVM = comm.EVM;
+                EVM.AveragingDimensions = [1 2];
+                preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
+                fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+                    Users(iUser).UeId,preEqualisedEVM);
+                if Param.draw
+                    figure;
+                    dims = size(Users(iUser).RxSubFrame);
+                    surf(20*log10(abs(Users(iUser).RxSubFrame)));
+                    title('Received resource grid');
+                    ylabel('Subcarrier');
+                    xlabel('Symbol');
+                    zlabel('absolute value (dB)');
+                    axis([1 dims(2) 1 dims(1) -40 10]);
+                end
                 
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
