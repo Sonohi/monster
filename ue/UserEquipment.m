@@ -58,10 +58,10 @@ classdef UserEquipment
 			enb = cast2Struct(enbObj);
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
         end
-        
+
         % equalizer
         function obj = equalize(obj)
-           obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst); 
+           obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
         end
 
 		% select CQI
@@ -71,13 +71,15 @@ classdef UserEquipment
 			[obj.WCqi, obj.Sinr] = lteCQISelect(enb, enb.PDSCH, ue.EstChannelGrid, ue.NoiseEst);
 		end
 
-	end
-
-	methods (Access = private)
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
 		end
+
+	end
+
+	methods (Access = private)
+
 	end
 
 end

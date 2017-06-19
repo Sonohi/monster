@@ -60,7 +60,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			if isempty(utilPercent)
 				utilPercent = 0;
 			end
-			
+
 			% store eNodeB-space results
 			Results.util(iStation, iRound) = utilPercent;
 
@@ -133,29 +133,30 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
-        
+
         if ~strcmp(Param.channel.mode,'B2B')
-           [Stations, Users] = Channel.traverse(Stations,Users); 
+           [Stations, Users] = Channel.traverse(Stations,Users);
         end
-        
+
 
 		for iUser = 1:length(Users)
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 
 			% TODO remove B2B testing
-            if strcmp(Param.channel.mode,'B2B')
-                  Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
-            end
+			if strcmp(Param.channel.mode,'B2B')
+				Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
+			end
 
-            % Achieve synchronization
-            % TODO; Offset not computed correctly. Check eNB settings and
-            % how the synchronization signals are set (see 'edit
-            % DownlinkChannelEstimationEqualizationExample')
-            
-            offset = lteDLFrameOffset(Stations(iServingStation),Users(iUser).RxWaveform);
-            %Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
-            
+			% Achieve synchronization
+			% TODO; Offset not computed correctly. Check eNB settings and
+			% how the synchronization signals are set (see 'edit
+			% DownlinkChannelEstimationEqualizationExample')
+
+			%offset = lteDLFrameOffset(cast2Struct(Stations(iServingStation)), ...
+			%	cast2Struct(Users(iUser)).RxWaveform);
+			%Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
+			offset = calcFrameOffset(Stations(iStation), Users(iUser));
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if checkUserSchedule(Users(iUser), Stations(iServingStation))
@@ -164,38 +165,38 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				% Estimate channel for the received subframe
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
 					ChannelEstimator);
-                if Param.draw
-                    est_SubFrame = reshape(Users(iUser).RxSubFrame,length(Users(iUser).RxSubFrame(:,1))*length(Users(iUser).RxSubFrame(1,:)),1);
-                    constellationDiagram(est_SubFrame,1);
-                    hPlotDLResourceGrid(struct(Stations(iServingStation)),Users(iUser).RxSubFrame);
-                end
-                
-                % Calculate error 
-                rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
-                
-                % Perform equalization to account for phase noise (needs
-                % SNR)
-                if ~strcmp(Param.channel.mode,'B2B')
-                    Users(iUser) = equalize(Users(iUser));
-                    eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
-                end
+				if Param.draw
+					est_SubFrame = reshape(Users(iUser).RxSubFrame,length(Users(iUser).RxSubFrame(:,1))*length(Users(iUser).RxSubFrame(1,:)),1);
+					constellationDiagram(est_SubFrame,1);
+					hPlotDLResourceGrid(struct(Stations(iServingStation)),Users(iUser).RxSubFrame);
+				end
 
-                EVM = comm.EVM;
-                EVM.AveragingDimensions = [1 2];
-                preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
-                fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-                    Users(iUser).UeId,preEqualisedEVM);
-                if Param.draw
-                    figure;
-                    dims = size(Users(iUser).RxSubFrame);
-                    surf(20*log10(abs(Users(iUser).RxSubFrame)));
-                    title('Received resource grid');
-                    ylabel('Subcarrier');
-                    xlabel('Symbol');
-                    zlabel('absolute value (dB)');
-                    axis([1 dims(2) 1 dims(1) -40 10]);
-                end
-                
+				% Calculate error
+				rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
+
+				% Perform equalization to account for phase noise (needs
+				% SNR)
+				if ~strcmp(Param.channel.mode,'B2B')
+					Users(iUser) = equalize(Users(iUser));
+					eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
+				end
+
+				EVM = comm.EVM;
+				EVM.AveragingDimensions = [1 2];
+				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
+				fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+					Users(iUser).UeId,preEqualisedEVM);
+				if Param.draw
+					figure;
+					dims = size(Users(iUser).RxSubFrame);
+					surf(20*log10(abs(Users(iUser).RxSubFrame)));
+					title('Received resource grid');
+					ylabel('Subcarrier');
+					xlabel('Symbol');
+					zlabel('absolute value (dB)');
+					axis([1 dims(2) 1 dims(1) -40 10]);
+				end
+
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
