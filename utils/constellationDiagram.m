@@ -1,6 +1,6 @@
 function [ constDiagram ] = constellationDiagram(txSig,sps)
 constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',sps, ...
-    'SymbolsToDisplaySource','Property','SymbolsToDisplay',100);
+    'SymbolsToDisplaySource','Property','SymbolsToDisplay',length(txSig)/sps);
 
 constDiagram(txSig)
 

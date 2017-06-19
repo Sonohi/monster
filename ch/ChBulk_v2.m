@@ -12,7 +12,13 @@ classdef ChBulk_v2
     methods(Static)
         function distance = getDistance(tx_pos,rx_pos)
              distance = norm(rx_pos-tx_pos);
-        end 
+        end
+        
+        function thermalNoise = ThermalNoise(BW)
+            T = 290;
+            k = physconst('Boltzmann');
+            thermalNoise = k*T*BW;
+        end
     end
     
     methods
@@ -25,7 +31,7 @@ classdef ChBulk_v2
          
   
          
-         function obj = traverse(obj,Stations,Users,iRound)
+         function [Stations,Users,obj] = traverse(obj,Stations,Users)
              eNBpos = cell2mat({Stations(:).Position}');
              userpos = cell2mat({Users(:).Position}');
              
@@ -212,6 +218,11 @@ classdef ChBulk_v2
                     % Assume a single link per stations
                     numLinks = length(Stations);
 
+                     % Assuming one antenna port, number of links are equal to
+                     % number of users scheuled in the given round
+                     users  = [Stations.Users];
+                     numLinks = nnz(users);
+                    
                     freq_MHz = 1900;
                     region =  'DenseUrban'; 
                     
@@ -226,10 +237,24 @@ classdef ChBulk_v2
                                     distance, hb_pos(3), hm_pos(3), region);
                                 
                                 
-                        % Compute power from transmitted waveform and apply
-                        % noise corresponding to the pathloss
+                       BW = 9e9;
+                       thermalNoise = obj.ThermalNoise(BW);
+                       
                         
-                        a = 1;
+                        %% Apply SNR
+
+                        % Compute average symbol energy og signal (E_s)
+                        E_s = sqrt(2.0*Stations(ii).CellRefP*double(Stations(ii).Waveforminfo.Nfft))
+
+                        % Compute spectral noise density NO
+                        N0 = 1/(E_s*SNR);
+
+                        % Add AWGN
+
+                        noise = N0*complex(randn(size(sig_in)), ...
+                            randn(size(sig_in)));
+
+                        Users(User).rxWaveform = Stations(ii).txWaveform + noise;
                     end
                     
                     

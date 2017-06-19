@@ -10,6 +10,7 @@ classdef UserEquipment
 		Queue;
 		RxWaveform;
 		RxSubFrame;
+        EqSubFrame;
 		Scheduled;
 		Sinr;
 		UeId;
@@ -56,7 +57,12 @@ classdef UserEquipment
 			ue = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
-		end
+        end
+        
+        % equalizer
+        function obj = equalize(obj)
+           obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst); 
+        end
 
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
