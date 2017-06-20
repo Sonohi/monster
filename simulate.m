@@ -60,7 +60,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			if isempty(utilPercent)
 				utilPercent = 0;
 			end
-
+			
 			% store eNodeB-space results
 			Results.util(iStation, iRound) = utilPercent;
 
@@ -129,6 +129,22 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Currently the waveform is given per station, i.e. same
 			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
+            
+
+
+        end
+        
+        if Param.draw
+            
+            % Plot OFDM spectrum
+            spectrumAnalyser(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate)
+            
+            % Plot conestellation diagram of first station
+            grid = lteOFDMDemodulate(Stations(1,1),Stations(1,1).TxWaveform);
+            grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
+            constellationDiagram(grid_r,1)
+             
+             
         end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
@@ -165,38 +181,26 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				% Estimate channel for the received subframe
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
 					ChannelEstimator);
-				if Param.draw
-					est_SubFrame = reshape(Users(iUser).RxSubFrame,length(Users(iUser).RxSubFrame(:,1))*length(Users(iUser).RxSubFrame(1,:)),1);
-					constellationDiagram(est_SubFrame,1);
-					hPlotDLResourceGrid(struct(Stations(iServingStation)),Users(iUser).RxSubFrame);
-				end
 
-				% Calculate error
-				rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
+                % Calculate error 
+                rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
+                
+                % Perform equalization to account for phase noise (needs
+                % SNR)
+                if ~strcmp(Param.channel.mode,'B2B')
+                    Users(iUser) = equalize(Users(iUser));
+                    eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
+                end
 
-				% Perform equalization to account for phase noise (needs
-				% SNR)
-				if ~strcmp(Param.channel.mode,'B2B')
-					Users(iUser) = equalize(Users(iUser));
-					eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
-				end
+                EVM = comm.EVM;
+                EVM.AveragingDimensions = [1 2];
+                preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
+                fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+                    Users(iUser).UeId,preEqualisedEVM);
+                if Param.draw
 
-				EVM = comm.EVM;
-				EVM.AveragingDimensions = [1 2];
-				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
-				fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-					Users(iUser).UeId,preEqualisedEVM);
-				if Param.draw
-					figure;
-					dims = size(Users(iUser).RxSubFrame);
-					surf(20*log10(abs(Users(iUser).RxSubFrame)));
-					title('Received resource grid');
-					ylabel('Subcarrier');
-					xlabel('Symbol');
-					zlabel('absolute value (dB)');
-					axis([1 dims(2) 1 dims(1) -40 10]);
-				end
-
+                end
+                
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
@@ -207,7 +211,16 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
 			end
 
-		end
+        end
+        
+
+         
+        % Plot resource grids for all users
+        if Param.draw
+            hScatter = plotConstDiagram_rx(Users);
+            hGrids = plotReGrids(Users);
+        end
+        
 	end % end round
 
 	% Once this simulation set is done, save the output

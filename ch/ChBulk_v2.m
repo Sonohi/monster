@@ -162,6 +162,7 @@ classdef ChBulk_v2
                     disp('Calculating channel...')
                     
                     rxSig = WINNERChan(txSig);
+                    rxSig = cellfun(@(x) x./max(abs(x)), rxSig, 'UniformOutput', false);
                     
                     
                     if obj.Draw
@@ -187,24 +188,63 @@ classdef ChBulk_v2
                             'Name',         'Frequency response', ...
                             'SpectrumType', 'Power density', ...
                             'SampleRate',   chanInfo.SampleRate(3), ...
+                            'FFTLength', 2000,...
                             'Title',        'Frequency Response', ...
                             'ShowLegend',   true, ...
                             'ChannelNames', {'Link 1','Link 2','Link 3','Link 4'});
 
-                        SA(cell2mat(cellfun(@(x) x(:,1), rxSig(1:4,1)', 'UniformOutput', false)));
+                        %SA(cell2mat(cellfun(@(x) x(:,1), rxSig(1:4,1)', 'UniformOutput', false)));
+                        sig = cell2mat(cellfun(@(x) x(:,1), rxSig(1,1)', 'UniformOutput', false))
+                        N = 2000;
+                        Fs = chanInfo.SampleRate(3);
+                        Fss = chanInfo.SampleRate(3)/N;
+                        f = [-Fs/2:Fss:Fs/2-1];
+                        Fr = fftshift(abs(fft(sig,N)/N).^2);
+                        figure
+                        semilogy(f',10*log10(Fr))
+                        
+                        SA(sig)
+                        
                     end
                     
                     
                     % Applying impulse response of the channel to each
                     % link.
                     
-                    % Normalize power of impulse response
-                    rxSig = cellfun(@(x) x./mean(x), rxSig, 'UniformOutput', false);
-                    % Normalize power of Tx signals to 1
-                    for station = 1:length(Stations)
-                       Stations(station).TxWaveform =  Stations(station).TxWaveform./mean(Stations(station).TxWaveform)
-                    end
                     
+                    qpskModulator = comm.QPSKModulator;  
+                    
+                    d = randi([0 3],1000,1);
+                    x = qpskModulator(d);
+                    x_up = interp(x,length(rxSig{1,1}));
+                    x_norm = (x_up./(max(abs(x_up))*sqrt(2)));
+                    y = conv(x_norm,rxSig{1,1});
+                    
+                   
+                     constellationDiagram(x_norm,length(rxSig{1,1}))
+                     y_norm = (y./(max(abs(y))*sqrt(2)));
+                     figure
+                     scatterplot(x_norm,length(rxSig{1,1}))
+                     figure
+                     scatterplot(y_norm(1000:end-1000),length(rxSig{3,1}),length(rxSig{1,1})/2)
+                     
+                     
+                     
+                    
+                    
+                    figure
+                    plot(1:length(y_norm),y_norm)
+                    hold on
+                    plot(1:length(x_norm),x_norm)
+                    
+                    constellationDiagram(y_norm(length(rxSig{1,1}):end),length(rxSig{1,1}))
+                    % Normalize power of impulse response
+                    
+                    % Normalize power of Tx signals to 1
+                    %for station = 1:length(Stations)
+                    %   Stations(station).TxWaveform =  Stations(station).TxWaveform./mean(Stations(station).TxWaveform)
+                    %end
+                    a = 1;
                     % Apply Channel
                     
                     
