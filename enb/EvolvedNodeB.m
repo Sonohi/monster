@@ -108,6 +108,20 @@ classdef EvolvedNodeB
 			obj.ReGrid = regrid;
 		end
 
+		% insert PDSCH symbols in grid at correct indexes
+		function obj = setPDSCHGrid(obj, syms)
+			enb = cast2Struct(obj);
+			% get PDSCH indexes
+			indPdsch = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+
+			% pad for unused subcarriers
+			padding(1:length(indPdsch) - length(syms), 1) = 0;
+			syms = cat(1, syms, padding);
+
+			% insert symbols into grid
+			obj.ReGrid(indPdsch) = syms;
+		end
+
 		% modulate TX waveform
 		function obj = modulateTxWaveform(obj)
 			enb = cast2Struct(obj);

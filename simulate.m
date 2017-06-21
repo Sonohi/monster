@@ -113,47 +113,34 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		for iStation = 1:length(Stations)
 			% reset the grid to empty with only RS and synchronization signals
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
-			% now for each list of user symbols, reshape them into the grid
-			for iUser = 1:Param.numUsers
-				sz = symMatrixInfo(iStation, iUser).symSize;
-				ixs = symMatrixInfo(iStation, iUser).indexes;
-				if (sz ~= 0)
-					% TODO revise padding/truncating (why symbols are not int multiples of 14?)
-					tempSym(1:sz,1) = symMatrix(iStation, iUser, 1:sz);
-					mapSym = mapSymbols(tempSym, length(ixs) * 14);
-					Stations(iStation).ReGrid(ixs, :) = reshape(mapSym, [length(ixs), 14]);
-				end
-			end
+
+			% extract all the symbols this eNOdeB has to transmit
+			syms = extractStationSyms(Stations(iStation), iStation, symMatrix, Param);
+
+			% insert the symbols of the PDSCH into the grid
+			Stations(iStation) = setPDSCHGrid(Stations(iStation), syms);
 
 			% with the grid ready, generate the TX waveform
-			% Currently the waveform is given per station, i.e. same
-			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
-
-
-
-		end
+		end % end stations loop
 
 		if Param.draw
 			% Plot OFDM spectrum of first station
-			spectrumAnalyser(Stations(1).TxWaveform, Stations(1).WaveformInfo.SamplingRate)
+			spectrumAnalyser(Stations(1).TxWaveform, Stations(1).WaveformInfo.SamplingRate);
 
 			% Plot conestellation diagram of first station
 			enb = cast2Struct(Stations(1));
 			grid = lteOFDMDemodulate(enb,enb.TxWaveform);
 			grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
-			constellationDiagram(grid_r,1)
-
-
+			constellationDiagram(grid_r,1);
 		end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
 
-        if ~strcmp(Param.channel.mode,'B2B')
-           [Stations, Users] = Channel.traverse(Stations,Users);
-        end
-
+		if ~strcmp(Param.channel.mode,'B2B')
+			[Stations, Users] = Channel.traverse(Stations,Users);
+		end
 
 		for iUser = 1:length(Users)
 			% find serving eNodeB
@@ -182,24 +169,24 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
 					ChannelEstimator);
 
-                % Calculate error
-                rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
+				% Calculate error
+				rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
 
-                % Perform equalization to account for phase noise (needs
-                % SNR)
-                if ~strcmp(Param.channel.mode,'B2B')
-                    Users(iUser) = equalize(Users(iUser));
-                    eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
-                end
+				% Perform equalization to account for phase noise (needs
+				% SNR)
+				if ~strcmp(Param.channel.mode,'B2B')
+					Users(iUser) = equalize(Users(iUser));
+					eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
+				end
 
-                EVM = comm.EVM;
-                EVM.AveragingDimensions = [1 2];
-                preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
-                fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-                    Users(iUser).UeId,preEqualisedEVM);
-                if Param.draw
+				EVM = comm.EVM;
+				EVM.AveragingDimensions = [1 2];
+				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
+				fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+					Users(iUser).UeId,preEqualisedEVM);
+				if Param.draw
 
-                end
+				end
 
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
@@ -211,7 +198,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
 			end
 
-        end
+		end
 
 
 

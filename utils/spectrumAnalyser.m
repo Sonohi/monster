@@ -6,7 +6,6 @@ function [spectrumPlotTx] = spectrumAnalyser(sig, Fs)
 %   samplingRate  			->  sampling rate
 %   waveform   					->  waveform																		                                                                                     %
 
-	figure('Name', 'Spectrum Analyser');
 	spectrumPlotTx = dsp.SpectrumAnalyzer;
 	spectrumPlotTx.SampleRate = Fs;
 	spectrumPlotTx.SpectrumType = 'Power density';

@@ -6,7 +6,6 @@ function [ constDiagram ] = constellationDiagram(txSig,sps)
 	%   txSig  			->  sampling rate
 	%   sps   			->  waveform
 
-	figure('Name', 'Constellation diagram');
 	constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',sps, ...
     'SymbolsToDisplaySource','Property','SymbolsToDisplay',length(txSig)/sps);
 

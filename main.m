@@ -24,7 +24,7 @@ close all;
 Param.reset = 0;
 Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 5;
+Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -63,7 +63,7 @@ Param.channel.mode = 'B2B';
 Param.channel.region = 'DenseUrban';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
-if (Param.numMacro ~= 1)
+if Param.numMacro ~= 1
 	return;
 end
 
@@ -97,7 +97,7 @@ end
 % Create struct to pass data to the simulation function
 simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
 	'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
-	
+
 % Main loop
 for iUtilLo = 1: length(utilLo)
 	for iUtilHi = 1:length(utilHi)
