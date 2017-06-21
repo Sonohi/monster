@@ -40,8 +40,8 @@ classdef EvolvedNodeB
 					obj.NDLRB = Param.numSubFramesMacro;
 				case 'micro'
 					obj.NDLRB = Param.numSubFramesMicro;
-            end
-            obj.BsClass = BsClass;
+      end
+      obj.BsClass = BsClass;
 			obj.NCellID = cellId;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
@@ -50,6 +50,7 @@ classdef EvolvedNodeB
 			obj.Ng = 'Sixth';
 			obj.NFrame = 0;
 			obj.TotSubframes = 1;
+			obj.NSubframe = 0;
 			obj.OCNG = 'On';
             obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
@@ -63,6 +64,7 @@ classdef EvolvedNodeB
 			obj.Status = string('active');
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
+
 		end
 
 		% Posiiton base station
@@ -86,10 +88,24 @@ classdef EvolvedNodeB
 			obj.NSubframe =  num;
 		end
 
-		% Set resource grid for eNodeB
+		% Set default subframe resource grid for eNodeB
 		function obj = resetResourceGrid(obj)
-			str = lteDLResourceGrid(cast2Struct(obj));
-			obj.ReGrid = str;
+			enb = cast2Struct(obj);
+			% Create empty grid
+			regrid = lteDLResourceGrid(enb);
+			% add RS in the right indexes
+			indRs = lteCellRSIndices(enb, 0);
+			rs = lteCellRS(enb, 0);
+			% add synchronization signals
+			indPss = ltePSSIndices(enb);
+			pss = ltePSS(enb);
+			indSss = lteSSSIndices(enb);
+			sss = lteSSS(enb);
+			% % put all 3 signals into the grid
+			regrid(indRs) = rs;
+			regrid(indPss) = pss;
+			regrid(indSss) = sss;
+			obj.ReGrid = regrid;
 		end
 
 		% modulate TX waveform

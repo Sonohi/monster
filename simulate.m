@@ -60,7 +60,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			if isempty(utilPercent)
 				utilPercent = 0;
 			end
-			
+
 			% store eNodeB-space results
 			Results.util(iStation, iRound) = utilPercent;
 
@@ -111,7 +111,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% the last step in the DL transmisison chain is to map the symbols to the
 		% resource grid and modulate the grid to get the TX waveform
 		for iStation = 1:length(Stations)
-			% generate empty grid or clean the previous one
+			% reset the grid to empty with only RS and synchronization signals
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
 			% now for each list of user symbols, reshape them into the grid
 			for iUser = 1:Param.numUsers
@@ -129,23 +129,23 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% Currently the waveform is given per station, i.e. same
 			% for all associated users.
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
-            
 
 
-        end
-        
-        if Param.draw
-            
-            % Plot OFDM spectrum
-            spectrumAnalyser(Stations(1,1).TxWaveform,Stations(1,1).WaveformInfo.SamplingRate)
-            
-            % Plot conestellation diagram of first station
-            grid = lteOFDMDemodulate(Stations(1,1),Stations(1,1).TxWaveform);
-            grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
-            constellationDiagram(grid_r,1)
-             
-             
-        end
+
+		end
+
+		if Param.draw
+			% Plot OFDM spectrum of first station
+			spectrumAnalyser(Stations(1).TxWaveform, Stations(1).WaveformInfo.SamplingRate)
+
+			% Plot conestellation diagram of first station
+			enb = cast2Struct(Stations(1));
+			grid = lteOFDMDemodulate(enb,enb.TxWaveform);
+			grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
+			constellationDiagram(grid_r,1)
+
+
+		end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
@@ -182,9 +182,9 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
 					ChannelEstimator);
 
-                % Calculate error 
+                % Calculate error
                 rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
-                
+
                 % Perform equalization to account for phase noise (needs
                 % SNR)
                 if ~strcmp(Param.channel.mode,'B2B')
@@ -200,7 +200,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
                 if Param.draw
 
                 end
-                
+
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
@@ -212,15 +212,15 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
         end
-        
 
-         
+
+
         % Plot resource grids for all users
         if Param.draw
             hScatter = plotConstDiagram_rx(Users);
             hGrids = plotReGrids(Users);
         end
-        
+
 	end % end round
 
 	% Once this simulation set is done, save the output
