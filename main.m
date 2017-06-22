@@ -24,7 +24,7 @@ close all;
 Param.reset = 0;
 Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 1;
+Param.schRounds = 10;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -51,7 +51,8 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 Param.freq = 1900; %Given in MHz
 Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
-Param.hystMax = 2; % number of scheduling rounds used for hysteresis in BS switching
+Param.tHyst = 0.002; % hysteresis timer threshold in ms
+Param.tSwitch = 0.001; % eNodeB switching on/off timer
 Param.rmResults = 1; % cleans the results folder
 
 sonohi(Param.reset);
@@ -74,7 +75,6 @@ Users = createUsers(Param);
 
 % Create Channel scenario
 Channel = ChBulk_v2(Param);
-%Stations = createChannels(Stations,Param);
 
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();
@@ -102,7 +102,16 @@ simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
 % if set, clean the results folder
 if Param.rmResults
 	removeResults();
-end 
+end
+
+% create status mapping
+status = [
+	string('active'), ...
+	string('overload'), ...
+	string('underload'), ...
+	string('shutdown'), ...
+	string('inactive'), ...
+	string('boot')];
 
 % Main loop
 for iUtilLo = 1: length(utilLo)

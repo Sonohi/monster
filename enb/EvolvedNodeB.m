@@ -30,6 +30,7 @@ classdef EvolvedNodeB
 		Status;
 		Neighbours;
 		HystCount;
+		SwitchCount;
 		Pmax;
 		P0;
 		DeltaP;
@@ -73,9 +74,10 @@ classdef EvolvedNodeB
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
-			obj.Status = string('active');
+			obj.Status = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
+			obj.SwitchCount = 0
 		end
 
 		% Posiiton base station
@@ -172,10 +174,10 @@ classdef EvolvedNodeB
 
 			% overload
 			if util >= hiThr
-				obj.Status = string('overload');
+				obj.Status = 2;
 				obj.HystCount = obj.HystCount + 1;
-				if obj.HystCount >= Param.hystMax
-					% The overload has exceeded the hysteresis guard, so find an inactive
+				if obj.HystCount >= Param.tHyst/10^-3
+					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
 					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
 
@@ -186,27 +188,56 @@ classdef EvolvedNodeB
 							nboIx = find([Stations.NCellID] == obj.Neighbours(nboMicroIxs(iNbo)));
 
 							% Check if it can be activated
-							if (~isempty(nboIx) && Stations(nboIx).Status == string('inactive'))
-								Stations(nboIx).Status = string('active');
+							if (~isempty(nboIx) && Stations(nboIx).Status == 5)
+								% in this case change the status of the target neighbour to "boot"
+								% and reset the hysteresis and the switching on/off counters
+								Stations(nboIx).Status = 6;
 								Stations(nboIx).HystCount = 0;
+								Stations(nboIx).SwitchCount = 0;
 								break;
 							end
 						end
 					end
 				end
 
-			% underload
+			% underload, shutdown, inactive or boot
 			elseif util <= loThr
-				obj.HystCount = obj.HystCount + 1;
-				if obj.HystCount >= Param.hystMax
-					% the underload has exceeded the hysteresis guard, so change status
-					obj.Status = string('inactive');
+				switch obj.Status
+					case 1
+						% eNodeB active and going in underload for the first time
+						obj.Status = 3;
+						obj.HystCount = 1;
+					case 3
+						% eNodeB already in underload
+						obj.HystCount = obj.HystCount + 1;
+						if obj.HystCount >= Param.tHyst/10^-3
+							% the underload has exceeded the hysteresis timer, so start switching
+							obj.Status = 4;
+							obj.SwitchCount = 1;
+						end
+					case 4
+						obj.SwitchCount = obj.SwitchCount + 1;
+						if obj.SwitchCount >= Param.tSwitch/10^-3
+							% the shutdown is completed
+							obj.Status = 5;
+							obj.SwitchCount = 0;
+							obj.HystCount = 0;
+						end
+					case 6
+						obj.SwitchCount = obj.SwitchCount + 1;
+						if obj.SwitchCount >= Param.tSwitch/10^-3
+							% the boot is completed
+							obj.Status = 1;
+							obj.SwitchCount = 0;
+							obj.HystCount = 0;
+						end
 				end
 
 			% normal operative range
 			else
-				obj.Status = string('active');
+				obj.Status = 1;
 				obj.HystCount = 0;
+				obj.SwitchCount = 0;
 
 			end
 
