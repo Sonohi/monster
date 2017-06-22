@@ -41,7 +41,6 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 		sym = [];
 	end
 
-
 	% padding
 	SymInfo.symSize = length(sym);
 	SymInfo.pdschIxs = pdschIxs;

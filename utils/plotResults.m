@@ -12,6 +12,7 @@ function plotResults(Param, Stations, Users)
 	sinr = source.out.sinr;
 	cqi = source.out.cqi;
 	util = source.out.util;
+	power = source.out.power;
 	lineStyle = {'-', '--', ':', '-.'};
 	markerStyle = {'o', '+', '*', '.', 'x', 's', 'd', '^', 'v', '>', '<', 'p', 'h'};
 
@@ -82,6 +83,24 @@ function plotResults(Param, Stations, Users)
 			'Marker', char(markerStyle(randi(length(markerStyle)))),...
 			'LineWidth', 2,...
 			'DisplayName', strcat('UE ', num2str(Users(iUser).UeId)));
+	end
+	legend('show')
+
+	% Power plot
+	figure('Name', 'eNodeB Power Used variation (W)');
+	title('eNodeB Power Used variation (W)');
+	xlabel('Scheduling round');
+	ylabel('eNodeB Power Used variation (W)');
+	utilLegend = '';
+	for iStation = 1: Param.numMacro + Param.numMicro
+		hold on;
+		y(:,1) = power(1,1,iStation, :);
+		plot(roundx, y, ...
+			'Color', rand(1,3),...
+			'LineStyle', char(lineStyle(randi(length(lineStyle)))),...
+			'Marker', char(markerStyle(randi(length(markerStyle)))),...
+			'LineWidth', 2,...
+			'DisplayName', strcat('eNodeB ', num2str(Stations(iStation).NCellID)));
 	end
 	legend('show')
 

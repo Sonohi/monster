@@ -30,6 +30,10 @@ classdef EvolvedNodeB
 		Status;
 		Neighbours;
 		HystCount;
+		Pmax;
+		P0;
+		DeltaP;
+		Psleep;
 	end
 
 	methods
@@ -38,8 +42,16 @@ classdef EvolvedNodeB
 			switch BsClass
 				case 'macro'
 					obj.NDLRB = Param.numSubFramesMacro;
+					obj.Pmax = 20; % W
+					obj.P0 = 130; % W
+					obj.DeltaP = 4.7;
+					obj.Psleep = 75; % W
 				case 'micro'
 					obj.NDLRB = Param.numSubFramesMicro;
+					obj.Pmax = 6.3; % W
+					obj.P0 = 56; % W
+					obj.DeltaP = 2.6;
+					obj.Psleep = 39.0; % W
       end
       obj.BsClass = BsClass;
 			obj.NCellID = cellId;
@@ -64,7 +76,6 @@ classdef EvolvedNodeB
 			obj.Status = string('active');
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
-
 		end
 
 		% Posiiton base station

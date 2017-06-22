@@ -1,6 +1,5 @@
 function simulate(Param, DataIn, utilLo, utilHi)
 
-
 	%   SIMULATE is used to run a single simulation
 	%
 	%   Function fingerprint
@@ -29,6 +28,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		'sinr', zeros(Param.numUsers,Param.schRounds),...
 		'cqi', 	zeros(Param.numUsers,Param.schRounds), ...
 		'util', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
+		'power', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
 
 	for iRound = 1:Param.schRounds
@@ -46,6 +46,9 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			Users(iUser) = setScheduled(Users(iUser), false);
 		end;
 
+		% ---------------------
+		% ENODEB SCHEDULE START
+		% ---------------------
 		for iStation = 1:length(Stations)
 			% schedule only if at least 1 user is associated
 			if Stations(iStation).Users(1) ~= 0
@@ -61,15 +64,24 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				utilPercent = 0;
 			end
 
+			% calculate the power that will be used in this round by this eNodeB
+			pIn = getPowerIn(Stations(iStation), utilPercent/100);
+
 			% store eNodeB-space results
 			Results.util(iStation, iRound) = utilPercent;
+			Results.power(iStation, iRound) = pIn;
 
 			% Check utilisation metrics and change status if needed
 			Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
 				Param, utilLo, utilHi, Stations);
 		end
+		% -------------------
+		% ENODEB SCHEDULE END
+		% -------------------
 
-		% per each user, create the codeword
+		% ----------------------------------------------
+		% ENODEB CREATE DL-SCH TB TO PDSCH SYMBOLS START
+		% ----------------------------------------------
 		for iUser = 1:length(Users)
 			% get the eNodeB thie UE is connected to
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
@@ -106,11 +118,17 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				end
 
 			end
-		end % end user loop
+		end
+		% --------------------------------------------
+		% ENODEB CREATE DL-SCH TB TO PDSCH SYMBOLS END
+		% --------------------------------------------
 
-		% the last step in the DL transmisison chain is to map the symbols to the
-		% resource grid and modulate the grid to get the TX waveform
+		% -------------------------
+		% ENODEB GRID MAPPING START
+		% -------------------------
 		for iStation = 1:length(Stations)
+			% the last step in the DL transmisison chain is to map the symbols to the
+			% resource grid and modulate the grid to get the TX waveform
 			% reset the grid to empty with only RS and synchronization signals
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
 
@@ -122,7 +140,10 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			% with the grid ready, generate the TX waveform
 			Stations(iStation) = modulateTxWaveform(Stations(iStation));
-		end % end stations loop
+		end
+		% -----------------------
+		% ENODEB GRID MAPPING END
+		% -----------------------
 
 		if Param.draw
 			% Plot OFDM spectrum of first station
@@ -137,11 +158,13 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
 		% through the UEs and compute the rxWaveforms
-
 		if ~strcmp(Param.channel.mode,'B2B')
 			[Stations, Users] = Channel.traverse(Stations,Users);
 		end
 
+		% ------------------
+		% UE RECEPTION START
+		% ------------------
 		for iUser = 1:length(Users)
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
@@ -197,16 +220,16 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Results.sinr(iUser, iRound) = Users(iUser).Sinr;
 				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
 			end
-
 		end
+		% -----------------
+		% UE RECEPTION END
+		% -----------------
 
-
-
-        % Plot resource grids for all users
-        if Param.draw
-            hScatter = plotConstDiagram_rx(Users);
-            hGrids = plotReGrids(Users);
-        end
+		% Plot resource grids for all users
+		if Param.draw
+		  hScatter = plotConstDiagram_rx(Users);
+		  hGrids = plotReGrids(Users);
+		end
 
 	end % end round
 
