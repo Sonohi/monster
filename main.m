@@ -20,6 +20,10 @@ clearvars;
 clc;
 close all;
 
+%log
+setpref('sonohiLog','logLevel',5)
+
+
 % Simulation Parameters
 Param.reset = 0;
 Param.draw = 1; % Enable plots
@@ -61,7 +65,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'B2B';
+Param.channel.mode = 'eHATA';
 Param.channel.region = 'DenseUrban';
 
 % Guard for initial setup: exit of there's more than 1 macro BS

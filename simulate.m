@@ -65,7 +65,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
 			% calculate the power that will be used in this round by this eNodeB
-			pIn = getPowerIn(Stations(iStation), utilPercent/100);
+			pIn = GetPowerIn(Stations(iStation), utilPercent/100);
 
 			% store eNodeB-space results
 			Results.util(iStation, iRound) = utilPercent;
@@ -205,8 +205,9 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				EVM = comm.EVM;
 				EVM.AveragingDimensions = [1 2];
 				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
-				fprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+				s = sprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
 					Users(iUser).UeId,preEqualisedEVM);
+                sonohilog(s,'NFO')
 				if Param.draw
 
 				end
