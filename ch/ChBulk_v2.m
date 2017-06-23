@@ -45,7 +45,7 @@ classdef ChBulk_v2
     
     methods(Access = private)
         
-        function rxSig = add_pathloss_awgn(obj,Station,User)
+        function rxSig = add_pathloss_awgn(obj,Station,User,tx_sig)
             thermalNoise = obj.ThermalNoise(Station.NDLRB);
             hb_pos = Station.Position;
             hm_pos = User.Position;
@@ -71,7 +71,7 @@ classdef ChBulk_v2
             sonohilog(str1,'NFO0');
             
             %% Apply SNR
-            tx_sig = Station.TxWaveform;
+ 
             % Compute average symbol energy og signal (E_s)
             E_s = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft));
             
@@ -87,6 +87,122 @@ classdef ChBulk_v2
             
         end
         
+        function rx = add_fading(obj,tx,info)
+            cfg.SamplingRate = info.SamplingRate;
+            cfg.Seed = 1;                  % Random channel seed
+            cfg.NRxAnts = 1;               % 1 receive antenna
+            cfg.DelayProfile = 'EVA';      % EVA delay spread
+            cfg.DopplerFreq = 120;         % 120Hz Doppler frequency
+            cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
+            cfg.InitTime = 0;              % Initialize at time zero
+            cfg.NTerms = 16;               % Oscillators used in fading model
+            cfg.ModelType = 'GMEDS';       % Rayleigh fading model type
+            cfg.InitPhase = 'Random';      % Random initial phases
+            cfg.NormalizePathGains = 'On'; % Normalize delay profile power 
+            cfg.NormalizeTxAnts = 'On';    % Normalize for transmit antennas
+            
+            % Pass data through the fading channel model
+            rx = lteFadingChannel(cfg,tx);
+
+            
+
+        end
+        
+        function H_ch = configure_fading(obj,Stations,Users)
+            disp('Setting up WINNER II channel model...')
+            % Construct anteanna array, eNB and users
+            AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
+            AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
+            
+            % Use antenna config 1, and establish three sectors pr basestation
+            %eNBidx = {[1 1 1]; [1 1 1]; [1 1 1]; [1 1 1]; [1 1 1]; [1 1 1]};
+            eNBidx = num2cell(ones(length(Stations),1));
+            %eNBidx = {repmat([ones(1,3)],length(Stations),1)};
+            % For users use antenna configuration 2
+            useridx = repmat(2,1,length(Users));
+            
+            range = max(obj.Area);
+            % Assuming one antenna port, number of links are equal to
+            % number of users scheuled in the given round
+            users  = [Stations.Users];
+            numLinks = nnz(users);
+            
+            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
+            
+            
+            % Stations are given as 1:6 and users are given as
+            % 7:21 as seen in cfgLayout.Stations. Pairs are given
+            % by association determined at the scheduling round,
+            % thus paring should be [i;
+            % Station(i).Schedule(iRound).ueId+length(Stations)]
+            
+            for i = 1:length(Stations)
+                cfgLayout.Stations(i).Pos(1:2) = Stations(i).Position(1:2);
+                
+            end
+            
+            for ii = 1:length(Users)
+                cfgLayout.Stations(ii+length(Stations)).Pos(1:2) = Users(ii).Position(1:2);
+            end
+            
+            % Each link is assigned with one propagation scenario,
+            % chosen from B4 (outdoor to indoor), C2 (Urban macro-cell)
+            % and C4 (Urban macro outdoor to indoor). Non-line-of-sight
+            % (NLOS) is modelled for each link.
+            
+            % For each station create pairing based on associated
+            % users.
+            nlink=1;
+            for i = 1:length(Stations)
+                for ii = 1:nnz(users(:,i))
+                    cfgLayout.Pairing(:,nlink) = [i; users(ii,i)+length(Stations)];
+                    nlink = nlink+1;
+                end
+            end
+            
+            
+            % Loop through pairings and set Scenarios based on
+            % station type
+            
+            for i = 1:numLinks
+                
+                c_bs = Stations(cfgLayout.Pairing(1,i));
+                c_ms = Users(cfgLayout.Pairing(2,i)-length(Stations));
+                if c_bs.BsClass == 'micro'
+                    cfgLayout.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+                    cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                else
+                    if obj.getDistance(c_bs.Position,c_ms.Position) < 50
+                        cfgLayout.ScenarioVector(i) = 6; % B5d NLOS hotspot metropol
+                        cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+                    else
+                        cfgLayout.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
+                        cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                    end
+                end
+                
+                
+            end
+            
+            
+            numBSSect = sum(cfgLayout.NofSect);
+            numMS = length(useridx);
+            
+            % Get all BS sector and MS positions
+            BSPos = cell2mat({cfgLayout.Stations(1:numBSSect).Pos});
+            MSPos = cell2mat({cfgLayout.Stations(numBSSect+1:end).Pos});
+            
+            
+            for linkIdx = 1:numLinks  % Plot links
+                pairStn = cfgLayout.Pairing(:,linkIdx);
+                pairPos = cell2mat({cfgLayout.Stations(pairStn).Pos});
+                if obj.Draw
+                    plot(pairPos(1,:), pairPos(2,:),'LineWidth',1,'Color',[0,0,0.7,0.3]);
+                end
+            end
+            
+            
+        end
         
         
     end
@@ -106,8 +222,6 @@ classdef ChBulk_v2
             eNBpos = cell2mat({Stations(:).Position}');
             userpos = cell2mat({Users(:).Position}');
             
-                    
-            
             % Assume a single link per stations
             numLinks = length(Stations);
             
@@ -116,8 +230,6 @@ classdef ChBulk_v2
             users  = [Stations.Users];
             numLinks = nnz(users);
             
-            freq_MHz = 1900;
-            region =  'DenseUrban';
             
             
             nlink=1;
@@ -128,15 +240,18 @@ classdef ChBulk_v2
                 end
             end
             
-            % Traverse for all inks.
+            
+            %fading_channel = obj.configure_fading(Stations,Users);
+            % Traverse for all links.
             
             for i = 1:numLinks
-                idxStation = Pairing(1,i);
-                idxUser = Pairing(2,i);
-                Users(idxUser).RxWaveform = obj.add_pathloss_awgn(Stations(idxStation),Users(idxUser));
+                station = Stations(Pairing(1,i));
+                user = Users(Pairing(2,i));
+                Users(Pairing(2,i)).RxWaveform = obj.add_fading(station.TxWaveform,station.WaveformInfo);
+                Users(Pairing(2,i)).RxWaveform = obj.add_pathloss_awgn(station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
                 
             end
-           
+            
         end
     end
 end

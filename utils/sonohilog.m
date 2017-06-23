@@ -123,10 +123,6 @@ if strcmpi(callerName,'unit')
    callerName = evalin('caller','class(obj)');
 end
 
-if strcmp(logType, 'ERR')
-    msg = [msg '\n\nTo get help run: robohelp ' callerName];
-end
-
 %Double escape % and \ because we call sprintf twice
 msg = strrep(msg, '%%', '%%%%');
 msg = strrep(msg, '\\', '\\\\');

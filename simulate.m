@@ -181,8 +181,14 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			%offset = lteDLFrameOffset(cast2Struct(Stations(iServingStation)), ...
 			%	cast2Struct(Users(iUser)).RxWaveform);
-			%Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
+			%
 			offset = calcFrameOffset(Stations(iStation), Users(iUser));
+            if offset > 0 && strcmp(Param.channel.mode,'B2B')
+                sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
+            end
+            
+            Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
+            
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if checkUserSchedule(Users(iUser), Stations(iServingStation))

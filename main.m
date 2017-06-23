@@ -65,7 +65,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'eHATA';
+Param.channel.mode = 'B2B';
 Param.channel.region = 'DenseUrban';
 
 % Guard for initial setup: exit of there's more than 1 macro BS
