@@ -1,4 +1,4 @@
-function off = calcFrameOffset(Station, User)
+function [off,off_auto] = calcFrameOffset(Station, User)
 
 % 	CALCULATE FRAME OFFSET is used to calculate the offset of the received frame
 %
@@ -10,4 +10,5 @@ function off = calcFrameOffset(Station, User)
 	enb = cast2Struct(Station);
 	ue = cast2Struct(User);
 	off = lteDLFrameOffset(enb, ue.RxWaveform);
+    [~,off_auto] = max(autocorr(ue.RxWaveform));
 end
