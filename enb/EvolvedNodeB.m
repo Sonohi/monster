@@ -117,14 +117,21 @@ classdef EvolvedNodeB
 			regrid(indPss) = pss;
 			regrid(indSss) = sss;
 			obj.ReGrid = regrid;
-		end
+        end
+        
+        function [indPdsch, info] = getPDSCHindicies(obj)
+            enb = cast2Struct(obj);
+            % get PDSCH indexes
+            [indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+ 
+        end
 
 		% insert PDSCH symbols in grid at correct indexes
 		function obj = setPDSCHGrid(obj, syms)
-			enb = cast2Struct(obj);
-			% get PDSCH indexes
-			[indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
 
+			% get PDSCH indexes
+			[indPdsch, info] = obj.getPDSCHindicies;
+  
 			% pad for unused subcarriers
 			padding(1:length(indPdsch) - length(syms), 1) = 0;
 			syms = cat(1, syms, padding);
