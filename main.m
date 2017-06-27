@@ -28,7 +28,7 @@ setpref('sonohiLog','logLevel',5)
 Param.reset = 0;
 Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 10;
+Param.schRounds = 1;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -54,6 +54,8 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 Param.freq = 1900; %Given in MHz
+Param.prbRe = 168;
+
 Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
 Param.tHyst = 0.002; % hysteresis timer threshold in ms
 Param.tSwitch = 0.001; % eNodeB switching on/off timer

@@ -31,7 +31,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		'power', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
 
-	for iRound = 1:Param.schRounds
+	for iRound = 0:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
 		% allocate PRBs through the scheduling function per each station
 
@@ -50,6 +50,13 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% ENODEB SCHEDULE START
 		% ---------------------
 		for iStation = 1:length(Stations)
+			% First off, set the number of the current subframe withing the frame
+			% this is the scheduling round modulo 10 (the frame is 10ms)
+			Stations(iStation).NSubframe = mod(iRound,10);
+
+			% Reset teh grid and put in the grid RS, PSS and SSS
+			Stations(iStation) = resetResourceGrid(Stations(iStation));
+
 			% schedule only if at least 1 user is associated
 			if Stations(iStation).Users(1) ~= 0
 				Stations(iStation) = schedule(Stations(iStation), Users, Param);
@@ -65,11 +72,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
 			% calculate the power that will be used in this round by this eNodeB
-			pIn = GetPowerIn(Stations(iStation), utilPercent/100);
+			pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 			% store eNodeB-space results
-			Results.util(iStation, iRound) = utilPercent;
-			Results.power(iStation, iRound) = pIn;
+			Results.util(iStation, iRound + 1) = utilPercent;
+			Results.power(iStation, iRound + 1) = pIn;
 
 			% Check utilisation metrics and change status if needed
 			Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
@@ -99,7 +106,6 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				% correspondent values per each eNodeB-UE pair
 				% setup current subframe for serving eNodeB
 				if CwdInfo.cwdSize ~= 0 % is this even necessary?
-					Stations(iServingStation).NSubframe = iRound;
 					[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
 						CwdInfo, Param);
 				end
@@ -129,10 +135,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		for iStation = 1:length(Stations)
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
-			% reset the grid to empty with only RS and synchronization signals
-			Stations(iStation) = resetResourceGrid(Stations(iStation));
 
-			% extract all the symbols this eNOdeB has to transmit
+			% extract all the symbols this eNodeB has to transmit
 			syms = extractStationSyms(Stations(iStation), iStation, symMatrix, Param);
 
 			% insert the symbols of the PDSCH into the grid
@@ -183,12 +187,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			%	cast2Struct(Users(iUser)).RxWaveform);
 			%
 			offset = calcFrameOffset(Stations(iStation), Users(iUser));
-            if offset > 0 && strcmp(Param.channel.mode,'B2B')
-                sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
-            end
-            
-            Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
-            
+%             if offset > 0 && strcmp(Param.channel.mode,'B2B')
+%                 sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
+%             end
+
+            %Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if checkUserSchedule(Users(iUser), Stations(iServingStation))
@@ -224,8 +227,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation));
 
 				% store UE-space results
-				Results.sinr(iUser, iRound) = Users(iUser).Sinr;
-				Results.cqi(iUser, iRound) = Users(iUser).WCqi;
+				Results.sinr(iUser, iRound + 1) = Users(iUser).Sinr;
+				Results.cqi(iUser, iRound + 1) = Users(iUser).WCqi;
 			end
 		end
 		% -----------------

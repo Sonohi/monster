@@ -1,4 +1,4 @@
-function [Station] = schedule(Station, Users, Param)
+function [Station] = schedule(Station, Users, Param, subframeNum)
 
 %   SCHEDULE is used to return the allocation of PRBs for a schedule
 %
@@ -6,6 +6,7 @@ function [Station] = schedule(Station, Users, Param)
 %   Station					->  base Station
 %		Users						-> 	users list
 %   Param.prbSym		->  number of OFDM symbols per PRB
+%   subframeNum			->  subframe number (taken from the scheduling round)
 %
 %   Station		->  station with allocation array with:
 %             		--> ueId		id of the UE scheduled in that slot
@@ -16,6 +17,10 @@ function [Station] = schedule(Station, Users, Param)
 	Station.Schedule(1:Station.NDLRB) = struct('UeId',0,'Mcs',0,'ModOrd',0);
 	sz = length(Station.Users);
 
+	% calculate number of available RBs available in the subframe for the PDSCH
+	res = length(find(abs(Station.ReGrid) == 0));
+	prbsAv = floor(res/Param.prbRe);
+
 	switch (Param.scheduling)
 		case 'roundRobin'
 			if (Station.RrNext.UeId == 0)
@@ -24,7 +29,6 @@ function [Station] = schedule(Station, Users, Param)
 			end
 
 			maxRounds = sz;
-			prbsAv = Station.NDLRB;
 			iUser = Station.RrNext.Index;
 			while (iUser <= sz && maxRounds > 0)
 
@@ -75,13 +79,6 @@ function [Station] = schedule(Station, Users, Param)
 					% in both cases, stop the loop
 					iUser = sz +1;
 				end
-			end
-
-		case 'random'
-			for (ix = 1:Station.NDLRB)
-				Station.Schedule(ix).UeId = Station.Users(randi(sz)).UeId;
-				Station.Schedule(ix).Mcs = randi([1,28]);
-				Station.Schedule(ix).ModOrd = 2*randi([1,3]);
 			end
 
 	end

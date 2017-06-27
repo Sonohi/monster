@@ -12,7 +12,6 @@ classdef EvolvedNodeB
 		CFI;
 		PHICHDuration;
 		Ng;
-		NFrame;
 		TotSubframes;
 		OCNG;
 		Windowing;
@@ -53,37 +52,36 @@ classdef EvolvedNodeB
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
-      end
-      obj.BsClass = BsClass;
+			end
+			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 2;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
-			obj.NFrame = 0;
-			obj.TotSubframes = 1;
+			obj.TotSubframes = Param.schRounds;
 			obj.NSubframe = 0;
 			obj.OCNG = 'On';
-            obj.Windowing = 0;
+			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
-            obj.Freq = Param.freq;
+			obj.Freq = Param.freq;
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
 			obj.Status = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
-			obj.SwitchCount = 0
+			obj.SwitchCount = 0;
 		end
 
 		% Posiiton base station
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
-    end
+		end
 
 		% reset users
 		function obj = resetUsers(obj, Param)
@@ -125,7 +123,7 @@ classdef EvolvedNodeB
 		function obj = setPDSCHGrid(obj, syms)
 			enb = cast2Struct(obj);
 			% get PDSCH indexes
-			indPdsch = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+			[indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
 
 			% pad for unused subcarriers
 			padding(1:length(indPdsch) - length(syms), 1) = 0;
