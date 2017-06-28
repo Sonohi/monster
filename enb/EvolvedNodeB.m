@@ -34,6 +34,8 @@ classdef EvolvedNodeB
 		P0;
 		DeltaP;
 		Psleep;
+		Frame;
+		PBCH;
 	end
 
 	methods
@@ -69,6 +71,7 @@ classdef EvolvedNodeB
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
 			obj.Freq = Param.freq;
+			obj = setBCH(obj);
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);
 			obj = initPDSCH(obj);
@@ -76,6 +79,7 @@ classdef EvolvedNodeB
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
+
 		end
 
 		% Posiiton base station
@@ -94,9 +98,22 @@ classdef EvolvedNodeB
 			obj.Schedule = temp;
 		end
 
-		% set subframre number
+		% set subframe number
 		function obj = set.NSubframe(obj, num)
 			obj.NSubframe =  num;
+		end
+
+		% set frame
+		function obj = set.Frame(obj, frm)
+			obj.Frame =  frm;
+		end
+
+		% set BCH
+		function obj = setBCH(obj)
+			enb = cast2Struct(obj);
+			mib = lteMIB(enb);
+			bchCoded = lteBCH(enb, mib);
+			obj.PBCH = struct('bch', bchCoded, 'unit', 1);
 		end
 
 		% Set default subframe resource grid for eNodeB
@@ -112,6 +129,22 @@ classdef EvolvedNodeB
 			pss = ltePSS(enb);
 			indSss = lteSSSIndices(enb);
 			sss = lteSSS(enb);
+
+			% every 10 ms we need to broadcast a unit of the BCH
+			if mod(enb.NSubframe, 10) == 0
+				fullPbch = ltePBCH(enb,enb.PBCH.bch);
+				indPbch = ltePBCHIndices(enb);
+
+				% find which portion of the PBCH we need to send in this frame and insert
+				a = (enb.PBCH.unit - 1) * length(indPbch) + 1;
+				b = enb.PBCH.unit * length(indPbch);
+				pbch = fullPbch(a:b, 1);
+				regrid(indPbch) = pbch;
+
+				% finally update the unit counter
+				obj.PBCH.unit = obj.PBCH.unit + 1;
+			end
+
 			% % put all 3 signals into the grid
 			regrid(indRs) = rs;
 			regrid(indPss) = pss;

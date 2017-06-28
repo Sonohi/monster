@@ -3,7 +3,7 @@
 %>   everything in black (faster) or totally disable the logging (even faster).
 %>
 %> __Log levels__
-%> 
+%>
 %> * ERR Errors. Will also break the code execution.
 %> * WRN Warnings. Use it when the behaviour may create problems if gone unoticed.
 %> * DBG Use it only in custom setups to display information for debugging. Don't use it in units or modules in the library.
@@ -20,9 +20,9 @@
 %>     - 0: Log to standard output
 %>     - 1: Log to file
 %>     - 2: Log both to standard output and file
-%>     
+%>
 %>   * setpref('roboLog', 'logFile', FILENAME)
-%>   
+%>
 %>   * setpref('roboLog', 'logLevel', LEVEL) [Default: Maximum]
 %>     - 1: Log errors (ERR)
 %>     - 2: Log errors and warnings (ERR, WRN)
@@ -44,18 +44,18 @@
 %>   robolog('Info 2', 'NFO');
 %>   robolog('Warning 1', 'WRN');
 %>   robolog('Formatted %s %d', 'WRN', 'warning', 2);
-%>   
+%>
 %>   % Enable logging to file only
 %>   setpref('roboLog', 'logToFile', 1);
 %>   robolog('Warning 3 to robolog.txt', 'WRN');
-%>   
+%>
 %>   % Set log file
 %>   setpref('roboLog', 'logFile', 'myfile.txt');
 %>   robolog('Info 3 to myfile.txt', 'NFO');
-%>   
+%>
 %>   robolog('ciao', 'ERR');
 %> @endcode
-%> 
+%>
 %> @author Simone Gaiarin
 %>
 %> @version 1
@@ -96,7 +96,7 @@ if nargin > 1 && ischar(varargin{1})
     end
 end
 
-if nargin == 1 || ~isValid    
+if nargin == 1 || ~isValid
     logType = 'NFO';
     logTypeIdx = find(strcmp(validLogTypeValues,logType));
     argIdx = 1;
@@ -162,14 +162,19 @@ if strcmp(logType, 'ERR')
     me = MException('sonohi:genericError', logMsg);
     throwAsCaller(me);
 else
-    
+
 % Log to console if logToFile is 0 or 2 (log both on file and terminal)
 if logToFile == 2 || logToFile == 0
+		fileId = fopen(logFile, 'a');
     if strcmp(logType, 'NFO') || logInBlack
-        fprintf(1, logMsg);
-    else
-        cprintf(textColors{logTypeIdx}, logMsg);
-    end
+      fprintf(1, logMsg);
+			fprintf(fileId, logMsg);
+		else
+			fprintf(1, logMsg);
+			fprintf(fileId, logMsg);
+      %fprintf(textColors{logTypeIdx}, logMsg); % gives some errors???
+		end
+		fclose(fileId);
 end
 
 end

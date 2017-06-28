@@ -54,6 +54,12 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% this is the scheduling round modulo 10 (the frame is 10ms)
 			Stations(iStation).NSubframe = mod(iRound,10);
 
+			% every 40 ms the cell has to broadcast its identity with the BCH
+			% check if we need to regenerate that (except for iRound == 0 as it's regenerated
+			% when the object is created)
+			if (iRound ~= 0 && mod(iRound, 40) == 0)
+				Stations(iStation) = setBCH(Stations(iStation));
+			end;
 			% Reset teh grid and put in the grid RS, PSS and SSS
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
 
@@ -158,6 +164,12 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			grid = lteOFDMDemodulate(enb,enb.TxWaveform);
 			grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
 			constellationDiagram(grid_r,1);
+
+			% combine subframe grids to a frame grid for dbg
+			if iRound < 11
+				Stations(1).Frame = [Stations(1).Frame Stations(1).ReGrid];
+			end
+	
 		end
 
 		% Once all eNodeBs have created and stored their txWaveforms, we can go
@@ -188,16 +200,16 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			%
 
 			[offset, offset_auto] = calcFrameOffset(Stations(iStation), Users(iUser));
-            if offset > offset_auto && strcmp(Param.channel.mode,'B2B')
-                sonohilog('Signaling error, offset not computed correctly, using autocorrelation.','WRN')
-                offset = offset_auto-1;
-            end
+			if offset > offset_auto && strcmp(Param.channel.mode,'B2B')
+					sonohilog('Signaling error, offset not computed correctly, using autocorrelation.','WRN')
+					offset = offset_auto-1;
+			end
 
-            if offset > 0 && strcmp(Param.channel.mode,'B2B')
-                sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
-            end
-
-            Users(iUser).RxWaveform= Users(iUser).RxWaveform(1+offset:end,:);
+			if offset > 0 && strcmp(Param.channel.mode,'B2B')
+					sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
+			end
+			offset = 0;
+			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+offset:end,:);
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
@@ -224,9 +236,6 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				s = sprintf('User %i: Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
 					Users(iUser).UeId,preEqualisedEVM);
                 sonohilog(s,'NFO')
-				if Param.draw
-
-				end
 
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
