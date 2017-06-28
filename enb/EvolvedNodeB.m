@@ -150,21 +150,20 @@ classdef EvolvedNodeB
 			regrid(indPss) = pss;
 			regrid(indSss) = sss;
 			obj.ReGrid = regrid;
-        end
-        
-        function [indPdsch, info] = getPDSCHindicies(obj)
-            enb = cast2Struct(obj);
-            % get PDSCH indexes
-            [indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
- 
-        end
+    end
+
+    function [indPdsch, info] = getPDSCHindicies(obj)
+      enb = cast2Struct(obj);
+      % get PDSCH indexes
+      [indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+    end
 
 		% insert PDSCH symbols in grid at correct indexes
 		function obj = setPDSCHGrid(obj, syms)
 
 			% get PDSCH indexes
 			[indPdsch, info] = obj.getPDSCHindicies;
-  
+
 			% pad for unused subcarriers
 			padding(1:length(indPdsch) - length(syms), 1) = 0;
 			syms = cat(1, syms, padding);
@@ -179,6 +178,10 @@ classdef EvolvedNodeB
       % Assume lossless transmitter
 			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
       obj.WaveformInfo.SNR = 40;
+			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
+			% for power scaling
+			used = length(find(abs(enb.ReGrid) ~= 0));
+			obj.WaveformInfo.OfdmEnergyScale = used/numel(enb.ReGrid);
 		end
 
 		% create list of neighbours
