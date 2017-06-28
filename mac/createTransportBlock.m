@@ -32,11 +32,10 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 		avMOrd = round(avMOrd/numPRB);
 	end
 
-
 	% the transport block is created of a size that is the minimum between the
 	% traffic queue size and the maximum size of the uncoded transport block
 	% the redundacy version (RV) is defaulted to 0
-	TbInfo.tbSize = min(qsz, lteTBS(numPRB, avMCS));
+	TbInfo.tbSize = min(qsz, lteTBS(numPRB, avMCS));	
 	TbInfo.rateMatch = lteTBS(numPRB, avMCS);
 	TbInfo.rv = 0;
 

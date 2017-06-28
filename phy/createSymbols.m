@@ -29,18 +29,36 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	% extract the codeword from the padded array
 	cwdEx(1:CwdInfo.cwdSize, 1) = cwd(1:CwdInfo.cwdSize,1);
 
-	% Get info and generate symbols
+	% Get info and indexes
 	[pdschIxs, SymInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+
+	% before generating the PDSCH, we need to check whether padding is needed based
+	% on the available/allocated resources
+	if length(cwdEx) < SymInfo.G
+		padding(1:SymInfo.G - length(cwdEx), 1) = 0;
+		cwdEx = cat(1, cwdEx, padding);
+	elseif length(cdwEx) > SymInfo.G % TODO check in which cases this can happen
+		cwdEx = cwdEx(1:SymInfo.G);
+	end
+
 	% error handling for symbol creation
-	% TODO try finding out errror root cause, e.g. invald TB size?
+
 	try
 		sym = ltePDSCH(enb, enb.PDSCH, cwdEx);
 	catch ME
 		fSpec = 'symbols generation failed for codeword with length %i\n';
 		s=sprintf(fSpec, length(cwdEx));
-        sonohilog(s,'WRN')
+    sonohilog(s,'WRN')
 		sym = [];
 	end
+
+% 	%TODO remove testing with DL-SCH
+% 	trBlk  = randi([0,1],SymInfo.Gd,1);
+% 	cw = lteDLSCH(enb,enb.PDSCH,SymInfo.G,trBlk);
+% 	sym = ltePDSCH(enb, enb.PDSCH, cw);
+%
+% 	% end test
+
 
 	% padding
 	SymInfo.symSize = length(sym);

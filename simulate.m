@@ -59,7 +59,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% when the object is created)
 			if (iRound ~= 0 && mod(iRound, 40) == 0)
 				Stations(iStation) = setBCH(Stations(iStation));
-			end;
+			end
 			% Reset teh grid and put in the grid RS, PSS and SSS
 			Stations(iStation) = resetResourceGrid(Stations(iStation));
 
