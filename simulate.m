@@ -78,7 +78,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
 			% calculate the power that will be used in this round by this eNodeB
-			pIn = getPowerIn(Stations(iStation), utilPercent/100);
+			pIn = GetPowerIn(Stations(iStation), utilPercent/100);
 
 			% store eNodeB-space results
 			Results.util(iStation, iRound + 1) = utilPercent;
@@ -161,8 +161,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			% Plot conestellation diagram of first station
 			enb = cast2Struct(Stations(1));
+			% get PDSCH indexes
+			[indPdsch, info] = Stations(1).getPDSCHindicies;
 			grid = lteOFDMDemodulate(enb,enb.TxWaveform);
-			grid_r = reshape(grid,length(grid(:,1))*length(grid(1,:)),1);
+            % Get data symbols and visualize
+			grid_r = grid(indPdsch);
 			constellationDiagram(grid_r,1);
 
 			% combine subframe grids to a frame grid for dbg
