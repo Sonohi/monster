@@ -16,6 +16,8 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
+        NoiseFigure;
+        Offset;
 	end
 
 	methods
@@ -28,6 +30,7 @@ classdef UserEquipment
 			obj.UeId = userId;
 			obj.Velocity = Param.velocity;
 			obj.WCqi = 6;
+            obj.NoiseFigure = Param.UENoiseFigure;
 		end
 
 		% Posiiton UE

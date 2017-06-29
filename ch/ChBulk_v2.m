@@ -64,7 +64,8 @@ classdef ChBulk_v2
             
             rxPw = txPw-lossdB;
             % SNR = P_rx_db - P_noise_db
-            SNR = rxPw-10*log10(thermalNoise);
+            rx_NoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
+            SNR = rxPw-rx_NoiseFloor;
             SNR_lin = 10^(SNR/10);
             str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
                 Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
@@ -72,9 +73,12 @@ classdef ChBulk_v2
             
             %% Apply SNR
  
-            % Compute average symbol energy og signal (E_s)
-            E_s = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft));
-            
+            % Compute average symbol energy 
+            % This is based on the number of useed subcarriers.
+            % Scale it by the number of used RE since the power is
+            % equally distributed
+            E_s = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft)*Station.WaveformInfo.OfdmEnergyScale);
+         
             % Compute spectral noise density NO
             N0 = 1/(E_s*SNR_lin);
             
@@ -230,15 +234,9 @@ classdef ChBulk_v2
             users  = [Stations.Users];
             numLinks = nnz(users);
             
+            Pairing = obj.getPairing(Stations);
             
-            
-            nlink=1;
-            for i = 1:length(Stations)
-                for ii = 1:nnz(users(:,i))
-                    Pairing(:,nlink) = [i; users(ii,i)];
-                    nlink = nlink+1;
-                end
-            end
+
             
             
             %fading_channel = obj.configure_fading(Stations,Users);
@@ -247,11 +245,25 @@ classdef ChBulk_v2
             for i = 1:numLinks
                 station = Stations(Pairing(1,i));
                 user = Users(Pairing(2,i));
-                Users(Pairing(2,i)).RxWaveform = obj.add_fading(station.TxWaveform,station.WaveformInfo);
+                Users(Pairing(2,i)).RxWaveform = obj.add_fading([station.TxWaveform;zeros(25,1)],station.WaveformInfo);
                 Users(Pairing(2,i)).RxWaveform = obj.add_pathloss_awgn(station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
+                %Users(Pairing(2,i)).RxWaveform = obj.add_pathloss_awgn(station,Users(Pairing(2,i)),station.TxWaveform);
                 
             end
             
+        end
+        
+        function Pairing = getPairing(obj,Stations)
+            users  = [Stations.Users];
+
+            nlink=1;
+            for i = 1:length(Stations)
+                for ii = 1:nnz(users(:,i))
+                    Pairing(:,nlink) = [i; users(ii,i)];
+                    nlink = nlink+1;
+                end
+            end
+           
         end
     end
 end
