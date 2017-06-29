@@ -37,7 +37,7 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	if length(cwdEx) < SymInfo.G
 		padding(1:SymInfo.G - length(cwdEx), 1) = 0;
 		cwdEx = cat(1, cwdEx, padding);
-	elseif length(cdwEx) > SymInfo.G % TODO check in which cases this can happen
+	elseif length(cwdEx) > SymInfo.G % TODO check in which cases this can happen
 		cwdEx = cwdEx(1:SymInfo.G);
 	end
 

@@ -59,7 +59,7 @@ classdef EvolvedNodeB
 			obj.NCellID = cellId;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
-			obj.CFI = 2;
+			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
 			obj.TotSubframes = Param.schRounds;
@@ -121,14 +121,27 @@ classdef EvolvedNodeB
 			enb = cast2Struct(obj);
 			% Create empty grid
 			regrid = lteDLResourceGrid(enb);
-			% add RS in the right indexes
+
+			% Reference signals
 			indRs = lteCellRSIndices(enb, 0);
 			rs = lteCellRS(enb, 0);
-			% add synchronization signals
+
+			% Synchronization signals
 			indPss = ltePSSIndices(enb);
 			pss = ltePSS(enb);
 			indSss = lteSSSIndices(enb);
 			sss = lteSSS(enb);
+
+			% Channel format indicator
+			cfi = lteCFI(enb);
+			indPcfich = ltePCFICHIndices(enb);
+			pcfich = ltePCFICH(enb, cfi);
+
+			% % put signals into the grid
+			regrid(indRs) = rs;
+			regrid(indPss) = pss;
+			regrid(indSss) = sss;
+			regrid(indPcfich) = pcfich;
 
 			% every 10 ms we need to broadcast a unit of the BCH
 			if mod(enb.NSubframe, 10) == 0
@@ -145,10 +158,6 @@ classdef EvolvedNodeB
 				obj.PBCH.unit = obj.PBCH.unit + 1;
 			end
 
-			% % put all 3 signals into the grid
-			regrid(indRs) = rs;
-			regrid(indPss) = pss;
-			regrid(indSss) = sss;
 			obj.ReGrid = regrid;
     end
 
