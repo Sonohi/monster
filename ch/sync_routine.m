@@ -20,7 +20,8 @@ users_new = Users;
 
 % Generate dummy data for all stations, e.g. one full frame
 for i = 1:length(Stations)
-    [Stations(i).TxWaveform, Stations(i).WaveformInfo, Stations(i).ReGrid] = generate_dummy_frame(Stations(i));
+    [Stations(i).TxWaveform, Stations(i).WaveformInfo, Stations(i).ReGrid] = ...
+			generate_dummy_frame(cast2Struct(Stations(i)));
     Stations(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
 end
 

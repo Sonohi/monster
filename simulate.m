@@ -82,7 +82,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
 			% calculate the power that will be used in this round by this eNodeB
-			pIn = GetPowerIn(Stations(iStation), utilPercent/100);
+			pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 			% store eNodeB-space results
 			Results.util(iStation, iRound + 1) = utilPercent;
