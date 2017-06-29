@@ -254,6 +254,18 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% UE RECEPTION END
 		% -----------------
 
+		% TODO consider moving this User loop into the one above
+		% -----------------
+		% UE MOVEMENT START
+		% -----------------
+		for iUser = 1:length(Users)
+			Users(iUser) = move(Users(iUser), simTime, Param);
+		end
+		% ---------------
+		% UE MOVEMENT END
+		% ---------------
+
+
 		% Plot resource grids for all users
 		if Param.draw
 		  hScatter = plotConstDiagram_rx(Users);

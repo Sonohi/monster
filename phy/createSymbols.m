@@ -58,6 +58,4 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	SymInfo.indexes = ixPRBs;
 	padding(1:Param.maxSymSize - SymInfo.symSize,1) = -1;
 	sym = cat(1, sym, padding);
-
-
 end

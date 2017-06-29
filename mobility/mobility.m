@@ -13,13 +13,13 @@ vehicle_speed = 15;
 
 valid = false;
 
-while (~valid),
+while (~valid)
     % starting point and destination
     start = randi(length(buildings(1, :)));
     stop = randi(length(buildings(1, :)));
     start_side = randi(4);
     stop_side = randi(4);
-    if (scenario == 1),
+    if scenario == 1
         [x0, y0] = exit_point(buildings(:, start), start_side, wall_distance);
         [xf, yf] = exit_point(buildings(:, stop), stop_side, wall_distance);
     else

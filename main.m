@@ -56,9 +56,10 @@ Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,
 Param.freq = 1900; %Given in MHz
 Param.prbRe = 168;
 Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
-Param.tHyst = 0.002; % hysteresis timer threshold in ms
-Param.tSwitch = 0.001; % eNodeB switching on/off timer
+Param.tHyst = 0.002; % hysteresis timer threshold in s
+Param.tSwitch = 0.001; % eNodeB switching on/off timer in s
 Param.rmResults = 1; % cleans the results folder
+Param.mobilityScenario = 1; % 1 is pedestrian UEs, 2 is vehicular UEs
 
 sonohi(Param.reset);
 
