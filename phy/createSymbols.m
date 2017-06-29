@@ -52,14 +52,6 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 		sym = [];
 	end
 
-% 	%TODO remove testing with DL-SCH
-% 	trBlk  = randi([0,1],SymInfo.Gd,1);
-% 	cw = lteDLSCH(enb,enb.PDSCH,SymInfo.G,trBlk);
-% 	sym = ltePDSCH(enb, enb.PDSCH, cw);
-%
-% 	% end test
-
-
 	% padding
 	SymInfo.symSize = length(sym);
 	SymInfo.pdschIxs = pdschIxs;

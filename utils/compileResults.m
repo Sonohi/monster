@@ -27,10 +27,10 @@ function out = compileResults(Param, utilLoList, utilHiList)
 		iUtilLo = find(utilLoList == fileData.Results.info.utilLo);
 		iUtilHi = find(utilHiList == fileData.Results.info.utilHi);
 
-		out.cqi(iUtilLo, iUtilHi, :, :) = fileData.Results.cqi;
-		out.sinr(iUtilLo, iUtilHi, :, :) = fileData.Results.sinr;
-		out.util(iUtilLo, iUtilHi, :, :) = fileData.Results.util;
-		out.power(iUtilLo, iUtilHi, :, :) = fileData.Results.power;
+		out.cqi(iUtilLo, iUtilHi, :, :) = fileData.Results.cqi(iUtilLo, iUtilHi, :,:);
+		out.sinr(iUtilLo, iUtilHi, :, :) = fileData.Results.sinr(iUtilLo, iUtilHi, :,:);
+		out.util(iUtilLo, iUtilHi, :, :) = fileData.Results.util(iUtilLo, iUtilHi, :,:);
+		out.power(iUtilLo, iUtilHi, :, :) = fileData.Results.power(iUtilLo, iUtilHi, :,:);
 
 	end
 

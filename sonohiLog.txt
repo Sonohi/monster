@@ -2517,3 +2517,193 @@ WRN	In simulate: Signaling error, offset not computed correctly, using autocorre
 NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
 WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
 NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 1: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 2: Percentage RMS EVM of Pre-Equalized signal: 0.000
+NFO	In simulate: User 3: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 5: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 6: Percentage RMS EVM of Pre-Equalized signal: 0.000
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 8: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 11: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 2: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 3: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 5: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 11: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 2: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 3: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 5: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 11: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 2: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 3: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 5: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 11: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+NFO	In simulate: User 1: Percentage RMS EVM of Pre-Equalized signal: 0.000
+NFO	In simulate: User 2: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 3: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 6: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+NFO	In simulate: User 8: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 9: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 8: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 8: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 4: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 7: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 8: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 10: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 12: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 13: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 14: Percentage RMS EVM of Pre-Equalized signal: 0.000
+WRN	In simulate: Signaling error, offset not computed correctly, using autocorrelation.
+NFO	In simulate: User 15: Percentage RMS EVM of Pre-Equalized signal: 0.000
