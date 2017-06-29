@@ -1,7 +1,20 @@
-function offset  = sync_routine(Stations,Users, Channel, Param,ChannelEstimator)
+function users_new  = sync_routine(Stations,Users, Channel, Param,ChannelEstimator)
+%% SYNC_ROUTINE Computes the timing offset required for synchronization
+% between TX and RX.
+% 1. Computes a full frame with PSS and SSS (given base station configuration) 
+% 2. Traverse the channel setup and compute the offset based on the PSS and SSS 
+% TODO
+% * Add offset in a list corresponding to the frame number.
+% * Test with multiple antennas
+% * Remove most function inputs and replace with varagin
+% * Add debugging feature which check that it can demodulate.
+% * Add BER curve of demodulated frame.
+
+
+% Save in temp variable
+users_new = Users;
 
 % Initial association.
-
 % check which UEs are associated to which eNB
 [Users, Stations] = refreshUsersAssociation(Users, Stations, Param);
 
@@ -15,57 +28,19 @@ end
 [Stations, Users] = Channel.traverse(Stations,Users);
     
 % Compute offset
-%% Synchronization
-% The offset caused by the channel in the received time domain signal is
-% obtained using <matlab:doc('lteDLFrameOffset') lteDLFrameOffset>. This
-% function returns a value |offset| which indicates how many samples the
-% waveform has been delayed. The offset is considered identical for
-% waveforms received on all antennas. The received time domain waveform can
-% then be manipulated to remove the delay using |offset|.
 for p = 1:length(Users)
+    % Find serving station
    iSStation = find([Stations.NCellID] == Users(p).ENodeB);
-    
-   offset(p) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform); 
-   rxWaveform = Users(p).RxWaveform(1+offset(p):end,:);
+    % Compute offset
+   users_new(p).Offset = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform); 
+   
+   
+   %% DEBUGGING STUFF
+   %rxWaveform = Users(p).RxWaveform(1+offset(p):end,:);
+    %rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform)
 
-
-
-    %% OFDM Demodulation
-    % The time domain waveform undergoes OFDM demodulation to transform it to
-    % the frequency domain and recreate a resource grid. This is accomplished
-    % using <matlab:doc('lteOFDMDemodulate') lteOFDMDemodulate>. The resulting
-    % grid is a 3-dimensional matrix. The number of rows represents the number
-    % of subcarriers. The number of columns equals the number of OFDM symbols
-    % in a subframe. The number of subcarriers and symbols is the same for the
-    % returned grid from OFDM demodulation as the grid passed into
-    % <matlab:doc('lteOFDMModulate') lteOFDMModulate>. The number of planes
-    % (3rd dimension) in the grid corresponds to the number of receive
-    % antennas.
-
-    rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform);
-
-    %% Channel Estimation
-    % To create an estimation of the channel over the duration of the
-    % transmitted resource grid <matlab:doc('lteDLChannelEstimate')
-    % lteDLChannelEstimate> is used. The channel estimation function is
-    % configured by the structure |cec|. <matlab:doc('lteDLChannelEstimate')
-    % lteDLChannelEstimate> assumes the first subframe within the resource grid
-    % is subframe number |enb.NSubframe| and therefore the subframe number must
-    % be set prior to calling the function. In this example the whole received
-    % frame will be estimated in one call and the first subframe within the
-    % frame is subframe number 0. The function returns a 4-D array of complex
-    % weights which the channel applies to each resource element in the
-    % transmitted grid for each possible transmit and receive antenna
-    % combination. The possible combinations are based upon the eNodeB
-    % configuration |enb| and the number of receive antennas (determined by the
-    % size of the received resource grid). The 1st dimension is the subcarrier,
-    % the 2nd dimension is the OFDM symbol, the 3rd dimension is the receive
-    % antenna and the 4th dimension is the transmit antenna. In this example
-    % one transmit and one receive antenna is used therefore the size of
-    % |estChannel| is 180-by-140-by-1-by-1.
-
-    enb.NSubframe = 0;
-    [estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
+    %enb.NSubframe = 0;
+    %[estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
 
 
     %constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',1, ...
@@ -74,15 +49,8 @@ for p = 1:length(Users)
     % for i= 1:30:length(rxGrid_r)-30
     %     constDiagram(rxGrid_r(i:i+30))
     % end
-    %% MMSE Equalization
-    % The effects of the channel on the received resource grid are equalized
-    % using <matlab:doc('lteEqualizeMMSE') lteEqualizeMMSE>. This function uses
-    % the estimate of the channel |estChannel| and noise |noiseEst| to equalize
-    % the received resource grid |rxGrid|. The function returns |eqGrid| which
-    % is the equalized grid. The dimensions of the equalized grid are the same
-    % as the original transmitted grid (|txGrid|) before OFDM modulation.
 
-    eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
+    %eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
     %eqGrid_r = reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1);
     %for i= 1:30:length(eqGrid_r)-30
     %    constDiagram(eqGrid_r(i:i+30))
@@ -90,25 +58,11 @@ for p = 1:length(Users)
 
     %constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
-    %% Analysis
-    % The received resource grid is compared with the equalized resource grid.
-    % The error between the transmitted and equalized grid and transmitted and
-    % received grids are calculated. This creates two matrices (the same size
-    % as the resource arrays) which contain the error for each symbol. To allow
-    % easy inspection the received and equalized grids are plotted on a
-    % logarithmic scale using <matlab:doc('surf') surf> within
-    % <matlab:edit('hDownlinkEstimationEqualizationResults.m')
-    % hDownlinkEstimationEqualizationResults.m>. These diagrams show that
-    % performing channel equalization drastically reduces the error in the
-    % received resource grid.
-
-    % Calculate error between transmitted and equalized grid
     %txGrid = Stations(iSStation).ReGrid;
     %eqError = txGrid - eqGrid;
     %rxError = txGrid - rxGrid;
 
-    % Compute EVM across all input values
-    % EVM of pre-equalized receive signal
+
     %EVM = comm.EVM;
     %EVM.AveragingDimensions = [1 2];
     %preEqualisedEVM = EVM(txGrid,rxGrid);
@@ -132,13 +86,7 @@ end
 
 function [txWaveform, info, txGrid] = generate_dummy_frame(enb)
     
-    %% Subframe Resource Grid Size
-    % In this example it is useful to have access to the subframe resource grid
-    % dimensions. These are determined using
-    % <matlab:doc('lteDLResourceGridSize') lteDLResourceGridSize>. This
-    % function returns an array containing the number of subcarriers, number of
-    % OFDM symbols and number of transmit antenna ports in that order.
-
+    
     gridsize = lteDLResourceGridSize(enb);
     K = gridsize(1);    % Number of subcarriers
     L = gridsize(2);    % Number of OFDM symbols in one subframe

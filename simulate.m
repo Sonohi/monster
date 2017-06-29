@@ -32,8 +32,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
     
     % Routine for establishing offset based on whole frame.
-    offset_sync = sync_routine(Stations, Users, Channel, Param,ChannelEstimator);
-    % TODO: add this to UserEquipment property
+    Users = sync_routine(Stations, Users, Channel, Param,ChannelEstimator);
     
     
 	for iRound = 0:Param.schRounds
@@ -200,14 +199,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
             end
 
 			% Achieve synchronization
-			% TODO; Offset not computed correctly. Check eNB settings and
-			% how the synchronization signals are set (see 'edit
-			% DownlinkChannelEstimationEqualizationExample')
-
-			%offset = lteDLFrameOffset(cast2Struct(Stations(iServingStation)), ...
-			%	cast2Struct(Users(iUser)).RxWaveform);
-			%
-
+            % TODO, check result of calcFrameoffset against result of
+            % sync_routine
 			[offset, offset_auto] = calcFrameOffset(Stations(iServingStation), Users(iUser));
 
             if offset > offset_auto && strcmp(Param.channel.mode,'B2B')
@@ -219,7 +212,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 					sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
 			end
 			
-			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+offset_sync(iUser):end,:);
+			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset:end,:);
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
