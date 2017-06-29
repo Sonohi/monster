@@ -169,10 +169,8 @@ if logToFile == 2 || logToFile == 0
     if strcmp(logType, 'NFO') || logInBlack
       fprintf(1, logMsg);
 			fprintf(fileId, logMsg);
-		else
-			fprintf(1, logMsg);
-			fprintf(fileId, logMsg);
-      %fprintf(textColors{logTypeIdx}, logMsg); % gives some errors???
+    else
+      cprintf(textColors{logTypeIdx}, logMsg); % gives some errors???
 		end
 		fclose(fileId);
 end

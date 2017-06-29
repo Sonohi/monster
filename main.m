@@ -54,6 +54,7 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.BuildingHeight],[1 length(Param.buildings(:,1))]);
 Param.freq = 1900; %Given in MHz
+Param.UENoiseFigure = 7; % dB 
 Param.prbRe = 168;
 Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
 Param.tHyst = 0.002; % hysteresis timer threshold in s
@@ -67,7 +68,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'B2B';
+Param.channel.mode = 'eHATA';
 Param.channel.region = 'DenseUrban';
 
 % Guard for initial setup: exit of there's more than 1 macro BS

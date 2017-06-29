@@ -20,7 +20,8 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
-
+    NoiseFigure;
+    Offset;
 	end
 
 	methods
@@ -32,6 +33,7 @@ classdef UserEquipment
 			obj.Scheduled = false;
 			obj.UeId = userId;
 			obj.WCqi = 6;
+			obj.NoiseFigure = Param.UENoiseFigure;
 			obj.PlotStyle = struct(	'marker', '^', ...
 															'colour', rand(1,3), ...
 															'edgeColour', [0.1 0.1 0.1], ...

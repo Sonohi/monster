@@ -30,7 +30,11 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		'util', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'power', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
-
+    
+    % Routine for establishing offset based on whole frame.
+    Users = sync_routine(Stations, Users, Channel, Param,ChannelEstimator);
+    
+    
 	for iRound = 0:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
 		% allocate PRBs through the scheduling function per each station
@@ -78,7 +82,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			end
 
 			% calculate the power that will be used in this round by this eNodeB
-			pIn = getPowerIn(Stations(iStation), utilPercent/100);
+			pIn = GetPowerIn(Stations(iStation), utilPercent/100);
 
 			% store eNodeB-space results
 			Results.util(iStation, iRound + 1) = utilPercent;
@@ -188,31 +192,27 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
 
-			% TODO remove B2B testing
+			% If B2B, the channel is not traversed.
+            % TODO, move this into the channel block.
 			if strcmp(Param.channel.mode,'B2B')
 				Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
-			end
+            end
 
 			% Achieve synchronization
-			% TODO; Offset not computed correctly. Check eNB settings and
-			% how the synchronization signals are set (see 'edit
-			% DownlinkChannelEstimationEqualizationExample')
+            % TODO, check result of calcFrameoffset against result of
+            % sync_routine
+			[offset, offset_auto] = calcFrameOffset(Stations(iServingStation), Users(iUser));
 
-			%offset = lteDLFrameOffset(cast2Struct(Stations(iServingStation)), ...
-			%	cast2Struct(Users(iUser)).RxWaveform);
-			%
-
-			[offset, offset_auto] = calcFrameOffset(Stations(iStation), Users(iUser));
-			if offset > offset_auto && strcmp(Param.channel.mode,'B2B')
-					sonohilog('Signaling error, offset not computed correctly, using autocorrelation.','WRN')
-					offset = offset_auto-1;
-			end
+            if offset > offset_auto && strcmp(Param.channel.mode,'B2B')
+                sonohilog('Signaling error, offset not computed correctly, using autocorrelation.','WRN')
+                offset = offset_auto-1;
+            end
 
 			if offset > 0 && strcmp(Param.channel.mode,'B2B')
 					sonohilog('Offset error, supposed to be 0 in B2B mode.','ERR')
 			end
-			offset = 0;
-			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+offset:end,:);
+			
+			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset:end,:);
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
@@ -229,7 +229,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				% Perform equalization to account for phase noise (needs
 				% SNR)
 				if ~strcmp(Param.channel.mode,'B2B')
-					Users(iUser) = equalize(Users(iUser));
+					Users(iUser) = Users(iUser).equalize;
 					eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
 				end
 
@@ -240,6 +240,14 @@ function simulate(Param, DataIn, utilLo, utilHi)
 					Users(iUser).UeId,preEqualisedEVM);
                 sonohilog(s,'NFO')
 
+                EVM = comm.EVM;
+				EVM.AveragingDimensions = [1 2];
+				postEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).EqSubFrame);
+				s = sprintf('User %i: Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
+					Users(iUser).UeId,postEqualisedEVM);
+                sonohilog(s,'NFO')
+                
+                
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
