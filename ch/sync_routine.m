@@ -1,16 +1,22 @@
-function users_new  = sync_routine(Stations,Users, Channel, Param,ChannelEstimator)
-%% SYNC_ROUTINE Computes the timing offset required for synchronization
-% between TX and RX.
+function users_new  = sync_routine(FrameNo, Stations, Users, Channel, Param, varargin)
+%% SYNC_ROUTINE Computes the timing offset required for synchronization between TX and RX.
+% For using debug mode, forward a channel estimator, e.g.
+% Users = sync_routine(FrameNo,Stations, Users, Channel, Param,'Debug',ChannelEstimator);
+% 
 % 1. Computes a full frame with PSS and SSS (given base station configuration) 
 % 2. Traverse the channel setup and compute the offset based on the PSS and SSS 
 % TODO
-% * Add offset in a list corresponding to the frame number.
 % * Test with multiple antennas
-% * Remove most function inputs and replace with varagin
-% * Add debugging feature which check that it can demodulate.
 % * Add BER curve of demodulated frame.
 
-
+if nargin > 5
+   nVargs = length(varargin);
+   for k = 1:nVargs
+      if strcmp(varargin{k},'Debug')
+         ChannelEstimator = varargin{k+1}; 
+      end
+   end
+end
 % Save in temp variable
 users_new = Users;
 
@@ -33,49 +39,55 @@ for p = 1:length(Users)
     % Find serving station
    iSStation = find([Stations.NCellID] == Users(p).ENodeB);
     % Compute offset
-   users_new(p).Offset = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform); 
+   users_new(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform); 
    
    
    %% DEBUGGING STUFF
-   %rxWaveform = Users(p).RxWaveform(1+offset(p):end,:);
-    %rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform)
+   if exist('ChannelEstimator', 'var')
+   rxWaveform = Users(p).RxWaveform(1+users_new(p).Offset(FrameNo):end,:);
+   rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform);
 
     %enb.NSubframe = 0;
-    %[estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
+    [estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
 
 
-    %constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',1, ...
-    %    'SymbolsToDisplaySource','Property','SymbolsToDisplay',600);
-    % rxGrid_r = reshape(rxGrid,length(rxGrid(:,1))*length(rxGrid(1,:)),1);
-    % for i= 1:30:length(rxGrid_r)-30
+    constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',1, ...
+       'SymbolsToDisplaySource','Property','SymbolsToDisplay',600);
+    %rxGrid_r = reshape(rxGrid,length(rxGrid(:,1))*length(rxGrid(1,:)),1);
+    %for i= 1:30:length(rxGrid_r)-30
     %     constDiagram(rxGrid_r(i:i+30))
-    % end
-
-    %eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
-    %eqGrid_r = reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1);
-    %for i= 1:30:length(eqGrid_r)-30
-    %    constDiagram(eqGrid_r(i:i+30))
     %end
+    
+			% get PDSCH indexes
+			[indPdsch, info] = Stations(iSStation).getPDSCHindicies;
+    
+    eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
+    eqGrid_r = eqGrid(indPdsch);
+    for i= 1:2:length(eqGrid_r)-2
+        constDiagram(eqGrid_r(i:i+2))
+    end
 
+    
     %constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
-    %txGrid = Stations(iSStation).ReGrid;
-    %eqError = txGrid - eqGrid;
-    %rxError = txGrid - rxGrid;
+    txGrid = Stations(iSStation).ReGrid;
+    eqError = txGrid - eqGrid;
+    rxError = txGrid - rxGrid;
 
 
-    %EVM = comm.EVM;
-    %EVM.AveragingDimensions = [1 2];
-    %preEqualisedEVM = EVM(txGrid,rxGrid);
-    %fprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-    %        preEqualisedEVM); 
-    % EVM of post-equalized receive signal
-    %postEqualisedEVM = EVM(txGrid,eqGrid);
-    %fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
-    %        postEqualisedEVM); 
+    EVM = comm.EVM;
+    EVM.AveragingDimensions = [1 2];
+    preEqualisedEVM = EVM(txGrid,rxGrid);
+    fprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+            preEqualisedEVM); 
+    %EVM of post-equalized receive signal
+    postEqualisedEVM = EVM(txGrid,eqGrid);
+    fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
+            postEqualisedEVM); 
 
     % Plot the received and equalized resource grids 
-    %hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);
+    hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);
+   end
 
    
 end
