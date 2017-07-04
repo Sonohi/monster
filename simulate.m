@@ -49,7 +49,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			queue = updateTrQueue(trSource, simTime, Users(iUser));
 			Users(iUser) = setQueue(Users(iUser), queue);
 			Users(iUser) = setScheduled(Users(iUser), false);
-		end;
+		end
 
 		% ---------------------
 		% ENODEB SCHEDULE START
@@ -174,8 +174,10 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			constellationDiagram(grid_r,1);
 
 			% combine subframe grids to a frame grid for dbg
-			if iRound < 11
+			if iRound <= 10
 				Stations(1).Frame = [Stations(1).Frame Stations(1).ReGrid];
+			else
+				disp('bau');
 			end
 
 		end

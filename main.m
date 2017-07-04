@@ -28,7 +28,7 @@ setpref('sonohiLog','logLevel',5)
 Param.reset = 0;
 Param.draw = 1; % Enable plots
 Param.storeTxData = 0;
-Param.schRounds = 1;
+Param.schRounds = 15;
 Param.numSubFramesMacro = 50;
 Param.numSubFramesMicro = 25;
 Param.numMacro = 1;
@@ -61,6 +61,7 @@ Param.tHyst = 0.002; % hysteresis timer threshold in s
 Param.tSwitch = 0.001; % eNodeB switching on/off timer in s
 Param.rmResults = 1; % cleans the results folder
 Param.mobilityScenario = 1; % 1 is pedestrian UEs, 2 is vehicular UEs
+Param.saveFrame = 1;
 
 sonohi(Param.reset);
 
