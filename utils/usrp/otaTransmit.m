@@ -46,7 +46,7 @@ disp('Starting transmission');
 disp('Please run otaTransmit.m in a new MATLAB session');
 
 currentTime = 0;
-while currentTime < 300                        
+while currentTime < 3000                        
     for n = 1:numFrames
         % Call step method to send a two-column matrix
         % First column for TX channel 1. Second column for TX channel 2

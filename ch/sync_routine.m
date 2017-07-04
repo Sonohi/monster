@@ -2,9 +2,9 @@ function users_new  = sync_routine(FrameNo, Stations, Users, Channel, Param, var
 %% SYNC_ROUTINE Computes the timing offset required for synchronization between TX and RX.
 % For using debug mode, forward a channel estimator, e.g.
 % Users = sync_routine(FrameNo,Stations, Users, Channel, Param,'Debug',ChannelEstimator);
-% 
-% 1. Computes a full frame with PSS and SSS (given base station configuration) 
-% 2. Traverse the channel setup and compute the offset based on the PSS and SSS 
+%
+% 1. Computes a full frame with PSS and SSS (given base station configuration)
+% 2. Traverse the channel setup and compute the offset based on the PSS and SSS
 % TODO
 % * Test with multiple antennas
 % * Add BER curve of demodulated frame.
@@ -13,7 +13,7 @@ if nargin > 5
    nVargs = length(varargin);
    for k = 1:nVargs
       if strcmp(varargin{k},'Debug')
-         ChannelEstimator = varargin{k+1}; 
+         ChannelEstimator = varargin{k+1};
       end
    end
 end
@@ -31,17 +31,17 @@ for i = 1:length(Stations)
     Stations(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
 end
 
-% Traverse channel 
+% Traverse channel
 [Stations, Users] = Channel.traverse(Stations,Users);
-    
+
 % Compute offset
 for p = 1:length(Users)
     % Find serving station
    iSStation = find([Stations.NCellID] == Users(p).ENodeB);
     % Compute offset
-   users_new(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform); 
-   
-   
+   users_new(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform);
+
+
    %% DEBUGGING STUFF
    if exist('ChannelEstimator', 'var')
    rxWaveform = Users(p).RxWaveform(1+users_new(p).Offset(FrameNo):end,:);
@@ -57,17 +57,17 @@ for p = 1:length(Users)
     %for i= 1:30:length(rxGrid_r)-30
     %     constDiagram(rxGrid_r(i:i+30))
     %end
-    
+
 			% get PDSCH indexes
 			[indPdsch, info] = Stations(iSStation).getPDSCHindicies;
-    
+
     eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
     eqGrid_r = eqGrid(indPdsch);
     for i= 1:2:length(eqGrid_r)-2
         constDiagram(eqGrid_r(i:i+2))
     end
 
-    
+
     %constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
     txGrid = Stations(iSStation).ReGrid;
@@ -79,27 +79,27 @@ for p = 1:length(Users)
     EVM.AveragingDimensions = [1 2];
     preEqualisedEVM = EVM(txGrid,rxGrid);
     fprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-            preEqualisedEVM); 
+            preEqualisedEVM);
     %EVM of post-equalized receive signal
     postEqualisedEVM = EVM(txGrid,eqGrid);
     fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
-            postEqualisedEVM); 
+            postEqualisedEVM);
 
-    % Plot the received and equalized resource grids 
+    % Plot the received and equalized resource grids
     hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);
    end
 
-   
+
 end
 
-   
+
 
 end
 
 
 function [txWaveform, info, txGrid] = generate_dummy_frame(enb)
-    
-    
+
+
     gridsize = lteDLResourceGridSize(enb);
     K = gridsize(1);    % Number of subcarriers
     L = gridsize(2);    % Number of OFDM symbols in one subframe
@@ -110,24 +110,24 @@ function [txWaveform, info, txGrid] = generate_dummy_frame(enb)
     % An empty resource grid |txGrid| is created which will be populated with
     % subframes.
     txGrid = [];
-    
+
     %% Payload Data Generation
     % As no transport channel is used in this example the data sent over the
     % channel will be random QPSK modulated symbols. A subframe worth of
     % symbols is created so a symbol can be mapped to every resource element.
     % Other signals required for transmission and reception will overwrite
     % these symbols in the resource grid.
-    
+
     % Number of bits needed is size of resource grid (K*L*P) * number of bits
     % per symbol (2 for QPSK)
     numberOfBits = K*L*P*2;
-    
+
     % Create random bit stream
     inputBits = randi([0 1], numberOfBits, 1);
-    
+
     % Modulate input bits
     inputSym = lteSymbolModulate(inputBits,'QPSK');
-    
+
     %% Frame Generation
     % The frame will be created by generating individual subframes within a
     % loop and appending each created subframe to the previous subframes. The
@@ -143,42 +143,44 @@ function [txWaveform, info, txGrid] = generate_dummy_frame(enb)
     % System Toolbox takes care of generating empty signals and indices in the
     % other subframes so that the calling syntax here can be completely uniform
     % across the subframes.
-    
+
     % For all subframes within the frame
     for sf = 0:10
-        
+
         % Set subframe number
         enb.NSubframe = mod(sf,10);
-        
+
         % Generate empty subframe
         subframe = lteDLResourceGrid(enb);
-        
+
         % Map input symbols to grid
         subframe(:) = inputSym;
-        
+
         % Generate synchronizing signals
         pssSym = ltePSS(enb);
         sssSym = lteSSS(enb);
         pssInd = ltePSSIndices(enb);
         sssInd = lteSSSIndices(enb);
-        
+
         % Map synchronizing signals to the grid
         subframe(pssInd) = pssSym;
         subframe(sssInd) = sssSym;
-        
+
         % Generate cell specific reference signal symbols and indices
         cellRsSym = lteCellRS(enb);
         cellRsInd = lteCellRSIndices(enb);
-        
+
         % Map cell specific reference signal to grid
         subframe(cellRsInd) = cellRsSym;
-        
+
+				% check whether we want to generate
+
         % Append subframe to grid to be transmitted
         txGrid = [txGrid subframe]; %#ok
-        
+
     end
-    
+
     [txWaveform,info] = lteOFDMModulate(enb,txGrid);
-    
+
 
 end

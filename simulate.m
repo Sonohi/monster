@@ -30,12 +30,12 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		'util', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'power', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
 		'info', struct('utilLo', utilLo, 'utilHi', utilHi));
-    
+
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
     Users = sync_routine(FrameNo,Stations, Users, Channel, Param);
-    
-    
+
+
 	for iRound = 0:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
 		% allocate PRBs through the scheduling function per each station
@@ -176,8 +176,6 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% combine subframe grids to a frame grid for dbg
 			if iRound <= 10
 				Stations(1).Frame = [Stations(1).Frame Stations(1).ReGrid];
-			else
-				disp('bau');
 			end
 
 		end
@@ -210,10 +208,10 @@ function simulate(Param, DataIn, utilLo, utilHi)
                    offset_s = sprintf('Timing offset compute for single RB differ by: %s',num2str(Users(iUser).Offset-offset));
                    sonohilog(offset_s, 'NFO0')
                 end
-            
+
             end
-            
-			
+
+
 			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset(FrameNo):end,:);
 
 			% Now, demodulate the overall received waveform for users that should
@@ -248,8 +246,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
 					postEqualisedEVM);
                 sonohilog(s,'NFO')
-                
-                
+
+
 				% finally, get the value of the sinr for this subframe and the corresponing
 				% CQI that should be used for the next round
 
