@@ -276,8 +276,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 		% Plot resource grids for all users
 		if Param.draw
-		  hScatter = plotConstDiagram_rx(Users);
-		  hGrids = plotReGrids(Users);
+		  [hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
+		  [hGrids(1), hGrids(2)] = plotReGrids(Users);
 		end
 
 	end % end round
