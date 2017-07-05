@@ -45,15 +45,98 @@ classdef ChBulk_v2
     
     methods(Access = private)
         
-        function rxSig = add_pathloss_awgn(obj,Station,User,tx_sig)
+       function [numPoints,dist_vec,elavation_profile] = getElavation(obj,tx_pos,rx_pos)
+            
+            elavation_profile(1) = 0;
+            dist_vec(1) = 0;
+            % Walk towards rx_pos
+            sign_x = sign(rx_pos(1)-tx_pos(1));
+            sign_y = sign(rx_pos(2)-tx_pos(2));
+            avg_g = (tx_pos(1)-rx_pos(1))/(tx_pos(2)-rx_pos(2));
+            position(1:2,1) = tx_pos(1:2);
+            %plot(position(1,1),position(2,1),'r<')
+            i = 2;
+            numPoints = 0;
+            while true
+                % Check current distance
+                distance = norm(position(1:2,i-1)'-rx_pos(1:2));
+                              
+                % Move position
+                [moved_dist,position(1:2,i)] = move(position(1:2,i-1),sign_x,sign_y,avg_g,0.1);
+                dist_vec(i) = dist_vec(i-1)+moved_dist;
+                %plot(position(1,i),position(2,i),'bo')
+                % Check if new position is at a greater distance, if so, we
+                % passed it.
+                distance_n = norm(position(1:2,i)'-rx_pos(1:2));
+                if distance_n > distance
+                   break; 
+                else
+                    % Check if we're inside a building
+                    fbuildings_x = obj.Buildings(obj.Buildings(:,1) < position(1,i) & obj.Buildings(:,3) > position(1,i),:);
+                    fbuildings_y = fbuildings_x(fbuildings_x(:,2) < position(2,i) & fbuildings_x(:,4) > position(2,i),:);
+                    
+                    if ~isempty(fbuildings_y)
+                       elavation_profile(i) = fbuildings_y(5);
+                       if elavation_profile(i-1) == 0
+                          numPoints = numPoints +1; 
+                       end
+                    else
+                       elavation_profile(i) = 0;
+                        
+                    end
+                end
+                i = i+1;
+            end
+            
+            %figure
+            %plot(elavation_profile)
+            
+            
+           function [distance,position] = move(position,sign_x,sign_y,avg_g,move_s)
+               if abs(avg_g) > 1
+                    move_x = abs(avg_g)*sign_x*move_s;
+                    move_y = 1*sign_y*move_s;
+                    position(1) = position(1)+move_x;
+                    position(2) = position(2)+move_y;
+                    
+               else
+                   move_x = 1*sign_x*move_s;
+                   move_y = (1/abs(avg_g))*sign_y*move_s;
+                   position(1) = position(1)+move_x;
+                   position(2) = position(2)+move_y;
+               end
+               distance = sqrt(move_x^2+move_y^2);
+           end
+            
+        end
+        
+        function rxSig = add_pathloss_awgn(obj,Station,User,tx_sig,varargin)
             thermalNoise = obj.ThermalNoise(Station.NDLRB);
             hb_pos = Station.Position;
             hm_pos = User.Position;
             distance = obj.getDistance(hb_pos,hm_pos)/1e3;
             switch obj.Mode
                 case 'eHATA'
-                    [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.Freq, ...
-                        distance, hb_pos(3), hm_pos(3), obj.Region);
+                    %[lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.Freq, ...
+                     %   distance, hb_pos(3), hm_pos(3), obj.Region);
+                    
+                    [numPoints,dist_vec,elev_profile] = obj.getElavation(hb_pos,hm_pos);
+                    
+                    if numPoints == 0
+                        numPoints_scale = 1;
+                    else
+                        numPoints_scale = numPoints;
+                    end
+                    
+                    elev = [numPoints_scale; dist_vec(end)/(numPoints_scale); hb_pos(3); elev_profile'; hm_pos(3)];
+
+                     lossdB = ExtendedHata_PropLoss(Station.Freq, hb_pos(3), ...
+                         hm_pos(3), obj.Region, elev);
+                     
+                case 'winner'
+                    
+                    
+
                     
             end
             
@@ -112,7 +195,7 @@ classdef ChBulk_v2
 
         end
         
-        function H_ch = configure_fading(obj,Stations,Users)
+        function cfgModel = configure_winner(obj,Stations,Users)
             disp('Setting up WINNER II channel model...')
             % Construct anteanna array, eNB and users
             AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
@@ -205,6 +288,25 @@ classdef ChBulk_v2
                 end
             end
             
+            % Use maximum fft size
+            sw = [Stations.WaveformInfo];
+            sw_nfft = [sw.Nfft];
+            sw_SamplingRate = [sw.SamplingRate];
+            
+            frmLen = double(max(sw_nfft));   % Frame length
+
+            
+            % Configure model parameters
+            cfgModel = winner2.wimparset;
+            cfgModel.NumTimeSamples     = frmLen; % Frame length
+            cfgModel.IntraClusterDsUsed = 'yes';   % No cluster splitting
+            cfgModel.SampleDensity      = sw_SamplingRate/50;    % To match sampling rate of signal
+
+
+            cfgModel.PathLossModelUsed  = 'no';  % Turn on path loss
+            cfgModel.ShadowingModelUsed = 'yes';  % Turn on shadowing
+            cfgModel.CenterFrequency = 1.9e9;
+            
             
         end
         
@@ -225,7 +327,7 @@ classdef ChBulk_v2
         function [Stations,Users,obj] = traverse(obj,Stations,Users)
             eNBpos = cell2mat({Stations(:).Position}');
             userpos = cell2mat({Users(:).Position}');
-            
+           
             % Assume a single link per stations
             numLinks = length(Stations);
             
@@ -235,8 +337,10 @@ classdef ChBulk_v2
             numLinks = nnz(users);
             
             Pairing = obj.getPairing(Stations);
-            
-
+            % Check if winner channel needs to be configured.
+            if strcmp(obj.Mode,'winner')
+                Wconfig = obj.configure_winner(Stations,Users)
+            end
             
             
             %fading_channel = obj.configure_fading(Stations,Users);
@@ -245,6 +349,7 @@ classdef ChBulk_v2
             for i = 1:numLinks
                 station = Stations(Pairing(1,i));
                 user = Users(Pairing(2,i));
+               
                 Users(Pairing(2,i)).RxWaveform = obj.add_fading([station.TxWaveform;zeros(25,1)],station.WaveformInfo);
                 Users(Pairing(2,i)).RxWaveform = obj.add_pathloss_awgn(station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
                 %Users(Pairing(2,i)).RxWaveform = obj.add_pathloss_awgn(station,Users(Pairing(2,i)),station.TxWaveform);
@@ -265,6 +370,9 @@ classdef ChBulk_v2
             end
            
         end
+        
+
+        
     end
 end
 
