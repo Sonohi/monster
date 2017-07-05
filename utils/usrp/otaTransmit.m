@@ -1,7 +1,7 @@
 % Simple utility to pilot a USRP B210 to send out a waveform
 
 % Load enb and generate LTE signal
-load('utils/usrp/macroEnb.mat', 'enb');
+load('utils/usrp/picoEnbQPSK.mat');
 [frameWaveform, waveformInfo] = lteOFDMModulate(enb, enb.Frame);
 
 % Connect to Radio
