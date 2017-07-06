@@ -219,7 +219,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			% compute the interference from non-serving stations
 			if ~strcmp(Param.channel.mode,'B2B')
-				Users(iUSer) = computeInterference(Channel, Stations, Users(iUser), Param);
+				Users(iUser) = computeInterference(Channel, Stations, Users(iUser), Param);
 			end
 
 			% Now, demodulate the overall received waveform for users that should
