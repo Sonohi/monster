@@ -9,7 +9,7 @@ function [pos] = positionUser(Param, id)
 %
 %   pos			-> position in Manhattan grid
 
-	pos = [randi([Param.area(1),Param.area(3)]) randi([Param.area(2),Param.area(4)]) Param.UEHeight];
+	pos = [randi([Param.area(1),Param.area(3)]) randi([Param.area(2),Param.area(4)]) Param.ueHeight];
 
     if Param.draw
 			text(pos(1),pos(2)-6,strcat('UE ',num2str(id),' (',num2str(round(pos(1))),', ', ...

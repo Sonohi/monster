@@ -10,6 +10,7 @@ classdef EvolvedNodeB
 		CellRefP;
 		CyclicPrefix;
 		CFI;
+		DlFreq;
 		PHICHDuration;
 		Ng;
 		TotSubframes;
@@ -79,7 +80,7 @@ classdef EvolvedNodeB
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
-
+			obj.DlFreq = Param.dlFreq;
 		end
 
 		% Posiiton base station

@@ -19,10 +19,10 @@ function [Stations, h] = createBaseStations (Param)
 		% For now only 1 macro in the scenario and it's kept as first elem
 		if (iStation <= Param.numMacro)
 			Stations(iStation) = EvolvedNodeB(Param, 'macro', iStation);
-			Stations(iStation).Position = [macroPos(iStation, :), Param.MacroHeight];
+			Stations(iStation).Position = [macroPos(iStation, :), Param.macroHeight];
 		else
 			Stations(iStation) = EvolvedNodeB(Param, 'micro', iStation);
-			Stations(iStation).Position = [microPos(iStation - Param.numMacro, :), Param.MicroHeight];
+			Stations(iStation).Position = [microPos(iStation - Param.numMacro, :), Param.microHeight];
 		end
 	end
 

@@ -34,7 +34,7 @@ classdef UserEquipment
 			obj.Scheduled = false;
 			obj.UeId = userId;
 			obj.WCqi = 6;
-			obj.NoiseFigure = Param.UENoiseFigure;
+			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.PlotStyle = struct(	'marker', '^', ...
 															'colour', rand(1,3), ...
 															'edgeColour', [0.1 0.1 0.1], ...
@@ -60,7 +60,7 @@ classdef UserEquipment
 			[x, y] = mobility(Param.mobilityScenario);
 			obj.Trajectory(1:length(x),1) = x;
 			obj.Trajectory(1:length(y),2) = y;
-			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.UEHeight];
+			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
 
 			% Plot UE posiiton and trajectory in scenario
 			if Param.draw
