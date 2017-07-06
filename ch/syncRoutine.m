@@ -1,5 +1,5 @@
-function users_new  = sync_routine(FrameNo, Stations, Users, Channel, Param, varargin)
-%% SYNC_ROUTINE Computes the timing offset required for synchronization between TX and RX.
+function users_new  = syncRoutine(FrameNo, Stations, Users, Channel, Param, varargin)
+%% SYNC ROUTINE Computes the timing offset required for synchronization between TX and RX.
 % For using debug mode, forward a channel estimator, e.g.
 % Users = sync_routine(FrameNo,Stations, Users, Channel, Param,'Debug',ChannelEstimator);
 %

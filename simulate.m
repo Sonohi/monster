@@ -33,7 +33,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
-    Users = sync_routine(FrameNo,Stations, Users, Channel, Param);
+    Users = syncRoutine(FrameNo,Stations, Users, Channel, Param);
 
 
 	for iRound = 0:Param.schRounds
@@ -169,9 +169,9 @@ function simulate(Param, DataIn, utilLo, utilHi)
 			% get PDSCH indexes
 			[indPdsch, info] = Stations(1).getPDSCHindicies;
 			grid = lteOFDMDemodulate(enb,enb.TxWaveform);
-            % Get data symbols and visualize
-			grid_r = grid(indPdsch);
-			constellationDiagram(grid_r,1);
+      % Get data symbols and visualize
+			gridR = grid(indPdsch);
+			constellationDiagram(gridR,1);
 
 			% combine subframe grids to a frame grid for dbg
 			if iRound <= 10
@@ -190,29 +190,37 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% UE RECEPTION START
 		% ------------------
 		for iUser = 1:length(Users)
+			% reset the interference level
+			Users(iUser).Interference = 0;
+
 			% find serving eNodeB
 			iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
-            loop_title = sprintf('Station %i -> User %i',iServingStation,Users(iUser).UeId);
-            sonohilog(loop_title, 'NFO')
+			loopTitle = sprintf('Station %i -> User %i',iServingStation,Users(iUser).UeId);
+			sonohilog(loopTitle, 'NFO')
 			% If B2B, the channel is not traversed.
-            % TODO, move this into the channel block.
+			% TODO, move this into the channel block.
 			if strcmp(Param.channel.mode,'B2B')
 				Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
-            end
+			end
+
 
 			% Compute offset on single RB, check against offset computed for whole frame.
-            if iRound == 0 || iRound == 5
-                [offset, offset_auto] = calcFrameOffset(Stations(iServingStation), Users(iUser));
+			if iRound == 0 || iRound == 5
+				[offset, offsetAuto] = calcFrameOffset(Stations(iServingStation), Users(iUser));
 
-                if offset ~= Users(iUser).Offset
-                   offset_s = sprintf('Timing offset compute for single RB differ by: %s',num2str(Users(iUser).Offset-offset));
-                   sonohilog(offset_s, 'NFO0')
-                end
+				if offset ~= Users(iUser).Offset
+					offsetS = sprintf('Timing offset compute for single RB differ by: %s',num2str(Users(iUser).Offset-offset));
+					sonohilog(offsetS, 'NFO0')
+				end
 
-            end
-
+			end
 
 			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset(FrameNo):end,:);
+
+			% compute the interference from non-serving stations
+			if ~strcmp(Param.channel.mode,'B2B')
+				Users(iUSer) = computeInterference(Channel, Stations, Users(iUser), Param);
+			end
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
@@ -238,14 +246,14 @@ function simulate(Param, DataIn, utilLo, utilHi)
 				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
 				s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
 					preEqualisedEVM);
-                sonohilog(s,'NFO0')
+				sonohilog(s,'NFO0')
 
-                EVM = comm.EVM;
+				EVM = comm.EVM;
 				EVM.AveragingDimensions = [1 2];
 				postEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).EqSubFrame);
 				s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
 					postEqualisedEVM);
-                sonohilog(s,'NFO')
+				sonohilog(s,'NFO')
 
 
 				% finally, get the value of the sinr for this subframe and the corresponing

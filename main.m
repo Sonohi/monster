@@ -62,6 +62,7 @@ Param.tSwitch = 0.001; % eNodeB switching on/off timer in s
 Param.rmResults = 1; % cleans the results folder
 Param.mobilityScenario = 1; % 1 is pedestrian UEs, 2 is vehicular UEs
 Param.saveFrame = 1;
+Param.icScheme = 'none'; % intereference coordination scheme
 
 sonohi(Param.reset);
 

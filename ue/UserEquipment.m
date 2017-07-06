@@ -5,7 +5,10 @@ classdef UserEquipment
 	properties
 		ENodeB;
 		EstChannelGrid;
+		Interference;
 		NoiseEst;
+		NoiseFigure;
+		Offset;
 		Position;
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
@@ -20,9 +23,7 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
-    NoiseFigure;
-    Offset;
-	end
+  end
 
 	methods
 		% Constructor
@@ -51,6 +52,7 @@ classdef UserEquipment
 			obj = setTrajectory(obj, Param);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
+			obj.Interference = 0;
 		end
 
 		% sets user trajectory
@@ -142,6 +144,11 @@ classdef UserEquipment
 				end
 
 			end
+		end
+
+		% set interference value
+		function obj = set.Interference(obj, num)
+			obj.Interference = num;
 		end
 
 		% cast object to struct
