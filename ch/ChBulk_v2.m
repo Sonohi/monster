@@ -132,7 +132,7 @@ classdef ChBulk_v2
 
 					elev = [numPoints_scale; dist_vec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
 
-					lossdB = ExtendedHata_PropLoss(Station.Freq, hbPos(3), ...
+					lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
 						hmPos(3), obj.Region, elev);
 
 				case 'winner'
@@ -151,16 +151,14 @@ classdef ChBulk_v2
 
 			end
 
-			% TODO; make sure this is scaled based on active
-			% subcarriers.
-			% Link budget
+
 			txPw = 10*log10(Station.Pmax)+30; %dBm.
 
 			rxPw = txPw-lossdB;
 			% SNR = P_rx_db - P_noise_db
 			rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
 			SNR = rxPw-rxNoiseFloor;
-			SNR_lin = 10^(SNR/10);
+			SNRLin = 10^(SNR/10);
 			str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
 				Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
 			sonohilog(str1,'NFO0');
@@ -171,10 +169,10 @@ classdef ChBulk_v2
 			% This is based on the number of useed subcarriers.
 			% Scale it by the number of used RE since the power is
 			% equally distributed
-			E_s = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft)*Station.WaveformInfo.OfdmEnergyScale);
+			Es = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft)*Station.WaveformInfo.OfdmEnergyScale);
 
 			% Compute spectral noise density NO
-			N0 = 1/(E_s*SNR_lin);
+			N0 = 1/(Es*SNRLin);
 
 			% Add AWGN
 
@@ -189,7 +187,7 @@ classdef ChBulk_v2
 			cfg.SamplingRate = info.SamplingRate;
 			cfg.Seed = 1;                  % Random channel seed
 			cfg.NRxAnts = 1;               % 1 receive antenna
-			cfg.DelayProfile = 'EVA';      % EVA delay spread
+			cfg.DelayProfile = 'EPA';      % EVA delay spread
 			cfg.DopplerFreq = 120;         % 120Hz Doppler frequency
 			cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
 			cfg.InitTime = 0;              % Initialize at time zero
@@ -204,161 +202,148 @@ classdef ChBulk_v2
 		end
 
 		function [cfgLayout,cfgModel] = configureWinner(obj,Stations,Users)
-			sonohilog('Setting up WINNER II channel model...','NFO')
-
-			% Find number of base station types
-			% A model is created for each type
-			classes = unique({Stations.BsClass});
-			for class = 1:length(classes)
-				varname = classes{class};
-				types.(varname) = find(strcmp({Stations.BsClass},varname));
-
-			end
-
-			Snames = fieldnames(types);
-
-			for model = 1:numel(Snames)
-				type = Snames{model};
-				stations = types.(Snames{model});
-
-
-				% Get number of links associated with the station.
-				users = nonzeros([Stations(stations).Users]);
-				numLinks = nnz(users);
-
-				if isempty(users)
-					% If no users are associated, skip the model
-					continue
-				end
-
-				% Select antenna array based on station class.
-				if strcmp(type,'macro')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
-				elseif strcmp(type,'micro')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
-				else
-
-					sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
-				end
-
-				% User antenna array
-				AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
-
-				% Assign AA(1) to all stations
-				eNBidx = num2cell(ones(length(stations),1));
-
-				% For users use antenna configuration 2
-				useridx = repmat(2,1,length(users));
-
-				range = max(obj.Area);
-
-				cfgLayout{model} = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
-
-				% Add station idx and user idx
-				cfgLayout{model}.StationIdx = stations;
-				cfgLayout{model}.UserIdx = users;
-
-				% Set the position of the base station
-				for iStation = 1:length(stations)
-					cfgLayout{model}.Stations(iStation).Pos(1:3) = int64(floor(Stations(stations(iStation)).Position(1:3)));
-				end
-
-				% Set the position of the users
-                                % TODO: Add velocity vector of users
-				for iUser = 1:length(users)
-					cfgLayout{model}.Stations(iUser+length(stations)).Pos(1:3) = int64(floor(Users(users(iUser)).Position(1:3)));
-				end
-
-				cfgLayout{model}.Pairing = obj.getPairing(Stations(stations));
-
-				% Change useridx of pairing to reflect
-				% cfgLayout.Stations, e.g. user one is most likely
-				% cfgLayout.Stations(2)
-				for ll = 1:length(cfgLayout{model}.Pairing(2,:))
-					cfgLayout{model}.Pairing(2,ll) =  length(stations)+ll;
-
+            sonohilog('Setting up WINNER II channel model...','NFO')
+            
+            % Find number of base station types
+            % A model is created for each type
+            classes = unique({Stations.BsClass});
+            for class = 1:length(classes)
+                varname = classes{class};
+                types.(varname) = find(strcmp({Stations.BsClass},varname));
+                
+            end
+            
+            Snames = fieldnames(types);
+            
+            for model = 1:numel(Snames)
+                type = Snames{model};
+                stations = types.(Snames{model});
+                
+                
+                % Get number of links associated with the station.
+                users = nonzeros([Stations(stations).Users]);
+                numLinks = nnz(users);
+                
+                if isempty(users)
+                    % If no users are associated, skip the model
+                    continue
                 end
                 
-
-
-
-				for i = 1:numLinks
+                % Select antenna array based on station class.
+                if strcmp(type,'macro')
+                    AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
+                elseif strcmp(type,'micro')
+                    AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
+                else
+                    
+                    sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
+                    AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
+                end
+                
+                % User antenna array
+                AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
+                
+                % Assign AA(1) to all stations
+                eNBidx = num2cell(ones(length(stations),1));
+                
+                % For users use antenna configuration 2
+                useridx = repmat(2,1,length(users));
+                
+                range = max(obj.Area);
+                
+                cfgLayout{model} = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
+                
+                % Add station idx and user idx
+                cfgLayout{model}.StationIdx = stations;
+                cfgLayout{model}.UserIdx = users;
+                
+                % Set the position of the base station
+                for iStation = 1:length(stations)
+                    cfgLayout{model}.Stations(iStation).Pos(1:3) = int64(floor(Stations(stations(iStation)).Position(1:3)));
+                end
+                
+                % Set the position of the users
+                % TODO: Add velocity vector of users
+                for iUser = 1:length(users)
+                    cfgLayout{model}.Stations(iUser+length(stations)).Pos(1:3) = int64(floor(Users(users(iUser)).Position(1:3)));
+                end
+                
+                cfgLayout{model}.Pairing = obj.getPairing(Stations(stations));
+                
+                % Change useridx of pairing to reflect
+                % cfgLayout.Stations, e.g. user one is most likely
+                % cfgLayout.Stations(2)
+                for ll = 1:length(cfgLayout{model}.Pairing(2,:))
+                    cfgLayout{model}.Pairing(2,ll) =  length(stations)+ll;
+                end
+                
+                
+                
+                
+                for i = 1:numLinks
                     userIdx = users(cfgLayout{model}.Pairing(2,i)-length(stations));
                     stationIdx = stations(cfgLayout{model}.Pairing(1,i));
-					cBs = Stations(stationIdx);
-					cMs = Users(userIdx);
+                    cBs = Stations(stationIdx);
+                    cMs = Users(userIdx);
                     % Apparently WINNERchan doesn't compute distance based
                     % on height, only on x,y distance. Also they can't be
                     % doubles...
                     distance = obj.getDistance(cBs.Position(1:2),cMs.Position(1:2));
-                 	if cBs.BsClass == 'micro'
-						if distance <= 50
+                    if cBs.BsClass == 'micro'
+                        if distance <= 50
                             msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
                                 stationIdx,userIdx,num2str(distance));
                             sonohilog(msg,'NFO0');
-							
-							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 1; %1 for LOS
-						else
-							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
-						end
+                            
+                            cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+                            cfgLayout{model}.PropagConditionVector(i) = 1; %1 for LOS
+                        else
+                            cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+                            cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
+                        end
                     elseif cBs.BsClass == 'macro'
-						if distance < 50
+                        if distance < 50
                             msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
                                 stationIdx,userIdx,num2str(distance));
-							sonohilog(msg,'NFO0');
-							cfgLayout{model}.ScenarioVector(i) = 11; % 
-							cfgLayout{model}.PropagConditionVector(i) = 1; %
-						else
-							cfgLayout{model}.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
-						end
-					end
-
-
-				end
-
-				%numBSSect = sum(cfgLayout{model}.NofSect);
-				%numMS = length(users);
-
-				% Get all BS sector and MS positions
-				%BSPos = cell2mat({cfgLayout{model}.Stations(1:numBSSect).Pos});
-				%MSPos = cell2mat({cfgLayout{model}.Stations(numBSSect+1:end).Pos});
-
-
-				%hold on
-				%for linkIdx = 1:numLinks  % Plot links
-				%    pairStn = cfgLayout{model}.Pairing(:,linkIdx);
-				%    pairPos = cell2mat({cfgLayout{model}.Stations(pairStn).Pos});
-				%    if obj.Draw
-				%
-				%        plot(pairPos(1,:), pairPos(2,:),'LineWidth',1,'Color',[0,0,0.7,0.3]);
-				%
-				%    end
-				%end
-
-				% Use maximum fft size
-				% However since the same BsClass is used these are most
-				% likely to be identical
-				sw = [Stations(stations).WaveformInfo];
-				swNfft = [sw.Nfft];
-				swSamplingRate = [sw.SamplingRate];
-				cf = max([Stations(stations).DlFreq]); % Given in MHz
-
-				frmLen = double(max(swNfft));   % Frame length
-
-				% Configure model parameters
-				cfgModel{model} = winner2.wimparset;
-				cfgModel{model}.NumTimeSamples     = frmLen; % Frame length
-				cfgModel{model}.IntraClusterDsUsed = 'no';   % No cluster splitting
-				cfgModel{model}.SampleDensity      = max(swSamplingRate)/50;    % To match sampling rate of signal
-				cfgModel{model}.PathLossModelUsed  = 'yes';  % Turn on path loss
-				cfgModel{model}.ShadowingModelUsed = 'yes';  % Turn on shadowing
-				cfgModel{model}.CenterFrequency = cf*10e5; % Given in Hz
-
-			end
+                            sonohilog(msg,'NFO0');
+                            cfgLayout{model}.ScenarioVector(i) = 11; %
+                            cfgLayout{model}.PropagConditionVector(i) = 1; %
+                        else
+                            cfgLayout{model}.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
+                            cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
+                        end
+                    end
+                    
+                    
+                end
+                
+                % Use maximum fft size
+                % However since the same BsClass is used these are most
+                % likely to be identical
+                sw = [Stations(stations).WaveformInfo];
+                swNfft = [sw.Nfft];
+                swSamplingRate = [sw.SamplingRate];
+                cf = max([Stations(stations).DlFreq]); % Given in MHz
+                
+                frmLen = double(max(swNfft));   % Frame length
+                
+                % Configure model parameters
+                % Determine maxMS velocity
+                maxMSVelocity = max(cell2mat(cellfun(@(x) norm(x, 'fro'), ...
+                    {cfgLayout{model}.Stations.Velocity}, 'UniformOutput', false)));
+                
+                
+                cfgModel{model} = winner2.wimparset;
+                cfgModel{model}.CenterFrequency = cf*10e5; % Given in Hz
+                cfgModel{model}.NumTimeSamples     = frmLen; % Frame length
+                cfgModel{model}.IntraClusterDsUsed = 'yes';   % No cluster splitting
+                cfgModel{model}.SampleDensity      = max(swSamplingRate)/50;    % To match sampling rate of signal
+                cfgModel{model}.PathLossModelUsed  = 'yes';  % Turn on path loss
+                cfgModel{model}.ShadowingModelUsed = 'yes';  % Turn on shadowing
+                cfgModel{model}.SampleDensity = round(physconst('LightSpeed')/ ...
+                    cfgModel{model}.CenterFrequency/2/(maxMSVelocity/max(swSamplingRate)));
+                
+            end
 
 
 
@@ -407,14 +392,18 @@ classdef ChBulk_v2
 
 
                     
-					impulse_r = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
-					h = wimCh(impulse_r);
+					impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
+					h = wimCh(impulseR);
                     
                     % Debugging code. Use of direct waveform for validating
                     % transferfunction
                     %release(wimCh)
                     %rxSig2 = wimCh(Stations(obj.WconfigLayout{model}.StationIdx(1)).TxWaveform);
                     
+                    % Go through all links for the given scenario
+                    % 1. Compute transfer function for each link
+                    % 2. Apply transferfunction and  compute loss
+                    % 3. Add loss as AWGN
                     for link = 1:numRx
                        % Get TX from the WINNER layout idx
                        txIdx = obj.WconfigLayout{model}.Pairing(1,link);
@@ -427,9 +416,9 @@ classdef ChBulk_v2
                        txPw = 10*log10(bandpower(txSig));
                        
                        
-                       figure
-                       plot(10*log10(abs(fftshift(fft(txSig)).^2)))
-                       hold on
+                       %figure
+                       %plot(10*log10(abs(fftshift(fft(txSig)).^2)))
+                       %hold on
                        
                        % Compute channel transfer function
                        H{link} = fft(h{link},length(txSig));
@@ -443,21 +432,23 @@ classdef ChBulk_v2
                        rxSig = ifft(Y)*length(txSig);
                        rxPw = 10*log10(bandpower(rxSig));
                        lossdB = txPw-rxPw;
-                       plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
+                       %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
                        %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
                        
                        % Normalize signal and add loss as AWGN based on
                        % noise floor
-                       %rxSigNorm = rxSig./mean(txSig.^2);
                        rxSigNorm = rxSig.*10^(lossdB/20);
                        
                        rxSigNorm = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
                        
-                       plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
+                       %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
                        % Assign to user
                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
                        
 
+                       % TODO: Save transfer function for each link and use
+                       % it for SyncRoutine in combination with the main
+                       % simulation loop
                         
                     end
 
@@ -466,8 +457,6 @@ classdef ChBulk_v2
 
 
 				end
-
-
 
 			elseif strcmp(obj.Mode,'eHATA')
 				for i = 1:numLinks
