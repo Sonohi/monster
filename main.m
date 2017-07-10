@@ -24,6 +24,9 @@ close all;
 setpref('sonohiLog','logLevel',5)
 
 % Load simulation parameters from config file
+if ~exist('utils','dir')
+	sonohi(1);
+end
 Param = loadConfig('simulation.config');
 Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
