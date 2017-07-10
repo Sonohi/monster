@@ -112,14 +112,14 @@ classdef ChBulk_v2
 
 		end
 
-		function rxSig = addPathlossAwgn(obj,Station,User,txSig,varargin)
+		function [rxSig, SNR_lin] = addPathlossAwgn(obj,Station,User,txSig,varargin)
 			thermalNoise = obj.ThermalNoise(Station.NDLRB);
 			hbPos = Station.Position;
 			hmPos = User.Position;
 			distance = obj.getDistance(hbPos,hmPos)/1e3;
 			switch obj.Mode
 				case 'eHATA'
-					%[lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.Freq, ...
+					%[lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
 					%   distance, hb_pos(3), hm_pos(3), obj.Region);
 
 					[numPoints,dist_vec,elev_profile] = obj.getElevation(hbPos,hmPos);
@@ -132,19 +132,19 @@ classdef ChBulk_v2
 
 					elev = [numPoints_scale; dist_vec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
 
-					lossdB = ExtendedHata_PropLoss(Station.Freq, hbPos(3), ...
+					lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
 						hmPos(3), obj.Region, elev);
 
 				case 'winner'
-                    
-                    if nargin > 3
-                        nVargs = length(varargin);
-                        for k = 1:nVargs
-                          if strcmp(varargin{k},'loss')
-                             lossdB = varargin{k+1};
-                          end
-                        end
-                    end
+
+					if nargin > 3
+						nVargs = length(varargin);
+						for k = 1:nVargs
+							if strcmp(varargin{k},'loss')
+								lossdB = varargin{k+1};
+							end
+						end
+					end
 
 
 
@@ -265,7 +265,7 @@ classdef ChBulk_v2
 				end
 
 				% Set the position of the users
-                                % TODO: Add velocity vector of users
+				% TODO: Add velocity vector of users
 				for iUser = 1:length(users)
 					cfgLayout{model}.Stations(iUser+length(stations)).Pos(1:3) = int64(floor(Users(users(iUser)).Position(1:3)));
 				end
@@ -278,38 +278,35 @@ classdef ChBulk_v2
 				for ll = 1:length(cfgLayout{model}.Pairing(2,:))
 					cfgLayout{model}.Pairing(2,ll) =  length(stations)+ll;
 
-                end
-                
-
-
+				end
 
 				for i = 1:numLinks
-                    userIdx = users(cfgLayout{model}.Pairing(2,i)-length(stations));
-                    stationIdx = stations(cfgLayout{model}.Pairing(1,i));
+					userIdx = users(cfgLayout{model}.Pairing(2,i)-length(stations));
+					stationIdx = stations(cfgLayout{model}.Pairing(1,i));
 					cBs = Stations(stationIdx);
 					cMs = Users(userIdx);
-                    % Apparently WINNERchan doesn't compute distance based
-                    % on height, only on x,y distance. Also they can't be
-                    % doubles...
-                    distance = obj.getDistance(cBs.Position(1:2),cMs.Position(1:2));
-                 	if cBs.BsClass == 'micro'
+					% Apparently WINNERchan doesn't compute distance based
+					% on height, only on x,y distance. Also they can't be
+					% doubles...
+					distance = obj.getDistance(cBs.Position(1:2),cMs.Position(1:2));
+					if cBs.BsClass == 'micro'
 						if distance <= 50
-                            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
-                                stationIdx,userIdx,num2str(distance));
-                            sonohilog(msg,'NFO0');
-							
+							msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
+								stationIdx,userIdx,num2str(distance));
+							sonohilog(msg,'NFO0');
+
 							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
 							cfgLayout{model}.PropagConditionVector(i) = 1; %1 for LOS
 						else
 							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
 							cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
 						end
-                    elseif cBs.BsClass == 'macro'
+					elseif cBs.BsClass == 'macro'
 						if distance < 50
-                            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
-                                stationIdx,userIdx,num2str(distance));
+							msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
+								stationIdx,userIdx,num2str(distance));
 							sonohilog(msg,'NFO0');
-							cfgLayout{model}.ScenarioVector(i) = 11; % 
+							cfgLayout{model}.ScenarioVector(i) = 11; %
 							cfgLayout{model}.PropagConditionVector(i) = 1; %
 						else
 							cfgLayout{model}.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
@@ -403,70 +400,60 @@ classdef ChBulk_v2
 					chanInfo = info(wimCh);
 					numTx    = chanInfo.NumBSElements(1);
 					Rs       = chanInfo.SampleRate(1);
-                    numRx = chanInfo.NumLinks(1);
+					numRx = chanInfo.NumLinks(1);
 
 
-                    
+
 					impulse_r = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
 					h = wimCh(impulse_r);
-                    
-                    % Debugging code. Use of direct waveform for validating
-                    % transferfunction
-                    %release(wimCh)
-                    %rxSig2 = wimCh(Stations(obj.WconfigLayout{model}.StationIdx(1)).TxWaveform);
-                    
-                    for link = 1:numRx
-                       % Get TX from the WINNER layout idx
-                       txIdx = obj.WconfigLayout{model}.Pairing(1,link);
-                       % Get RX from the WINNER layout idx
-                       rxIdx = obj.WconfigLayout{model}.Pairing(2,link)-length(obj.WconfigLayout{model}.StationIdx);
-                       Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
-                       User = Users(obj.WconfigLayout{model}.UserIdx(rxIdx));
-                       % Get corresponding TxSig
-                       txSig = Station.TxWaveform;
-                       txPw = 10*log10(bandpower(txSig));
-                       
-                       
-                       %figure
-                       %plot(10*log10(abs(fftshift(fft(txSig)).^2)))
-                       %hold on
-                       
-                       % Compute channel transfer function
-                       H{link} = fft(h{link},length(txSig));
-                       
-                       % Apply transfer function to signal
-                       
-                       X = fft(txSig)./length(txSig);
-                       Y = X.*H{link};
+
+					% Debugging code. Use of direct waveform for validating
+					% transferfunction
+					%release(wimCh)
+					%rxSig2 = wimCh(Stations(obj.WconfigLayout{model}.StationIdx(1)).TxWaveform);
+
+					for link = 1:numRx
+						% Get TX from the WINNER layout idx
+						txIdx = obj.WconfigLayout{model}.Pairing(1,link);
+						% Get RX from the WINNER layout idx
+						rxIdx = obj.WconfigLayout{model}.Pairing(2,link)-length(obj.WconfigLayout{model}.StationIdx);
+						Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
+						User = Users(obj.WconfigLayout{model}.UserIdx(rxIdx));
+						% Get corresponding TxSig
+						txSig = Station.TxWaveform;
+						txPw = 10*log10(bandpower(txSig));
 
 
-                       rxSig = ifft(Y)*length(txSig);
-                       rxPw = 10*log10(bandpower(rxSig));
-                       lossdB = txPw-rxPw;
-                       %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
-                       %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
-                       
-                       % Normalize signal and add loss as AWGN based on
-                       % noise floor
-                       rxSigNorm = rxSig./(mean(txSig.^2));
-                       
-                       rxSigNorm = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
-                       
-                       %plot(10*log10(abs(fftshift(fft(rxSig_norm)).^2)));
-                       % Assign to user
-                       Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
-                       
+						%figure
+						%plot(10*log10(abs(fftshift(fft(txSig)).^2)))
+						%hold on
 
-                        
-                    end
+						% Compute channel transfer function
+						H{link} = fft(h{link},length(txSig));
 
-                    
+						% Apply transfer function to signal
+
+						X = fft(txSig)./length(txSig);
+						Y = X.*H{link};
 
 
+						rxSig = ifft(Y)*length(txSig);
+						rxPw = 10*log10(bandpower(rxSig));
+						lossdB = txPw-rxPw;
+						%plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
+						%plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
 
+						% Normalize signal and add loss as AWGN based on
+						% noise floor
+						rxSigNorm = rxSig./(mean(txSig.^2));
+
+						rxSigNorm = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
+
+						%plot(10*log10(abs(fftshift(fft(rxSig_norm)).^2)));
+						% Assign to user
+						Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
+					end
 				end
-
-
 
 			elseif strcmp(obj.Mode,'eHATA')
 				for i = 1:numLinks
@@ -501,6 +488,16 @@ classdef ChBulk_v2
 			rxWaveform = obj.addPathlossAwgn(Station, User, rxWaveform);
 
 			pwr = bandpower(rxWaveform);
+		end
+
+		function [snr, evm] = calculateSignalDegradation(obj, User, Station)
+			% calculate pathloss and fading for this link
+			rxWaveform = obj.addFading([Station.TxWaveform;zeros(25,1)], ...
+				Station.WaveformInfo);
+			[rxWaveform, snr] = obj.addPathlossAwgn(Station, User, rxWaveform);
+
+			% TODO remove stub for EVM
+			evm = 0;
 		end
 
 	end

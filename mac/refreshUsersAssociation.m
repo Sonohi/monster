@@ -20,10 +20,10 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Param)
 		minLossDb = 200;
 		for (iStation = 1:length(Stations))
 			bs = Stations(iStation);
-			if (bs.Status == 1 || bs.Status == 2 || bs.Status == 3) 
+			if (bs.Status == 1 || bs.Status == 2 || bs.Status == 3)
 				bsPos = bs.Position;
 				dist = sqrt((bsPos(1)-uePos(1))^2 + (bsPos(2)-uePos(2))^2 );
-				[lossDb, ~] = ExtendedHata_MedianBasicPropLoss(Stations(iStation).Freq, ...
+				[lossDb, ~] = ExtendedHata_MedianBasicPropLoss(Stations(iStation).DlFreq, ...
 					dist/1e3, bsPos(3), uePos(3), Param.channel.region);
 				% check if this is the minimum so far
 				if (lossDb < minLossDb)

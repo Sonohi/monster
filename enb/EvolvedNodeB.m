@@ -26,7 +26,6 @@ classdef EvolvedNodeB
 		Channel;
 		NSubframe;
 		BsClass;
-		Freq;
 		Status;
 		Neighbours;
 		HystCount;
@@ -71,7 +70,6 @@ classdef EvolvedNodeB
 			obj.RrNext = struct('UeId',0,'Index',1);
 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
-			obj.Freq = Param.freq;
 			obj = setBCH(obj);
 			obj = resetSchedule(obj);
 			obj = resetResourceGrid(obj);

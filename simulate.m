@@ -33,8 +33,14 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
-    Users = syncRoutine(FrameNo,Stations, Users, Channel, Param);
-
+    [Users, Transmitters] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
+		
+		if Param.generateHeatMap
+			HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			if Param.draw
+				drawHeatMap(HeatMap);
+			end
+		end
 
 	for iRound = 0:Param.schRounds
 		% In each scheduling round, check UEs associated with each station and
