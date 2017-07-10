@@ -352,7 +352,7 @@ classdef ChBulk_v2
 				% Configure model parameters
 				cfgModel{model} = winner2.wimparset;
 				cfgModel{model}.NumTimeSamples     = frmLen; % Frame length
-				cfgModel{model}.IntraClusterDsUsed = 'yes';   % No cluster splitting
+				cfgModel{model}.IntraClusterDsUsed = 'no';   % No cluster splitting
 				cfgModel{model}.SampleDensity      = max(swSamplingRate)/50;    % To match sampling rate of signal
 				cfgModel{model}.PathLossModelUsed  = 'yes';  % Turn on path loss
 				cfgModel{model}.ShadowingModelUsed = 'yes';  % Turn on shadowing
@@ -427,9 +427,9 @@ classdef ChBulk_v2
                        txPw = 10*log10(bandpower(txSig));
                        
                        
-                       %figure
-                       %plot(10*log10(abs(fftshift(fft(txSig)).^2)))
-                       %hold on
+                       figure
+                       plot(10*log10(abs(fftshift(fft(txSig)).^2)))
+                       hold on
                        
                        % Compute channel transfer function
                        H{link} = fft(h{link},length(txSig));
@@ -443,16 +443,17 @@ classdef ChBulk_v2
                        rxSig = ifft(Y)*length(txSig);
                        rxPw = 10*log10(bandpower(rxSig));
                        lossdB = txPw-rxPw;
-                       %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
+                       plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
                        %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
                        
                        % Normalize signal and add loss as AWGN based on
                        % noise floor
-                       rxSigNorm = rxSig./(mean(txSig.^2));
+                       %rxSigNorm = rxSig./mean(txSig.^2);
+                       rxSigNorm = rxSig.*10^(lossdB/20);
                        
                        rxSigNorm = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
                        
-                       %plot(10*log10(abs(fftshift(fft(rxSig_norm)).^2)));
+                       plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
                        % Assign to user
                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
                        
