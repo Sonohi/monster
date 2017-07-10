@@ -205,148 +205,59 @@ classdef ChBulk_v2
 		end
 
 		function [cfgLayout,cfgModel] = configureWinner(obj,Stations,Users)
-			sonohilog('Setting up WINNER II channel model...','NFO')
+            sonohilog('Setting up WINNER II channel model...','NFO')
+            
+            % Find number of base station types
+            % A model is created for each type
+            classes = unique({Stations.BsClass});
+            for class = 1:length(classes)
+                varname = classes{class};
+                types.(varname) = find(strcmp({Stations.BsClass},varname));
+                
+            end
+            
+            Snames = fieldnames(types);
+            
+            cfgLayout = cell(numel(Snames));
+            cfgModel = cell(numel(Snames));
+            
+            for model = 1:numel(Snames)
+                type = Snames{model};
+                stations = types.(Snames{model});
+                
+                % Get number of links associated with the station.
+                users = nonzeros([Stations(stations).Users]);
+                numLinks = nnz(users);
+                
+                if isempty(users)
+                    % If no users are associated, skip the model
+                    continue
+                end
+                [AA, eNBIdx, userIdx] = sonohiWINNER.configureAA(type,stations,users);
+                
+                range = max(obj.Area);
 
-			% Find number of base station types
-			% A model is created for each type
-			classes = unique({Stations.BsClass});
-			for class = 1:length(classes)
-				varname = classes{class};
-				types.(varname) = find(strcmp({Stations.BsClass},varname));
+                cfgLayout{model} = sonohiWINNER.initializeLayout(userIdx, eNBIdx, numLinks, AA, range);
+                
+                cfgLayout{model} = sonohiWINNER.addAssociated(cfgLayout{model},stations,users);
 
-			end
+                cfgLayout{model} = sonohiWINNER.setPositions(cfgLayout{model},Stations,Users);
+                
+                
+                cfgLayout{model}.Pairing = obj.getPairing(Stations(cfgLayout{model}.StationIdx));
+                
+                cfgLayout{model} = sonohiWINNER.updateIndexing(cfgLayout{model},Stations);
+                
+                cfgLayout{model} = sonohiWINNER.setPropagationScenario(cfgLayout{model},Stations,Users, obj);
+                
+                cfgModel{model} = sonohiWINNER.configureModel(cfgLayout{model},Stations);
+                
 
-			Snames = fieldnames(types);
+                
+            end
+            
+            
 
-			for model = 1:numel(Snames)
-				type = Snames{model};
-				stations = types.(Snames{model});
-
-
-				% Get number of links associated with the station.
-				users = nonzeros([Stations(stations).Users]);
-				numLinks = nnz(users);
-
-				if isempty(users)
-					% If no users are associated, skip the model
-					continue
-				end
-
-				% Select antenna array based on station class.
-				if strcmp(type,'macro')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
-				elseif strcmp(type,'micro')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
-				else
-
-					sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
-					AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
-				end
-
-				% User antenna array
-				AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
-
-				% Assign AA(1) to all stations
-				eNBidx = num2cell(ones(length(stations),1));
-
-				% For users use antenna configuration 2
-				useridx = repmat(2,1,length(users));
-
-				range = max(obj.Area);
-
-				cfgLayout{model} = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
-
-				% Add station idx and user idx
-				cfgLayout{model}.StationIdx = stations;
-				cfgLayout{model}.UserIdx = users;
-
-				% Set the position of the base station
-				for iStation = 1:length(stations)
-					cfgLayout{model}.Stations(iStation).Pos(1:3) = int64(floor(Stations(stations(iStation)).Position(1:3)));
-				end
-
-				% Set the position of the users
-				% TODO: Add velocity vector of users
-				for iUser = 1:length(users)
-					cfgLayout{model}.Stations(iUser+length(stations)).Pos(1:3) = int64(floor(Users(users(iUser)).Position(1:3)));
-				end
-
-				cfgLayout{model}.Pairing = obj.getPairing(Stations(stations));
-
-				% Change useridx of pairing to reflect
-				% cfgLayout.Stations, e.g. user one is most likely
-				% cfgLayout.Stations(2)
-				for ll = 1:length(cfgLayout{model}.Pairing(2,:))
-					cfgLayout{model}.Pairing(2,ll) =  length(stations)+ll;
-				end
-
-
-
-
-				for i = 1:numLinks
-					userIdx = users(cfgLayout{model}.Pairing(2,i)-length(stations));
-					stationIdx = stations(cfgLayout{model}.Pairing(1,i));
-					cBs = Stations(stationIdx);
-					cMs = Users(userIdx);
-					% Apparently WINNERchan doesn't compute distance based
-					% on height, only on x,y distance. Also they can't be
-					% doubles...
-					distance = obj.getDistance(cBs.Position(1:2),cMs.Position(1:2));
-					if cBs.BsClass == 'micro'
-						if distance <= 50
-							msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
-								stationIdx,userIdx,num2str(distance));
-							sonohilog(msg,'NFO0');
-
-							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 1; %1 for LOS
-						else
-							cfgLayout{model}.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
-						end
-					elseif cBs.BsClass == 'macro'
-						if distance < 50
-							msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
-								stationIdx,userIdx,num2str(distance));
-							sonohilog(msg,'NFO0');
-							cfgLayout{model}.ScenarioVector(i) = 11; %
-							cfgLayout{model}.PropagConditionVector(i) = 1; %
-						else
-							cfgLayout{model}.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
-							cfgLayout{model}.PropagConditionVector(i) = 0; %0 for NLOS
-						end
-					end
-
-
-				end
-
-				% Use maximum fft size
-				% However since the same BsClass is used these are most
-				% likely to be identical
-				sw = [Stations(stations).WaveformInfo];
-				swNfft = [sw.Nfft];
-				swSamplingRate = [sw.SamplingRate];
-				cf = max([Stations(stations).DlFreq]); % Given in MHz
-
-				frmLen = double(max(swNfft));   % Frame length
-
-				% Configure model parameters
-				% Determine maxMS velocity
-				maxMSVelocity = max(cell2mat(cellfun(@(x) norm(x, 'fro'), ...
-					{cfgLayout{model}.Stations.Velocity}, 'UniformOutput', false)));
-
-
-				cfgModel{model} = winner2.wimparset;
-				cfgModel{model}.CenterFrequency = cf*10e5; % Given in Hz
-				cfgModel{model}.NumTimeSamples     = frmLen; % Frame length
-				cfgModel{model}.IntraClusterDsUsed = 'yes';   % No cluster splitting
-				cfgModel{model}.SampleDensity      = max(swSamplingRate)/50;    % To match sampling rate of signal
-				cfgModel{model}.PathLossModelUsed  = 'yes';  % Turn on path loss
-				cfgModel{model}.ShadowingModelUsed = 'yes';  % Turn on shadowing
-				cfgModel{model}.SampleDensity = round(physconst('LightSpeed')/ ...
-					cfgModel{model}.CenterFrequency/2/(maxMSVelocity/max(swSamplingRate)));
-
-			end
 
 
 
@@ -387,15 +298,10 @@ classdef ChBulk_v2
 					end
 
 					wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
-
 					chanInfo = info(wimCh);
 					numTx    = chanInfo.NumBSElements(1);
 					Rs       = chanInfo.SampleRate(1);
-					numRx = chanInfo.NumLinks(1);
-
-
-
-
+                    numRx = chanInfo.NumLinks(1);
 					impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
 					h = wimCh(impulseR);
 

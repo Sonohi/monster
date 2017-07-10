@@ -165,14 +165,11 @@ else
 
 % Log to console if logToFile is 0 or 2 (log both on file and terminal)
 if logToFile == 2 || logToFile == 0
-		fileId = fopen(logFile, 'a');
     if strcmp(logType, 'NFO') || logInBlack
-      fprintf(1, logMsg);
-			fprintf(fileId, logMsg);
+        fprintf(1, logMsg);
     else
-      cprintf(textColors{logTypeIdx}, logMsg); % gives some errors???
-		end
-		fclose(fileId);
+        cprintf(textColors{logTypeIdx}, logMsg);
+    end
 end
 
 end
