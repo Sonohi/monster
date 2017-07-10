@@ -14,9 +14,21 @@ function param = loadConfig(path)
 			row = fgetl(fid);
 		else
 			% parse the row into an array
-			tokenList = strread(row, '%s', 'delimiter', ' ');
-			% store to cell and then struct
-			param.(tokenList{1}) = tokenList{3};
+			tokenList = strread(row, '%s', 'delimiter', ' '); %#ok<*DSTRRD>
+			% cast and store
+			switch tokenList{4}
+				case 'AD' % Array of double
+					param.(tokenList{1}) = str2num(tokenList{3}); %#ok<*ST2NM>
+				case 'B' % Boolean
+					param.(tokenList{1}) = round(str2double(tokenList{3}));
+				case 'C' % Char array
+					param.(tokenList{1}) = strrep(tokenList{3}, '''', '');
+				case 'D' % Double
+					param.(tokenList{1}) = str2double(tokenList{3});
+				case 'I' % Integer
+					param.(tokenList{1}) = round(str2double(tokenList{3}));
+			end
+
 			row = fgetl(fid);
 		end
 	end

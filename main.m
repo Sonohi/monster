@@ -24,53 +24,13 @@ close all;
 setpref('sonohiLog','logLevel',5)
 
 % Load simulation parameters from config file
-% Param = loadConfig('simulation.config');
-% Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
-% 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
-% Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-% Param.channel.mode = Param.channelMode;
-% Param.channel.region = Param.channelRegion;
-
-% Simulation Parameters
-Param.reset = 0;
-Param.draw = 1; % Enable plots
-Param.storeTxData = 0;
-Param.schRounds = 15;
-Param.numSubFramesMacro = 50;
-Param.numSubFramesMicro = 25;
-Param.numMacro = 1;
-Param.numMicro = 5;
-Param.macroHeight = 35; %Given in meters
-Param.microHeight = 10;
-Param.ueHeight = 1.5;
-Param.buildingHeight = [20,50]; % Height interval
-Param.seed = 122;
-Param.buildings = load('mobility/buildings.txt');
-Param.velocity = 3; % in km/h
-Param.numUsers = 15;
-Param.utilLoThr = 1;
-Param.utilHiThr = 100;
-Param.ulFreq = 1747.5;
-Param.dlFreq = 1842.5;
-Param.maxTbSize = 97896;
-Param.maxCwdSize = 10^5;
-Param.maxSymSize = 10^5;
-Param.scheduling = 'roundRobin';
-Param.prbSym = 160;
+Param = loadConfig('simulation.config');
+Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-Param.freq = 1900; %Given in MHz
-Param.ueNoiseFigure = 7; % dB
-Param.prbRe = 168;
-Param.nboRadius = 100; % maximum radius in m to include micro eNodeBs in neighbours
-Param.tHyst = 0.002; % hysteresis timer threshold in s
-Param.tSwitch = 0.001; % eNodeB switching on/off timer in s
-Param.rmResults = 1; % cleans the results folder
-Param.mobilityScenario = 1; % 1 is pedestrian UEs, 2 is vehicular UEs
-Param.saveFrame = 1;
-Param.icScheme = 'none'; % intereference coordination scheme
-Param.generateHeatMap = 1;
+Param.channel.mode = Param.channelMode;
+Param.channel.region = Param.channelRegion;
 
 sonohi(Param.reset);
 
