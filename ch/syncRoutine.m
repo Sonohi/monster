@@ -94,6 +94,8 @@ end
 % for generating the heatmap
 if Param.generateHeatMap
 	StationsNew = Stations;
+else
+	StationsNew = [];
 end
 end
 
