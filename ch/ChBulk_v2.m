@@ -8,8 +8,10 @@ classdef ChBulk_v2
 		Buildings;
 		Draw;
 		Region;
-		WconfigLayout;
-		WconfigParset;
+		WconfigLayout; % Used for WINNER: Layout of winner model
+		WconfigParset; % Used for WINNER: Model parameters
+        numRx; % Used for WINNER: Number of receivers, per model
+        h; % Used for WINNER: Stored impulse response
 	end
 
 	methods(Static)
@@ -17,9 +19,6 @@ classdef ChBulk_v2
 
 		function distance = getDistance(txPos,rxPos)
 			distance = norm(rxPos-txPos);
-			if distance < 0.5
-				disp('shit!');
-			end
 		end
 
 		function thermalNoise = ThermalNoise(NDLRB)
@@ -218,8 +217,8 @@ classdef ChBulk_v2
             
             Snames = fieldnames(types);
             
-            cfgLayout = cell(numel(Snames));
-            cfgModel = cell(numel(Snames));
+            cfgLayout = cell(numel(Snames),1);
+            cfgModel = cell(numel(Snames),1);
             
             for model = 1:numel(Snames)
                 type = Snames{model};
@@ -278,6 +277,7 @@ classdef ChBulk_v2
 
 
 		function [Stations,Users,obj] = traverse(obj,Stations,Users)
+           
 
 			% Assuming one antenna port, number of links are equal to
 			% number of users scheuled in the given round
@@ -287,7 +287,31 @@ classdef ChBulk_v2
 			Pairing = obj.getPairing(Stations);
 			% Apply channel based on configuration.
 			if strcmp(obj.Mode,'winner')
-				[obj.WconfigLayout, obj.WconfigParset] = obj.configureWinner(Stations,Users);
+                
+                %Check if transfer function is already computed:
+                % If empty, e.g. not computed, compute impulse response and
+                % store it for next syncroutine.
+                if isempty(obj.h) 
+                    [obj.WconfigLayout, obj.WconfigParset] = obj.configureWinner(Stations,Users);
+                    
+                    for model = 1:length(obj.WconfigLayout)
+                        wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
+                        chanInfo = info(wimCh);
+                        numTx    = chanInfo.NumBSElements(1);
+                        Rs       = chanInfo.SampleRate(1);
+                        obj.numRx{model} = chanInfo.NumLinks(1);
+                        impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
+                        h{model} = wimCh(impulseR);    
+                    end
+                    obj.h = h;
+                    
+                else
+                    
+                    sonohilog('Using previously computed transfer function','NFO0')
+                    
+                end
+                
+				
 
 				% Compute Rx for each model
 				for model = 1:length(obj.WconfigLayout)
@@ -295,15 +319,9 @@ classdef ChBulk_v2
 					if isempty(obj.WconfigLayout{model})
 						sonohilog(sprintf('Nothing assigned to %i model',model),'NFO')
 						continue
-					end
-
-					wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
-					chanInfo = info(wimCh);
-					numTx    = chanInfo.NumBSElements(1);
-					Rs       = chanInfo.SampleRate(1);
-                    numRx = chanInfo.NumLinks(1);
-					impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
-					h = wimCh(impulseR);
+                    end
+                    
+                  
 
 					% Debugging code. Use of direct waveform for validating
 					% transferfunction
@@ -314,7 +332,7 @@ classdef ChBulk_v2
 					% 1. Compute transfer function for each link
 					% 2. Apply transferfunction and  compute loss
 					% 3. Add loss as AWGN
-					for link = 1:numRx
+					for link = 1:obj.numRx{model}
 						% Get TX from the WINNER layout idx
 						txIdx = obj.WconfigLayout{model}.Pairing(1,link);
 						% Get RX from the WINNER layout idx
@@ -322,7 +340,7 @@ classdef ChBulk_v2
 						Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
 						User = Users(obj.WconfigLayout{model}.UserIdx(rxIdx));
 						% Get corresponding TxSig
-						txSig = Station.TxWaveform;
+						txSig = [Station.TxWaveform;zeros(25,1)];
 						txPw = 10*log10(bandpower(txSig));
 
 
@@ -330,13 +348,15 @@ classdef ChBulk_v2
 						%plot(10*log10(abs(fftshift(fft(txSig)).^2)))
 						%hold on
 
-						% Compute channel transfer function
-						H{link} = fft(h{link},length(txSig));
+						
+                        H = fft(obj.h{model}{link},length(txSig));
+                        
+                       
 
 						% Apply transfer function to signal
 
 						X = fft(txSig)./length(txSig);
-						Y = X.*H{link};
+						Y = X.*H;
 
 
 						rxSig = ifft(Y)*length(txSig);
@@ -360,8 +380,10 @@ classdef ChBulk_v2
 						% it for SyncRoutine in combination with the main
 						% simulation loop
 
-					end
-				end
+                    end
+                   
+                end
+                
 
 			elseif strcmp(obj.Mode,'eHATA')
 				for i = 1:numLinks

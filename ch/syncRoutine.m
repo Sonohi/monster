@@ -1,4 +1,4 @@
-function [UsersNew, StationsNew]  = syncRoutine(FrameNo, Stations, Users, Channel, Param, varargin)
+function [UsersNew, StationsNew, ChannelNew]  = syncRoutine(FrameNo, Stations, Users, Channel, Param, varargin)
 %% SYNC ROUTINE Computes the timing offset required for synchronization between TX and RX.
 % For using debug mode, forward a channel estimator, e.g.
 % Users = sync_routine(FrameNo,Stations, Users, Channel, Param,'Debug',ChannelEstimator);
@@ -14,7 +14,7 @@ if nargin > 5
 	for k = 1:nVargs
 		if strcmp(varargin{k},'Debug')
 			ChannelEstimator = varargin{k+1};
-		end
+        end
 	end
 end
 % Save in temp variable
@@ -32,7 +32,8 @@ for i = 1:length(Stations)
 end
 
 % Traverse channel
-[Stations, Users] = Channel.traverse(Stations,Users);
+[Stations, Users, ChannelNew] = Channel.traverse(Stations,Users);
+
 
 % Compute offset
 for p = 1:length(Users)
@@ -41,10 +42,10 @@ for p = 1:length(Users)
 	% Compute offset
 	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform);
 
-
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
 		rxWaveform = Users(p).RxWaveform(1+UsersNew(p).Offset(FrameNo):end,:);
+        
 		rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform);
 
 		%enb.NSubframe = 0;
@@ -71,15 +72,15 @@ for p = 1:length(Users)
 		%constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
 		txGrid = Stations(iSStation).ReGrid;
-		eqError = txGrid - eqGrid;
-		rxError = txGrid - rxGrid;
+		%eqError = txGrid - eqGrid;
+		%rxError = txGrid - rxGrid;
 
 
 		EVM = comm.EVM;
 		EVM.AveragingDimensions = [1 2];
 		preEqualisedEVM = EVM(txGrid,rxGrid);
 		fprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-			preEqualisedEVM);
+        		preEqualisedEVM);
 		%EVM of post-equalized receive signal
 		postEqualisedEVM = EVM(txGrid,eqGrid);
 		fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...

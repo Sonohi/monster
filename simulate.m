@@ -33,10 +33,10 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
-    [Users, Transmitters] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
+    [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
 		
 		if Param.generateHeatMap
-			HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			HeatMap = generateHeatmap(Transmitters, Channel, Param);
 			if Param.draw
 				drawHeatMap(HeatMap);
 			end
@@ -221,16 +221,17 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			end
 
-			Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset(FrameNo):end,:);
-
+			
 			% compute the interference from non-serving stations
-			if ~strcmp(Param.channel.mode,'B2B')
-				Users(iUser) = computeInterference(Channel, Stations, Users(iUser), Param);
-			end
+			%if ~strcmp(Param.channel.mode,'B2B')
+			%	Users(iUser) = computeInterference(Channel, Stations, Users(iUser), Param);
+			%end
 
 			% Now, demodulate the overall received waveform for users that should
 			% receive a TB
 			if checkUserSchedule(Users(iUser), Stations(iServingStation))
+                Users(iUser).RxWaveform = Users(iUser).RxWaveform(1+Users(iUser).Offset(FrameNo):end,:);
+
 				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iServingStation));
 
 				% Estimate channel for the received subframe
@@ -238,7 +239,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 					ChannelEstimator);
 
 				% Calculate error
-				rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
+				%rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
 
 				% Perform equalization to account for phase noise (needs
 				% SNR)
@@ -292,8 +293,15 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		if Param.draw
 		  [hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		  [hGrids(1), hGrids(2)] = plotReGrids(Users);
-		end
+        end
 
+        
+        % TODO:
+        % Decide how to reconfigure channel model. e.g. each scheduling
+        % round? 
+        Channel.h = [];
+        [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
+        
 	end % end round
 
 	% Once this simulation set is done, save the output

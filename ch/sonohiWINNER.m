@@ -53,7 +53,7 @@ end
 % Set the position of the users
 % TODO: Add velocity vector of users
 for iUser = 1:length(cfgLayout.UserIdx)
-    cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(floor(Users(cfgLayout.UserIdx(iUser)).Position(1:3)));
+    cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users(cfgLayout.UserIdx(iUser)).Position(1:3)));
 end
 
 end
