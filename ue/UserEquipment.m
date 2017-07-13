@@ -23,6 +23,7 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
+        RxInfo;
   end
 
 	methods

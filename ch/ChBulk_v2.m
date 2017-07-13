@@ -114,7 +114,7 @@ classdef ChBulk_v2
 
 		end
 
-		function [rxSig, SNRLin] = addPathlossAwgn(obj,Station,User,txSig,varargin)
+		function [rxSig, SNRLin, rxPw] = addPathlossAwgn(obj,Station,User,txSig,varargin)
 			thermalNoise = obj.ThermalNoise(Station.NDLRB);
 			hbPos = Station.Position;
 			hmPos = User.Position;
@@ -185,26 +185,40 @@ classdef ChBulk_v2
 
 		end
 
-		function rx = addFading(obj,tx,info)
-			cfg.SamplingRate = info.SamplingRate;
-			cfg.Seed = 1;                  % Random channel seed
-			cfg.NRxAnts = 1;               % 1 receive antenna
-			cfg.DelayProfile = 'EPA';      % EVA delay spread
-			cfg.DopplerFreq = 120;         % 120Hz Doppler frequency
-			cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
-			cfg.InitTime = 0;              % Initialize at time zero
-			cfg.NTerms = 16;               % Oscillators used in fading model
-			cfg.ModelType = 'GMEDS';       % Rayleigh fading model type
-			cfg.InitPhase = 'Random';      % Random initial phases
-			cfg.NormalizePathGains = 'On'; % Normalize delay profile power
-			cfg.NormalizeTxAnts = 'On';    % Normalize for transmit antennas
-
-			% Pass data through the fading channel model
-			rx = lteFadingChannel(cfg,tx);
+		function rx = addFading(obj,tx,info,varargin)
+            
+            
+            
+            switch obj.Mode
+                case 'eHATA'
+                    cfg.SamplingRate = info.SamplingRate;
+                    cfg.Seed = 1;                  % Random channel seed
+                    cfg.NRxAnts = 1;               % 1 receive antenna
+                    cfg.DelayProfile = 'EPA';      % EVA delay spread
+                    cfg.DopplerFreq = 120;         % 120Hz Doppler frequency
+                    cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
+                    cfg.InitTime = 0;              % Initialize at time zero
+                    cfg.NTerms = 16;               % Oscillators used in fading model
+                    cfg.ModelType = 'GMEDS';       % Rayleigh fading model type
+                    cfg.InitPhase = 'Random';      % Random initial phases
+                    cfg.NormalizePathGains = 'On'; % Normalize delay profile power
+                    cfg.NormalizeTxAnts = 'On';    % Normalize for transmit antennas
+                    % Pass data through the fading channel model
+                    rx = lteFadingChannel(cfg,tx);
+                case 'winner'
+                    h = varargin{1};
+                    H = fft(h,length(tx));
+					% Apply transfer function to signal
+					X = fft(tx)./length(tx);
+					Y = X.*H;
+					rx = ifft(Y)*length(tx);
+                    
+            end
+                    
 		end
 
-		function [cfgLayout,cfgModel] = configureWinner(obj,Stations,Users)
-            sonohilog('Setting up WINNER II channel model...','NFO')
+		function [cfgLayout,cfgModel] = initializeWinner(obj,Stations,Users)
+            sonohilog('Initializing WINNER II channel model...','NFO')
             
             % Find number of base station types
             % A model is created for each type
@@ -250,17 +264,25 @@ classdef ChBulk_v2
                 cfgLayout{model} = sonohiWINNER.setPropagationScenario(cfgLayout{model},Stations,Users, obj);
                 
                 cfgModel{model} = sonohiWINNER.configureModel(cfgLayout{model},Stations);
-                
-
-                
+      
             end
-            
-            
 
+        end
 
+        function [obj] = configureWinner(obj)
+            % Computes impulse response of initalized winner model
+             for model = 1:length(obj.WconfigLayout)
+                wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
+                chanInfo = info(wimCh);
+                numTx    = chanInfo.NumBSElements(1);
+                Rs       = chanInfo.SampleRate(1);
+                obj.numRx{model} = chanInfo.NumLinks(1);
+                impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
+                h{model} = wimCh(impulseR);    
+             end
+             obj.h = h;
 
-
-		end
+        end
 
 
 	end
@@ -292,21 +314,9 @@ classdef ChBulk_v2
                 % If empty, e.g. not computed, compute impulse response and
                 % store it for next syncroutine.
                 if isempty(obj.h) 
-                    [obj.WconfigLayout, obj.WconfigParset] = obj.configureWinner(Stations,Users);
-                    
-                    for model = 1:length(obj.WconfigLayout)
-                        wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
-                        chanInfo = info(wimCh);
-                        numTx    = chanInfo.NumBSElements(1);
-                        Rs       = chanInfo.SampleRate(1);
-                        obj.numRx{model} = chanInfo.NumLinks(1);
-                        impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
-                        h{model} = wimCh(impulseR);    
-                    end
-                    obj.h = h;
-                    
+                    [obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
+                    obj = obj.configureWinner()
                 else
-                    
                     sonohilog('Using previously computed transfer function','NFO0')
                     
                 end
@@ -343,43 +353,31 @@ classdef ChBulk_v2
 						txSig = [Station.TxWaveform;zeros(25,1)];
 						txPw = 10*log10(bandpower(txSig));
 
-
 						%figure
 						%plot(10*log10(abs(fftshift(fft(txSig)).^2)))
 						%hold on
-
-						
-                        H = fft(obj.h{model}{link},length(txSig));
                         
-                       
+                        rxSig = obj.addFading(txSig,[],obj.h{model}{link});
 
-						% Apply transfer function to signal
-
-						X = fft(txSig)./length(txSig);
-						Y = X.*H;
-
-
-						rxSig = ifft(Y)*length(txSig);
-						rxPw = 10*log10(bandpower(rxSig));
-						lossdB = txPw-rxPw;
+						rxPw_ = 10*log10(bandpower(rxSig));
+                        
+						lossdB = txPw-rxPw_;
 						%plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
 						%plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
 
 						% Normalize signal and add loss as AWGN based on
 						% noise floor
 						rxSigNorm = rxSig.*10^(lossdB/20);
-
-						rxSigNorm = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
+						[rxSigNorm, SNRLin, rxPw] = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
 
 						%plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
+                        
 						% Assign to user
+                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNRdB = 10*log10(SNRLin);
+                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNR = SNRLin;
+                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.rxPw = rxPw;
 						Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
-
-
-						% TODO: Save transfer function for each link and use
-						% it for SyncRoutine in combination with the main
-						% simulation loop
-
+                        
                     end
                    
                 end
@@ -390,8 +388,12 @@ classdef ChBulk_v2
 					station = Stations(Pairing(1,i));
 					Users(Pairing(2,i)).RxWaveform = obj.addFading([...
 						station.TxWaveform;zeros(25,1)],station.WaveformInfo);
-					Users(Pairing(2,i)).RxWaveform = obj.addPathlossAwgn(...
+					[Users(Pairing(2,i)).RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
 						station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
+
+                    Users(Pairing(2,i)).RxInfo.SNRdB = 10*log10(SNRLin);
+                    Users(Pairing(2,i)).RxInfo.SNR = SNRLin;
+                    Users(Pairing(2,i)).RxInfo.rxPw = rxPw;
 
 				end
 			end
