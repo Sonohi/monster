@@ -234,40 +234,53 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 				Users(iUser) = demodulateRxWaveform(Users(iUser), Stations(iServingStation));
 
-				% Estimate channel for the received subframe
-				Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
-					ChannelEstimator);
-
-				% Calculate error
-				%rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
-
-				% Perform equalization to account for phase noise (needs
-				% SNR)
-				if ~strcmp(Param.channel.mode,'B2B')
-					Users(iUser) = Users(iUser).equalize;
-					eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
-				end
-
-				EVM = comm.EVM;
-				EVM.AveragingDimensions = [1 2];
-				preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
-				s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
-					preEqualisedEVM);
-				sonohilog(s,'NFO0')
-
-				EVM = comm.EVM;
-				EVM.AveragingDimensions = [1 2];
-				postEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).EqSubFrame);
-				s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
-					postEqualisedEVM);
-				sonohilog(s,'NFO')
+                % Check if we're able to demodulate
+                if isequal(size(Users(iUser).RxSubFrame),size(Stations(iServingStation).ReGrid))
 
 
-				% finally, get the value of the sinr for this subframe and the corresponing
-				% CQI that should be used for the next round
+                    % Estimate channel for the received subframe
+                    Users(iUser) = estimateChannel(Users(iUser), Stations(iServingStation),...
+                        ChannelEstimator);
 
-				Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation));
+                    % Calculate error
+                    %rxError = Stations(iServingStation).ReGrid - Users(iUser).RxSubFrame;
 
+                    % Perform equalization to account for phase noise (needs
+                    % SNR)
+                    if ~strcmp(Param.channel.mode,'B2B')
+                        Users(iUser) = Users(iUser).equalize;
+                        eqError = Stations(iServingStation).ReGrid - Users(iUser).EqSubFrame;
+                    end
+
+                    EVM = comm.EVM;
+                    EVM.AveragingDimensions = [1 2];
+                    preEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).RxSubFrame);
+                    s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', ...
+                        preEqualisedEVM);
+                    sonohilog(s,'NFO0')
+
+                    EVM = comm.EVM;
+                    EVM.AveragingDimensions = [1 2];
+                    postEqualisedEVM = EVM(Stations(iServingStation).ReGrid,Users(iUser).EqSubFrame);
+                    s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
+                        postEqualisedEVM);
+                    sonohilog(s,'NFO')
+
+
+                    % finally, get the value of the sinr for this subframe and the corresponing
+                    % CQI that should be used for the next round
+
+
+
+                    Users(iUser) = selectCqi(Users(iUser), Stations(iServingStation));
+                else
+                    % Set lowest CQI
+                    % TODO, maybe not lowest?
+                    sonohilog(sprintf('Not able to demodulate Station(%i) to User(%i)',iServingStation,iUser),'WRN');
+                    Users(iUser).WCqi = 1;
+                    Users(iUser).Sinr = NaN;
+                    
+                end
 				% store UE-space results
 				Results.sinr(iUser, iRound + 1) = Users(iUser).Sinr;
 				Results.cqi(iUser, iRound + 1) = Users(iUser).WCqi;
@@ -299,6 +312,8 @@ function simulate(Param, DataIn, utilLo, utilHi)
         % TODO:
         % Decide how to reconfigure channel model. e.g. each scheduling
         % round? 
+        % Should the model configuration be identical (only update of
+        % layout) or configured upon new?
         Channel.h = [];
         [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
         
