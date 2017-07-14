@@ -183,7 +183,39 @@ classdef ChBulk_v2
 
 			rxSig = txSig + noise;
 
-		end
+        end
+        
+        function lossdb = getInterference(obj,Stations,station,user)
+            
+           % Get power of each station that is not the serving station and
+           % compute loss based on pathloss or in the case of winner on
+           % both.
+           % Computation needs to be done per spectral component, thus
+           % interference needs to be computed as a transferfunction
+           % This means the non-normalized spectrums needs to be added
+           % after pathloss is added. 
+           
+           % v1 Uses eHATA based pathloss computation for both cases
+           
+           for iStation = 1:length(Stations)
+               
+               if Stations(iStation).NCellID ~= station.NCellID
+                  % Get rx of all other stations
+                  txSig = obj.addFading([...
+						Stations(iStation).TxWaveform;zeros(25,1)],Stations(iStation).WaveformInfo);
+                  [rxSig(:,iStation),~,rxPw(:,iStation)] = obj.addPathlossAwgn(Stations(iStation),user,txSig);
+                   
+                   
+               end
+               
+               
+           end
+           
+           
+           
+           lossdb = 0;
+            
+        end
 
 		function rx = addFading(obj,tx,info,varargin)
             
@@ -388,8 +420,13 @@ classdef ChBulk_v2
 					station = Stations(Pairing(1,i));
 					Users(Pairing(2,i)).RxWaveform = obj.addFading([...
 						station.TxWaveform;zeros(25,1)],station.WaveformInfo);
+                    
+                    interLossdB = obj.getInterference(Stations,station,Users(Pairing(2,i)));
+                    
 					[Users(Pairing(2,i)).RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
 						station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
+                    
+                    
 
                     Users(Pairing(2,i)).RxInfo.SNRdB = 10*log10(SNRLin);
                     Users(Pairing(2,i)).RxInfo.SNR = SNRLin;
