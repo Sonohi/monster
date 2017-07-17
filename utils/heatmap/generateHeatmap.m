@@ -7,8 +7,15 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 %
 %   heatMap 		->  2D matrix with combined pathloss levels
 
+    % Reset channel function
+    Channel = Channel.resetWinner;
+
 	% create a dummy UE that we move around in the grid for the heatMap
 	ue = UserEquipment(Param, 99);
+    
+    
+    
+    
 
 	% cluster the grid based on the chosen resoultion
 	% get grid dimensions TODO extend to more shapes
@@ -44,7 +51,8 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 																'D', [xa, yc],...
 																'CC', [xa + (xc-xa)/2, ya + (yc-ya)/2],...
 																'snrVals', zeros(1, length(Stations)), ...
-																'evmVals', zeros(1, length(Stations)));
+																'evmVals', zeros(1, length(Stations)),...
+                                                                'rxPw',zeros(1,length(Stations)));
 
 		% move along the row for next round
 		xa = xc;
@@ -52,10 +60,29 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 
 	% now for each station, place the UE at the centre of each cluster and calculate
 	for iStation = 1:length(Stations)
+        % Associate user with stations
+        Stations(iStation).Users = ue.UeId;
+        
 		for iCluster = 1:length(Clusters)
+            sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 			ue.Position = [Clusters(iCluster).CC, Param.ueHeight];
-			[Clusters(iCluster).snrVals(iStation), Clusters(iCluster).evnVals(iStation)] = ...
-				calculateSignalDegradation(Channel, ue, Stations(iStation));
+            
+            try
+                [~, ue] = Channel.traverse(Stations(iStation),ue);
+                Clusters(iCluster).snrVals(iStation) = ue.RxInfo.SNRdB;
+                Clusters(iCluster).rxPw(iStation) = ue.RxInfo.rxPw;
+                sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue.RxInfo.SNRdB),num2str(ue.RxInfo.rxPw)),'NFO');
+            catch ME
+                Clusters(iCluster).snrVals(iStation) = NaN;
+               sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
+            end
+            
+
 		end
-	end
+    end
+    
+    
+    save('Heatmap_17_07.mat','Clusters')
+    
+    
 end

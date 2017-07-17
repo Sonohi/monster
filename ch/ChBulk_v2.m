@@ -185,7 +185,7 @@ classdef ChBulk_v2
 
         end
         
-        function lossdb = getInterference(obj,Stations,station,user)
+        function combinedLoss = getInterference(obj,Stations,station,user)
             
            % Get power of each station that is not the serving station and
            % compute loss based on pathloss or in the case of winner on
@@ -203,17 +203,37 @@ classdef ChBulk_v2
                   % Get rx of all other stations
                   txSig = obj.addFading([...
 						Stations(iStation).TxWaveform;zeros(25,1)],Stations(iStation).WaveformInfo);
-                  [rxSig(:,iStation),~,rxPw(:,iStation)] = obj.addPathlossAwgn(Stations(iStation),user,txSig);
+                  [rxSigNorm,~,rxPw(iStation)] = obj.addPathlossAwgn(Stations(iStation),user,txSig);
                    
-                   
+                  % Set correct power of all signals, rxSigNorm is the signal
+                  % normalized. rxPw contains the estimated rx power based
+                  % on tx power and the link budget
+                  lossdB = 10*log10(bandpower(rxSigNorm))-rxPw(iStation);                                 
+                  rxSig(:,iStation) =  rxSigNorm.*10^(-lossdB/20);
+                  
+                  
+                  
+                  rxPwP = 10*log10(bandpower(rxSig(:,iStation)));
                end
                
                
            end
            
+      
+           % Compute combined recieved spectrum (e.g. sum of all recieved
+           % signals)
+           
+           intSig = sum(rxSig,2);
+           
+           % Get power of signal at independent frequency components.
+           
+           intSigLoss = 10*log10(bandpower(intSig));
+           
+           figure
+           plot(10*log10(abs(fftshift(fft(intSig)).^2)));
            
            
-           lossdb = 0;
+           combinedLoss = 0;
             
         end
 
@@ -380,7 +400,7 @@ classdef ChBulk_v2
 						% Get RX from the WINNER layout idx
 						rxIdx = obj.WconfigLayout{model}.Pairing(2,link)-length(obj.WconfigLayout{model}.StationIdx);
 						Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
-						User = Users(obj.WconfigLayout{model}.UserIdx(rxIdx));
+						User = Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx));
 						% Get corresponding TxSig
 						txSig = [Station.TxWaveform;zeros(25,1)];
 						txPw = 10*log10(bandpower(txSig));
@@ -405,10 +425,10 @@ classdef ChBulk_v2
 						%plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
                         
 						% Assign to user
-                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNRdB = 10*log10(SNRLin);
-                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNR = SNRLin;
-                        Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.rxPw = rxPw;
-						Users(obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
+                        Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNRdB = 10*log10(SNRLin);
+                        Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNR = SNRLin;
+                        Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.rxPw = rxPw;
+						Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
                         
                     end
                    
@@ -421,7 +441,7 @@ classdef ChBulk_v2
 					Users(Pairing(2,i)).RxWaveform = obj.addFading([...
 						station.TxWaveform;zeros(25,1)],station.WaveformInfo);
                     
-                    interLossdB = obj.getInterference(Stations,station,Users(Pairing(2,i)));
+                    %interLossdB = obj.getInterference(Stations,station,Users(Pairing(2,i)));
                     
 					[Users(Pairing(2,i)).RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
 						station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
@@ -467,7 +487,15 @@ classdef ChBulk_v2
 
 			% TODO remove stub for EVM
 			evm = 0;
-		end
+        end
+        
+        
+        function obj = resetWinner(obj)
+            obj.h = [];
+            obj.numRx = [];
+            obj.WconfigLayout = [];
+            obj.WconfigParset = [];
+        end
 
 	end
 end

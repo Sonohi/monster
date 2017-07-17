@@ -8,7 +8,7 @@ function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
 
 % Select antenna array based on station class.
 if strcmp(type,'macro')
-    AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
+    AA(1) = winner2.AntennaArray('UCA', 8,  0.3);
 elseif strcmp(type,'micro')
     AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
 else
@@ -53,7 +53,7 @@ end
 % Set the position of the users
 % TODO: Add velocity vector of users
 for iUser = 1:length(cfgLayout.UserIdx)
-    cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users(cfgLayout.UserIdx(iUser)).Position(1:3)));
+    cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Position(1:3)));
 end
 
 end
@@ -76,7 +76,7 @@ for i = 1:numLinks
     userIdx = cfgLayout.UserIdx(cfgLayout.Pairing(2,i)-length(cfgLayout.StationIdx));
     stationIdx =  cfgLayout.StationIdx(cfgLayout.Pairing(1,i));
     cBs = Stations(stationIdx);
-    cMs = Users(userIdx);
+    cMs = Users([Users.UeId] == userIdx);
     % Apparently WINNERchan doesn't compute distance based
     % on height, only on x,y distance. Also they can't be
     % doubles...
