@@ -367,7 +367,7 @@ classdef ChBulk_v2
                 % store it for next syncroutine.
                 if isempty(obj.h) 
                     [obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
-                    obj = obj.configureWinner()
+                    obj = obj.configureWinner();
                 else
                     sonohilog('Using previously computed transfer function','NFO0')
                     

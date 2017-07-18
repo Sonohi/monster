@@ -1,8 +1,6 @@
-function Clusters = generateHeatMap(Stations, Channel, Param)
+function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 
 %   GENERATE HEATMAP is used to gnerate a pathloss map in the scenario
-%   
-%   Generates a heatmap per station.
 %
 %   Function fingerprint
 %   Stations		->  array of eNodeBs
@@ -61,31 +59,54 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
     end
    
     
+    % Find number of base station types
+    % A model is created for each type
+    classes = unique({Stations.BsClass});
+    for class = 1:length(classes)
+        varname = classes{class};
+        types.(varname) = find(strcmp({Stations.BsClass},varname));
+    end
 
-	% now for each station, place the UE at the centre of each cluster and calculate
-	for iStation = 1:length(Stations)
-        % Associate user with stations
-        Stations(iStation).Users = ue.UeId;
+    Snames = fieldnames(types);
+    
+    
+    
+    for model = 1:numel(Snames)
+        stations = types.(Snames{model});
         
-		for iCluster = 1:length(Clusters)
+        
+        
+
+        
+        for iCluster = 1:length(Clusters)
             sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 			ue.Position = [Clusters(iCluster).CC, Param.ueHeight];
             
+            
+            % User association based on distance
+            for iStation = 1:length(stations)
+               distance(iStation) = Channel.getDistance(Stations(iStation).Position,ue.Position);  
+               Stations(stations(iStation)).Users = zeros(15,1);
+            end
+ 
+            [~,minIdx] = min(distance);
+            
+            Stations(stations(minIdx)).Users(1) = ue.UeId;
+            
+            
             try
-                [~, ue] = Channel.traverse(Stations(iStation),ue);
-                Clusters(iCluster).snrVals(iStation) = ue.RxInfo.SNRdB;
-                Clusters(iCluster).rxPw(iStation) = ue.RxInfo.rxPw;
+                [~, ue] = Channel.traverse(Stations(stations),ue);
+                Clusters(iCluster).snrVals(model) = ue.RxInfo.SNRdB;
+                Clusters(iCluster).rxPw(model) = ue.RxInfo.rxPw;
                 sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue.RxInfo.SNRdB),num2str(ue.RxInfo.rxPw)),'NFO');
             catch ME
-                Clusters(iCluster).snrVals(iStation) = NaN;
+                Clusters(iCluster).snrVals(model) = NaN;
                sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
             end
-            
-
-		end
+        
+        end
+        
     end
-    
-
 
     
     
