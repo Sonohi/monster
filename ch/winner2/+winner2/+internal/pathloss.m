@@ -51,7 +51,7 @@ switch Scenario
             BsHeight = linkpar.BsHeight(iterpar.UserIndeces);
             MsHeight = linkpar.MsHeight(iterpar.UserIndeces);
         end
-        
+
         % Calculate floor loss
         FL = 17 + 4*(NumPenetratedFloors - 1);
         FL(FL < 17) = 0;
@@ -68,7 +68,7 @@ switch Scenario
         if NumNLoSConnectionLinks
             numWall = max(floor(MsBsDistance(NLoSConnectionLinks)./10), 1); % Estimated number of walls
             dist = MsBsDistance(NLoSConnectionLinks);
-            
+
             if  strcmpi(wimpar.PathLossOption,'CR_light') % Corridor-to-Room light walls
                 loss(NLoSConnectionLinks) = ...
                     iterpar.NLoS.PL_A(1)*log10(dist) + ...
@@ -87,11 +87,11 @@ switch Scenario
                     FL(NLoSConnectionLinks);
                 SF_sigma(NLoSConnectionLinks) = 4;
             end
-            if  strcmpi(wimpar.PathLossOption,'RR_light') % Room-to-Room through light walls 
+            if  strcmpi(wimpar.PathLossOption,'RR_light') % Room-to-Room through light walls
                 loss(NLoSConnectionLinks) = ...
                     20*log10(dist) + ...
                     iterpar.NLoS.PL_B(2) + ...
-                    iterpar.LoS.PL_C*log10(CenterFrequency/5) + ... 
+                    iterpar.LoS.PL_C*log10(CenterFrequency/5) + ...
                     (numWall-1)*iterpar.NLoS.PL_X(1) + ... % Wall loss
                     FL(NLoSConnectionLinks);
                 SF_sigma(NLoSConnectionLinks) = 6;
@@ -118,17 +118,21 @@ switch Scenario
         end
 
         StreetWidth = linkpar.StreetWidth(iterpar.UserIndeces);
-        % xxx Dist1 only applies to B1 and B2 in the doc ??? 
-        if isnan(linkpar.Dist1) % NaN default -> will be drawn randomly 
+        % xxx Dist1 only applies to B1 and B2 in the doc ???
+        if isnan(linkpar.Dist1) % NaN default -> will be drawn randomly
             Dist_out = 1;
             iter = 1;
             coder.internal.errorIf(StreetWidth/2 > MsBsDistance, ...
                 'winner2:pathloss:RandomDist1NotDrawn', 'twice the', 'A2 or B4');
-            while any(Dist_out > MsBsDistance | Dist_out < StreetWidth/2) || iter < 10000
+            while any(Dist_out > MsBsDistance | Dist_out < StreetWidth/2)
                 Dist_out = MsBsDistance - (MsBsDistance-StreetWidth/2).*rand(uniStream,1,length(MsBsDistance));
                 iter = iter+1;
                 if mod(iter,5000) == 0
-                    sonohilog(sprintf('Iter for B1 and B2 case: %i',iter),'NFO0')
+                    sonohilog(sprintf('Iter for B4 case: %i',iter),'NFO0')
+                end
+
+                if iter > 100000
+                    break;
                 end
             end
 
@@ -327,7 +331,7 @@ switch Scenario
             if sum(ind2)>0
                 loss_LoS(ind2) = iterpar.LoS.PL_A(2)*log10(MsBsDistance_LoS(ind2)) + iterpar.LoS.PL_B(2) + iterpar.LoS.PL_C(2)*log10(CenterFrequency/5) - 16.2*log10(MsHeight_LoS(ind2)) - 16.2*log10(BsHeight_LoS(ind2));
             end
-            SF_sigma_tmp(ind2) = 6; 
+            SF_sigma_tmp(ind2) = 6;
 
             loss(LoSConnectionLinks) = loss_LoS;
             SF_sigma(LoSConnectionLinks)=SF_sigma_tmp;
@@ -348,7 +352,7 @@ switch Scenario
             BsHeight = linkpar.BsHeight(iterpar.UserIndeces);
             MsHeight = linkpar.MsHeight(iterpar.UserIndeces);
         end
-        
+
         PL_bp = 4*BsHeight.*MsHeight*wimpar.CenterFrequency/2.998e8;
 
         if NumLoSConnectionLinks %LOS
@@ -367,8 +371,8 @@ switch Scenario
             if sum(ind2)>0
                 loss_LoS(ind2) = iterpar.LoS.PL_A(2)*log10(MsBsDistance_LoS(ind2)) + iterpar.LoS.PL_B(2) + iterpar.LoS.PL_C(2)*log10(CenterFrequency/5) - 14*log10(MsHeight_LoS(ind2)) - 14*log10(BsHeight_LoS(ind2));
             end
-            SF_sigma_tmp(ind2) = 6; 
-            
+            SF_sigma_tmp(ind2) = 6;
+
             loss(LoSConnectionLinks) = loss_LoS;
             SF_sigma(LoSConnectionLinks) = SF_sigma_tmp;
         end
@@ -378,8 +382,8 @@ switch Scenario
             SF_sigma(NLoSConnectionLinks) = 8;
         end
 
-        
-        
+
+
     case {'C4'}
         % Check antenna heights
         if isnan(linkpar.BsHeight(iterpar.UserIndeces(1)))
@@ -391,7 +395,7 @@ switch Scenario
         end
 
         StreetWidth = linkpar.StreetWidth(iterpar.UserIndeces);
-        % xxx Dist1 only applies to B1 and B2 in the doc ??? 
+        % xxx Dist1 only applies to B1 and B2 in the doc ???
         if isnan(linkpar.Dist1) % NaN default -> will be drawn randomly
             Dist_out = 1;
             coder.internal.errorIf(StreetWidth/2 > MsBsDistance, ...
@@ -410,12 +414,12 @@ switch Scenario
             end
         end
         Dist_in = MsBsDistance - Dist_out; %indoor distance
-        
+
         PL_C2_NLOS = (44.9-6.55*log10(BsHeight)).*log10(Dist_out+Dist_in) + 31.46 + 5.83*log10(BsHeight) + iterpar.NLoS.PL_C*log10(CenterFrequency/5);
         loss = PL_C2_NLOS + 17.4 + 0.5*Dist_in;
         SF_sigma(NLoSConnectionLinks) = 8;
 
-        
+
 
     case {'D1'}
         %Check antenna heights
@@ -445,7 +449,7 @@ switch Scenario
             if sum(ind2)>0
                 loss_LoS(ind2) = iterpar.LoS.PL_A(2).*log10(MsBsDistance_LoS(ind2)) + iterpar.LoS.PL_B(2) - 18.5*log10(BsHeight_LoS(ind2)) - 18.5*log10(MsHeight_LoS(ind2))+ iterpar.LoS.PL_C(2)*log10(CenterFrequency/5);
             end
-            SF_sigma_tmp(ind2) = 6; 
+            SF_sigma_tmp(ind2) = 6;
 
             loss(LoSConnectionLinks) = loss_LoS;
             SF_sigma(LoSConnectionLinks) = SF_sigma_tmp;
@@ -486,15 +490,15 @@ switch Scenario
         if sum(ind2)>0
             loss_LoS(ind2) = iterpar.LoS.PL_A(2).*log10(MsBsDistance_LoS(ind2)) + iterpar.LoS.PL_B(2) - 18.5*log10(BsHeight_LoS(ind2)) - 18.5*log10(MsHeight_LoS(ind2))+ iterpar.LoS.PL_C(2)*log10(CenterFrequency/5);
         end
-        SF_sigma_tmp(ind2) = 6; 
+        SF_sigma_tmp(ind2) = 6;
 
         loss(LoSConnectionLinks) = loss_LoS;
         SF_sigma(LoSConnectionLinks) = SF_sigma_tmp;
 
-        
+
 
     otherwise       % all other scenarios with one d PL model
-        
+
         BsHeight = 10*ones(1,NumLinks);
         MsHeight = 1.5*ones(1,NumLinks);
         SF_sigma = 3*ones(1,NumLinks);

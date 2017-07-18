@@ -1,5 +1,5 @@
 classdef sonohiWINNER
-    
+
     methods(Static)
 
 
@@ -12,7 +12,7 @@ if strcmp(type,'macro')
 elseif strcmp(type,'micro')
     AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
 else
-    
+
     sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
     AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
 end
@@ -86,11 +86,11 @@ for i = 1:numLinks
             msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
                 stationIdx,userIdx,num2str(distance));
             sonohilog(msg,'NFO0');
-            
-            cfgLayout.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+
+            cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
             cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
         else
-            cfgLayout.ScenarioVector(i) = 6; % B4 Typical urban micro-cell
+            cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
             cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
         end
     elseif cBs.BsClass == 'macro'
@@ -105,8 +105,8 @@ for i = 1:numLinks
             cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
         end
     end
-    
-    
+
+
 end
 
 end
@@ -141,5 +141,5 @@ cfgModel.SampleDensity = round(physconst('LightSpeed')/ ...
 end
 
     end
-    
+
 end
