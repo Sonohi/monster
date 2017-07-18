@@ -101,7 +101,7 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
                 sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue.RxInfo.SNRdB),num2str(ue.RxInfo.rxPw)),'NFO');
             catch ME
                 Clusters(iCluster).snrVals(model) = NaN;
-               sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
+               sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
             end
         
         end
