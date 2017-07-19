@@ -13,7 +13,7 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
     Channel = Channel.resetWinner;
 
 	% create a dummy UE that we move around in the grid for the heatMap
-	%ue = UserEquipment(Param, 99);
+	ue = UserEquipment(Param, 99);
     
     
     
@@ -30,8 +30,6 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 	% set initial position to start the clustering
 	xa = 0;
 	ya = 0;
-    
-    ueM = cell(numClusters,1);
     
 	for iCluster = 1:numClusters
 
@@ -61,7 +59,6 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 
 		% move along the row for next round
 		xa = xc;
-        ueM{iCluster} = UserEquipment(Param, 99);
     end
    
     
@@ -71,14 +68,16 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 	% now for each station, place the UE at the centre of each cluster and calculate
 	for iStation = 1:length(Stations)
         % Associate user with stations
-        Stations(iStation).Users = ueM{iCluster}.UeId;
+        Stations(iStation).Users = ue.UeId;
         
 		parfor iCluster = 1:length(Clusters)
             %sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
-			ueM{iCluster}.Position = [Clusters(iCluster).CC, Param.ueHeight];
+            % make local copy
+            ue_c = ue;
+            ue_c.Position = [Clusters(iCluster).CC, Param.ueHeight];
             
             try
-                [~, ue_] = Channel.traverse(Stations(iStation),ueM{iCluster});
+                [~, ue_] = Channel.traverse(Stations(iStation),ue_c);
                 Clusters(iCluster).snrVals(iStation) = ue_.RxInfo.SNRdB;
                 Clusters(iCluster).rxPw(iStation) = ue_.RxInfo.rxPw;
                 sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue_.RxInfo.SNRdB),num2str(ue_.RxInfo.rxPw)),'NFO');
