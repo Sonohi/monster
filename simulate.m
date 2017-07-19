@@ -36,9 +36,9 @@ function simulate(Param, DataIn, utilLo, utilHi)
     [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
 		
 		if Param.generateHeatMap
-			%HeatMap = generateHeatmap(Transmitters, Channel, Param);
+			HeatMap = generateHeatMap(Transmitters, Channel, Param);
 			
-			HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
+			%HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
             if Param.draw
 				drawHeatMap(HeatMap);
 			end

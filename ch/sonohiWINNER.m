@@ -82,8 +82,17 @@ for i = 1:numLinks
     % doubles...
     distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
     if cBs.BsClass == 'micro'
-        if distance <= 50
-            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B4 with NLOS, swapping to B4 LOS',...
+        
+        if distance <= 20
+            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
+            stationIdx,userIdx,num2str(distance));
+            sonohilog(msg,'NFO0');
+
+            cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
+            cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+        
+        elseif distance <= 50
+            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS',...
                 stationIdx,userIdx,num2str(distance));
             sonohilog(msg,'NFO0');
 

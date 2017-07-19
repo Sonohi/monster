@@ -43,6 +43,7 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 		end
 		xc = xa + Param.heatMapRes;
 		yc = ya + Param.heatMapRes;
+        
 		Clusters(iCluster) = struct(...
 																'clusterIndex', iCluster,...
 																'A', [xa, ya],...
@@ -71,7 +72,7 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
     
     
     
-    for model = 1:numel(Snames)
+    for model = 2:numel(Snames)
         stations = types.(Snames{model});
         
         
@@ -110,7 +111,7 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 
     
     
-    save('Heatmap_17_07_MacroMicroBS_2.mat','Clusters')
+    save('Heatmap_17_07_MacroMicroBS_2.mat','Clusters','Stations')
     
     
 end

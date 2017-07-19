@@ -211,7 +211,7 @@ switch Scenario
 
             if isnan(linkpar.Dist1) % NaN default -> will be drawn randomly
                 Dist1 = 1;
-                coder.internal.errorIf(StreetWidth > MsBsDistance, ...
+                coder.internal.errorIf(StreetWidth > MsBsDistance_NLoS, ...
                     'winner2:pathloss:RandomDist1NotDrawn', 'the', 'B1 or B2');
                 while any(Dist1>MsBsDistance_NLoS-StreetWidth/2 | Dist1<StreetWidth/2)
                     Dist1 = MsBsDistance_NLoS-StreetWidth/2 - (MsBsDistance_NLoS-StreetWidth).*rand(uniStream,1,length(MsBsDistance_NLoS));
