@@ -34,12 +34,16 @@ function simulate(Param, DataIn, utilLo, utilHi)
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
     [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
-		
+
 		if Param.generateHeatMap
-			HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			switch Param.channel.mode
+			case 'winner'
+				HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
+			otherwise
+				HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			end
 			
-			%HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
-            if Param.draw
+      if Param.draw
 				drawHeatMap(HeatMap);
 			end
 		end
@@ -223,7 +227,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
 			end
 
-			
+
 			% compute the interference from non-serving stations
 			%if ~strcmp(Param.channel.mode,'B2B')
 			%	Users(iUser) = computeInterference(Channel, Stations, Users(iUser), Param);
@@ -281,7 +285,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
                     sonohilog(sprintf('Not able to demodulate Station(%i) to User(%i)',iServingStation,iUser),'WRN');
                     Users(iUser).WCqi = 1;
                     Users(iUser).Sinr = NaN;
-                    
+
                 end
 				% store UE-space results
 				Results.sinr(iUser, iRound + 1) = Users(iUser).Sinr;
@@ -310,15 +314,15 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		  [hGrids(1), hGrids(2)] = plotReGrids(Users);
         end
 
-        
+
         % TODO:
         % Decide how to reconfigure channel model. e.g. each scheduling
-        % round? 
+        % round?
         % Should the model configuration be identical (only update of
         % layout) or configured upon new?
         Channel.h = [];
         [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
-        
+
 	end % end round
 
 	% Once this simulation set is done, save the output
