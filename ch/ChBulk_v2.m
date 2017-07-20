@@ -363,7 +363,7 @@ classdef ChBulk_v2
 		function [Stations,Users,obj] = traverse(obj,Stations,Users,varargin)
             validateattributes(Stations,{'EvolvedNodeB'},{'vector'})
             validateattributes(Users,{'UserEquipment'},{'vector'})
-            validateattributes([Stations.Users],{'numeric'},{'<=',0})
+            validateattributes([Stations.Users],{'numeric'},{'>=',0})
            
             if nargin > 3
                 nVargs = length(varargin);
