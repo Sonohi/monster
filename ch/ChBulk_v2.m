@@ -8,10 +8,7 @@ classdef ChBulk_v2
 		Buildings;
 		Draw;
 		Region;
-		WconfigLayout; % Used for WINNER: Layout of winner model
-		WconfigParset; % Used for WINNER: Model parameters
-		numRx; % Used for WINNER: Number of receivers, per model
-		h; % Used for WINNER: Stored impulse response
+        WINNER;
 	end
 	
 	methods(Static)
@@ -136,18 +133,6 @@ classdef ChBulk_v2
 
 					lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
 						hmPos(3), obj.Region, elev);
-
-				case 'winner'
-					
-					if nargin > 3
-						nVargs = length(varargin);
-						for k = 1:nVargs
-							if strcmp(varargin{k},'loss')
-								lossdB = varargin{k+1};
-							end
-						end
-					end
-					
 					
 					
 					
@@ -258,93 +243,13 @@ classdef ChBulk_v2
                     cfg.NormalizeTxAnts = 'On';    % Normalize for transmit antennas
                     % Pass data through the fading channel model
                     rx = lteFadingChannel(cfg,tx);
-                case 'winner'
-                    h = varargin{1};
-                    H = fft(h,length(tx));
-					% Apply transfer function to signal
-					X = fft(tx)./length(tx);
-					Y = X.*H;
-					rx = ifft(Y)*length(tx);
 					
 			end
 			
 		end
 		
-		function [cfgLayout,cfgModel] = initializeWinner(obj,Stations,Users)
-            
-            % TODO, move this to sonohiWINNER class
-            sonohilog('Initializing WINNER II channel model...','NFO0')
-            
-            % Find number of base station types
-            % A model is created for each type
-            classes = unique({Stations.BsClass});
-            for class = 1:length(classes)
-                varname = classes{class};
-                types.(varname) = find(strcmp({Stations.BsClass},varname));
-                
-            end
-            
-            Snames = fieldnames(types);
-            
-            cfgLayout = cell(numel(Snames),1);
-            cfgModel = cell(numel(Snames),1);
-            
-            for model = 1:numel(Snames)
-                type = Snames{model};
-                stations = types.(Snames{model});
-                
-                % Get number of links associated with the station.
-                users = nonzeros([Stations(stations).Users]);
-                numLinks = nnz(users);
-                
-                if isempty(users)
-                    % If no users are associated, skip the model
-                    continue
-                end
-                [AA, eNBIdx, userIdx] = sonohiWINNER.configureAA(type,stations,users);
-                
-                range = max(obj.Area);
 
-                cfgLayout{model} = sonohiWINNER.initializeLayout(userIdx, eNBIdx, numLinks, AA, range);
-                
-                cfgLayout{model} = sonohiWINNER.addAssociated(cfgLayout{model},stations,users);
 
-                cfgLayout{model} = sonohiWINNER.setPositions(cfgLayout{model},Stations,Users);
-                
-                
-                cfgLayout{model}.Pairing = obj.getPairing(Stations(cfgLayout{model}.StationIdx));
-                
-                cfgLayout{model} = sonohiWINNER.updateIndexing(cfgLayout{model},Stations);
-                
-                cfgLayout{model} = sonohiWINNER.setPropagationScenario(cfgLayout{model},Stations,Users, obj);
-                
-                cfgModel{model} = sonohiWINNER.configureModel(cfgLayout{model},Stations);
-      
-            end
-
-        end
-
-        function [obj] = configureWinner(obj)
-            % TODO, move this to sonohiWINNER class
-            % Computes impulse response of initalized winner model
-             for model = 1:length(obj.WconfigLayout)
-                
-                if isempty(obj.WconfigParset{model})
-                    % No users associated, skip the model.
-                    continue 
-                end
-                 
-                wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
-                chanInfo = info(wimCh);
-                numTx    = chanInfo.NumBSElements(1);
-                Rs       = chanInfo.SampleRate(1);
-                obj.numRx{model} = chanInfo.NumLinks(1);
-                impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
-                h{model} = wimCh(impulseR);    
-             end
-             obj.h = h;
-
-        end
 
 
 	end
@@ -389,73 +294,16 @@ classdef ChBulk_v2
 				%Check if transfer function is already computed:
 				% If empty, e.g. not computed, compute impulse response and
 				% store it for next syncroutine.
-				if isempty(obj.h)
-					[obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
-					obj = obj.configureWinner();
+				if isempty(obj.WINNER)
+                    obj.WINNER = sonohiWINNER(Stations,Users, obj);
+					%[obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
+					obj.WINNER = obj.WINNER.setup();
 				else
-					sonohilog('Using previously computed transfer function','NFO0')
-				end
+					sonohilog('Using previously computed WINNER','NFO0')
+                end
 				
-				
-				
-				% Compute Rx for each model
-				for model = 1:length(obj.WconfigLayout)
-					
-					if isempty(obj.WconfigLayout{model})
-						sonohilog(sprintf('Nothing assigned to %i model',model),'NFO0')
-						continue
-					end
-					
-					
-					
-					% Debugging code. Use of direct waveform for validating
-					% transferfunction
-					%release(wimCh)
-					%rxSig2 = wimCh(Stations(obj.WconfigLayout{model}.StationIdx(1)).TxWaveform);
-					
-					% Go through all links for the given scenario
-					% 1. Compute transfer function for each link
-					% 2. Apply transferfunction and  compute loss
-					% 3. Add loss as AWGN
-					for link = 1:obj.numRx{model}
-						% Get TX from the WINNER layout idx
-						txIdx = obj.WconfigLayout{model}.Pairing(1,link);
-						% Get RX from the WINNER layout idx
-						rxIdx = obj.WconfigLayout{model}.Pairing(2,link)-length(obj.WconfigLayout{model}.StationIdx);
-						Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
-						User = Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx));
-						% Get corresponding TxSig
-						txSig = [Station.TxWaveform;zeros(25,1)];
-						txPw = 10*log10(bandpower(txSig));
-						
-						%figure
-						%plot(10*log10(abs(fftshift(fft(txSig)).^2)))
-						%hold on
-						
-						rxSig = obj.addFading(txSig,[],obj.h{model}{link});
-						
-						rxPw_ = 10*log10(bandpower(rxSig));
-						
-						lossdB = txPw-rxPw_;
-						%plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
-						%plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
-						
-						% Normalize signal and add loss as AWGN based on
-						% noise floor
-						rxSigNorm = rxSig.*10^(lossdB/20);
-						[rxSigNorm, SNRLin, rxPw] = obj.addPathlossAwgn(Station, User, rxSigNorm, 'loss', lossdB);
-						
-						%plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
-						
-						% Assign to user
-						Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNRdB = 10*log10(SNRLin);
-						Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.SNR = SNRLin;
-						Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxInfo.rxPw = rxPw;
-						Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)).RxWaveform = rxSigNorm;
-						
-					end
-					
-				end
+                
+                Users = obj.WINNER.run(Stations,Users);
 				
 				
 			elseif strcmp(obj.Mode,'eHATA')
@@ -546,11 +394,7 @@ classdef ChBulk_v2
         end
         
         function obj = resetWinner(obj)
-            % TODO, refactorize to seperate winner class.
-            obj.h = [];
-            obj.numRx = [];
-            obj.WconfigLayout = [];
-            obj.WconfigParset = [];
+            obj.WINNER = [];
         end
 
 	end
