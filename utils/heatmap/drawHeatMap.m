@@ -7,22 +7,29 @@ function drawHeatMap(HeatMap, Stations)
 %
 	% Setup a figure with all the heatmaps singularly
 
-	figure;
-	title('SNR heatmaps for single eNodeBs');
-	
+	figure('Name', 'SNR heatmaps for single eNodeBs');
 
 	sz = sqrt(length(HeatMap));
 	x = 1:290/sz:290;
 	y = 1:290/sz:290;
 	StationSNR = reshape([HeatMap.snrVals],length(Stations),length(HeatMap));
+	StationSNR = 10*log10(StationSNR);
 
 	for iStation = 1:length(Stations)
 		subplot(3,2,iStation);
-		contourf(x,y,reshape(StationSNR(iStation,:),sz,sz),6);
+		contourf(x,y,reshape(StationSNR(iStation,:),sz,sz),25);
 		title(strcat('eNodeB ', num2str(Stations(iStation).NCellID)));
 		xlabel('Metres (x)');
 		ylabel('Metres (y)');
 		c = colorbar;
 		c.Label.String = 'SNR (dB)';
 	end
+
+	figure('Name', 'SNR aggregated heatmap');
+	AggreagatedSNR = sum(StationSNR, 1);
+	contourf(x,y,reshape(AggreagatedSNR,sz,sz),25);
+	xlabel('Metres (x)');
+	ylabel('Metres (y)');
+	c = colorbar;
+	c.Label.String = 'SNR (dB)';
 end

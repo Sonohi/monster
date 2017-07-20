@@ -33,20 +33,21 @@ function simulate(Param, DataIn, utilLo, utilHi)
 
     % Routine for establishing offset based on whole frame.
     FrameNo = 1;
-   % [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
+		[Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
 
 		if Param.generateHeatMap
-% 			switch Param.channel.mode
-% 				case 'winner'
-% 					HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
-% 				otherwise
-% 					HeatMap = generateHeatMap(Transmitters, Channel, Param);
-% 			end
-			
-			load('utils/heatmap/Heatmap');
-			if Param.draw
-				drawHeatMap(HeatMap, Stations);
+			switch Param.channel.mode
+				case 'winner'
+					HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
+				otherwise
+					HeatMap = generateHeatMap(Transmitters, Channel, Param);
 			end
+		else
+			load('utils/heatmap/Heatmap');
+		end
+		
+		if Param.draw
+			drawHeatMap(HeatMap, Stations);
 		end
 
 	for iRound = 0:Param.schRounds
