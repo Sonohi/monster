@@ -1,4 +1,4 @@
-load('Heatmap_17_07_MacroMicroBS_2.mat')
+load('Heatmap_17_07_MacroMicroBS_Models.mat')
 StationSNR = reshape([Clusters.snrVals],2,length(Clusters))
 
 nRes = sqrt(length(Clusters));

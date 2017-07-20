@@ -83,11 +83,5 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 		end
 	end
 
-
-
-
-
-	save('Heatmap_17_07_MacroMicroBS_Parfor.mat','Clusters')
-
-
+	save('Heatmap.mat','Clusters')
 end

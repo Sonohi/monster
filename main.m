@@ -24,7 +24,7 @@ close all;
 setpref('sonohiLog','logLevel',5)
 
 % Load simulation parameters from config file
-if ~exist('loadConfig', 'var')
+if (~exist('utils', 'dir') && ~exist('loadConfig', 'var'))
 	sonohi(1);
 end
 Param = loadConfig('simulation.config');
