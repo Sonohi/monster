@@ -24,10 +24,14 @@ close all;
 setpref('sonohiLog','logLevel',5)
 
 % Load simulation parameters from config file
-if (~exist('utils', 'dir') && ~exist('loadConfig', 'var'))
+try
+	Param = loadConfig('simulation.config');
+catch ME
+	disp('Initialising project');
 	sonohi(1);
+	Param = loadConfig('simulation.config');
 end
-Param = loadConfig('simulation.config');
+
 Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];

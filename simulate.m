@@ -36,16 +36,18 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		[Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
 
 		if Param.generateHeatMap
-			switch Param.channel.mode
-				case 'winner'
-					HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
-				otherwise
-					HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			switch Param.heatMapType
+			case 'perClass'
+				HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
+			case 'perStation'
+				HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			otherwise
+				sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
 			end
 		else
 			load('utils/heatmap/Heatmap');
 		end
-		
+
 		if Param.draw
 			drawHeatMap(HeatMap, Stations);
 		end

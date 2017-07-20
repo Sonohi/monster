@@ -32,4 +32,5 @@ function param = loadConfig(path)
 			row = fgetl(fid);
 		end
 	end
+	fclose(fid);
 end
