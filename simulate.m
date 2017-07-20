@@ -55,7 +55,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 		% allocate PRBs through the scheduling function per each station
 
 		% check which UEs are associated to which eNB
-		[Users, Stations] = refreshUsersAssociation(Users, Stations, Param);
+		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
 		simTime = iRound*10^-3;
 
 		% Update RLC transmission queues for the users and reset the scheduled flag

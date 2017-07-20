@@ -8,9 +8,22 @@ function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
 
 % Select antenna array based on station class.
 if strcmp(type,'macro')
-    AA(1) = winner2.AntennaArray('UCA', 8,  0.3);
+    %Az = -180:179;
+    %pattern(1,:,1,:) = winner2.dipole(Az,10);
+    %AA(1) = winner2.AntennaArray( ...
+    %    'ULA', 12, 0.15, ...
+    %    'FP-ECS', pattern, ...
+    %    'Azimuth', Az);
+
+    AA(1) = winner2.AntennaArray('UCA', 8,  0.2);
 elseif strcmp(type,'micro')
-    AA(1) = winner2.AntennaArray('UCA', 1,  0.15);
+    %Az = -180:179;
+    %pattern(1,:,1,:) = winner2.dipole(Az,10);
+    %AA(1) = winner2.AntennaArray( ...
+    %    'ULA', 6, 0.15, ...
+    %    'FP-ECS', pattern, ...
+    %    'Azimuth', Az);
+    AA(1) = winner2.AntennaArray('UCA', 4,  0.15);
 else
 
     sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
@@ -18,11 +31,15 @@ else
 end
 
 % User antenna array
-AA(2) = winner2.AntennaArray('UCA', 1,  0.05);
+AA(2) = winner2.AntennaArray('ULA', 1,  0.05);
 
-% Assign AA(1) to all stations
-eNBIdx = num2cell(ones(length(stations),1));
-
+% Number of sectors.
+numSec = 1;
+% TODO, requires changes ot the way pairing is done
+eNBIdx = cell(length(stations),1);
+for iStation = 1:length(stations)
+    eNBIdx{iStation} = [ones(1,numSec)];
+end
 % For users use antenna configuration 2
 userIdx = repmat(2,1,length(users));
 
@@ -83,15 +100,15 @@ for i = 1:numLinks
     distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
     if cBs.BsClass == 'micro'
         
-        if distance <= 20
-            msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
-            stationIdx,userIdx,num2str(distance));
-            sonohilog(msg,'NFO0');
-
-            cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
-            cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+%         if distance <= 20
+%             msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
+%             stationIdx,userIdx,num2str(distance));
+%             sonohilog(msg,'NFO0');
+% 
+%             cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
+%             cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
         
-        elseif distance <= 50
+       if distance <= 50
             msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS',...
                 stationIdx,userIdx,num2str(distance));
             sonohilog(msg,'NFO0');

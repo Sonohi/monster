@@ -20,9 +20,7 @@ end
 % Save in temp variable
 UsersNew = Users;
 
-% Initial association.
-% check which UEs are associated to which eNB
-[Users, Stations] = refreshUsersAssociation(Users, Stations, Param);
+
 
 % Generate dummy data for all stations, e.g. one full frame
 for i = 1:length(Stations)
@@ -30,6 +28,11 @@ for i = 1:length(Stations)
 		generateDummyFrame(cast2Struct(Stations(i)));
 	Stations(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
 end
+
+
+% Initial association.
+% check which UEs are associated to which eNB
+[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
 
 % Traverse channel
 [Stations, Users, ChannelNew] = Channel.traverse(Stations,Users);
