@@ -147,12 +147,15 @@ classdef sonohiWINNER
         
         
        function [rxSig, SNRLin, rxPw] = addPathlossAwgn(obj, Station, User, txSig, lossdB)
-            
+            % Compute thermalnoise based on bandwidth
             thermalNoise = obj.Channel.ThermalNoise(Station.NDLRB);
-            hbPos = Station.Position;
-            hmPos = User.Position;
-            distance = obj.Channel.getDistance(hbPos,hmPos)/1e3;
+            % Get distance of Tx - Rx
+            distance = obj.Channel.getDistance(Station.Position,User.Position)/1e3;
+            
+            % Compute transmission power
             txPw = 10*log10(Station.Pmax)+30; %dBm.
+            
+            % Setup link budget
             rxPw = txPw-lossdB;
             % SNR = P_rx_db - P_noise_db
             rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
@@ -190,14 +193,11 @@ classdef sonohiWINNER
     methods(Static)
         
         function rx = addFading(tx,h)
-            
             H = fft(h,length(tx));
             % Apply transfer function to signal
             X = fft(tx)./length(tx);
             Y = X.*H;
-            rx = ifft(Y)*length(tx);
-            
-            
+            rx = ifft(Y)*length(tx);  
         end
         
         
@@ -205,8 +205,7 @@ classdef sonohiWINNER
         
         
         function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
-            
-            
+
             % Select antenna array based on station class.
             if strcmp(type,'macro')
                 %Az = -180:179;
