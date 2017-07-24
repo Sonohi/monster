@@ -50,9 +50,7 @@ classdef sonohieHATA
         
         function rx = addFading(obj,tx,info,varargin)
             
-            
-            % TODO, refactorize to seperate classes
-            
+           
             cfg.SamplingRate = info.SamplingRate;
             cfg.Seed = 1;                  % Random channel seed
             cfg.NRxAnts = 1;               % 1 receive antenna
@@ -80,7 +78,7 @@ classdef sonohieHATA
             %[lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
             %  distance, hbPos(3), hmPos(3), obj.Region);
             
-            [numPoints,distVec,elev_profile] = obj.Channel.getElevation(hbPos,hmPos);
+            [numPoints,distVec,elev_profile] = obj.getElevation(hbPos,hmPos);
             
             if numPoints == 0
                 numPoints_scale = 1;
@@ -92,9 +90,6 @@ classdef sonohieHATA
             
             lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
                 hmPos(3), obj.Channel.Region, elev);
-            
-            
-            
             
             txPw = 10*log10(Station.Pmax)+30; %dBm.
             
@@ -126,6 +121,68 @@ classdef sonohieHATA
             rxSig = txSig + noise;
             
         end
+        
+        function [numPoints,distVec,elavationProfile] = getElevation(obj,txPos,rxPos)
+            elavationProfile(1) = 0;
+            distVec(1) = 0;
+            % Walk towards rxPos
+            signX = sign(rxPos(1)-txPos(1));
+            signY = sign(rxPos(2)-txPos(2));
+            avgG = (txPos(1)-rxPos(1))/(txPos(2)-rxPos(2));
+            position(1:2,1) = txPos(1:2);
+            i = 2;
+            numPoints = 0;
+            while true
+                % Check current distance
+                distance = norm(position(1:2,i-1)'-rxPos(1:2));
+                
+                % Move position
+                [moved_dist,position(1:2,i)] = move(position(1:2,i-1),signX,signY,avgG,0.1);
+                distVec(i) = distVec(i-1)+moved_dist;
+                
+                % Check if new position is at a greater distance, if so, we
+                % passed it.
+                distance_n = norm(position(1:2,i)'-rxPos(1:2));
+                if distance_n > distance
+                    break;
+                else
+                    % Check if we're inside a building
+                    fbuildings_x = obj.Channel.Buildings(obj.Channel.Buildings(:,1) < position(1,i) & obj.Channel.Buildings(:,3) > position(1,i),:);
+                    fbuildings_y = fbuildings_x(fbuildings_x(:,2) < position(2,i) & fbuildings_x(:,4) > position(2,i),:);
+                    
+                    if ~isempty(fbuildings_y)
+                        elavationProfile(i) = fbuildings_y(5);
+                        if elavationProfile(i-1) == 0
+                            numPoints = numPoints +1;
+                        end
+                    else
+                        elavationProfile(i) = 0;
+                        
+                    end
+                end
+                i = i+1;
+            end
+            
+            
+            
+            function [distance,position] = move(position,signX,signY,avgG,moveS)
+                if abs(avgG) > 1
+                    moveX = abs(avgG)*signX*moveS;
+                    moveY = 1*signY*moveS;
+                    position(1) = position(1)+moveX;
+                    position(2) = position(2)+moveY;
+                    
+                else
+                    moveX = 1*signX*moveS;
+                    moveY = (1/abs(avgG))*signY*moveS;
+                    position(1) = position(1)+moveX;
+                    position(2) = position(2)+moveY;
+                end
+                distance = sqrt(moveX^2+moveY^2);
+            end
+            
+        end
+        
         
         
         
