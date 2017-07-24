@@ -14,7 +14,7 @@ classdef UserEquipment
 		Queue;
 		RxWaveform;
 		RxSubFrame;
-    EqSubFrame;
+		EqSubFrame;
 		PlotStyle;
 		Scheduled;
 		Sinr;
@@ -23,8 +23,9 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
-        RxInfo;
-  end
+		RxInfo;
+		RxAmpli;
+	end
 
 	methods
 		% Constructor
@@ -37,10 +38,10 @@ classdef UserEquipment
 			obj.WCqi = 6;
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.PlotStyle = struct(	'marker', '^', ...
-															'colour', rand(1,3), ...
-															'edgeColour', [0.1 0.1 0.1], ...
-															'markerSize', 8, ...
-															'lineWidth', 2);
+				'colour', rand(1,3), ...
+				'edgeColour', [0.1 0.1 0.1], ...
+				'markerSize', 8, ...
+				'lineWidth', 2);
 			switch Param.mobilityScenario
 				case 1
 					obj.Velocity = 1; % in m/s
@@ -54,6 +55,7 @@ classdef UserEquipment
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.Interference = 0;
+			obj.RxAmpli = 1;
 		end
 
 		% sets user trajectory
@@ -93,10 +95,10 @@ classdef UserEquipment
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
 		end
 
-    % equalizer
-    function obj = equalize(obj)
-       obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
-    end
+		% equalizer
+		function obj = equalize(obj)
+			obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
+		end
 
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
