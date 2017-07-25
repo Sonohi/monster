@@ -13,7 +13,7 @@ function [Stations, h] = createBaseStations (Param)
 
 	% Create position vectors for the macro and micro BSs
 	[macroPos, microPos, h] = positionBaseStations(Param.numMacro, Param.numMicro, ...
-		Param.buildings, Param.draw);
+		Param);
 
 	for iStation = 1: (Param.numMacro + Param.numMicro)
 		% For now only 1 macro in the scenario and it's kept as first elem

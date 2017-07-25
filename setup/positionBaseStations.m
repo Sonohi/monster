@@ -1,4 +1,4 @@
-function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,draw)
+function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, Param)
 
 %   POSITION BASE STATIONS is used to set up the physical location of BSs
 %
@@ -13,13 +13,14 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
 	%Create position vectors
 	macroPos = zeros(maBS, 2);
 	microPos = zeros(miBS, 2);
+	buildings = Param.buildings;
 
 	%Find simulation area
 	area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
 		max(buildings(:, 4))];
 
   % Draw grid
-  if draw
+  if Param.draw
       h = figure;
       %rectangle('Position',area)
       hold on
@@ -30,7 +31,7 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
           y = buildings(i,4)-y0;
           rectangle('Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9])
       end
-      
+
       % Plot 3d manhattan grid.
       %h2 = figure;
       %set(gca, 'XTick', []);
@@ -47,19 +48,18 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
       %             x0 y0 z; x y0 z; x y z; x0 y z];
       %   fac = [1 2 3 4; 2 3 7 6; 1 2 6 5; 4 3 7 8;
       %             5 8 7 6; 1 4 8 5];
-      %   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])      
+      %   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])
       %end
 	else
 		h = [];
 	end
 
 	% Macro BS positioned at centre with single BS
-	% TODO extend at multiple macro
 	if (maBS == 1)
 		xc = (area(3) - area(1))/2;
 		yc = (area(4) - area(2))/2;
 		macroPos(maBS, :) = [xc yc];
-		if draw
+		if Param.draw
       text(xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
       [im, map, alpha] = imread('utils/images/basestation.png');
       % For some magical reason the image is rotated 180 degrees.
@@ -76,37 +76,64 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, buildings,d
 	end
 
 	%Micro BS positioning
-	for (i = 1 : miBS)
-	  valid = false;
-	  while (~valid)
-	    x = rand * (area(3) + area(1)) - area(1);
-	    y = rand * (area(4) + area(2)) - area(2);
-	    for (b = 1 : length(buildings(:, 1)))
-	      if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
-	        valid = true;
-	      end
-	    end
-	    for (m = 1 : maBS)
-	      d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
-	      if (d < 20)
-	        valid = false;
-	      end
-	    end
+% 	for (i = 1 : miBS)
+% 	  valid = false;
+% 	  while (~valid)
+% 	    x = rand * (area(3) + area(1)) - area(1);
+% 	    y = rand * (area(4) + area(2)) - area(2);
+% 	    for (b = 1 : length(buildings(:, 1)))
+% 	      if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
+% 	        valid = true;
+% 	      end
+% 	    end
+% 	    for (m = 1 : maBS)
+% 	      d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
+% 	      if (d < 20)
+% 	        valid = false;
+% 	      end
+% 	    end
+%
+% 	    for (m = 1 : i - 1)
+% 	      d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
+% 	      if (d < 20)
+% 	        valid = false;
+% 	      end
+% 	    end
+% 	  end
+% 	  microPos(i, :) = [x y];
+%       if draw
+%         text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+% 				 	num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
+%
+%         rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+%       end
+% 	end
 
-	    for (m = 1 : i - 1)
-	      d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
-	      if (d < 20)
-	        valid = false;
-	      end
-	    end
-	  end
-	  microPos(i, :) = [x y];
-      if draw
-        text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-				 	num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
+	%Micro BS positioning
+	switch Param.microPos
+	case 'uniform'
+			% place the micro bs in a circle of radius around the centre
+			theta = 4*pi/miBS;
+			alpha = 0;
+			r = Param.microUniformRadius;
+			xc = (area(3) - area(1))/2;
+			yc = (area(4) - area(2))/2;
+			for iMicro = 1:miBS
+				xr = xc + r*cos(alpha+iMicro*theta);
+				yr = yc + r*sin(alpha+iMicro*theta);
+				microPos(iMicro, :) = [xr yr];
+				if Param.draw
+					text(xr,yr-6,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
+						num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
+						
+					rectangle('Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
+						[0 .5 .5],'FaceColor',[0 .5 .5]);
+				end
+			end
 
-        rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
-      end
+		otherwise
+			sonohiLog('Unknown choice for micro BS positioning strategy', 'ERR');
+
 	end
 
 end

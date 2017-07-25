@@ -32,6 +32,8 @@ catch ME
 	Param = loadConfig('simulation.config');
 end
 
+validateParam(Param);
+
 Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
@@ -47,11 +49,6 @@ w = warning('off', 'all');
 % Channel configuration
 Param.channel.mode = 'winner';
 Param.channel.region = 'DenseUrban';
-
-% Guard for initial setup: exit of there's more than 1 macro BS
-if Param.numMacro ~= 1
-	return;
-end
 
 % Create Stations and Users
 [Stations, Param.AreaPlot] = createBaseStations(Param);
@@ -71,13 +68,8 @@ else
 end
 
 % Utilisation ranges
-if (Param.utilLoThr > 0 && Param.utilLoThr <= 100 && Param.utilHiThr > 0 && ...
-		Param.utilHiThr <= 100)
-	utilLo = 1:Param.utilLoThr;
-	utilHi = Param.utilHiThr:100;
-else
-	return;
-end
+utilLo = 1:Param.utilLoThr;
+utilHi = Param.utilHiThr:100;
 
 % Create struct to pass data to the simulation function
 simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...

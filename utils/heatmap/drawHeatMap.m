@@ -13,11 +13,10 @@ function drawHeatMap(HeatMap, Stations)
 	x = 1:290/sz:290;
 	y = 1:290/sz:290;
 	StationSNR = reshape([HeatMap.snrVals],length(Stations),length(HeatMap));
-	StationSNR = 10*log10(StationSNR);
 
 	for iStation = 1:length(Stations)
 		subplot(3,2,iStation);
-		contourf(x,y,reshape(StationSNR(iStation,:),sz,sz),25);
+		contourf(x,y,reshape(StationSNR(iStation,:),sz,sz),10);
 		title(strcat('eNodeB ', num2str(Stations(iStation).NCellID)));
 		xlabel('Metres (x)');
 		ylabel('Metres (y)');
@@ -27,7 +26,7 @@ function drawHeatMap(HeatMap, Stations)
 
 	figure('Name', 'SNR aggregated heatmap');
 	AggreagatedSNR = sum(StationSNR, 1);
-	contourf(x,y,reshape(AggreagatedSNR,sz,sz),25);
+	contourf(x,y,reshape(AggreagatedSNR,sz,sz),10);
 	xlabel('Metres (x)');
 	ylabel('Metres (y)');
 	c = colorbar;
