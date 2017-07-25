@@ -76,40 +76,6 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, Param)
 	end
 
 	%Micro BS positioning
-% 	for (i = 1 : miBS)
-% 	  valid = false;
-% 	  while (~valid)
-% 	    x = rand * (area(3) + area(1)) - area(1);
-% 	    y = rand * (area(4) + area(2)) - area(2);
-% 	    for (b = 1 : length(buildings(:, 1)))
-% 	      if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
-% 	        valid = true;
-% 	      end
-% 	    end
-% 	    for (m = 1 : maBS)
-% 	      d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
-% 	      if (d < 20)
-% 	        valid = false;
-% 	      end
-% 	    end
-%
-% 	    for (m = 1 : i - 1)
-% 	      d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
-% 	      if (d < 20)
-% 	        valid = false;
-% 	      end
-% 	    end
-% 	  end
-% 	  microPos(i, :) = [x y];
-%       if draw
-%         text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-% 				 	num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
-%
-%         rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
-%       end
-% 	end
-
-	%Micro BS positioning
 	switch Param.microPos
 	case 'uniform'
 			% place the micro bs in a circle of radius around the centre
@@ -125,10 +91,43 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, Param)
 				if Param.draw
 					text(xr,yr-6,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
 						num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
-						
+
 					rectangle('Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
 						[0 .5 .5],'FaceColor',[0 .5 .5]);
 				end
+			end
+		case 'random'
+			for (i = 1 : miBS)
+			  valid = false;
+			  while (~valid)
+			    x = rand * (area(3) + area(1)) - area(1);
+			    y = rand * (area(4) + area(2)) - area(2);
+			    for (b = 1 : length(buildings(:, 1)))
+			      if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
+			        valid = true;
+			      end
+			    end
+			    for (m = 1 : maBS)
+			      d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
+			      if (d < 20)
+			        valid = false;
+			      end
+			    end
+
+			    for (m = 1 : i - 1)
+			      d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
+			      if (d < 20)
+			        valid = false;
+			      end
+			    end
+			  end
+			  microPos(i, :) = [x y];
+		      if Param.draw
+		        text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+						 	num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
+
+		        rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+		      end
 			end
 
 		otherwise
