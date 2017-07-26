@@ -83,5 +83,5 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 		end
 	end
 
-	save('Heatmap.mat','Clusters')
+	save('Heatmap.mat','Clusters','Stations')
 end
