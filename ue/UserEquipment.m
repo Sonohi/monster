@@ -5,7 +5,6 @@ classdef UserEquipment
 	properties
 		ENodeB;
 		EstChannelGrid;
-		Interference;
 		NoiseEst;
 		NoiseFigure;
 		Offset;
@@ -54,7 +53,6 @@ classdef UserEquipment
 			obj = setTrajectory(obj, Param);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
-			obj.Interference = 0;
 			obj.RxAmpli = 1;
 		end
 
@@ -150,8 +148,8 @@ classdef UserEquipment
 		end
 
 		% set interference value
-		function obj = set.Interference(obj, num)
-			obj.Interference = num;
+		function obj = set.RxWaveform(obj, sig)
+			obj.RxWaveform = sig;
 		end
 
 		% cast object to struct

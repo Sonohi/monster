@@ -42,7 +42,7 @@ classdef ChBulk_v2
 	end
 
 	methods(Access = private)
-		function combinedLoss = getInterferenceLoss(obj,Stations,station,user)
+		function [intSig, intSigLoss] = getInterferers(obj,Stations,station,user)
 
 			% Get power of each station that is not the serving station and
 			% compute loss based on pathloss or in the case of winner on
@@ -85,8 +85,6 @@ classdef ChBulk_v2
 			figure
 			plot(10*log10(abs(fftshift(fft(intSig)).^2)));
 
-			combinedLoss = 0;
-
 		end
 	end
 
@@ -103,7 +101,7 @@ classdef ChBulk_v2
 			validateChannel(obj);
 			validateStations(Stations);
 			validateUsers(Users);
-			validateEmptyUsers([Stations.Users]);
+			%validateEmptyUsers([Stations.Users]);
 
 			if nargin > 3
 				nVargs = length(varargin);
@@ -147,6 +145,12 @@ classdef ChBulk_v2
 				eHATA = sonohieHATA(obj);
 				Users = eHATA.run(Stations,Users);
 
+			elseif strcmp(obj.Mode,'B2B')
+				sonohilog('Back2Back channel mode selected, no chanel actually traversed', 'WRN');
+				for iUser = 1:length(Users)
+					iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+					Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
+				end
 			end
 
 		end
@@ -213,17 +217,21 @@ classdef ChBulk_v2
 		end
 
 		function rxSig = applyInterference(obj,Stations,Station,User)
+			% Method used to apply the interference on a specific received waveform
+
 			% Validate arguments
 			validateChannel(obj);
 			validateStations(Stations);
 			validateStations(Station);
 			validateUsers(User);
 
-			combinedLoss = getInterferenceLoss(obj,Stations,station,user);
+			% Get the combined interfering signal and its loss
+			[intSig, intSigLoss] = getInterferers(obj,Stations,station,user);
 
+			% Now combine the interferingand serving signal
 			% TODO revise stub
-			% rxSig = User.RxAmpli*User.RxWaveform*combinedLoss;
-			rxSig = User.RxWaveform;
+			rxSig = User.RxAmpli*User.RxWaveform + intSig*intSigLoss;
+
 		end
 
 	end
