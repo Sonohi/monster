@@ -22,8 +22,8 @@ classdef UserEquipment
 		UeId;
 		Velocity;
 		WCqi;
-		RxInfo;
 		RxAmpli;
+		Rx;
 	end
 
 	methods
@@ -54,6 +54,7 @@ classdef UserEquipment
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
+			obj.Rx = ReceiverModule(Param);
 		end
 
 		% sets user trajectory

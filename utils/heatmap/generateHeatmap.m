@@ -62,7 +62,7 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 		% Associate user with stations
 		Stations(iStation).Users = ue.UeId;
 
-		parfor iCluster = 1:length(Clusters)
+		for iCluster = 1:length(Clusters)
 			%sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 			% make local copy
 			ueCopy = ue;
@@ -70,10 +70,10 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 
 			try
 				[~, ueCopy] = Channel.traverse(Stations(iStation),ueCopy);
-				Clusters(iCluster).snrVals(iStation) = ueCopy.RxInfo.SNRdB;
-				Clusters(iCluster).rxPw(iStation) = ueCopy.RxInfo.rxPw;
-				sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.RxInfo.SNRdB),...
-					num2str(ueCopy.RxInfo.rxPw)),'NFO');
+				Clusters(iCluster).snrVals(iStation) = ueCopy.Rx.SNRdB;
+				Clusters(iCluster).rxPw(iStation) = ueCopy.Rx.RxPw;
+				sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.Rx.SNRdB),...
+					num2str(ueCopy.Rx.RxPw)),'NFO');
 			catch ME
 				Clusters(iCluster).snrVals(iStation) = NaN;
 				sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')

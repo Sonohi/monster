@@ -43,42 +43,42 @@ for p = 1:length(Users)
 	% Find serving station
 	iSStation = find([Stations.NCellID] == Users(p).ENodeB);
 	% Compute offset
-	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).RxWaveform);
-	
+	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).Rx.Waveform);
+
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
 		rxWaveform = Users(p).RxWaveform(1+UsersNew(p).Offset(FrameNo):end,:);
-		
+
 		rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform);
-		
+
 		%enb.NSubframe = 0;
 		[estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
-		
-		
+
+
 		constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',1, ...
 			'SymbolsToDisplaySource','Property','SymbolsToDisplay',600);
 		%rxGrid_r = reshape(rxGrid,length(rxGrid(:,1))*length(rxGrid(1,:)),1);
 		%for i= 1:30:length(rxGrid_r)-30
 		%     constDiagram(rxGrid_r(i:i+30))
 		%end
-		
+
 		% get PDSCH indexes
 		[indPdsch, info] = Stations(iSStation).getPDSCHindicies;
-		
+
 		eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
 		eqGrid_r = eqGrid(indPdsch);
 		for i= 1:2:length(eqGrid_r)-2
 			constDiagram(eqGrid_r(i:i+2))
 		end
-		
-		
+
+
 		%constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
-		
+
 		txGrid = Stations(iSStation).ReGrid;
 		%eqError = txGrid - eqGrid;
 		%rxError = txGrid - rxGrid;
-		
-		
+
+
 		EVM = comm.EVM;
 		EVM.AveragingDimensions = [1 2];
 		preEqualisedEVM = EVM(txGrid,rxGrid);
@@ -88,7 +88,7 @@ for p = 1:length(Users)
 		postEqualisedEVM = EVM(txGrid,eqGrid);
 		fprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', ...
 			postEqualisedEVM);
-		
+
 		% Plot the received and equalized resource grids
 		hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);
 	end
@@ -153,38 +153,38 @@ inputSym = lteSymbolModulate(inputBits,'QPSK');
 
 % For all subframes within the frame
 for sf = 0:10
-	
+
 	% Set subframe number
 	enb.NSubframe = mod(sf,10);
-	
+
 	% Generate empty subframe
 	subframe = lteDLResourceGrid(enb);
-	
+
 	% Map input symbols to grid
 	subframe(:) = inputSym;
-	
+
 	% Generate synchronizing signals
 	pssSym = ltePSS(enb);
 	sssSym = lteSSS(enb);
 	pssInd = ltePSSIndices(enb);
 	sssInd = lteSSSIndices(enb);
-	
+
 	% Map synchronizing signals to the grid
 	subframe(pssInd) = pssSym;
 	subframe(sssInd) = sssSym;
-	
+
 	% Generate cell specific reference signal symbols and indices
 	cellRsSym = lteCellRS(enb);
 	cellRsInd = lteCellRSIndices(enb);
-	
+
 	% Map cell specific reference signal to grid
 	subframe(cellRsInd) = cellRsSym;
-	
+
 	% check whether we want to generate
-	
+
 	% Append subframe to grid to be transmitted
 	txGrid = [txGrid subframe]; %#ok
-	
+
 end
 
 [txWaveform,info] = lteOFDMModulate(enb,txGrid);

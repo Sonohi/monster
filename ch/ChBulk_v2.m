@@ -63,7 +63,7 @@ classdef ChBulk_v2
 					%[rxSigNorm,~,rxPw(iStation)] = obj.addPathlossAwgn(Stations(iStation),user,txSig);
 
 					Users = eHATA.run(Stations(iStation),user);
-					RxPw(iStation) = UserRx.RxInfo.rxPw;
+					RxPw(iStation) = UserRx.Rx.RxPw;
 					rxSignorm = Users.RxWaveform;
 
 					% Set correct power of all signals, rxSigNorm is the signal
@@ -206,7 +206,7 @@ classdef ChBulk_v2
 
 				% Traverse channel
 				[~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
-				RxPw(iStation) = UserRx.RxInfo.rxPw;
+				RxPw(iStation) = UserRx.Rx.RxPw;
 			end
 			[maxPw,maxStation] = max(RxPw);
 			stationID = Stations(maxStation).NCellID;

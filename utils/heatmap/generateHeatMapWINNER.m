@@ -12,10 +12,10 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 
 	% create a dummy UE that we move around in the grid for the heatMap
 	ue = UserEquipment(Param, 99);
-    
-    
-    
-    
+
+
+
+
 
 	% cluster the grid based on the chosen resoultion
 	% get grid dimensions TODO extend to more shapes
@@ -43,7 +43,7 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 		end
 		xc = xa + Param.heatMapRes;
 		yc = ya + Param.heatMapRes;
-        
+
 		Clusters(iCluster) = struct(...
 																'clusterIndex', iCluster,...
 																'A', [xa, ya],...
@@ -58,8 +58,8 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
 		% move along the row for next round
 		xa = xc;
     end
-   
-    
+
+
     % Find number of base station types
     % A model is created for each type
     classes = unique({Stations.BsClass});
@@ -69,49 +69,49 @@ function Clusters = generateHeatMapWINNER(Stations, Channel, Param)
     end
 
     Snames = fieldnames(types);
-    
-    
-    
+
+
+
     for model = 2:numel(Snames)
         stations = types.(Snames{model});
-        
-        
-        
 
-        
+
+
+
+
         for iCluster = 1:length(Clusters)
             sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 			ue.Position = [Clusters(iCluster).CC, Param.ueHeight];
-            
-            
+
+
             % User association based on distance
             for iStation = 1:length(stations)
-               distance(iStation) = Channel.getDistance(Stations(iStation).Position,ue.Position);  
+               distance(iStation) = Channel.getDistance(Stations(iStation).Position,ue.Position);
                Stations(stations(iStation)).Users = zeros(15,1);
             end
- 
+
             [~,minIdx] = min(distance);
-            
+
             Stations(stations(minIdx)).Users(1) = ue.UeId;
-            
-            
+
+
             try
                 [~, ue] = Channel.traverse(Stations(stations),ue);
-                Clusters(iCluster).snrVals(model) = ue.RxInfo.SNRdB;
-                Clusters(iCluster).rxPw(model) = ue.RxInfo.rxPw;
-                sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue.RxInfo.SNRdB),num2str(ue.RxInfo.rxPw)),'NFO');
+                Clusters(iCluster).snrVals(model) = ue.Rx.SNRdB;
+                Clusters(iCluster).rxPw(model) = ue.Rx.RxPw;
+                sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ue.Rx.SNRdB),num2str(ue.Rx.RxPw)),'NFO');
             catch ME
                 Clusters(iCluster).snrVals(model) = NaN;
                sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
             end
-        
+
         end
-        
+
     end
 
-    
-    
+
+
     save('Heatmap_17_07_MacroMicroBS_2.mat','Clusters','Stations')
-    
-    
+
+
 end
