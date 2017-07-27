@@ -226,7 +226,7 @@ classdef ChBulk_v2
 			validateUsers(User);
 
 			% Get the combined interfering signal and its loss
-			[intSig, intSigLoss] = getInterferers(obj,Stations,station,user);
+			[intSig, intSigLoss] = getInterferers(obj,Stations,Station,User);
 
 			% Now combine the interferingand serving signal
 			% TODO revise stub

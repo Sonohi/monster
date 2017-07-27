@@ -24,11 +24,11 @@ function drawHeatMap(HeatMap, Stations)
 		c.Label.String = 'SNR (dB)';
 	end
 
-	figure('Name', 'SNR aggregated heatmap');
-	AggreagatedSNR = sum(StationSNR, 1);
+	figure('Name', 'Mean SNR for complete layout');
+	AggreagatedSNR = mean(StationSNR);
 	contourf(x,y,reshape(AggreagatedSNR,sz,sz),10);
 	xlabel('Metres (x)');
 	ylabel('Metres (y)');
 	c = colorbar;
-	c.Label.String = 'SNR (dB)';
+	c.Label.String = '\mu SNR (dB)';
 end

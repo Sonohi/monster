@@ -92,32 +92,42 @@ classdef sonohieHATA
             hmPos = User.Position;
             distance = obj.Channel.getDistance(hbPos,hmPos)/1e3;
             
-            %[lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
-            %  distance, hbPos(3), hmPos(3), obj.Region);
+            try
             
-            [numPoints,distVec,elev_profile] = obj.getElevation(hbPos,hmPos);
-            
-            if numPoints == 0
-                numPoints_scale = 1;
-            else
-                numPoints_scale = numPoints;
+                [numPoints,distVec,elev_profile] = obj.getElevation(hbPos,hmPos);
+
+                if numPoints == 0
+                    numPoints_scale = 1;
+                else
+                    numPoints_scale = numPoints;
+                end
+
+                elev = [numPoints_scale; distVec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
+
+                lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
+                    hmPos(3), obj.Channel.Region, elev);
+            catch
+                % If the basic proploss fails it's most likely due to
+                % missing elevation profile data (e.g. if the position of
+                % Tx and Rx are just ontop of each other, or complete LoS
+                % transmission).
+                % MedianBasicPropLoss provides an average loss in those
+                % positions.
+                [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
+                  distance, hbPos(3), hmPos(3), obj.Channel.Region);
             end
-            
-            elev = [numPoints_scale; distVec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
-            
-            lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
-                hmPos(3), obj.Channel.Region, elev);
-            
-            txPw = 10*log10(Station.Pmax)+30; %dBm.
-            
-            rxPw = txPw-lossdB;
-            % SNR = P_rx_db - P_noise_db
-            rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
-            SNR = rxPw-rxNoiseFloor;
-            SNRLin = 10^(SNR/10);
-            str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
-                Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
-            sonohilog(str1,'NFO0');
+                
+
+                txPw = 10*log10(Station.Pmax)+30; %dBm.
+
+                rxPw = txPw-lossdB;
+                % SNR = P_rx_db - P_noise_db
+                rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
+                SNR = rxPw-rxNoiseFloor;
+                SNRLin = 10^(SNR/10);
+                str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
+                    Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
+                sonohilog(str1,'NFO0');
             
             %% Apply SNR
             
@@ -144,24 +154,21 @@ classdef sonohieHATA
             distVec(1) = 0;
             
             % Check if x and y are equal
-            
             if txPos(1:2) == rxPos(1:2)
                 numPoints = 0;
                 distVec = 0;
                 elavationProfile = 0;
-                
-                
             else
                 
-           
-            
             % Walk towards rxPos
             signX = sign(rxPos(1)-txPos(1));
+
             signY = sign(rxPos(2)-txPos(2));
+
             avgG = (txPos(1)-rxPos(1))/(txPos(2)-rxPos(2))+normrnd(0,0.01); %Small offset
             position(1:2,1) = txPos(1:2);
             i = 2;
-            max_i = 10e4;
+            max_i = 10e6;
             numPoints = 0;
             resolution = 0.05; % Given in meters
          
