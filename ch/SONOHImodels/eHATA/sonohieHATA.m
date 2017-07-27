@@ -19,28 +19,45 @@ classdef sonohieHATA
             
             for i = 1:numLinks
                 station = Stations(Pairing(1,i));
+                % Local copy for mutation
+                user = Users(find([Users.UeId] == Pairing(2,i)));
+                
+                try
                 
                 if strcmp(obj.Channel.fieldType,'full')
-                    
-                    Users(Pairing(2,i)).RxWaveform = obj.addFading([...
+                    user.RxWaveform = obj.addFading([...
                         station.TxWaveform;zeros(25,1)],station.WaveformInfo);
                     
                     
                     
                     %interLossdB = obj.getInterference(Stations,station,Users(Pairing(2,i)));
                     
-                    [Users(Pairing(2,i)).RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
-                        station,Users(Pairing(2,i)),Users(Pairing(2,i)).RxWaveform);
+                    [user.RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
+                        station,user,user.RxWaveform);
+                    
+                    
+                  
                     
                 elseif strcmp(obj.Channel.fieldType,'pathloss')
-                    [Users([Users.UeId] == Pairing(2,i)).RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
-                        station,Users([Users.UeId] == Pairing(2,i)),Users([Users.UeId] == Pairing(2,i)).RxWaveform);
+                    [user.RxWaveform, SNRLin, rxPw] = obj.addPathlossAwgn(...
+                        station,user,user.RxWaveform);
                     
                 end
                 
-                Users([Users.UeId] == Pairing(2,i)).RxInfo.SNRdB = 10*log10(SNRLin);
-                Users([Users.UeId] == Pairing(2,i)).RxInfo.SNR = SNRLin;
-                Users([Users.UeId] == Pairing(2,i)).RxInfo.rxPw = rxPw;
+                user.RxInfo.SNRdB = 10*log10(SNRLin);
+                user.RxInfo.rxPw = rxPw;
+                
+                catch ME
+                    
+                user.RxInfo.SNRdB = NaN;
+                user.RxInfo.rxPw = NaN;    
+                    
+                end
+                
+                
+                
+                % Write changes to user object in array.
+                Users(find([Users.UeId] == Pairing(2,i))) = user; 
                 
             end
             
@@ -48,14 +65,14 @@ classdef sonohieHATA
             
         end
         
-        function rx = addFading(obj,tx,info,varargin)
+        function rx = addFading(obj,tx,info)
             
            
             cfg.SamplingRate = info.SamplingRate;
             cfg.Seed = 1;                  % Random channel seed
             cfg.NRxAnts = 1;               % 1 receive antenna
             cfg.DelayProfile = 'EPA';      % EVA delay spread
-            cfg.DopplerFreq = 120;         % 120Hz Doppler frequency
+            cfg.DopplerFreq = 5;         % 120Hz Doppler frequency
             cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
             cfg.InitTime = 0;              % Initialize at time zero
             cfg.NTerms = 16;               % Oscillators used in fading model
@@ -125,25 +142,45 @@ classdef sonohieHATA
         function [numPoints,distVec,elavationProfile] = getElevation(obj,txPos,rxPos)
             elavationProfile(1) = 0;
             distVec(1) = 0;
+            
+            % Check if x and y are equal
+            
+            if txPos(1:2) == rxPos(1:2)
+                numPoints = 0;
+                distVec = 0;
+                elavationProfile = 0;
+                
+                
+            else
+                
+           
+            
             % Walk towards rxPos
             signX = sign(rxPos(1)-txPos(1));
             signY = sign(rxPos(2)-txPos(2));
-            avgG = (txPos(1)-rxPos(1))/(txPos(2)-rxPos(2));
+            avgG = (txPos(1)-rxPos(1))/(txPos(2)-rxPos(2))+normrnd(0,0.01); %Small offset
             position(1:2,1) = txPos(1:2);
             i = 2;
+            max_i = 10e4;
             numPoints = 0;
+            resolution = 0.05; % Given in meters
+         
             while true
+                if i >= max_i
+                    break;
+                end
+                
                 % Check current distance
                 distance = norm(position(1:2,i-1)'-rxPos(1:2));
                 
                 % Move position
-                [moved_dist,position(1:2,i)] = move(position(1:2,i-1),signX,signY,avgG,0.1);
+                [moved_dist,position(1:2,i)] = move(position(1:2,i-1),signX,signY,avgG,resolution);
                 distVec(i) = distVec(i-1)+moved_dist;
                 
                 % Check if new position is at a greater distance, if so, we
                 % passed it.
                 distance_n = norm(position(1:2,i)'-rxPos(1:2));
-                if distance_n > distance
+                if distance_n >= distance
                     break;
                 else
                     % Check if we're inside a building
@@ -161,6 +198,9 @@ classdef sonohieHATA
                     end
                 end
                 i = i+1;
+                
+                 end
+
             end
             
             
