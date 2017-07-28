@@ -31,6 +31,10 @@ classdef sonohieHATA
                     [RxSig, SNRLin, rxPw] = obj.addPathlossAwgn(...
                         station,user,user.Rx.Waveform);
 
+
+
+                   
+
                 elseif strcmp(obj.Channel.fieldType,'pathloss')
                     [RxSig, SNRLin, rxPw] = obj.addPathlossAwgn(...
                         station,user,station.TxWaveform);
@@ -115,16 +119,16 @@ classdef sonohieHATA
             end
 
 
-                txPw = 10*log10(Station.Pmax)+30; %dBm.
+            txPw = 10*log10(Station.Pmax)+30; %dBm.
 
-                rxPw = txPw-lossdB;
-                % SNR = P_rx_db - P_noise_db
-                rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
-                SNR = rxPw-rxNoiseFloor;
-                SNRLin = 10^(SNR/10);
-                str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
-                    Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
-                sonohilog(str1,'NFO0');
+            rxPw = txPw-lossdB;
+            % SNR = P_rx_db - P_noise_db
+            rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
+            SNR = rxPw-rxNoiseFloor;
+            SNRLin = 10^(SNR/10);
+            str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
+                Station.NCellID,User.UeId,num2str(distance),num2str(SNR),num2str(rxPw));
+            sonohilog(str1,'NFO0');
 
             %% Apply SNR
 
@@ -203,7 +207,7 @@ classdef sonohieHATA
                 end
                 i = i+1;
 
-                 end
+            end
 
             end
 

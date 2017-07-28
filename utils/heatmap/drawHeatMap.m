@@ -13,7 +13,8 @@ function drawHeatMap(HeatMap, Stations)
 	x = 1:290/sz:290;
 	y = 1:290/sz:290;
 	StationSNR = reshape([HeatMap.snrVals],length(Stations),length(HeatMap));
-
+  StationRxPw = reshape([HeatMap.rxPw],length(Stations),length(HeatMap));
+    figure
 	for iStation = 1:length(Stations)
 		subplot(3,2,iStation);
 		contourf(x,y,reshape(StationSNR(iStation,:),sz,sz),10);
@@ -31,4 +32,25 @@ function drawHeatMap(HeatMap, Stations)
 	ylabel('Metres (y)');
 	c = colorbar;
 	c.Label.String = '\mu SNR (dB)';
+
+
+    figure
+	for iStation = 1:length(Stations)
+		subplot(3,2,iStation);
+		contourf(x,y,reshape(StationRxPw(iStation,:),sz,sz),10);
+		title(strcat('eNodeB ', num2str(Stations(iStation).NCellID)));
+		xlabel('Metres (x)');
+		ylabel('Metres (y)');
+		c = colorbar;
+		c.Label.String = 'P_{Rx}(dB)';
+	end
+
+	figure('Name', 'Mean Rx power for complete layout');
+	AggreagatedRxPw = mean(StationRxPw);
+	contourf(x,y,reshape(AggreagatedRxPw,sz,sz),10);
+	xlabel('Metres (x)');
+	ylabel('Metres (y)');
+	c = colorbar;
+	c.Label.String = '\mu P_{Rx} (dB)';
+
 end
