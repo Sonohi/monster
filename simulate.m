@@ -45,7 +45,7 @@ if Param.generateHeatMap
 			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
 	end
 else
-	load('utils/heatmap/Heatmap');
+	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
 end
 
 if Param.draw
@@ -217,11 +217,6 @@ for iRound = 0:Param.schRounds
 				sonohilog(offsetS, 'NFO0')
 			end
 		end
-
-
-		% compute the interference from non-serving stations
-		Users(iUser).RxWaveform = Channel.applyInterference(Stations, ...
-			Stations(iServingStation), Users(iUser));
 
 		% Now, demodulate the overall received waveform for users that should
 		% receive a TB

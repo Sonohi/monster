@@ -83,10 +83,13 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 			%	sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
 			%end
 
-            
+
 
 		end
 	end
 
-	save('HeatmapInterference_28_07_17.mat','Clusters','Stations')
+	% Renaming to avoid fuck-ups
+	HeatMap = Clusters;
+	EnodeBs = Staitons;
+	save('HeatmapInterference_28_07_17.mat','HeatMap','EnodeBs')
 end

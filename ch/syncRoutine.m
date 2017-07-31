@@ -19,40 +19,37 @@ if nargin > 5
 end
 % Save in temp variable
 UsersNew = Users;
-
-
+StationsNew = Stations;
 
 % Generate dummy data for all stations, e.g. one full frame
-for i = 1:length(Stations)
-	[Stations(i).TxWaveform, Stations(i).WaveformInfo, Stations(i).ReGrid] = ...
-		generateDummyFrame(cast2Struct(Stations(i)));
-	Stations(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
+for i = 1:length(StationsNew)
+	[StationsNew(i).TxWaveform, StationsNew(i).WaveformInfo, StationsNew(i).ReGrid] = ...
+		generateDummyFrame(StationsNew(i));
+	StationsNew(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
 end
-
 
 % Initial association.
 % check which UEs are associated to which eNB
-[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+[Users, StationsNew] = refreshUsersAssociation(Users, StationsNew, Channel, Param);
 
 % Traverse channel
-[Stations, Users, ChannelNew] = Channel.traverse(Stations,Users);
-
+[StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users);
 
 % Compute offset
 for p = 1:length(Users)
 	% Find serving station
-	iSStation = find([Stations.NCellID] == Users(p).ENodeB);
+	iSStation = find([StationsNew.NCellID] == Users(p).ENodeB);
 	% Compute offset
-	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(Stations(iSStation)), Users(p).Rx.Waveform);
+	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
 		rxWaveform = Users(p).RxWaveform(1+UsersNew(p).Offset(FrameNo):end,:);
 
-		rxGrid = lteOFDMDemodulate(struct(Stations(iSStation)),rxWaveform);
+		rxGrid = lteOFDMDemodulate(struct(StationsNew(iSStation)),rxWaveform);
 
 		%enb.NSubframe = 0;
-		[estChannel, noiseEst] = lteDLChannelEstimate(struct(Stations(iSStation)),ChannelEstimator,rxGrid);
+		[estChannel, noiseEst] = lteDLChannelEstimate(struct(StationsNew(iSStation)),ChannelEstimator,rxGrid);
 
 
 		constDiagram = comm.ConstellationDiagram('SamplesPerSymbol',1, ...
@@ -63,7 +60,7 @@ for p = 1:length(Users)
 		%end
 
 		% get PDSCH indexes
-		[indPdsch, info] = Stations(iSStation).getPDSCHindicies;
+		[indPdsch, info] = StationsNew(iSStation).getPDSCHindicies;
 
 		eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
 		eqGrid_r = eqGrid(indPdsch);
@@ -74,7 +71,7 @@ for p = 1:length(Users)
 
 		%constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
-		txGrid = Stations(iSStation).ReGrid;
+		txGrid = StationsNew(iSStation).ReGrid;
 		%eqError = txGrid - eqGrid;
 		%rxError = txGrid - rxGrid;
 
@@ -93,101 +90,4 @@ for p = 1:length(Users)
 		hDownlinkEstimationEqualizationResults(rxGrid, eqGrid);
 	end
 end
-
-% At the end of the sync routine check whether we need to rerutn the newStations
-% for generating the heatmap
-if Param.generateHeatMap
-	StationsNew = Stations;
-else
-	StationsNew = [];
-end
-end
-
-
-function [txWaveform, info, txGrid] = generateDummyFrame(enb)
-
-
-gridsize = lteDLResourceGridSize(enb);
-K = gridsize(1);    % Number of subcarriers
-L = gridsize(2);    % Number of OFDM symbols in one subframe
-P = gridsize(3);    % Number of transmit antenna ports
-
-
-%% Transmit Resource Grid
-% An empty resource grid |txGrid| is created which will be populated with
-% subframes.
-txGrid = [];
-
-%% Payload Data Generation
-% As no transport channel is used in this example the data sent over the
-% channel will be random QPSK modulated symbols. A subframe worth of
-% symbols is created so a symbol can be mapped to every resource element.
-% Other signals required for transmission and reception will overwrite
-% these symbols in the resource grid.
-
-% Number of bits needed is size of resource grid (K*L*P) * number of bits
-% per symbol (2 for QPSK)
-numberOfBits = K*L*P*2;
-
-% Create random bit stream
-inputBits = randi([0 1], numberOfBits, 1);
-
-% Modulate input bits
-inputSym = lteSymbolModulate(inputBits,'QPSK');
-
-%% Frame Generation
-% The frame will be created by generating individual subframes within a
-% loop and appending each created subframe to the previous subframes. The
-% collection of appended subframes are contained within |txGrid|. This
-% appending is repeated ten times to create a frame. When the OFDM
-% modulated time domain waveform is passed through a channel the waveform
-% will experience a delay. To avoid any samples being missed due to this
-% delay an extra subframe is generated, therefore 11 subframes are
-% generated in total. For each subframe the Cell-Specific Reference Signal
-% (Cell RS) is added. The Primary Synchronization Signal (PSS) and
-% Secondary Synchronization Signal (SSS) are also added. Note that these
-% synchronization signals only occur in subframes 0 and 5, but the LTE
-% System Toolbox takes care of generating empty signals and indices in the
-% other subframes so that the calling syntax here can be completely uniform
-% across the subframes.
-
-% For all subframes within the frame
-for sf = 0:10
-
-	% Set subframe number
-	enb.NSubframe = mod(sf,10);
-
-	% Generate empty subframe
-	subframe = lteDLResourceGrid(enb);
-
-	% Map input symbols to grid
-	subframe(:) = inputSym;
-
-	% Generate synchronizing signals
-	pssSym = ltePSS(enb);
-	sssSym = lteSSS(enb);
-	pssInd = ltePSSIndices(enb);
-	sssInd = lteSSSIndices(enb);
-
-	% Map synchronizing signals to the grid
-	subframe(pssInd) = pssSym;
-	subframe(sssInd) = sssSym;
-
-	% Generate cell specific reference signal symbols and indices
-	cellRsSym = lteCellRS(enb);
-	cellRsInd = lteCellRSIndices(enb);
-
-	% Map cell specific reference signal to grid
-	subframe(cellRsInd) = cellRsSym;
-
-	% check whether we want to generate
-
-	% Append subframe to grid to be transmitted
-	txGrid = [txGrid subframe]; %#ok
-
-end
-
-[txWaveform,info] = lteOFDMModulate(enb,txGrid);
-
-
 end
