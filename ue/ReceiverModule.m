@@ -10,6 +10,7 @@ classdef ReceiverModule
       SNRdB;
       Waveform;
       RxPw; % Wideband
+      intSigLoss;
   end
 
 methods

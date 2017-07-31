@@ -51,8 +51,7 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 			'CC', [xa + (xc-xa)/2, ya + (yc-ya)/2],...
 			'snrVals', zeros(1,length(Stations)), ...
 			'evmVals', zeros(1,length(Stations)),...
-			'rxPw',zeros(1,length(Stations)),...
-            'SINR',zeros(1,length(Stations)));
+			'rxPw',zeros(1,length(Stations)));
 
 		% move along the row for next round
 		xa = xc;
@@ -64,24 +63,23 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 		Stations(iStation).Users = ue.UeId;
         ue.ENodeB = Stations(iStation).NCellID;
 
-		for iCluster = 1:length(Clusters)
+		parfor iCluster = 1:length(Clusters)
 			%sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 			% make local copy
 			ueCopy = ue;
 			ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
 
-			%try
+			try
 				[~, ueCopy] = Channel.traverse(Stations(iStation),ueCopy);
 				Clusters(iCluster).snrVals(iStation) = ueCopy.Rx.SNRdB;
 				Clusters(iCluster).rxPw(iStation) = ueCopy.Rx.RxPw;
-                Clusters(iCluster).SINR(iStation) = ueCopy.Rx.SINR;
-				sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),...
-					num2str(ueCopy.Rx.RxPw),num2str(ueCopy.Rx.SINRdB)),'NFO');
-			%catch ME
-			%	Clusters(iCluster).snrVals(iStation) = NaN;
-            %    Clusters(iCluster).SINR(iStation) = NaN;
-			%	sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
-			%end
+				sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.Rx.SNRdB),...
+					num2str(ueCopy.Rx.RxPw)),'NFO');
+			catch ME
+				Clusters(iCluster).snrVals(iStation) = NaN;
+                Clusters(iCluster).SINR(iStation) = NaN;
+				sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
+			end
 
 
 
@@ -91,5 +89,5 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 	% Renaming to avoid fuck-ups
 	HeatMap = Clusters;
 	EnodeBs = Staitons;
-	save('HeatmapInterference_28_07_17.mat','HeatMap','EnodeBs')
+	save('Heatmap.mat','HeatMap','EnodeBs')
 end
