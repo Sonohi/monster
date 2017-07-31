@@ -251,6 +251,8 @@ classdef ChBulk_v2
 			validateChannel(obj);
 			validateStations(Stations);
 			validateUsers(Users);
+            % TODO: Validate that users are scheduled. E.g. that Users(iUser).ENodeB is not empty. required when
+            % finding the station associated with each user.
             % For each user find serving eNB
             for iUser = 1:length(Users)
                 user = Users(iUser);
@@ -272,6 +274,7 @@ classdef ChBulk_v2
 
                 % Get the combined interfering signal and its loss
                 [intSig, intSigLoss] = obj.getInterferers(Stations,station,user);
+                user.Rx.intSigLoss = intSigLoss;
                 % If no interference is compute intSig is zero
                 if intSig == 0
                    user.Rx.SINR =  user.Rx.SNR;
@@ -309,10 +312,11 @@ classdef ChBulk_v2
 				% SINR is then given as the SNR (dB difference towards noise floor)
 				% with the additional loss of the interference signal.
                 if (user.Rx.RxPw-intSigLoss) >= 0
-                    user.Rx.SINR = 10^(user.Rx.SNRdB - (user.Rx.RxPw-intSigLoss)/10);
+                    user.Rx.SINR = 10^((user.Rx.SNRdB - (user.Rx.RxPw-intSigLoss))/10);
                 else
                     user.Rx.SINR = 10^((user.Rx.RxPw-intSigLoss)/10);
                 end
+                
                     
                 Users(iUser) = user;
             end

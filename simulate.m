@@ -34,13 +34,13 @@ Results = struct(...
 % Routine for establishing offset based on whole frame.
 FrameNo = 1;
 [Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
-
+%
 if Param.generateHeatMap
 	switch Param.heatMapType
 		case 'perClass'
-			HeatMap = generateHeatMapWINNER(Transmitters, Channel, Param);
+			HeatMap = generateHeatMapClass(Transmitters, Channel, Param);
 		case 'perStation'
-			HeatMap = generateHeatMap(Transmitters, Channel, Param);
+			HeatMap = generateHeatmap(Transmitters, Channel, Param);
 		otherwise
 			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
 	end
