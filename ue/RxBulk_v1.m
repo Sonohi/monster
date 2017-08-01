@@ -21,8 +21,12 @@
         [demodBool, user.Rx] = user.Rx.demod(station);
         % demodulate received waveform, if it returns 1 (true) then demodulated
         if demodBool
+          % TODO:
+          % Estimate Channel
 
-          user.Rx = user.Rx.equalize();
+          % Equalize signal
+
+          % Compute errors
 
         else
           sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
