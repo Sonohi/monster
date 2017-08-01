@@ -154,6 +154,7 @@ classdef UserEquipment
 
 		% set RxWaveform
 		function obj = set.RxWaveform(obj, sig)
+			% TODO: remove this, use Rx module
 			obj.RxWaveform = sig;
 		end
 

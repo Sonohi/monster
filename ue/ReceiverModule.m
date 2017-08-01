@@ -44,9 +44,19 @@ methods
     obj.RxPw = RxPw;
   end
 
-  function obj = demod(obj,enbObj)
+  function [returnCode, obj] = demod(obj,enbObj)
+    % TODO: validate that a waveform exist.
     enb = cast2Struct(enbObj);
-    obj.RxSubFrame = lteOFDMDemodulate(enb, obj.Waveform);
+    RxSubFrame = lteOFDMDemodulate(enb, obj.Waveform); %#ok
+
+    if all(RxSubFrame(:) == 0) %#ok
+      returnCode = 0;
+    else
+      obj.RxSubFrame = RxSubFrame; %#ok
+      returnCode = 1;
+    end
+
+
   end
 
 	% estimate channel at the receiver
