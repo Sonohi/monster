@@ -11,6 +11,8 @@ classdef ReceiverModule
       Waveform;
       RxPw; % Wideband
       intSigLoss;
+      RxSubFrame;
+      eqGrid;
   end
 
 methods
@@ -39,6 +41,10 @@ methods
     obj.RxPw = RxPw;
   end
 
+  function obj = demod(obj,enbObj)
+    enb = cast2Struct(enbObj);
+    obj.RxSubFrame = lteOFDMDemodulate(enb, obj.Waveform);
+  end
 
 end
 

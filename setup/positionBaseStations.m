@@ -23,6 +23,8 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, Param)
   if Param.draw
       h = figure;
       %rectangle('Position',area)
+      set(gca, 'XTick', []);
+      set(gca, 'YTick', []);
       hold on
       for i = 1:length(buildings(:,1))
           x0 = buildings(i,1);

@@ -44,7 +44,7 @@ for p = 1:length(Users)
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
-		rxWaveform = Users(p).RxWaveform(1+UsersNew(p).Offset(FrameNo):end,:);
+		rxWaveform = Users(p).Rx.Waveform(1+UsersNew(p).Offset(FrameNo):end,:);
 
 		rxGrid = lteOFDMDemodulate(struct(StationsNew(iSStation)),rxWaveform);
 
