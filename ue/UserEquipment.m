@@ -24,6 +24,8 @@ classdef UserEquipment
 		WCqi;
 		RxAmpli;
 		Rx;
+		Codeword;
+		TransportBlock;
 	end
 
 	methods
@@ -55,6 +57,8 @@ classdef UserEquipment
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
 			obj.Rx = ReceiverModule(Param);
+			obj.Codeword = [];
+			obj.TransportBlock = [];
 		end
 
 		% sets user trajectory
@@ -148,14 +152,31 @@ classdef UserEquipment
 			end
 		end
 
-		% set interference value
+		% set RxWaveform
 		function obj = set.RxWaveform(obj, sig)
 			obj.RxWaveform = sig;
+		end
+
+		% set TransportBlock
+		function obj = set.TransportBlock(obj, tb)
+			obj.TransportBlock = tb;
+		end
+
+		% set Codeword
+		function obj = set.Codeword(obj, cw)
+			obj.Codeword = cw;
 		end
 
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
+		end
+
+		%Reset properties that change every round
+		function obj = resetUser(obj)
+			obj.Scheduled = false;
+			obj.Codeword = [];
+			obj.TransportBlock = [];
 		end
 
 	end
