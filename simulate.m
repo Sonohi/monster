@@ -24,12 +24,20 @@ end
 % create a string to mark the output of this simulation
 outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
-Results = struct(...
-	'sinr', zeros(Param.numUsers,Param.schRounds),...
-	'cqi', 	zeros(Param.numUsers,Param.schRounds), ...
-	'util', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
-	'power', zeros(Param.numMacro + Param.numMicro, Param.schRounds),...
-	'info', struct('utilLo', utilLo, 'utilHi', utilHi));
+% Prepare results data structures
+enbResults(1:Param.numMacro + Param.numMicro, 1:Param.schRound ) = struct(...
+	'power', 0,...
+	'util', 0
+);
+
+ueResults(1:Param.numUsers, 1:Param.schRound ) = struct(...
+	'bler', 0,...
+	'evm', 0,...
+	'throughput', 0,...
+	'sinr', 0,...
+	'snr',0
+);
+infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
 % Routine for establishing offset based on whole frame.
 FrameNo = 1;
@@ -102,8 +110,8 @@ for iRound = 0:Param.schRounds
 		pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 		% store eNodeB-space results
-		Results.util(iStation, iRound + 1) = utilPercent;
-		Results.power(iStation, iRound + 1) = pIn;
+		enbResults(iStation, iRound + 1).util = utilPercent;
+		enbResults(iStation, iRound + 1).power = pIn;
 
 		% Check utilisation metrics and change status if needed
 		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
@@ -271,8 +279,8 @@ for iRound = 0:Param.schRounds
 
 			end
 			% store UE-space results
-			Results.sinr(iUser, iRound + 1) = Users(iUser).Sinr;
-			Results.cqi(iUser, iRound + 1) = Users(iUser).WCqi;
+			ueResults(iUser, iRound + 1).sinr = Users(iUser).Sinr;
+			ueResults(iUser, iRound + 1).cqi = Users(iUser).WCqi;
 		end
 	end
 	% -----------------
@@ -309,5 +317,5 @@ for iRound = 0:Param.schRounds
 end % end round
 
 % Once this simulation set is done, save the output
-save(strcat('results/', outPrexif, '.mat'), 'Results');
+save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
 end

@@ -1,4 +1,4 @@
-function out = compileResults(Param, utilLoList, utilHiList)
+function compileResults(Param, utilLoList, utilHiList)
 
 	%   COMPILE RESULTS is a simple utility to compile all results files
 	%
@@ -12,28 +12,25 @@ function out = compileResults(Param, utilLoList, utilHiList)
 	resultFiles = dir(filePattern);
 
 	% allocate struct to hold compiled data
-	out = struct(...
-		'cqi', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds), ...
-		'sinr', zeros(length(utilLoList), length(utilHiList), Param.numUsers, Param.schRounds),...
-		'util', zeros(length(utilLoList), length(utilHiList), Param.numMacro + Param.numMicro, Param.schRounds),...
-		'power', zeros(length(utilLoList), length(utilHiList), Param.numMacro + Param.numMicro, Param.schRounds));
+	enbOut(1:length(utilLoList),1:length(utilHiList), 1:Param.numMacro + Param.numMicro,...
+		1:Param.numMacro + Param.numMicro) = struct('power', 0, 'util', 0);
 
+	ueOut(1:length(utilLoList),1:length(utilHiList), 1:Param.numMacro + Param.numMicro,...
+		1:Param.numMacro + Param.numMicro) = struct('bler', 0, 'evm', 0, 'throughput', 0, ...
+		'sinr', 0, 'snr', 0);
 
 	for iFile = 1:length(resultFiles)
 		fileName = fullfile('results', resultFiles(iFile).name);
 		fileData = load(fileName);
 
 		% get the indexes for storing based on the utilisation values
-		iUtilLo = find(utilLoList == fileData.Results.info.utilLo);
-		iUtilHi = find(utilHiList == fileData.Results.info.utilHi);
+		iUtilLo = find(utilLoList == fileData.infoResults.utilLo);
+		iUtilHi = find(utilHiList == fileData.infoResults.utilHi);
 
-		out.cqi(iUtilLo, iUtilHi, :, :) = fileData.Results.cqi(iUtilLo, iUtilHi, :,:);
-		out.sinr(iUtilLo, iUtilHi, :, :) = fileData.Results.sinr(iUtilLo, iUtilHi, :,:);
-		out.util(iUtilLo, iUtilHi, :, :) = fileData.Results.util(iUtilLo, iUtilHi, :,:);
-		out.power(iUtilLo, iUtilHi, :, :) = fileData.Results.power(iUtilLo, iUtilHi, :,:);
-
+		enbOut(iUtilLo, iUtilHi,:,:) = fileData.enbResults;
+		ueOut(iUtilLo, iUtilHi,:,:) = fileData.ueResults;
 	end
 
 	% once done, save to mat file the compiled output
-	save(strcat('results/compiled.mat'), 'out');
+	save(strcat('results/compiled.mat'), 'enbOut', 'ueOut');
 end

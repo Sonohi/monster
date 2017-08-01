@@ -7,12 +7,17 @@ function plotResults(Param, Stations, Users)
 	%   Stations		->  eNodebs details for plotting
 	%   Users				->  UEs details for plotting
 
-	source = load('results/compiled.mat', 'out');
+	enbSource = load('results/compiled.mat', 'enbOut');
+	ueSource = load('results/compiled.mat', 'ueOut');
 	roundx = 1:Param.schRounds;
-	sinr = source.out.sinr;
-	cqi = source.out.cqi;
-	util = source.out.util;
-	power = source.out.power;
+	power = [enbSource.power];
+	util = [enbSource.util];
+	bler = [ueSource.bler];
+	evm = [ueSource.evm];
+	throughput = [ueSource.throughput];
+	sinr = [ueSource.sinr];
+	snr = [ueSource.snr];
+
 	lineStyle = {'-', '--', ':', '-.'};
 	markerStyle = {'o', '+', '*', '.', 'x', 's', 'd', '^', 'v', '>', '<', 'p', 'h'};
 
