@@ -105,13 +105,6 @@ classdef UserEquipment
 			obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
-		% select CQI
-		function obj = selectCqi(obj, enbObj)
-			ue = cast2Struct(obj);
-			enb = cast2Struct(enbObj);
-			[obj.WCqi, obj.Sinr] = lteCQISelect(enb, enb.PDSCH, ue.EstChannelGrid, ue.NoiseEst);
-		end
-
 		% move User
 		function obj = move(obj, ts, Param)
 			% if we are at the beginning, don't move
