@@ -42,11 +42,11 @@ for p = 1:length(Users)
 	% Find serving station
 	iSStation = find([StationsNew.NCellID] == Users(p).ENodeB);
 	% Compute offset
-	UsersNew(p).Offset(FrameNo) = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
+	UsersNew(p).Rx.Offset(FrameNo) = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
-		rxWaveform = Users(p).Rx.Waveform(1+UsersNew(p).Offset(FrameNo):end,:);
+		rxWaveform = Users(p).Rx.Waveform(1+UsersNew(p).Rx.Offset(FrameNo):end,:);
 
 		rxGrid = lteOFDMDemodulate(struct(StationsNew(iSStation)),rxWaveform);
 

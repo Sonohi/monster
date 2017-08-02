@@ -42,7 +42,7 @@ function [Station] = schedule(Station, Users, Param, subframeNum)
 
 				if (prbsAv > 0)
 					if (~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0)
-						modOrd = cqi2modOrd(Users(iCurrUe).WCqi);
+						modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
 						prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
 						prbsSch = 0;
 						if (prbsNeed >= prbsAv)
@@ -56,7 +56,7 @@ function [Station] = schedule(Station, Users, Param, subframeNum)
 						% write to schedule struct
 						for (iPrb = 1:Station.NDLRB)
 							if (Station.Schedule(iPrb).UeId == 0)
-								mcs = cqi2mcs(Users(iCurrUe).WCqi);
+								mcs = cqi2mcs(Users(iCurrUe).Rx.WCQI);
 								for (iSch = 0:prbsSch-1)
 									Station.Schedule(iPrb + iSch) = struct('UeId', Users(iCurrUe).UeId,...
 										'Mcs', mcs, 'ModOrd', modOrd);

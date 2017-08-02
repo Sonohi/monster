@@ -4,16 +4,9 @@ classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
 		ENodeB;
-		EstChannelGrid;
-		NoiseEst;
-		NoiseFigure;
-		Offset;
 		Position;
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
-		RxWaveform;
-		RxSubFrame;
-		EqSubFrame;
 		PlotStyle;
 		Scheduled;
 		Sinr;
@@ -21,13 +14,13 @@ classdef UserEquipment
 		Trajectory;
 		UeId;
 		Velocity;
-		WCqi;
 		RxAmpli;
 		Rx;
 		Codeword;
 		CodewordInfo;
 		TransportBlock;
 		TransportBlockInfo;
+		WCQI;
 	end
 
 	methods
@@ -35,11 +28,8 @@ classdef UserEquipment
 		function obj = UserEquipment(Param, userId)
 			obj.ENodeB = 0;
 			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
-			obj.RxWaveform = zeros(Param.numSubFramesMacro * 307.2, 1);
 			obj.Scheduled = false;
 			obj.UeId = userId;
-			obj.WCqi = 6;
-			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
 				'edgeColour', [0.1 0.1 0.1], ...
@@ -86,25 +76,6 @@ classdef UserEquipment
 			obj.Scheduled = status;
 		end
 
-		% demodulate RX waveform
-		function obj = demodulateRxWaveform(obj, enbObj)
-			ue = cast2Struct(obj);
-			enb = cast2Struct(enbObj);
-			obj.RxSubFrame = lteOFDMDemodulate(enb, ue.RxWaveform);
-		end
-
-		% estimate channel
-		function obj = estimateChannel(obj, enbObj, cec)
-			ue = cast2Struct(obj);
-			enb = cast2Struct(enbObj);
-			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, ue.RxSubFrame);
-		end
-
-		% equalizer
-		function obj = equalize(obj)
-			obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
-		end
-
 		% move User
 		function obj = move(obj, ts, Param)
 			% if we are at the beginning, don't move
@@ -147,12 +118,6 @@ classdef UserEquipment
 			end
 		end
 
-		% set RxWaveform
-		function obj = set.RxWaveform(obj, sig)
-			% TODO: remove this, use Rx module
-			obj.RxWaveform = sig;
-		end
-
 		% set TransportBlock
 		function obj = set.TransportBlock(obj, tb)
 			obj.TransportBlock = tb;
@@ -182,7 +147,9 @@ classdef UserEquipment
 		function obj = resetUser(obj)
 			obj.Scheduled = false;
 			obj.Codeword = [];
+			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
+			obj.TransportBlockInfo = [];
 		end
 
 	end

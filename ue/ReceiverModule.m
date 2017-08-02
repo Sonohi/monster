@@ -13,19 +13,21 @@ classdef ReceiverModule
 		Waveform;
 		RxPw; % Wideband
 		IntSigLoss;
-		RxSubFrame;
+		Subframe;
 		EqSubFrame;
 		TransportBlock;
 		Crc;
 		PreEvm;
 		PostEvm;
 		WCQI;
+		Offset;
 	end
 
 	methods
 
 		function obj = ReceiverModule(Param)
 			obj.NoiseFigure = Param.ueNoiseFigure;
+			obj.WCQI = 3;
 		end
 
 		function obj = set.Waveform(obj,Sig)
@@ -48,15 +50,19 @@ classdef ReceiverModule
 			obj.RxPw = RxPw;
 		end
 
+		function obj = set.Offset(obj,offset)
+			obj.Offset = offset;
+		end
+
 		function [returnCode, obj] = demod(obj,enbObj)
 			% TODO: validate that a waveform exist.
 			enb = cast2Struct(enbObj);
-			RxSubFrame = lteOFDMDemodulate(enb, obj.Waveform); %#ok
+			Subframe = lteOFDMDemodulate(enb, obj.Waveform); %#ok
 
-			if all(RxSubFrame(:) == 0) %#ok
+			if all(Subframe(:) == 0) %#ok
 				returnCode = 0;
 			else
-				obj.RxSubFrame = RxSubFrame; %#ok
+				obj.Subframe = Subframe; %#ok
 				returnCode = 1;
 			end
 
@@ -68,13 +74,13 @@ classdef ReceiverModule
 			validateRxEstimateChannel(obj);
 			rx = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
-			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, rx.RxSubFrame);
+			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, rx.Subframe);
 		end
 
 		% equalize at the receiver
 		function obj = equalise(obj)
 			validateRxEqualise(obj);
-			obj.EqSubFrame = lteEqualizeMMSE(obj.RxSubFrame, obj.EstChannelGrid, obj.NoiseEst);
+			obj.EqSubFrame = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
 		function obj = estimatePdsch(obj, ue, enbObj)
@@ -99,7 +105,7 @@ classdef ReceiverModule
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.preEvm = EVM(enbObj.ReGrid,obj..RxSubFrame);
+			obj.preEvm = EVM(enbObj.ReGrid,obj.Subframe);
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.preEvm);
 			sonohilog(s,'NFO0')
 
@@ -120,7 +126,7 @@ classdef ReceiverModule
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
 	    enb = cast2Struct(enbObj)
-	    rsmeas = hRSMeasurements(enb,obj.RxSubFrame)
+	    rsmeas = hRSMeasurements(enb,obj.Subframe)
 	    obj.RSSIdBm = rsmeas.RSSIdBm;
 	    obj.RSRPdBm = rsmeas.RSRPdBm;
 	    obj.RSRQdB = rsmeas.RSRQdB;
@@ -138,7 +144,7 @@ classdef ReceiverModule
 			obj.Waveform = 0;
 			obj.RxPw = 0;
 			obj.IntSigLoss = 0;
-			obj.RxSubFrame = [];
+			obj.Subframe = [];
 			obj.EqGrid = 0;
 			obj.EstChannelGrid = [];
 			obj.EqSubFrame = [];

@@ -64,9 +64,13 @@ for iRound = 0:Param.schRounds
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
 
-	% check which UEs are associated to which eNB
-	[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
+	if mod(simTime, Param.refreshAssociationTimer) == 0
+		sonohilog(sprintf('Refreshing user association at time: %s',simTime), 'NFO');
+		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+	end
+
 
 	% Update RLC transmission queues for the users and reset the scheduled flag
 	for iUser = 1:length(Users)

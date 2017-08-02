@@ -93,7 +93,7 @@ classdef sonohieHATA
 
       rxPw = txPw-lossdB;
       % SNR = P_rx_db - P_noise_db
-      rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
+      rxNoiseFloor = 10*log10(thermalNoise)+User.Rx.NoiseFigure;
       SNR = rxPw-rxNoiseFloor;
       SNRLin = 10^(SNR/10);
       str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...

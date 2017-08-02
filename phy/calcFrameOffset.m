@@ -7,9 +7,10 @@ function [off,off_auto] = calcFrameOffset(Station, User)
 %   User								->	the UE
 %
 % 	off									-> symbols padded
+
 	enb = cast2Struct(Station);
 	ue = cast2Struct(User);
 	off = lteDLFrameOffset(enb, ue.RxWaveform);
-    %off = lteDLResourceBlockOffset(enb,ue.RxWaveform);
-    off_auto = finddelay(enb.TxWaveform(1:200),ue.RxWaveform(1:200));
+  %off = lteDLResourceBlockOffset(enb,ue.RxWaveform);
+  off_auto = finddelay(enb.TxWaveform(1:200),ue.RxWaveform(1:200));
 end

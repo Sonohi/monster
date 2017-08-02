@@ -22,7 +22,7 @@ function Users = RxBulk(Stations,Users, cec)
     end
 
     % Apply Offset
-    user.Rx.Waveform = user.Rx.Waveform(1+user.Offset(station.FrameNo):end,:);
+    user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset(station.NSubframe):end,:);
 
     % Try demodulation
     [demodBool, user.Rx] = user.Rx.demod(station);
@@ -39,7 +39,7 @@ function Users = RxBulk(Stations,Users, cec)
 			% calculate EVM
 			user.rx = calculateEvm(user.Rx, station);
 			% Finally calculate the CQI to use
-			usser.rx = selectCqi(user.rx, station);
+			user.rx = selectCqi(user.rx, station);
 
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
