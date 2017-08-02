@@ -1,13 +1,16 @@
 function [UsersNew, ChannelNew]  = syncRoutine(Stations, Users, Channel, Param, varargin)
-%% SYNC ROUTINE Computes the timing offset required for synchronization between TX and RX.
+%% SYNC ROUTINE Computes the timing offset required for synchronization between TX and RX. Should be run explicit at the start of a new temporal iteration where a discrete synchronization is required.
 % For using debug mode, forward a channel estimator, e.g.
 % Users = sync_routine(Stations, Users, Channel, Param,'Debug',ChannelEstimator);
 %
-% 1. Computes a full frame with PSS and SSS (given base station configuration)
-% 2. Traverse the channel setup and compute the offset based on the PSS and SSS
-% TODO
-% * Test with multiple antennas
-% * Add BER curve of demodulated frame.
+% 1. Traverse the channel setup (with a full frame) and compute the offset based on the PSS and SSS
+% 2. Mutates Users and Channels (saves WINNER response or fading seed)
+%
+% TODO Refactorize. Should utilize pre-existing user association and pre-existing dummyframe
+% TODO Test with multiple antennas
+% TODO Add BER curve of demodulated frame.
+% TODO Validate input 
+
 sonohilog('Performing full frame sync routine...','NFO')
 if nargin > 5
 	nVargs = length(varargin);
@@ -36,9 +39,9 @@ sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
 % Compute offset
 for p = 1:length(Users)
 	% Find serving station
-	iSStation = find([StationsNew.NCellID] == Users(p).ENodeB);
+	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeB));
 	% Compute offset
-	UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
+	UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
@@ -58,7 +61,7 @@ for p = 1:length(Users)
 		%end
 
 		% get PDSCH indexes
-		[indPdsch, info] = StationsNew(iSStation).getPDSCHindicies;
+		[indPdsch, ~] = StationsNew(iSStation).getPDSCHindicies;
 
 		eqGrid = lteEqualizeMMSE(rxGrid, estChannel, noiseEst);
 		eqGrid_r = eqGrid(indPdsch);

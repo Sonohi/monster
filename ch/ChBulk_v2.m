@@ -9,6 +9,7 @@ classdef ChBulk_v2
     Draw;
     Region;
     WINNER;
+    eHATA;
     fieldType;
   end
 
@@ -158,8 +159,8 @@ classdef ChBulk_v2
         Users = obj.WINNER.run(Stations,Users);
 
       elseif strcmp(obj.Mode,'eHATA')
-        eHATA = sonohieHATA(obj);
-        Users = eHATA.run(Stations,Users);
+        obj.eHATA = sonohieHATA(obj);
+        Users = obj.eHATA.run(Stations,Users);
       elseif strcmp(obj.Mode,'B2B')
         sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
         for iUser = 1:length(Users)

@@ -2,12 +2,14 @@ classdef sonohieHATA
 
   properties
     Channel;
+    Seed;
   end
 
   methods
 
     function obj = sonohieHATA(Channel)
       obj.Channel = Channel;
+      obj.Seed = randi(99999);
 
     end
 
@@ -42,7 +44,7 @@ classdef sonohieHATA
 
     function rx = addFading(obj,tx,info)
       cfg.SamplingRate = info.SamplingRate;
-      cfg.Seed = 1;                  % Random channel seed
+      cfg.Seed = obj.Seed;                  % Random channel seed
       cfg.NRxAnts = 1;               % 1 receive antenna
       cfg.DelayProfile = 'EPA';      % EVA delay spread
       cfg.DopplerFreq = 5;         % 120Hz Doppler frequency

@@ -68,6 +68,8 @@ for iRound = 0:Param.schRounds
 	end
 
 	% run sync routine
+    % TODO: Run syncRoutine before refresh of user association, such
+  % syncroutines determines and saves the channel seed/randomization
 	if mod(simTime, Param.syncRoutineTimer) == 0
 		sonohilog('Running sync routine', 'NFO');
 		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
