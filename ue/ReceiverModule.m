@@ -1,10 +1,11 @@
 classdef ReceiverModule
 	properties
 		NoiseFigure;
+		EstChannelGrid;
 		NoiseEst;
-		RSSI;
-		RSQI;
-		RSRP;
+		RSSIdBm;
+		RSRQdB;
+		RSRPdBm;
 		SINR;
 		SINRdB;
 		SNR;
@@ -13,7 +14,7 @@ classdef ReceiverModule
 		RxPw; % Wideband
 		IntSigLoss;
 		RxSubFrame;
-		EqGrid;
+		EqSubFrame;
 		TransportBlock;
 		Crc;
 		PreEvm;
@@ -84,13 +85,13 @@ classdef ReceiverModule
 			alloc = enb.Schedule(allocIndexes);
 
 			% Now get the PDSCH symbols out of the whole grid for this receiver
-			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, alloc);
+			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, allocIndexes);
 			[pdschRx, pdschHest] = lteExtractResources(pdschIndices, enb.ReGrid, obj.NoiseEst);
 
 			% Decode PDSCH
 			dlschBits = ltePDSCHDecode(enb, enb.pdsch, pdschRx, pdschHest, obj.NoiseEst);
 			% Decode DL-SCH
-			[rx.TransportBlock, rx.Crc] = lteDLSCHDecode(enb, enb.pdsch, lenght(ue.TransportBlock), ...
+			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.pdsch, ue.TransportBlockInfo.tbSize, ...
 				ue.Codeword);
 		end
 
@@ -115,6 +116,15 @@ classdef ReceiverModule
 			enb = cast2Struct(enbObj);
 			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.PDSCH, rx.EstChannelGrid, rx.NoiseEst);
 		end
+
+		% reference measurements
+		function obj  = referenceMeasurements(obj,enbObj)
+	    enb = cast2Struct(enbObj)
+	    rsmeas = hRSMeasurements(enb,obj.RxSubFrame)
+	    obj.RSSIdBm = rsmeas.RSSIdBm;
+	    obj.RSRPdBm = rsmeas.RSRPdBm;
+	    obj.RSRQdB = rsmeas.RSRQdB;
+	  end
 
 		function obj = resetReceiver(obj)
 			obj.NoiseEst = [];

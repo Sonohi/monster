@@ -35,6 +35,7 @@ ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
 	'throughput', 0,...
 	'sinr', 0,...
 	'snr',0);
+
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
 % Routine for establishing offset based on whole frame.
@@ -59,6 +60,7 @@ if Param.draw
 end
 
 for iRound = 0:Param.schRounds
+  % TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
 
@@ -134,7 +136,7 @@ for iRound = 0:Param.schRounds
 
 			% generate codeword (RV defaulted to 0)
 			[Users(iUser).Codeword, Users(iUser).CodewordInfo] = createCodeword(...
-				Users(iUser).TransportBlock,Users(iUser).TransportBlockInfo], Param);
+				Users(iUser).TransportBlock,Users(iUser).TransportBlockInfo, Param);
 
 			% finally, generate the arrays of complex symbols by setting the
 			% correspondent values per each eNodeB-UE pair
@@ -192,10 +194,17 @@ for iRound = 0:Param.schRounds
 
 	end
 
+	% Once all eNodeBs have created and stored their txWaveforms, we can go
+	% through the UEs and compute the rxWaveforms
+  sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
+	[Stations, Users] = Channel.traverse(Stations,Users);
+
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
-	sonohilog('Channel traverse block', 'NFO');
+	% Once all eNodeBs have created and stored their txWaveforms, we can go
+	% through the UEs and compute the rxWaveforms
+	sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode), 'NFO');
 	[Stations, Users] = Channel.traverse(Stations,Users);
 
 	% ------------

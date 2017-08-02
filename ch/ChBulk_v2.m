@@ -206,7 +206,7 @@ classdef ChBulk_v2
 
       % For user try association with all stations and select
       % the one with highest Rx power
-      sonohilog(sprintf('Finding User association for User(%i) based on Rx power...',User.UeId),'NFO')
+      sonohilog(sprintf('Finding User association for User(%i) based on Rx power...',User.UeId),'NFO0')
 
       RxPw = zeros(length(Stations),1);
       for iStation = 1:length(Stations)
@@ -238,7 +238,7 @@ classdef ChBulk_v2
 
     function Users = applyInterference(obj,Stations,Users)
       % Method used to apply the interference on a specific received waveform
-
+      sonohilog('Computing and applying interference based on station class...','NFO0')
       % Validate arguments
       validateChannel(obj);
       validateStations(Stations);
@@ -266,7 +266,7 @@ classdef ChBulk_v2
 
         % Get the combined interfering signal and its loss
         [intSig, intSigLoss] = obj.getInterferers(Stations,station,user);
-        user.Rx.intSigLoss = intSigLoss;
+        user.Rx.IntSigLoss = intSigLoss;
         % If no interference is compute intSig is zero
         if intSig == 0
           user.Rx.SINR =  user.Rx.SNR;
