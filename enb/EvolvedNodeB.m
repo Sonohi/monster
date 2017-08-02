@@ -166,45 +166,6 @@ classdef EvolvedNodeB
       [indPdsch, info] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
     end
 
-		% insert PDSCH symbols in grid at correct indexes
-		function obj = setPDSCHGrid(obj, syms)
-			enb = cast2Struct(obj);
-			regrid = enb.ReGrid;
-			% get PDSCH indexes
-			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
-
-			% pad for unused subcarriers
-			padding(1:length(indPdsch) - length(syms), 1) = 0;
-			syms = cat(1, syms, padding);
-
-			% insert symbols into grid
-			regrid(indPdsch) = syms;
-
-			% once the PDSCH is inserted, add also the PDDCH
-			% generate a random codeword to emulate the control info carried
-			pdcchParam = ltePDCCHInfo(enb);
-			ctrl = randi([0,1],pdcchParam.MTot,1);
-			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
-			indPdcch = ltePDCCHIndices(enb);
-			regrid(indPdcch) = pdcchSym;
-
-			% Set back in object
-			obj.ReGrid = regrid;
-
-		end
-
-		% modulate TX waveform
-		function obj = modulateTxWaveform(obj)
-			enb = cast2Struct(obj);
-      % Assume lossless transmitter
-			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
-      obj.WaveformInfo.SNR = 40;
-			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
-			% for power scaling
-			used = length(find(abs(enb.ReGrid) ~= 0));
-			obj.WaveformInfo.OfdmEnergyScale = used/numel(enb.ReGrid);
-		end
-
 		% create list of neighbours
 		function obj = setNeighbours(obj, Stations, Param)
 			% the macro eNodeB has neighbours all the micro
@@ -310,6 +271,21 @@ classdef EvolvedNodeB
 			enbStruct = struct(obj);
 		end
 
+		% map elements to grid and modulate waveform to transmit
+		function obj = mapGridAndModulate(obj, ix, sym, Param)
+			% the last step in the DL transmisison chain is to map the symbols to the
+			% resource grid and modulate the grid to get the TX waveform
+
+			% extract all the symbols this eNodeB has to transmit
+			symExtr = extractStationSyms(obj, ix, sym, Param);
+
+			% insert the symbols of the PDSCH into the grid
+			obj = setPDSCHGrid(obj, symExtr);
+
+			% with the grid ready, generate the TX waveform
+			obj = modulateTxWaveform(obj);
+		end
+
 	end
 
 	methods (Access = private)
@@ -322,6 +298,44 @@ classdef EvolvedNodeB
 			obj.PDSCH = ch;
 		end
 
+		% modulate TX waveform
+		function obj = modulateTxWaveform(obj)
+			enb = cast2Struct(obj);
+      % Assume lossless transmitter
+			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
+      obj.WaveformInfo.SNR = 40;
+			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
+			% for power scaling
+			used = length(find(abs(enb.ReGrid) ~= 0));
+			obj.WaveformInfo.OfdmEnergyScale = used/numel(enb.ReGrid);
+		end
+
+		% insert PDSCH symbols in grid at correct indexes
+		function obj = setPDSCHGrid(obj, syms)
+			enb = cast2Struct(obj);
+			regrid = enb.ReGrid;
+			% get PDSCH indexes
+			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+
+			% pad for unused subcarriers
+			padding(1:length(indPdsch) - length(syms), 1) = 0;
+			syms = cat(1, syms, padding);
+
+			% insert symbols into grid
+			regrid(indPdsch) = syms;
+
+			% once the PDSCH is inserted, add also the PDDCH
+			% generate a random codeword to emulate the control info carried
+			pdcchParam = ltePDCCHInfo(enb);
+			ctrl = randi([0,1],pdcchParam.MTot,1);
+			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
+			indPdcch = ltePDCCHIndices(enb);
+			regrid(indPdcch) = pdcchSym;
+
+			% Set back in object
+			obj.ReGrid = regrid;
+
+		end
 
 
 	end

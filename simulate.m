@@ -129,19 +129,19 @@ for iRound = 0:Param.schRounds
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
 			% generate transport block for the user
-			[Users(iUser).TransportBlock, TbInfo] = createTransportBlock(Stations(iServingStation),...
-				Users(iUser), Param);
+			[Users(iUser).TransportBlock, Users(iUser).TransportBlockInfo] =...
+				createTransportBlock(Stations(iServingStation), Users(iUser), Param);
 
 			% generate codeword (RV defaulted to 0)
-			[Users(iUser).Codeword, CwdInfo] = createCodeword(Users(iUser).TransportBlock,...
-				TbInfo, Param);
+			[Users(iUser).Codeword, Users(iUser).CodewordInfo] = createCodeword(...
+				Users(iUser).TransportBlock,Users(iUser).TransportBlockInfo], Param);
 
 			% finally, generate the arrays of complex symbols by setting the
 			% correspondent values per each eNodeB-UE pair
 			% setup current subframe for serving eNodeB
-			if CwdInfo.cwdSize ~= 0 % is this even necessary?
-				[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser), cwd, ...
-					CwdInfo, Param);
+			if Users(iUser).CodewordInfo.cwdSize ~= 0 % is this even necessary?
+				[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser),...
+					Users(iUser).Codeword, Users(iUser).CodewordInfo, Param);
 			end
 
 			if SymInfo.symSize > 0
@@ -151,10 +151,10 @@ for iRound = 0:Param.schRounds
 
 			% Save to data structures
 			if Param.storeTxData
-				tbMatrix(iServingStation, iUser, :) = tb;
-				tbMatrixInfo(iServingStation, iUser) = TbInfo;
-				cwdMatrix(iServingStation, iUser, :) = cwd;
-				cwdMatrixInfo(iServingStation, iUser) = CwdInfo;
+				tbMatrix(iServingStation, iUser, :) = Users(iUser).TransportBlock;
+				tbMatrixInfo(iServingStation, iUser) = Users(iUser).TransportBlockInfo;
+				cwdMatrix(iServingStation, iUser, :) = Users(iUser).Codeword;
+				cwdMatrixInfo(iServingStation, iUser) = Users(iUser).CodewordInfo;
 			end
 
 		end
@@ -167,17 +167,8 @@ for iRound = 0:Param.schRounds
 	% ENODEB GRID MAPPING START
 	% -------------------------
 	for iStation = 1:length(Stations)
-		% the last step in the DL transmisison chain is to map the symbols to the
-		% resource grid and modulate the grid to get the TX waveform
-
-		% extract all the symbols this eNodeB has to transmit
-		syms = extractStationSyms(Stations(iStation), iStation, symMatrix, Param);
-
-		% insert the symbols of the PDSCH into the grid
-		Stations(iStation) = setPDSCHGrid(Stations(iStation), syms);
-
-		% with the grid ready, generate the TX waveform
-		Stations(iStation) = modulateTxWaveform(Stations(iStation));
+		Stations(iStation) = mapGridAndModulate(Stations(iStation), iStation, ...
+			symMatrix, Param);
 	end
 	% -----------------------
 	% ENODEB GRID MAPPING END

@@ -25,7 +25,9 @@ classdef UserEquipment
 		RxAmpli;
 		Rx;
 		Codeword;
+		CodewordInfo;
 		TransportBlock;
+		TransportBlockInfo;
 	end
 
 	methods
@@ -162,9 +164,19 @@ classdef UserEquipment
 			obj.TransportBlock = tb;
 		end
 
+		% set TransportBlockInfo
+		function obj = set.TransportBlockInfo(obj, info)
+			obj.TransportBlockInfo = info;
+		end
+
 		% set Codeword
 		function obj = set.Codeword(obj, cw)
 			obj.Codeword = cw;
+		end
+
+		% set CodewordInfo
+		function obj = set.CodewordInfo(obj, info)
+			obj.CodewordInfo = info;
 		end
 
 		% cast object to struct
