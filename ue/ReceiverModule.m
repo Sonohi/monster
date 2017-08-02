@@ -1,21 +1,22 @@
 classdef ReceiverModule
   properties
-      NoiseFigure;
-			NoiseEst;
-      RSSI;
-      RSQI;
-      RSRP;
-      SINR;
-      SINRdB;
-      SNR;
-      SNRdB;
-      Waveform;
-      RxPw; % Wideband
-      IntSigLoss;
-      RxSubFrame;
-      EqGrid;
-			TransportBlock;
-			Crc;
+    NoiseFigure;
+    EstChannelGrid;
+    NoiseEst;
+    RSSIdBm;
+    RSRQdB;
+    RSRPdBm;
+    SINR;
+    SINRdB;
+    SNR;
+    SNRdB;
+    Waveform;
+    RxPw; % Wideband
+    IntSigLoss;
+    RxSubFrame;
+    EqSubFrame;
+    TransportBlock;
+    Crc;
   end
 
 methods
@@ -87,16 +88,16 @@ methods
 		% Decode PDSCH
 		dlschBits = ltePDSCHDecode(enb, enb.pdsch, pdschRx, pdschHest, obj.NoiseEst);
 		% Decode DL-SCH
-		[rx.TransportBlock, rx.Crc] = lteDLSCHDecode(enb, enb.pdsch, lenght(ue.TransportBlock), ...
+		[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.pdsch, lenght(ue.TransportBlock), ...
 		 	ue.Codeword);
 
 	end
 
 	function obj = resetReceiver(obj)
 		obj.NoiseEst = [];
-		obj.RSSI = 0;
-		obj.RSQI = 0;
-		obj.RSRP = 0;
+		obj.RSSIdBm = 0;
+		obj.RSRQdB = 0;
+		obj.RSRPdBm = 0;
 		obj.SINR = 0;
 		obj.SINRdB = 0;
 		obj.SNR = 0;
@@ -105,12 +106,20 @@ methods
 		obj.RxPw = 0;
 		obj.IntSigLoss = 0;
 		obj.RxSubFrame = [];
-		obj.EqGrid = 0;
+		obj.EqSubFrame = 0;
 		obj.EstChannelGrid = [];
 		obj.EqSubFrame = [];
 		obj.TransportBlock = [];
 		obj.Crc = [];
 	end
+
+  function obj  = referenceMeasurements(obj,enbObj)
+    enb = cast2Struct(enbObj)
+    rsmeas = hRSMeasurements(enb,obj.RxSubFrame)
+    obj.RSSIdBm = rsmeas.RSSIdBm;
+    obj.RSRPdBm = rsmeas.RSRPdBm;
+    obj.RSRQdB = rsmeas.RSRQdB;
+  end
 
 end
 
