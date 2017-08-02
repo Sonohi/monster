@@ -35,6 +35,8 @@ classdef EvolvedNodeB
 		DeltaP;
 		Psleep;
 		Frame;
+		FrameInfo;
+		FrameGrid;
 		PBCH;
 	end
 
@@ -79,6 +81,7 @@ classdef EvolvedNodeB
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
+			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(obj);
 		end
 
 		% Posiiton base station

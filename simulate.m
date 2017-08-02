@@ -38,16 +38,12 @@ ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
 
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
-% Routine for establishing offset based on whole frame.
-FrameNo = 1;
-[Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
-%
 if Param.generateHeatMap
 	switch Param.heatMapType
 		case 'perClass'
-			HeatMap = generateHeatMapClass(Transmitters, Channel, Param);
+			HeatMap = generateHeatMapClass(Stations, Channel, Param);
 		case 'perStation'
-			HeatMap = generateHeatmap(Transmitters, Channel, Param);
+			HeatMap = generateHeatmap(Stations, Channel, Param);
 		otherwise
 			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
 	end
@@ -67,8 +63,14 @@ for iRound = 0:Param.schRounds
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
-		sonohilog(sprintf('Refreshing user association at time: %s',simTime), 'NFO');
+		sonohilog('Refreshing user association', 'NFO');
 		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+	end
+
+	% run sync routine
+	if mod(simTime, Param.syncRoutineTimer) == 0
+		sonohilog('Running sync routine', 'NFO');
+		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
 	end
 
 
@@ -229,6 +231,15 @@ for iRound = 0:Param.schRounds
 		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		[hGrids(1), hGrids(2)] = plotReGrids(Users);
 	end
+
+	% --------------------
+	% RESET FOR NEXT ROUND
+	% --------------------
+	sonohilog('Resetting objects for next simulation round', 'NFO');
+	for iUser = 1:length(USers)
+		Users(iUser) = Users(iUSer).resetUser();
+	end
+
 
 
 	% TODO:

@@ -6,7 +6,7 @@ function validateRxEstimateChannel(rx)
 	%   rx		->  test
 
 	validateattributes(rx,{'ReceiverModule'},{'size',[1,1]});
-	if sum(rx.RxSubFrame == 0)
+	if sum(rx.Subframe) == 0
 		sonohiLog('Receiver has empty parameters for estimating the channel', 'ERR');
 	end
 end

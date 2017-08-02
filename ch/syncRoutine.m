@@ -1,7 +1,7 @@
-function [UsersNew, StationsNew, ChannelNew]  = syncRoutine(FrameNo, Stations, Users, Channel, Param, varargin)
+function [UsersNew, ChannelNew]  = syncRoutine(Stations, Users, Channel, Param, varargin)
 %% SYNC ROUTINE Computes the timing offset required for synchronization between TX and RX.
 % For using debug mode, forward a channel estimator, e.g.
-% Users = sync_routine(FrameNo,Stations, Users, Channel, Param,'Debug',ChannelEstimator);
+% Users = sync_routine(Stations, Users, Channel, Param,'Debug',ChannelEstimator);
 %
 % 1. Computes a full frame with PSS and SSS (given base station configuration)
 % 2. Traverse the channel setup and compute the offset based on the PSS and SSS
@@ -21,20 +21,16 @@ end
 UsersNew = Users;
 StationsNew = Stations;
 
-% Generate dummy data for all stations, e.g. one full frame
-for i = 1:length(StationsNew)
-	[StationsNew(i).TxWaveform, StationsNew(i).WaveformInfo, StationsNew(i).ReGrid] = ...
-		generateDummyFrame(StationsNew(i));
-	StationsNew(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
+% In the stations copy, set the txWaveform etc from the dummy frames info
+for iStation = 1:length(StationsNew)
+	StationsNew(iStation).TxWaveform = StationsNew(iStation).Frame;
+	StationsNew(iStation).WaveformInfo = StationsNew(iStation).FrameInfo;
+	StationsNew(iStation).ReGrid = StationsNew(iStation).FrameGrid;
 end
 
-% Initial association.
-% check which UEs are associated to which eNB
-[Users, StationsNew] = refreshUsersAssociation(Users, StationsNew, Channel, Param);
 
 % Traverse channel
-
- sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
+sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
 [StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users);
 
 % Compute offset
@@ -42,11 +38,11 @@ for p = 1:length(Users)
 	% Find serving station
 	iSStation = find([StationsNew.NCellID] == Users(p).ENodeB);
 	% Compute offset
-	UsersNew(p).Rx.Offset(FrameNo) = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
+	UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(StationsNew(iSStation)), Users(p).Rx.Waveform);
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
-		rxWaveform = Users(p).Rx.Waveform(1+UsersNew(p).Rx.Offset(FrameNo):end,:);
+		rxWaveform = Users(p).Rx.Waveform(1+UsersNew(p).Rx.Offset:end,:);
 
 		rxGrid = lteOFDMDemodulate(struct(StationsNew(iSStation)),rxWaveform);
 

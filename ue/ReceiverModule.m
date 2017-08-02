@@ -88,6 +88,7 @@ classdef ReceiverModule
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
 			allocIndexes = find([enb.Schedule.UeId] == ue.UeId);
+			allocIndexes = allocIndexes';
 			alloc = enb.Schedule(allocIndexes);
 
 			% Now get the PDSCH symbols out of the whole grid for this receiver
@@ -95,9 +96,9 @@ classdef ReceiverModule
 			[pdschRx, pdschHest] = lteExtractResources(pdschIndices, enb.ReGrid, obj.NoiseEst);
 
 			% Decode PDSCH
-			dlschBits = ltePDSCHDecode(enb, enb.pdsch, pdschRx, pdschHest, obj.NoiseEst);
+			dlschBits = ltePDSCHDecode(enb, enb.PDSCH, pdschRx, pdschHest, obj.NoiseEst);
 			% Decode DL-SCH
-			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.pdsch, ue.TransportBlockInfo.tbSize, ...
+			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.PDSCH, ue.TransportBlockInfo.tbSize, ...
 				ue.Codeword);
 		end
 
@@ -118,20 +119,25 @@ classdef ReceiverModule
 
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
-			rx = cast2Struct(obj);
 			enb = cast2Struct(enbObj);
 			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.PDSCH, rx.EstChannelGrid, rx.NoiseEst);
 		end
 
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
-	    enb = cast2Struct(enbObj)
-	    rsmeas = hRSMeasurements(enb,obj.Subframe)
+	    enb = cast2Struct(enbObj);
+	    rsmeas = hRSMeasurements(enb,obj.Subframe);
 	    obj.RSSIdBm = rsmeas.RSSIdBm;
 	    obj.RSRPdBm = rsmeas.RSRPdBm;
 	    obj.RSRQdB = rsmeas.RSRQdB;
 	  end
 
+		% cast object to struct
+		function objstruct = cast2Struct(obj)
+			objstruct = struct(obj);
+		end
+
+		% Reset receiver
 		function obj = resetReceiver(obj)
 			obj.NoiseEst = [];
 			obj.RSSI = 0;

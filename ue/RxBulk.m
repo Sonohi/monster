@@ -22,7 +22,7 @@ function Users = RxBulk(Stations,Users, cec)
     end
 
     % Apply Offset
-    user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset(station.NSubframe):end,:);
+    user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
 
     % Try demodulation
     [demodBool, user.Rx] = user.Rx.demod(station);
@@ -31,15 +31,15 @@ function Users = RxBulk(Stations,Users, cec)
 			% Conduct reference measurements
       user.Rx = user.Rx.referenceMeasurements(station);
       % Estimate Channel
-			user.Rx = estimateChannel(user.Rx, station, cec);
+			user.Rx = user.Rx.estimateChannel(station, cec);
       % Equalize signal
-			user.Rx = equalise(user.Rx);
+			user.Rx = user.Rx.equalise();
       % Estimate PDSCH (main data channel)
-			user.Rx = estimatePdsch(user.Rx, user, station);
+			user.Rx = user.Rx.estimatePdsch(user, station);
 			% calculate EVM
-			user.rx = calculateEvm(user.Rx, station);
+			user.rx = user.Rx.calculateEvm(station);
 			% Finally calculate the CQI to use
-			user.rx = selectCqi(user.rx, station);
+			user.rx = user.Rx.selectCqi(station);
 
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');

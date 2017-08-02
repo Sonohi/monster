@@ -91,6 +91,7 @@ for sf = 0:10
 end
 
 [txWaveform,info] = lteOFDMModulate(enb,txGrid);
+info.OfdmEnergyScale = 1;
 
 
 end
