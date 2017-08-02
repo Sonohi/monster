@@ -28,6 +28,8 @@ function Users = RxBulk(Stations,Users, cec)
     [demodBool, user.Rx] = user.Rx.demod(station);
     % demodulate received waveform, if it returns 1 (true) then demodulated
     if demodBool
+			% Conduct reference measurements
+      user.Rx = user.Rx.referenceMeasurements(station);
       % Estimate Channel
 			user.Rx = estimateChannel(user.Rx, station, cec);
       % Equalize signal

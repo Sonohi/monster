@@ -194,11 +194,6 @@ for iRound = 0:Param.schRounds
 
 	end
 
-	% Once all eNodeBs have created and stored their txWaveforms, we can go
-	% through the UEs and compute the rxWaveforms
-  sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
-	[Stations, Users] = Channel.traverse(Stations,Users);
-
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
