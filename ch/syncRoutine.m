@@ -8,7 +8,7 @@ function [UsersNew, StationsNew, ChannelNew]  = syncRoutine(FrameNo, Stations, U
 % TODO
 % * Test with multiple antennas
 % * Add BER curve of demodulated frame.
-
+sonohilog('Performing full frame sync routine...','NFO')
 if nargin > 5
 	nVargs = length(varargin);
 	for k = 1:nVargs
@@ -33,6 +33,8 @@ end
 [Users, StationsNew] = refreshUsersAssociation(Users, StationsNew, Channel, Param);
 
 % Traverse channel
+
+ sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
 [StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users);
 
 % Compute offset
