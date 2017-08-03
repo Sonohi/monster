@@ -6,12 +6,12 @@ function [ h1, h2 ] = plotConstDiagram_rx(Stations,Users)
             
             for pp = 1:length(Users)
                 hs(pp)=subplot(5,3,pp);
-                dims = size(Users(pp).RxSubFrame);
+                dims = size(Users(pp).Rx.Subframe);
                 sps = 1;
                 if dims ~= [0 0]
                     iServingStation = find([Stations.NCellID] == Users(pp).ENodeB);
                     [indPdsch, info] = Stations(iServingStation).getPDSCHindicies;
-                    est_SubFrame = Users(pp).RxSubFrame(indPdsch);
+                    est_SubFrame = Users(pp).Rx.Subframe(indPdsch);
                     plot(est_SubFrame,'.')
                     title(['User: ',num2str(pp)],'Fontsize',8);
                     ylabel('Quadrature');
@@ -28,12 +28,12 @@ function [ h1, h2 ] = plotConstDiagram_rx(Stations,Users)
             
             for pp = 1:length(Users)
                 hs(pp)=subplot(5,3,pp);
-                dims = size(Users(pp).EqSubFrame);
+                dims = size(Users(pp).Rx.EqSubframe);
                 sps = 1;
                 if dims ~= [0 0]
                     iServingStation = find([Stations.NCellID] == Users(pp).ENodeB);
                     [indPdsch, info] = Stations(iServingStation).getPDSCHindicies;
-                    est_SubFrame = Users(pp).EqSubFrame(indPdsch);
+                    est_SubFrame = Users(pp).Rx.EqSubframe(indPdsch);
                     plot(est_SubFrame,'.')
                     title(['User: ',num2str(pp)],'Fontsize',8);
                     ylabel('Quadrature');

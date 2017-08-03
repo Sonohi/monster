@@ -36,27 +36,27 @@ ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
 	'throughput', 0,...
 	'sinr', 0,...
 	'snr',0,...
-	'rxPosition', [],
+	'rxPosition', [],...
 	'txPosition', []);
 
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
-if Param.generateHeatMap
-	switch Param.heatMapType
-		case 'perClass'
-			HeatMap = generateHeatMapClass(Stations, Channel, Param);
-		case 'perStation'
-			HeatMap = generateHeatmap(Stations, Channel, Param);
-		otherwise
-			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
-	end
-else
-	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
-end
-
-if Param.draw
-	drawHeatMap(HeatMap, Stations);
-end
+% if Param.generateHeatMap
+% 	switch Param.heatMapType
+% 		case 'perClass'
+% 			HeatMap = generateHeatMapClass(Stations, Channel, Param);
+% 		case 'perStation'
+% 			HeatMap = generateHeatmap(Stations, Channel, Param);
+% 		otherwise
+% 			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
+% 	end
+% else
+% 	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
+% end
+% 
+% if Param.draw
+% 	drawHeatMap(HeatMap, Stations);
+% end
 
 for iRound = 0:Param.schRounds
   % TODO: Add log print that states which round is being simulated.
@@ -73,10 +73,10 @@ for iRound = 0:Param.schRounds
 	% run sync routine
     % TODO: Run syncRoutine before refresh of user association, such
   % syncroutines determines and saves the channel seed/randomization
-	if mod(simTime, Param.syncRoutineTimer) == 0
+	%if mod(simTime, Param.syncRoutineTimer) == 0
 		sonohilog('Running sync routine', 'NFO');
 		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
-	end
+	%end
 
 
 	% Update RLC transmission queues for the users and reset the scheduled flag
@@ -236,22 +236,13 @@ for iRound = 0:Param.schRounds
 	% RESET FOR NEXT ROUND
 	% --------------------
 	sonohilog('Resetting objects for next simulation round', 'NFO');
-	for iUser = 1:length(USers)
-		Users(iUser) = Users(iUSer).resetUser();
+	for iUser = 1:length(Users)
+		Users(iUser) = Users(iUser).resetUser();
+    Channel = Channel.resetChannel();
 	end
-
-
-
-	% TODO:
-	% Decide how to reconfigure channel model. e.g. each scheduling
-	% round?
-	% Should the model configuration be identical (only update of
-	% layout) or configured upon new?
-	Channel.h = [];
-	[Users, Transmitters,Channel] = syncRoutine(FrameNo, Stations, Users, Channel, Param);
 
 end % end round
 
 % Once this simulation set is done, save the output
-save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
+%save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
 end

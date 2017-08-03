@@ -11,7 +11,7 @@ classdef ReceiverModule
 		SNR;
 		SNRdB;
 		Waveform;
-		RxPw; % Wideband
+		RxPwdBm; % Wideband
 		IntSigLoss;
 		Subframe;
 		EqSubframe;
@@ -48,8 +48,8 @@ classdef ReceiverModule
 			obj.SNRdB = 10*log10(SNR);
 		end
 
-		function obj = set.RxPw(obj,RxPw)
-			obj.RxPw = RxPw;
+		function obj = set.RxPwdBm(obj,RxPwdBm)
+			obj.RxPwdBm = RxPwdBm;
 		end
 
 		function obj = set.Offset(obj,offset)
@@ -131,11 +131,22 @@ classdef ReceiverModule
 
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
-	    enb = cast2Struct(enbObj);
-	    rsmeas = hRSMeasurements(enb,obj.Subframe);
-	    obj.RSSIdBm = rsmeas.RSSIdBm;
-	    obj.RSRPdBm = rsmeas.RSRPdBm;
-	    obj.RSRQdB = rsmeas.RSRQdB;
+			enb = cast2Struct(enbObj);
+
+      %       rxSig = setPower(obj.Waveform,obj.RxPwdBm);
+      %rxSig = obj.Waveform*sqrt(10^((obj.RxPwdBm-30)/10));
+      %    Subframe = lteOFDMDemodulate(enb, rxSig); %#ok
+      %  rsmeas = hRSMeasurements(enb, Subframe);
+
+      %       RSSI is the average power of OFDM symbols containing the reference
+      %       signals
+      %       RxPw is the wideband power, e.g. the received power for the whole
+      %       subframe, the RSSI must be the ratio of OFDM symbols occupying the
+      %       subframe scaled with the wideband received power.
+      %       TODO: Replace this approximation with correct calculation on
+      %       demodulated grid.
+      RSSI = 0.92*10^((obj.RxPwdBm-30)/10); %mWatts
+      obj.RSSIdBm = 10*log10(RSSI)+30;
 	  end
 
 		% cast object to struct
@@ -154,7 +165,7 @@ classdef ReceiverModule
 			obj.SNR = 0;
 			obj.SNRdB = 0;
 			obj.Waveform = 0;
-			obj.RxPw = 0;
+			obj.RxPwdBm = 0;
 			obj.IntSigLoss = 0;
 			obj.Subframe = [];
 			obj.EstChannelGrid = [];
