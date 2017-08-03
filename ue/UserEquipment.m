@@ -150,7 +150,7 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			obj.rx = obj.rx.resetReceiver();
+			obj.Rx = obj.Rx.resetReceiver();
 		end
 
 	end

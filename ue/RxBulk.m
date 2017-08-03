@@ -38,8 +38,11 @@ function Users = RxBulk(Stations,Users, cec)
 			user.Rx = user.Rx.estimatePdsch(user, station);
 			% calculate EVM
 			user.Rx = user.Rx.calculateEvm(station);
-			% Finally calculate the CQI to use
+			% Calculate the CQI to use
 			user.Rx = user.Rx.selectCqi(station);
+			% Log block reception stats
+			user.Rx = user.Rx.logBlockReception(user);
+			% Update parent structure
 			Users(iUser) = user;
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');

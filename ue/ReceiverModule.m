@@ -23,6 +23,9 @@ classdef ReceiverModule
 		Offset;
 		BLER;
 		Throughput;
+		SchIndexes;
+		Blocks;
+		Bits;
 	end
 
 	methods
@@ -30,6 +33,8 @@ classdef ReceiverModule
 		function obj = ReceiverModule(Param)
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.WCQI = 3;
+			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
+			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 		end
 
 		function obj = set.Waveform(obj,Sig)
@@ -89,11 +94,11 @@ classdef ReceiverModule
 			validateRxEstimatePdsch(obj);
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
-			allocIndexes = find([enb.Schedule.UeId] == ue.UeId);
-			allocIndexes = allocIndexes';
+			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
+			obj.SchIndexes = obj.SchIndexes';
 
 			% Now get the PDSCH symbols out of the whole grid for this receiver
-			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, allocIndexes);
+			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, obj.SchIndexes);
 			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.ReGrid);
 
 			% Decode PDSCH
@@ -138,6 +143,31 @@ classdef ReceiverModule
 	    obj.RSRQdB = rsmeas.RSRQdB;
 	  end
 
+		% Block reception
+		function obj  = logBlockReception(obj,ueObj)
+			validateRxLogBlockReception(obj);
+			% increase counters for BLER
+			if obj.Crc
+				obj.Blocks.ok = obj.Blocks.ok + 1;
+			else
+				obj.Blocks.err = obj.Blocks.err + 1;
+			end
+			obj.Blocks.tot = obj.Blocks.tot + 1;
+
+			%TB comparison and bit stats logging
+% 			diff = bitxor(obj.TransportBlock, ueObj.TransportBlock);
+% 			obj.Bits.tot = obj.Bits.tot + length(diff);
+% 			obj.Bits.err = obj.Bits.err + sum(diff);
+% 			obj.Bits.ok = obj.Bits.ok + length(diff) - sum(diff);
+	  end
+
+		% Error bits
+		function obj  = calculateThroughput(obj,enbObj)
+			validateRxCalculateThroughput(obj);
+	    enb = cast2Struct(enbObj);
+			%
+	  end
+
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
@@ -163,8 +193,9 @@ classdef ReceiverModule
 			obj.Crc = [];
 			obj.PreEvm = 0;
 			obj.PostEvm = 0;
-			BLER = 0;
-			Throughput = 0;
+			obj.BLER = 0;
+			obj.Throughput = 0;
+			obj.SchIndexes = [];
 		end
 
 	end
