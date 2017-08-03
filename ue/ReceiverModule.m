@@ -14,13 +14,15 @@ classdef ReceiverModule
 		RxPw; % Wideband
 		IntSigLoss;
 		Subframe;
-		EqSubFrame;
+		EqSubframe;
 		TransportBlock;
 		Crc;
 		PreEvm;
 		PostEvm;
 		WCQI;
 		Offset;
+		BLER;
+		Throughput;
 	end
 
 	methods
@@ -80,7 +82,7 @@ classdef ReceiverModule
 		% equalize at the receiver
 		function obj = equalise(obj)
 			validateRxEqualise(obj);
-			obj.EqSubFrame = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
+			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
 		function obj = estimatePdsch(obj, ue, enbObj)
@@ -92,7 +94,7 @@ classdef ReceiverModule
 
 			% Now get the PDSCH symbols out of the whole grid for this receiver
 			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, allocIndexes);
-			[pdschRx, pdschHest] = lteExtractResources(pdschIndices, enb.ReGrid);
+			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.ReGrid);
 
 			% Decode PDSCH
 			dlschBits = ltePDSCHDecode(enb, enb.PDSCH, pdschRx);
@@ -110,21 +112,21 @@ classdef ReceiverModule
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.preEvm = EVM(enbObj.ReGrid,obj.Subframe);
-			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.preEvm);
+			obj.PreEvm = EVM(enbObj.ReGrid,obj.Subframe);
+			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
 			sonohilog(s,'NFO0')
 
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.postEvm = EVM(enbObj.ReGrid,obj.EqSubFrame);
-			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.postEvm);
-			sonohilog(s,'NFO')
+			obj.PostEvm = EVM(enbObj.ReGrid,obj.EqSubframe);
+			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
+			sonohilog(s,'NFO0')
 		end
 
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
-			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.PDSCH, rx.EstChannelGrid, rx.NoiseEst);
+			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
 		% reference measurements
@@ -144,9 +146,9 @@ classdef ReceiverModule
 		% Reset receiver
 		function obj = resetReceiver(obj)
 			obj.NoiseEst = [];
-			obj.RSSI = 0;
-			obj.RSQI = 0;
-			obj.RSRP = 0;
+			obj.RSSIdBm = 0;
+			obj.RSRQdB = 0;
+			obj.RSRPdBm = 0;
 			obj.SINR = 0;
 			obj.SINRdB = 0;
 			obj.SNR = 0;
@@ -155,13 +157,14 @@ classdef ReceiverModule
 			obj.RxPw = 0;
 			obj.IntSigLoss = 0;
 			obj.Subframe = [];
-			obj.EqGrid = 0;
 			obj.EstChannelGrid = [];
-			obj.EqSubFrame = [];
+			obj.EqSubframe = [];
 			obj.TransportBlock = [];
 			obj.Crc = [];
-			obj.preEvm = 0;
-			obj.preEvm = 0;
+			obj.PreEvm = 0;
+			obj.PostEvm = 0;
+			BLER = 0;
+			Throughput = 0;
 		end
 
 	end

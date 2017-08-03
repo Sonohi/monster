@@ -37,10 +37,10 @@ function Users = RxBulk(Stations,Users, cec)
       % Estimate PDSCH (main data channel)
 			user.Rx = user.Rx.estimatePdsch(user, station);
 			% calculate EVM
-			user.rx = user.Rx.calculateEvm(station);
+			user.Rx = user.Rx.calculateEvm(station);
 			% Finally calculate the CQI to use
-			user.rx = user.Rx.selectCqi(station);
-
+			user.Rx = user.Rx.selectCqi(station);
+			Users(iUser) = user;
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
       continue;

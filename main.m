@@ -21,7 +21,7 @@ clc;
 close all;
 
 %log
-setpref('sonohiLog','logLevel',5)
+setpref('sonohiLog','logLevel',4)
 
 % Load simulation parameters from config file
 try
