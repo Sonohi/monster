@@ -4,9 +4,9 @@ function [ h1, h2 ] = plotReGrids(Users)
             
             for pp = 1:length(Users)
                 hs(pp)=subplot(5,3,pp);
-                dims = size(Users(pp).RxSubFrame);
+                dims = size(Users(pp).Rx.Subframe);
                 if dims ~= [0 0]
-                    surf(20*log10(abs(Users(pp).RxSubFrame)));
+                    surf(20*log10(abs(Users(pp).Rx.Subframe)));
                     title(['User: ',num2str(pp)],'Fontsize',8);
                     ylabel('Subcarrier');
                     xlabel('Symbol');
@@ -24,9 +24,9 @@ function [ h1, h2 ] = plotReGrids(Users)
             
             for pp = 1:length(Users)
                 hs(pp)=subplot(5,3,pp);
-                dims = size(Users(pp).RxSubFrame);
+                dims = size(Users(pp).Rx.Subframe);
                 if dims ~= [0 0]
-                    surf(20*log10(abs(Users(pp).RxSubFrame)));
+                    surf(20*log10(abs(Users(pp).Rx.Subframe)));
                     title(['User: ',num2str(pp)],'Fontsize',8);
                     ylabel('Subcarrier');
                     xlabel('Symbol');

@@ -26,16 +26,16 @@ classdef sonohieHATA
           RxSig = obj.addFading([...
             station.TxWaveform;zeros(25,1)],station.WaveformInfo);
 
-          [RxSig, SNRLin, rxPw] = obj.addPathlossAwgn(...
+          [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,RxSig);
 
         elseif strcmp(obj.Channel.fieldType,'pathloss')
-          [RxSig, SNRLin, rxPw] = obj.addPathlossAwgn(...
+          [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,station.TxWaveform);
 
         end
         user.Rx.SNR = SNRLin;
-        user.Rx.RxPw = rxPw;
+        user.Rx.RxPwdBm = rxPwdBm;
         user.Rx.Waveform = RxSig;
         % Write changes to user object in array.
         Users(find([Users.UeId] == Pairing(2,i))) = user; %#ok
@@ -59,7 +59,7 @@ classdef sonohieHATA
       rx = lteFadingChannel(cfg,tx);
     end
 
-    function [rxSig, SNRLin, rxPw] = addPathlossAwgn(obj,Station,User,txSig,varargin)
+    function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj,Station,User,txSig,varargin)
       thermalNoise = obj.Channel.ThermalNoise(Station.NDLRB);
       hbPos = Station.Position;
       hmPos = User.Position;
@@ -93,13 +93,13 @@ classdef sonohieHATA
 
       txPw = 10*log10(Station.Pmax)+30; %dBm.
 
-      rxPw = txPw-lossdB;
+      rxPwdBm = txPw-lossdB; %dBm
       % SNR = P_rx_db - P_noise_db
       rxNoiseFloor = 10*log10(thermalNoise)+User.Rx.NoiseFigure;
-      SNR = rxPw-rxNoiseFloor;
+      SNR = rxPwdBm-rxNoiseFloor;
       SNRLin = 10^(SNR/10);
       str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
-        Station.NCellID,User.UeId,num2str(distance),num2str(SNR),num2str(rxPw));
+        Station.NCellID,User.UeId,num2str(distance),num2str(SNR),num2str(rxPwdBm));
       sonohilog(str1,'NFO0');
 
       %% Apply SNR

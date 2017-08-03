@@ -129,12 +129,12 @@ classdef sonohiWINNER
                     % Normalize signal and add loss as AWGN based on
                     % noise floor
                     rxSigNorm = rxSig.*10^(lossdB/20);
-                    [rxSigNorm, SNRLin, rxPw] = obj.addPathlossAwgn(Station, User, rxSigNorm, lossdB);
+                    [rxSigNorm, SNRLin, RxPwdBm] = obj.addPathlossAwgn(Station, User, rxSigNorm, lossdB);
 
                     %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
 
                     User.Rx.SNR = SNRLin;
-                    User.Rx.RxPw = rxPw;
+                    User.Rx.RxPwdBm = rxPwdBm;
                     User.Rx.Waveform = rxSigNorm;
 
 
@@ -146,7 +146,7 @@ classdef sonohiWINNER
         end
 
 
-       function [rxSig, SNRLin, rxPw] = addPathlossAwgn(obj, Station, User, txSig, lossdB)
+       function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, Station, User, txSig, lossdB)
             % Compute thermalnoise based on bandwidth
             thermalNoise = obj.Channel.ThermalNoise(Station.NDLRB);
             % Get distance of Tx - Rx
@@ -156,10 +156,10 @@ classdef sonohiWINNER
             txPw = 10*log10(Station.Pmax)+30; %dBm.
 
             % Setup link budget
-            rxPw = txPw-lossdB;
+            rxPwdBm = txPw-lossdB; %dBm
             % SNR = P_rx_db - P_noise_db
             rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
-            SNR = rxPw-rxNoiseFloor;
+            SNR = rxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
             str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
                 Station.NCellID,User.UeId,num2str(distance),num2str(SNR));

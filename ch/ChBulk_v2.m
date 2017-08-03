@@ -43,7 +43,7 @@ classdef ChBulk_v2
   end
 
   methods(Access = private)
-    function [intSig, intSigLoss] = getInterferers(obj,Stations,station,user)
+    function [intSig, intSigdBm] = getInterferers(obj,Stations,station,user)
 
       % Get power of each station that is not the serving station and
       % compute loss based on pathloss or in the case of winner on
@@ -66,16 +66,15 @@ classdef ChBulk_v2
           user.Rx.Waveform = [];
 
           Users = eHATA.run(StationC,user);
-          RxPw(iStation) = Users.Rx.RxPw;
+          RxPw(iStation) = Users.Rx.RxPwdBm;
           rxSignorm = Users.Rx.Waveform;
 
           % Set correct power of all signals, rxSigNorm is the signal
           % normalized. rxPw contains the estimated rx power based
           % on tx power and the link budget
-          lossdB = 10*log10(bandpower(rxSignorm))-RxPw(iStation);
-          rxSig(:,iStation) =  rxSignorm.*10^(-lossdB/20); %#ok
+          rxSig(:,iStation) = setPower(rxSignorm,RxPw(iStation));
 
-          %rxPwP = 10*log10(bandpower(rxSig(:,iStation)));
+          rxPwP = 10*log10(bandpower(rxSig(:,iStation)))+30;
         end
       end
       % Compute combined recieved spectrum (e.g. sum of all recieved
@@ -98,10 +97,10 @@ classdef ChBulk_v2
         intSig = sum(rxSig,2);
 
         % total power of interfering signal
-        intSigLoss = 10*log10(bandpower(intSig));
+        intSigdBm = 10*log10(bandpower(intSig))+30;
       else
         intSig = 0;
-        intSigLoss = 0;
+        intSigdBm= 0;
       end
       %figure
       %plot(10*log10(abs(fftshift(fft(intSig)).^2)));
@@ -159,7 +158,9 @@ classdef ChBulk_v2
         Users = obj.WINNER.run(Stations,Users);
 
       elseif strcmp(obj.Mode,'eHATA')
-        obj.eHATA = sonohieHATA(obj);
+        if isempty(obj.eHATA)
+          obj.eHATA = sonohieHATA(obj);
+        end
         Users = obj.eHATA.run(Stations,Users);
       elseif strcmp(obj.Mode,'B2B')
         sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
@@ -227,14 +228,15 @@ classdef ChBulk_v2
 
         % Traverse channel
         [~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
-        RxPw(iStation) = UserRx.Rx.RxPw;
+        RxPw(iStation) = UserRx.Rx.RxPwdBm;
       end
       [maxPw,maxStation] = max(RxPw);
       stationID = Stations(maxStation).NCellID;
     end
 
-    function obj = resetWinner(obj)
+    function obj = resetChannel(obj)
       obj.WINNER = [];
+      obj.eHATA = [];
     end
 
     function Users = applyInterference(obj,Stations,Users)
@@ -266,50 +268,56 @@ classdef ChBulk_v2
 
 
         % Get the combined interfering signal and its loss
-        [intSig, intSigLoss] = obj.getInterferers(Stations,station,user);
-        user.Rx.IntSigLoss = intSigLoss;
-        % If no interference is compute intSig is zero
+        [intSig, intSigdBm] = obj.getInterferers(Stations,station,user);
+        user.Rx.IntSigLoss = intSigdBm;
+        % If no interference is computed intSig is zero
         if intSig == 0
           user.Rx.SINR =  user.Rx.SNR;
           Users(iUser) = user;
           continue
         end
         % Now combine the interfering and serving signal
-        % Compute loss for unormalizing the normalized waveform
-        NormLossdB = 10*log10(bandpower(user.Rx.Waveform))-user.Rx.RxPw;
-        UserRxSig =  user.Rx.Waveform.*10^(-NormLossdB/20);
-
+        % Set the calculated rx power to the waveform so the combined
+        % signal can be created.
+        NormPw = 10*log10(bandpower(user.Rx.Waveform))+30;
+        UserRxSig = setPower(user.Rx.Waveform,user.Rx.RxPwdBm);
 
         % check power is set correct
         powerThreshold = 0.05;
-        if abs(10*log10(bandpower(UserRxSig))-user.Rx.RxPw) > powerThreshold %in dB
-          sonohi(sprintf('Power scaling is incorrect or exceeded threshold of %s dB',num2str(powerThreshold)),'WRN')
+        UserRxSigPwdBm = 10*log10(bandpower(UserRxSig))+30;
+        if abs(UserRxSigPwdBm-user.Rx.RxPwdBm) > powerThreshold %in dB
+          sonohilog('Power scaling is incorrect or exceeded threshold of dB','WRN')
         end
 
         % Create combined signal
         rxSig = user.RxAmpli*UserRxSig + intSig;
 
         % Amplify the combined waveform such the energy is normalized per symbol
-        % This corresponds to the loss computed previously.
-				% TODO: Generalize this, this is not accurate.
-        user.Rx.Waveform = rxSig.*10^(NormLossdB/20);
+        % This corresponds to normalizing the transmitted waveform with the
+        % interfering waveforms.
+				% TODO: Generalize this, this is not completely accurate.
+        user.Rx.Waveform = setPower(rxSig,NormPw);
 
 
 
-        %                 figure
-        %                 hold on
-        %                 plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
-        %                 plot(10*log10(abs(fftshift(fft(UserRxSig)).^2)));
-        %                 plot(10*log10(abs(fftshift(fft(intSig)).^2)));
-        %                 legend('Combined signal (w interference)','Unnormalized received waveform','Interference')
+%                         figure
+%                         hold on
+%                         plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
+%                         plot(10*log10(abs(fftshift(fft(UserRxSig)).^2)));
+%                         plot(10*log10(abs(fftshift(fft(intSig)).^2)));
+%                         legend('Combined signal (w interference)','Unnormalized received waveform','Interference')
 
         % SINR is then given as the SNR (dB difference towards noise floor)
         % with the additional loss of the interference signal.
-        if (user.Rx.RxPw-intSigLoss) >= 0
-          user.Rx.SINR = 10^((user.Rx.SNRdB - (user.Rx.RxPw-intSigLoss))/10);
+        if (user.Rx.RxPwdBm-intSigdBm) >= 0
+          user.Rx.SINR = 10^((user.Rx.SNRdB - (user.Rx.RxPwdBm-intSigdBm))/10);
         else
-          user.Rx.SINR = 10^((user.Rx.RxPw-intSigLoss)/10);
+          user.Rx.SINR = 10^((user.Rx.RxPwdBm-intSigdBm)/10);
+          % Update RxPw
+          user.Rx.RxPwdBm = intSigdBm;
         end
+        
+        
 
         Users(iUser) = user;
       end

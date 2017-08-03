@@ -6,10 +6,12 @@ function [UsersNew, ChannelNew]  = syncRoutine(Stations, Users, Channel, Param, 
 % 1. Traverse the channel setup (with a full frame) and compute the offset based on the PSS and SSS
 % 2. Mutates Users and Channels (saves WINNER response or fading seed)
 %
-% TODO Refactorize. Should utilize pre-existing user association and pre-existing dummyframe
 % TODO Test with multiple antennas
 % TODO Add BER curve of demodulated frame.
-% TODO Validate input 
+% TODO Validate input
+
+validateChannel(Channel);
+validateEmptyChannel(Channel);
 
 sonohilog('Performing full frame sync routine...','NFO')
 if nargin > 5
