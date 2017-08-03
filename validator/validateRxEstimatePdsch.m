@@ -6,7 +6,7 @@ function validateRxEstimatePdsch(rx)
 	%   rx		->  test
 
 	validateattributes(rx,{'ReceiverModule'},{'size',[1,1]});
-	if sum(rx.NoiseEst) == 0
+	if isempty(rx.NoiseEst)
 		sonohiLog('Receiver has empty parameters for PDSCH estimation', 'ERR');
 	end
 end

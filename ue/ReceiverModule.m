@@ -89,17 +89,21 @@ classdef ReceiverModule
 			enb = cast2Struct(enbObj);
 			allocIndexes = find([enb.Schedule.UeId] == ue.UeId);
 			allocIndexes = allocIndexes';
-			alloc = enb.Schedule(allocIndexes);
 
 			% Now get the PDSCH symbols out of the whole grid for this receiver
 			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, allocIndexes);
-			[pdschRx, pdschHest] = lteExtractResources(pdschIndices, enb.ReGrid, obj.NoiseEst);
+			[pdschRx, pdschHest] = lteExtractResources(pdschIndices, enb.ReGrid);
 
 			% Decode PDSCH
-			dlschBits = ltePDSCHDecode(enb, enb.PDSCH, pdschRx, pdschHest, obj.NoiseEst);
+			dlschBits = ltePDSCHDecode(enb, enb.PDSCH, pdschRx);
 			% Decode DL-SCH
 			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.PDSCH, ue.TransportBlockInfo.tbSize, ...
-				ue.Codeword);
+				dlschBits);
+			% lteDLSCHDecode returns a cell array for the estimated TB, convert
+			% that to a matrix
+			if iscell(obj.TransportBlock)
+				obj.TransportBlock = obj.TransportBlock{1};
+			end
 		end
 
 		% calculate the EVM

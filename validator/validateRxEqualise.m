@@ -6,7 +6,7 @@ function validateRxEqualise(rx)
 	%   rx		->  test
 
 	validateattributes(rx,{'ReceiverModule'},{'size',[1,1]});
-	%if (sum(rx.Subframe) == 0 || sum(rx.EstChannelGrid) == 0 || sum(rx.NoiseEst) == 0)
-	%	sonohiLog('Receiver has empty parameters for equalisation', 'ERR');
-	%end
+	if (isempty(rx.Subframe) || isempty(rx.EstChannelGrid) || isempty(rx.NoiseEst))
+		sonohiLog('Receiver has empty parameters for equalisation', 'ERR');
+	end
 end

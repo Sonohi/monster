@@ -194,12 +194,6 @@ for iRound = 0:Param.schRounds
 		% Get data symbols and visualize
 		gridR = grid(indPdsch);
 		constellationDiagram(gridR,1);
-
-		% combine subframe grids to a frame grid for dbg
-		if iRound <= 10
-			Stations(1).Frame = [Stations(1).Frame Stations(1).ReGrid];
-		end
-
 	end
 
 	% ------------------
