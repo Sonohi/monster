@@ -54,8 +54,10 @@ classdef ChBulk_v2
       % after pathloss is added.
 
       % v1 Uses eHATA based pathloss computation for both cases
+      % v2 Switch based on channel mode
 
-      eHATA = sonohieHATA(obj);
+
+
       RxPw = zeros(1,length(Stations));
       for iStation = 1:length(Stations)
         if Stations(iStation).NCellID ~= station.NCellID
@@ -64,8 +66,14 @@ classdef ChBulk_v2
           StationC.Users = zeros(1,length(Stations(iStation).Users));
           StationC.Users(1) = user.UeId;
           user.Rx.Waveform = [];
-
-          Users = eHATA.run(StationC,user);
+          if strcmp(obj.Mode,'eHATA')
+            eHATA = sonohieHATA(obj);
+            Users = eHATA.run(StationC,user);
+          elseif strcmp(obj.Mode, 'winner')
+            WINNER = sonohiWINNER(StationC,user, obj);
+            WINNER = WINNER.setup();
+            Users = WINNER.run(StationC,user);
+          end
           RxPw(iStation) = Users.Rx.RxPwdBm;
           rxSignorm = Users.Rx.Waveform;
 
@@ -316,8 +324,8 @@ classdef ChBulk_v2
           user.Rx.SINR = 10^((user.Rx.RxPwdBm-intSigdBm)/10);
           % Update RxPw
         end
-        
-        
+
+
 
         Users(iUser) = user;
       end
