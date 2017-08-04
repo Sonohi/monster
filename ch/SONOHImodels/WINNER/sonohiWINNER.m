@@ -134,7 +134,7 @@ classdef sonohiWINNER
                     %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
 
                     User.Rx.SNR = SNRLin;
-                    User.Rx.RxPwdBm = rxPwdBm;
+                    User.Rx.RxPwdBm = RxPwdBm;
                     User.Rx.Waveform = rxSigNorm;
 
 
@@ -158,7 +158,7 @@ classdef sonohiWINNER
             % Setup link budget
             rxPwdBm = txPw-lossdB; %dBm
             % SNR = P_rx_db - P_noise_db
-            rxNoiseFloor = 10*log10(thermalNoise)+User.NoiseFigure;
+            rxNoiseFloor = 10*log10(thermalNoise)+User.Rx.NoiseFigure;
             SNR = rxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
             str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...

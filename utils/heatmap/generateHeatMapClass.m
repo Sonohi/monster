@@ -8,7 +8,7 @@ function Clusters = generateHeatMapClass(Stations, Channel, Param)
 %   heatMap 		->  2D matrix with combined pathloss levels
 
 % Reset channel function
-Channel = Channel.resetWinner;
+Channel = Channel.resetChannel;
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);
@@ -82,30 +82,31 @@ end
 for model = 2:numel(Snames)
 	stations = types.(Snames{model});
 	for iCluster = 1:length(Clusters)
-
+    warning('off','all')
 		% local copy
 		ueCopy = ue;
+    StationsCopy_ = StationsCopy(stations);
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
 
-		StationID = Channel.getAssociation(StationsCopy(stations),ueCopy);
+		StationID = Channel.getAssociation(StationsCopy_,ueCopy);
 
-		StationsCopy([StationsCopy.NCellID] == StationID).Users(1) = ueCopy.UeId;
+		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
 		ueCopy.ENodeB = StationID;
 
-		try
-			[~, ueCopy] = Channel.traverse(StationsCopy(stations),ueCopy);
+		%try
+			[~, ueCopy] = Channel.traverse(StationsCopy_,ueCopy);
 			Clusters(iCluster).snrVals(model) = ueCopy.Rx.SNRdB;
-			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPw;
+			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;
-			Clusters(iCluster).intSigLoss(model) = ueCopy.Rx.intSigLoss;
-			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPw),num2str(ueCopy.Rx.SINRdB)),'NFO');
-		catch ME
-			Clusters(iCluster).snrVals(model) = NaN;
-			Clusters(iCluster).rxPw(model) = NaN;
-			Clusters(iCluster).SINR(model) = NaN;
-			Clusters(iCluster).intSigLoss(model) = NaN;
-			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
-		end
+			Clusters(iCluster).intSigLoss(model) = ueCopy.Rx.IntSigLoss;
+			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPwdBm),num2str(ueCopy.Rx.SINRdB)),'NFO');
+% 		catch ME
+% 			Clusters(iCluster).snrVals(model) = NaN;
+% 			Clusters(iCluster).rxPw(model) = NaN;
+% 			Clusters(iCluster).SINR(model) = NaN;
+% 			Clusters(iCluster).intSigLoss(model) = NaN;
+% 			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
+% 		end
 
 	end
 

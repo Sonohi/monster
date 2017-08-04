@@ -26,7 +26,7 @@ drawSubplot(x,y,StationSINR,sz,classes,'SINR','SINR')
 		
 		figure
 		for class = 1:length(classes)
-			subplot(3,2,class);
+			subplot(2,1,class);
 			contourf(x,y,reshape(z(class,:),sz,sz),10);
 			title(strcat(title_s,' for class: '));
 			xlabel('Metres (x)');

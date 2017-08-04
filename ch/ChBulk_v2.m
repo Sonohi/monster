@@ -291,6 +291,7 @@ classdef ChBulk_v2
 
         % Create combined signal
         rxSig = user.RxAmpli*UserRxSig + intSig;
+        user.Rx.RxPwdBm;
 
         % Amplify the combined waveform such the energy is normalized per symbol
         % This corresponds to normalizing the transmitted waveform with the
@@ -314,7 +315,6 @@ classdef ChBulk_v2
         else
           user.Rx.SINR = 10^((user.Rx.RxPwdBm-intSigdBm)/10);
           % Update RxPw
-          user.Rx.RxPwdBm = intSigdBm;
         end
         
         

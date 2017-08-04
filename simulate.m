@@ -41,22 +41,22 @@ ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
 
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
-% if Param.generateHeatMap
-% 	switch Param.heatMapType
-% 		case 'perClass'
-% 			HeatMap = generateHeatMapClass(Stations, Channel, Param);
-% 		case 'perStation'
-% 			HeatMap = generateHeatmap(Stations, Channel, Param);
-% 		otherwise
-% 			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
-% 	end
-% else
-% 	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
-% end
-%
-% if Param.draw
-% 	drawHeatMap(HeatMap, Stations);
-% end
+if Param.generateHeatMap
+	switch Param.heatMapType
+		case 'perClass'
+			HeatMap = generateHeatMapClass(Stations, Channel, Param);
+		case 'perStation'
+			HeatMap = generateHeatmap(Stations, Channel, Param);
+		otherwise
+			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
+	end
+else
+	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
+end
+
+if Param.draw
+	drawHeatMap(HeatMap, Stations);
+end
 
 for iRound = 0:Param.schRounds
   % TODO: Add log print that states which round is being simulated.
@@ -185,19 +185,7 @@ for iRound = 0:Param.schRounds
 			symMatrix, Param);
 	end
 
-	if Param.draw
-		% Plot OFDM spectrum of first station
-		spectrumAnalyser(Stations(1).TxWaveform, Stations(1).WaveformInfo.SamplingRate);
 
-		% Plot conestellation diagram of first station
-		enb = cast2Struct(Stations(1));
-		% get PDSCH indexes
-		[indPdsch, info] = Stations(1).getPDSCHindicies;
-		grid = lteOFDMDemodulate(enb,enb.TxWaveform);
-		% Get data symbols and visualize
-		gridR = grid(indPdsch);
-		constellationDiagram(gridR,1);
-	end
 
 	% ------------------
 	% CHANNEL TRAVERSE
@@ -230,7 +218,9 @@ for iRound = 0:Param.schRounds
 	if Param.draw
 		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		[hGrids(1), hGrids(2)] = plotReGrids(Users);
-	end
+		[hSpectrums(1)] = plotSpectrums(Users,Stations);
+  end
+
 
 	% --------------------
 	% RESET FOR NEXT ROUND
