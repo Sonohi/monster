@@ -62,7 +62,7 @@ for iRound = 0:Param.schRounds
   % TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
-
+  sonohilog(sprintf('Round %i/%i',iRound,Param.schRounds),'NFO');
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
@@ -73,10 +73,10 @@ for iRound = 0:Param.schRounds
 	% run sync routine
     % TODO: Run syncRoutine before refresh of user association, such
   % syncroutines determines and saves the channel seed/randomization
-	%if mod(simTime, Param.syncRoutineTimer) == 0
+	if mod(simTime, Param.syncRoutineTimer) == 0
 		sonohilog('Running sync routine', 'NFO');
 		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
-	%end
+	end
 
 
 	% Update RLC transmission queues for the users and reset the scheduled flag
@@ -234,5 +234,5 @@ for iRound = 0:Param.schRounds
 end % end round
 
 % Once this simulation set is done, save the output
-%save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
+save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
 end
