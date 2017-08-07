@@ -138,21 +138,21 @@ classdef ReceiverModule
 		function obj  = referenceMeasurements(obj,enbObj)
 			enb = cast2Struct(enbObj);
 
-      %       rxSig = setPower(obj.Waveform,obj.RxPwdBm);
-      %rxSig = obj.Waveform*sqrt(10^((obj.RxPwdBm-30)/10));
-      %    Subframe = lteOFDMDemodulate(enb, rxSig); %#ok
-      %  rsmeas = hRSMeasurements(enb, Subframe);
+			%       rxSig = setPower(obj.Waveform,obj.RxPwdBm);
+			%rxSig = obj.Waveform*sqrt(10^((obj.RxPwdBm-30)/10));
+			%    Subframe = lteOFDMDemodulate(enb, rxSig); %#ok
+			%  rsmeas = hRSMeasurements(enb, Subframe);
 
-      %       RSSI is the average power of OFDM symbols containing the reference
-      %       signals
-      %       RxPw is the wideband power, e.g. the received power for the whole
-      %       subframe, the RSSI must be the ratio of OFDM symbols occupying the
-      %       subframe scaled with the wideband received power.
-      %       TODO: Replace this approximation with correct calculation on
-      %       demodulated grid.
-      RSSI = 0.92*10^((obj.RxPwdBm-30)/10); %mWatts
-      obj.RSSIdBm = 10*log10(RSSI)+30;
-	  end
+			%       RSSI is the average power of OFDM symbols containing the reference
+			%       signals
+			%       RxPw is the wideband power, e.g. the received power for the whole
+			%       subframe, the RSSI must be the ratio of OFDM symbols occupying the
+			%       subframe scaled with the wideband received power.
+			%       TODO: Replace this approximation with correct calculation on
+			%       demodulated grid.
+			RSSI = 0.92*10^((obj.RxPwdBm-30)/10); %mWatts
+			obj.RSSIdBm = 10*log10(RSSI)+30;
+		end
 
 		% Block reception
 		function obj  = logBlockReception(obj,ueObj)
@@ -166,18 +166,53 @@ classdef ReceiverModule
 			obj.Blocks.tot = obj.Blocks.tot + 1;
 
 			%TB comparison and bit stats logging
-% 			diff = bitxor(obj.TransportBlock, ueObj.TransportBlock);
-% 			obj.Bits.tot = obj.Bits.tot + length(diff);
-% 			obj.Bits.err = obj.Bits.err + sum(diff);
-% 			obj.Bits.ok = obj.Bits.ok + length(diff) - sum(diff);
-	  end
+			% extract the original TB and cast it to uint
+			tbOriginal(1:ueObj.TransportBlockInfo.tbSize, 1) = ...
+				ueObj.TransportBlock(1:ueObj.TransportBlockInfo.tbSize, 1);
+			tbOriginal = uint64(tbOriginal);
+			tbReceived = uint64(obj.TransportBlock);
+
+
+			% Check sizes and log a warning if they don't match
+			sizeCheck = length(tbOriginal) - length(tbReceived);
+			if sizeCheck == 0
+				% This is the normal case where we XOR the whole TBs and no extra error
+				% bits are found
+				diff = bitxor(tbReceived, tbOriginal);
+				errEx = 0;
+
+			else
+				sonohilog('(ReceiverModule logBlockReception) TBs sizes mismatch', 'WRN');
+				% In this case, we do the xor between the minimum common set of bits
+				if sizeCheck > 0
+					% the original TB was bigger than the received one, so test on the
+					% usable portion and log the rest as errors
+					sizeTest = length(tbOriginal) - sizeCheck;
+					tbTest(1:sizeTest) = tbOriginal(1:sizeTest);
+					diff = bitxor(tbTest, tbReceived);
+					errEx = sizeCheck;
+				else
+					% the original TB was smaller than the received one, so test on the
+					% usable portion and discard the rest
+					sizeTest = length(tbReceived) - sizeCheck;
+					tbTest(1:sizeTest) = tbReceived(1:sizeTest);
+					diff = bitxor(tbOriginal, tbTest);
+					% TODO check the assumption of discarding the rest of the received TB
+					errEx = 0;
+				end
+			end
+
+			obj.Bits.tot = obj.Bits.tot + length(diff);
+			obj.Bits.err = obj.Bits.err + sum(diff) + errEx;
+			obj.Bits.ok = obj.Bits.ok + length(diff) - sum(diff) - errEx;
+		end
 
 		% Error bits
 		function obj  = calculateThroughput(obj,enbObj)
 			validateRxCalculateThroughput(obj);
-	    enb = cast2Struct(enbObj);
+			enb = cast2Struct(enbObj);
 			%
-	  end
+		end
 
 		% cast object to struct
 		function objstruct = cast2Struct(obj)

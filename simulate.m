@@ -31,6 +31,7 @@ enbResults(1:Param.numMacro + Param.numMicro, 1:Param.schRounds ) = struct(...
 
 ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
 	'blocks', [],...
+	'cqi', 0,...
 	'preEvm', 0,...
 	'postEvm', 0,....
 	'bits', [],...
@@ -73,10 +74,10 @@ for iRound = 0:Param.schRounds
 	% run sync routine
     % TODO: Run syncRoutine before refresh of user association, such
   % syncroutines determines and saves the channel seed/randomization
-	%if mod(simTime, Param.syncRoutineTimer) == 0
+	if mod(simTime, Param.syncRoutineTimer) == 0
 		sonohilog('Running sync routine', 'NFO');
 		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
-	%end
+	end
 
 
 	% Update RLC transmission queues for the users and reset the scheduled flag
@@ -234,5 +235,5 @@ for iRound = 0:Param.schRounds
 end % end round
 
 % Once this simulation set is done, save the output
-%save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
+save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
 end
