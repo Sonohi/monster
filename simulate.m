@@ -63,7 +63,7 @@ for iRound = 0:Param.schRounds
   % TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
-
+  sonohilog(sprintf('Round %i/%i',iRound,Param.schRounds),'NFO');
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0

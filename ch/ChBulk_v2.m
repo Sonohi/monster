@@ -149,40 +149,43 @@ classdef ChBulk_v2
 
       Pairing = obj.getPairing(Stations);
       % Apply channel based on configuration.
-      if strcmp(obj.Mode,'winner')
-        %Check if transfer function is already computed:
-        % If empty, e.g. not computed, compute impulse response and
-        % store it for next syncroutine.
-        % TODO: move this to WINNER. e.g. construction and setup is
-        % called in run.
-        if isempty(obj.WINNER)
-          obj.WINNER = sonohiWINNER(Stations,Users, obj);
-          %[obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
-          obj.WINNER = obj.WINNER.setup();
-        else
-          sonohilog('Using previously computed WINNER','NFO0')
+      try
+        if strcmp(obj.Mode,'winner')
+          %Check if transfer function is already computed:
+          % If empty, e.g. not computed, compute impulse response and
+          % store it for next syncroutine.
+          % TODO: move this to WINNER. e.g. construction and setup is
+          % called in run.
+          if isempty(obj.WINNER)
+            obj.WINNER = sonohiWINNER(Stations,Users, obj);
+            %[obj.WconfigLayout, obj.WconfigParset] = obj.initializeWinner(Stations,Users);
+            obj.WINNER = obj.WINNER.setup();
+          else
+            sonohilog('Using previously computed WINNER','NFO0')
+          end
+
+          Users = obj.WINNER.run(Stations,Users);
+
+        elseif strcmp(obj.Mode,'eHATA')
+          if isempty(obj.eHATA)
+            obj.eHATA = sonohieHATA(obj);
+          end
+          Users = obj.eHATA.run(Stations,Users);
+        elseif strcmp(obj.Mode,'B2B')
+          sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
+          for iUser = 1:length(Users)
+            iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+            Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
+          end
         end
 
-        Users = obj.WINNER.run(Stations,Users);
-
-      elseif strcmp(obj.Mode,'eHATA')
-        if isempty(obj.eHATA)
-          obj.eHATA = sonohieHATA(obj);
+        % Apply interference on all users if 'full' is enabled
+        if strcmp(obj.fieldType,'full')
+          Users = obj.applyInterference(Stations,Users);
         end
-        Users = obj.eHATA.run(Stations,Users);
-      elseif strcmp(obj.Mode,'B2B')
-        sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
-        for iUser = 1:length(Users)
-          iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
-          Users(iUser).RxWaveform = Stations(iServingStation).TxWaveform;
-        end
+      catch ME
+        sonohilog(sprintf('Something went wrong in the channel....%s',ME.identifier),'WRN');
       end
-
-      % Apply interference on all users if 'full' is enabled
-      if strcmp(obj.fieldType,'full')
-        Users = obj.applyInterference(Stations,Users);
-      end
-
     end
 
     function Pairing = getPairing(obj,Stations)
@@ -249,7 +252,7 @@ classdef ChBulk_v2
 
     function Users = applyInterference(obj,Stations,Users)
       % Method used to apply the interference on a specific received waveform
-      sonohilog('Computing and applying interference based on station class...','NFO0')
+      sonohilog('Computing and applying interference based on station class...','NFO')
       % Validate arguments
       validateChannel(obj);
       validateStations(Stations);

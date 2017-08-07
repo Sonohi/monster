@@ -81,7 +81,7 @@ end
 
 for model = 2:numel(Snames)
 	stations = types.(Snames{model});
-	for iCluster = 1:length(Clusters)
+	parfor iCluster = 1:length(Clusters)
     warning('off','all')
 		% local copy
 		ueCopy = ue;
@@ -93,20 +93,20 @@ for model = 2:numel(Snames)
 		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
 		ueCopy.ENodeB = StationID;
 
-		%try
+		try
 			[~, ueCopy] = Channel.traverse(StationsCopy_,ueCopy);
 			Clusters(iCluster).snrVals(model) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;
 			Clusters(iCluster).intSigLoss(model) = ueCopy.Rx.IntSigLoss;
 			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPwdBm),num2str(ueCopy.Rx.SINRdB)),'NFO');
-% 		catch ME
-% 			Clusters(iCluster).snrVals(model) = NaN;
-% 			Clusters(iCluster).rxPw(model) = NaN;
-% 			Clusters(iCluster).SINR(model) = NaN;
-% 			Clusters(iCluster).intSigLoss(model) = NaN;
-% 			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
-% 		end
+		catch ME
+			Clusters(iCluster).snrVals(model) = NaN;
+			Clusters(iCluster).rxPw(model) = NaN;
+			Clusters(iCluster).SINR(model) = NaN;
+			Clusters(iCluster).intSigLoss(model) = NaN;
+			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
+		end
 
 	end
 
