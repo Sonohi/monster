@@ -25,11 +25,11 @@ end
 outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
 % Prepare results data structures
-enbResults(1:Param.numMacro + Param.numMicro, 1:Param.schRounds ) = struct(...
+enbResults(1:Param.schRounds, 1:Param.numMacro + Param.numMicro) = struct(...
 	'power', 0,...
 	'util', 0);
 
-ueResults(1:Param.numUsers, 1:Param.schRounds ) = struct(...
+ueResults(1:Param.schRounds, 1:Param.numUsers) = struct(...
 	'blocks', [],...
 	'cqi', 0,...
 	'preEvm', 0,...
@@ -59,11 +59,12 @@ if Param.draw
 	drawHeatMap(HeatMap, Stations);
 end
 
-for iRound = 0:Param.schRounds
+% Rounds are 0-based for the subframe indexing, so add 1 when needed
+for iRound = 0:(Param.schRounds-1)
   % TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
-  sonohilog(sprintf('Round %i/%i',iRound,Param.schRounds),'NFO');
+  sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
@@ -122,8 +123,8 @@ for iRound = 0:Param.schRounds
 		pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 		% store eNodeB-space results
-		enbResults(iStation, iRound + 1).util = utilPercent;
-		enbResults(iStation, iRound + 1).power = pIn;
+		enbResults(iRound + 1, iStation).util = utilPercent;
+		enbResults(iRound + 1, iStation).power = pIn;
 
 		% Check utilisation metrics and change status if needed
 		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...

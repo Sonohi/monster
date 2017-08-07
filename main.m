@@ -47,7 +47,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'winner';
+Param.channel.mode = 'eHATA';
 Param.channel.region = 'DenseUrban';
 
 % Create Stations and Users
@@ -97,7 +97,7 @@ for iUtilLo = 1: length(utilLo)
 end
 
 % compile all results files and do some plots
-compileResults(Param, utilLo, utilHi);
+compileResults(Param, utilLo, utilHi, Stations, Users);
 if Param.draw
 	plotResults(Param, Stations, Users);
 end
