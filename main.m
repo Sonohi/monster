@@ -47,7 +47,7 @@ sonohi(Param.reset);
 w = warning('off', 'all');
 
 % Channel configuration
-Param.channel.mode = 'eHATA';
+Param.channel.mode = 'winner';
 Param.channel.region = 'DenseUrban';
 
 % Create Stations and Users

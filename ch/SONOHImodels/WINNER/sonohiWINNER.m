@@ -6,6 +6,7 @@ classdef sonohiWINNER
         numRx; % Number of receivers, per model
         h; % Stored impulse response
         Channel;
+        AA;
     end
 
     methods
@@ -207,23 +208,35 @@ classdef sonohiWINNER
         function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
 
             % Select antenna array based on station class.
+            % TODO: load antenna arrays from MAT file. computational hack.
             if strcmp(type,'macro')
-                %Az = -180:179;
-                %pattern(1,:,1,:) = winner2.dipole(Az,10);
-                %AA(1) = winner2.AntennaArray( ...
-                %    'ULA', 12, 0.15, ...
-                %    'FP-ECS', pattern, ...
-                %    'Azimuth', Az);
-
-                AA(1) = winner2.AntennaArray('UCA', 8,  0.2);
+                if ~exist('macroAA.mat')
+                  Az = -180:179;
+                  pattern(1,:,1,:) = winner2.dipole(Az,10);
+                  AA(1) = winner2.AntennaArray( ...
+                     'ULA', 12, 0.15, ...
+                     'FP-ECS', pattern, ...
+                     'Azimuth', Az);
+                  save('macroAA.mat','AA')
+                else
+                  sonohilog('Loading pregenerated antenna AA...','NFO0')
+                  load('macroAA.mat');
+                end
+                %AA(1) = winner2.AntennaArray('UCA', 8,  0.2);
             elseif strcmp(type,'micro')
-                %Az = -180:179;
-                %pattern(1,:,1,:) = winner2.dipole(Az,10);
-                %AA(1) = winner2.AntennaArray( ...
-                %    'ULA', 6, 0.15, ...
-                %    'FP-ECS', pattern, ...
-                %    'Azimuth', Az);
-                AA(1) = winner2.AntennaArray('UCA', 4,  0.15);
+              if ~exist('microAA.mat')
+                Az = -180:179;
+                pattern(1,:,1,:) = winner2.dipole(Az,10);
+                AA(1) = winner2.AntennaArray( ...
+                   'ULA', 6, 0.15, ...
+                   'FP-ECS', pattern, ...
+                   'Azimuth', Az);
+                save('microAA.mat','AA')
+              else
+                sonohilog('Loading pregenerated antenna AA...','NFO0')
+                load('microAA.mat');
+              end
+                %AA(1) = winner2.AntennaArray('UCA', 4,  0.15);
             else
 
                 sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
@@ -232,7 +245,8 @@ classdef sonohiWINNER
 
             % User antenna array
             AA(2) = winner2.AntennaArray('ULA', 1,  0.05);
-
+            
+            
             % Number of sectors.
             numSec = 1;
             % TODO, requires changes ot the way pairing is done
