@@ -146,13 +146,13 @@ classdef EvolvedNodeB
 			regrid(indPcfich) = pcfich;
 
 			% every 10 ms we need to broadcast a unit of the BCH
-			if mod(enb.NSubframe, 10) == 0
+			if (mod(obj.NSubframe, 10) == 0 && obj.PBCH.unit <= 4)
 				fullPbch = ltePBCH(enb,enb.PBCH.bch);
 				indPbch = ltePBCHIndices(enb);
 
 				% find which portion of the PBCH we need to send in this frame and insert
-				a = (enb.PBCH.unit - 1) * length(indPbch) + 1;
-				b = enb.PBCH.unit * length(indPbch);
+				a = (obj.PBCH.unit - 1) * length(indPbch) + 1;
+				b = obj.PBCH.unit * length(indPbch);
 				pbch = fullPbch(a:b, 1);
 				regrid(indPbch) = pbch;
 
