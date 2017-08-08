@@ -43,6 +43,7 @@ for p = 1:length(Users)
 	% Find serving station
 	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeB));
 	% Compute offset
+	% TODO add try catch as lteDLFrameOffset could throw a size mismatch error
 	UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
 
 	%% DEBUGGING STUFF

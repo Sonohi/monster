@@ -46,10 +46,6 @@ sonohi(Param.reset);
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');
 
-% Channel configuration
-Param.channel.mode = 'eHATA';
-Param.channel.region = 'DenseUrban';
-
 % Create Stations and Users
 [Stations, Param.AreaPlot] = createBaseStations(Param);
 Users = createUsers(Param);
