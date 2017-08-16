@@ -92,8 +92,5 @@ parfor iUtilLo = 1: length(utilLo)
 	end
 end
 
-% compile all results files and do some plots
+% compile all results files
 compileResults(Param, utilLo, utilHi, Stations, Users);
-if Param.draw
-	plotResults(Param, Stations, Users);
-end
