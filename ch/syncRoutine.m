@@ -44,7 +44,26 @@ for p = 1:length(Users)
 	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeB));
 	% Compute offset
 	% TODO add try catch as lteDLFrameOffset could throw a size mismatch error
-	UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
+    NotAbleToDemod = 1;
+    maxTries = 5;
+    tries = 0;
+    while NotAbleToDemod
+        try
+            if tries == maxTries
+                UsersNew(p).Rx.Offset = 0;
+                NotAbleToDemod = 0;
+            else
+                UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
+                NotAbleToDemod = 0;
+            end
+
+        catch ME
+           sonohilog(sprintf('Not able to locate synchronization signal, trying again for user %i, (try %i)',p,tries),'WRN')
+           NotAbleToDemod = 1;
+           tries = tries +1;
+        end
+            
+    end
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
