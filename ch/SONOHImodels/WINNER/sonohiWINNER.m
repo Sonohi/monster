@@ -244,7 +244,17 @@ classdef sonohiWINNER
             end
 
             % User antenna array
-            AA(2) = winner2.AntennaArray('ULA', 1,  0.05);
+            
+            if ~exist('UEAA.mat')
+              ueAA = winner2.AntennaArray('ULA', 1,  0.05);
+              save('UEAA.mat','ueAA')
+              AA(2) = ueAA;
+            else
+              sonohilog('Loading pregenerated antenna AA...','NFO0')
+              load('UEAA.mat')
+              AA(2) = ueAA;
+            end
+            
             
             
             % Number of sectors.
