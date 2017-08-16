@@ -1,4 +1,4 @@
-function h = plotSpectrums(Users,Stations)
+function h1 = plotSpectrums(Users,Stations)
 
   h1 = figure('Name','Rx Power spectrum');
   set(h1,'Position',[425 425 900 900],'WindowStyle','Docked','Visible','on');
@@ -14,12 +14,13 @@ function h = plotSpectrums(Users,Stations)
           nfft=length(sig);
           f=Fs/2*[-1:2/nfft:1-2/nfft];
           plot(f,Fpsd);
+          title(['User: ',num2str(pp)],'Fontsize',8);
+          ylabel('dBm');
+          xlabel('Hz');
+          ylim([min(Fpsd) max(Fpsd)])
+          set(hs(pp),'FontSize',8);
         end
-        title(['User: ',num2str(pp)],'Fontsize',8);
-        ylabel('dBm');
-        xlabel('Hz');
-        ylim([min(Fpsd) max(Fpsd)])
-        set(hs(pp),'FontSize',8);
+        
 
   end
 end
