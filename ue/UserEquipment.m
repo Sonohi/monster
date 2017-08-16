@@ -79,7 +79,7 @@ classdef UserEquipment
 		% move User
 		function obj = move(obj, ts, Param)
 			% if we are at the beginning, don't move
-			if ts ~0
+			if ts ~= 0
 
 				% delta of time since last step
 				tDelta = ts - obj.TLast;
