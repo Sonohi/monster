@@ -24,7 +24,7 @@ else
 end
 
 % MS-BS distance
-distBSToMS = sqrt((posBS(1,:)-posMS(1,:)).^2+(posBS(2,:)-posMS(2,:)).^2);
+distBSToMS = sqrt((posBS(1,:)-posMS(1,:)).^2+(posBS(2,:)-posMS(2,:)).^2+(posBS(3,:)-posMS(3,:)).^2);
 heightBS = posBS(3,:);
 heightMS = posMS(3,:);
 

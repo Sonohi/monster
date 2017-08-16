@@ -263,6 +263,14 @@ classdef ChBulk_v2
       for iUser = 1:length(Users)
         user = Users(iUser);
         station = Stations(find([Stations.NCellID] == Users(iUser).ENodeB));
+        if isnan(user.Rx.Waveform)
+          % TODO: this check is to ensure demodulation fails without any
+          % excepts. Move this further back towards traverse.
+          user.Rx.Waveform=0;
+          Users(iUser) = user;
+          continue
+        end
+        
         if isempty(station)
           continue
         end

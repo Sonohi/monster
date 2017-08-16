@@ -321,9 +321,9 @@ classdef sonohiWINNER
                 % Apparently WINNERchan doesn't compute distance based
                 % on height, only on x,y distance. Also they can't be
                 % doubles...
-                distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
+                distance = Ch.getDistance(cBs.Position,cMs.Position);
                 if cBs.BsClass == 'micro'
-
+        
                     if distance <= 20
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
                             stationIdx,userIdx,num2str(distance));
