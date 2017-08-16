@@ -86,7 +86,7 @@ status = [
 	"boot"];
 
 % Main loop
-for iUtilLo = 1: length(utilLo)
+parfor iUtilLo = 1: length(utilLo)
 	for iUtilHi = 1:length(utilHi)
 		simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
 	end
