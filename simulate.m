@@ -184,6 +184,8 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB GRID MAPPING AND MODULATION
 	% ----------------------------------
 	sonohilog('eNodeB grid mapping and modulation block', 'NFO');
+	% TODO remove testing of TransmitterModule
+	%Stations = TxBulk(Stations, symMatrix, Param);
 	for iStation = 1:length(Stations)
 		Stations(iStation) = mapGridAndModulate(Stations(iStation), iStation, ...
 			symMatrix, Param);

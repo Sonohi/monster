@@ -19,10 +19,6 @@ classdef EvolvedNodeB
 		Users;
 		Schedule;
 		RrNext;
-		ReGrid;
-		TxWaveform;
-		WaveformInfo;
-		PDSCH;
 		Channel;
 		NSubframe;
 		BsClass;
@@ -34,11 +30,16 @@ classdef EvolvedNodeB
 		P0;
 		DeltaP;
 		Psleep;
+		Tx;
+		% TODO remove below as into TX
+		TxWaveform;
+		WaveformInfo;
+		ReGrid;
+		PDSCH;
+		PBCH;
 		Frame;
 		FrameInfo;
 		FrameGrid;
-		PBCH;
-		Tx;
 	end
 
 	methods
@@ -71,18 +72,19 @@ classdef EvolvedNodeB
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
-			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
 			obj.Users = zeros(Param.numUsers, 1);
-			obj = setBCH(obj);
 			obj = resetSchedule(obj);
-			obj = resetResourceGrid(obj);
-			obj = initPDSCH(obj);
 			obj.Status = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
+			% TODO remove below as into TX
 			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(obj);
+			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
+			obj = setBCH(obj);
+			obj = resetResourceGrid(obj);
+			obj = initPDSCH(obj);
 		end
 
 		% Posiiton base station

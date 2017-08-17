@@ -1,17 +1,20 @@
 classdef TransmitterModule
 	properties
-		TxWaveform;
+		Waveform;
 		WaveformInfo;
 		ReGrid;
 		PDSCH;
 		PBCH;
+		Frame;
+		FrameInfo;
+		FrameGrid;
 	end
 
 	methods
 
 		function obj = TransmitterModule(enb, Param)
 			obj.TxWaveform = zeros(enb.NDLRB * 307.2, 1);
-			obj = setBCH(obj);
+			obj = setBCH(obj, enb);
 			obj = resetResourceGrid(obj, enb);
 			obj = initPDSCH(obj, enb.NDLRB);
 		end
@@ -73,18 +76,23 @@ classdef TransmitterModule
     end
 
 		% map elements to grid and modulate waveform to transmit
-		function obj = mapGridAndModulate(obj, ix, sym, Param)
+		function obj = mapGridAndModulate(obj, enbObj, iStation, sym, Param)
 			% the last step in the DL transmisison chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
 
 			% extract all the symbols this eNodeB has to transmit
-			symExtr = extractStationSyms(obj, ix, sym, Param);
+			symExtr = extractStationSyms(enbObj, iStation, sym, Param);
 
 			% insert the symbols of the PDSCH into the grid
-			obj = setPDSCHGrid(obj, symExtr);
+			obj = setPDSCHGrid(obj, enbObj, symExtr);
 
 			% with the grid ready, generate the TX waveform
-			obj = modulateTxWaveform(obj);
+			obj = modulateTxWaveform(obj, enbObj);
+		end
+
+		% cast object to struct
+		function txStruct = cast2Struct(obj)
+			txStruct = struct(obj);
 		end
 
 
@@ -113,23 +121,24 @@ classdef TransmitterModule
 		end
 
 		% modulate TX waveform
-		function obj = modulateTxWaveform(obj)
-			enb = cast2Struct(obj);
+		function obj = modulateTxWaveform(obj, enbObj)
+			enb = cast2Struct(enbObj);
+			tx = cast2Struct(obj);
       % Assume lossless transmitter
-			[obj.TxWaveform, obj.WaveformInfo] = lteOFDMModulate(enb, enb.ReGrid);
+			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, tx.ReGrid);
       obj.WaveformInfo.SNR = 40;
 			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
 			% for power scaling
-			used = length(find(abs(enb.ReGrid) ~= 0));
-			obj.WaveformInfo.OfdmEnergyScale = used/numel(enb.ReGrid);
+			used = length(find(abs(tx.ReGrid) ~= 0));
+			obj.WaveformInfo.OfdmEnergyScale = used/numel(tx.ReGrid);
 		end
 
 		% insert PDSCH symbols in grid at correct indexes
-		function obj = setPDSCHGrid(obj, syms)
-			enb = cast2Struct(obj);
-			regrid = enb.ReGrid;
+		function obj = setPDSCHGrid(obj, enbObj, syms)
+			enb = cast2Struct(enbObj);
+			regrid = obj.ReGrid;
 			% get PDSCH indexes
-			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, obj.PDSCH, obj.PDSCH.PRBSet);
 
 			% pad for unused subcarriers
 			padding(1:length(indPdsch) - length(syms), 1) = 0;
