@@ -38,6 +38,7 @@ classdef EvolvedNodeB
 		FrameInfo;
 		FrameGrid;
 		PBCH;
+		Tx;
 	end
 
 	methods
@@ -197,7 +198,6 @@ classdef EvolvedNodeB
 
 		% check utilisation wrapper
 		function obj = checkUtilisation(obj, util, Param, loThr, hiThr, Stations)
-
 			% overload
 			if util >= hiThr
 				obj.Status = 2;

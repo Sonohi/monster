@@ -27,7 +27,8 @@ outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 % Prepare results data structures
 enbResults(1:Param.schRounds, 1:Param.numMacro + Param.numMicro) = struct(...
 	'power', 0,...
-	'util', 0);
+	'util', 0,...
+	'schedule', []);
 
 ueResults(1:Param.schRounds, 1:Param.numUsers) = struct(...
 	'blocks', [],...
@@ -123,8 +124,9 @@ for iRound = 0:(Param.schRounds-1)
 		pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 		% store eNodeB-space results
-		enbResults(iRound + 1, iStation).util = utilPercent;
-		enbResults(iRound + 1, iStation).power = pIn;
+		resultsStore(iStation).util = utilPercent;
+		resultsStore(iStation).power = pIn;
+		resultsStore(iStation).schedule = Stations(iStation).Schedule;
 
 		% Check utilisation metrics and change status if needed
 		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
@@ -187,8 +189,6 @@ for iRound = 0:(Param.schRounds-1)
 			symMatrix, Param);
 	end
 
-
-
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
@@ -202,6 +202,12 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------
 	sonohilog('UE reception block', 'NFO');
 	Users = RxBulk(Stations, Users, ChannelEstimator);
+
+	% --------------------------
+	% ENODEB SPACE METRICS RECORDING
+	% ---------------------------
+	sonohilog('eNodeB-space metrics recording', 'NFO');
+	[enbResults, resultsStore] = recordEnBResults(Stations, resultsStore, enbResults, iRound);
 
 	% --------------------------
 	% UE SPACE METRICS RECORDING

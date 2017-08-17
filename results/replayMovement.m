@@ -6,7 +6,7 @@ close all
 
 ue = 5;
 
-load('results/utilLo_1-utilHi_90.mat')
+load('results/utilLo_1-utilHi_100.mat')
 
 
 positions = [ueResults(:,ue).rxPosition];
@@ -23,17 +23,17 @@ set(gcf, 'Position', [181 595 1.4793e+03 656])
 var_p = 0.01;
 subplot(2,3,[1,3])
 pos_plot = animatedline('Color','r','Marker','o','MarkerSize',3);
-ax_pos_plot = gca
+ax_pos_plot = gca;
 set(ax_pos_plot,'XLim',[min(xx)-var_p max(xx)+var_p],'YLim',[min(yy)-var_p max(yy)+var_p]);
-xlabel('X (m)')
-ylabel('Y (m)')
+xlabel('X (m)');
+ylabel('Y (m)');
 
-subplot(2,3,4)
+subplot(2,3,4);
 evm_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
 ax_evm_plot = gca;
 set(ax_evm_plot,'XLim',[0 20],'YLim',[min(postEvm) max(postEvm)]);
-xlabel('Round')
-ylabel('post EVM (%)')
+xlabel('Round');
+ylabel('post EVM (%)');
 
 
 subplot(2,3,5)
