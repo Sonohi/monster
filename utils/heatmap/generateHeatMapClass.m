@@ -74,9 +74,9 @@ StationsCopy = Stations;
 for iStation = 1:length(Stations)
 	StationsCopy(iStation).Users = zeros(15,1);
 	% In the stations copy, set the txWaveform etc from the dummy frames info
-	StationsCopy(iStation).TxWaveform = StationsCopy(iStation).Frame;
-	StationsCopy(iStation).WaveformInfo = StationsCopy(iStation).FrameInfo;
-	StationsCopy(iStation).ReGrid = StationsCopy(iStation).FrameGrid;
+	StationsCopy(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
+	StationsCopy(iStation).Tx.WaveformInfo = StationsCopy(iStation).FrameInfo;
+	StationsCopy(iStation).Tx.ReGrid = StationsCopy(iStation).FrameGrid;
 end
 
 for model = 2:numel(Snames)

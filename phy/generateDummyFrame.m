@@ -1,13 +1,13 @@
-function [txWaveform, info, txGrid] = generateDummyFrame(enbObj)
+function [frameWaveform, frameInfo, frameGrid] = generateDummyFrame(enbObj)
 
 %   GENERATE DUMMY FRAME  is used to generate a full LTE frame for piloting
 %
 %   Function fingerprint
-%   enbObj						->  a EvolvedNodeB object
+%   enbObj					->  a EvolvedNodeB object
 %
-%   txWaveform		->  resulting transmitted waveform
-%		info									->	resulting waveform info
-%		txGrid							-> resulting transmission grid
+%   frameWaveform		->  resulting transmitted waveform
+%		frameInfo				->	resulting waveform info
+%		frameGrid				-> resulting transmission grid
 
 enb = cast2Struct(enbObj);
 gridsize = lteDLResourceGridSize(enb);
@@ -17,9 +17,9 @@ P = gridsize(3);    % Number of transmit antenna ports
 
 
 %% Transmit Resource Grid
-% An empty resource grid |txGrid| is created which will be populated with
+% An empty resource grid |frameGrid| is created which will be populated with
 % subframes.
-txGrid = [];
+frameGrid = [];
 
 %% Payload Data Generation
 % As no transport channel is used in this example the data sent over the
@@ -41,7 +41,7 @@ inputSym = lteSymbolModulate(inputBits,'QPSK');
 %% Frame Generation
 % The frame will be created by generating individual subframes within a
 % loop and appending each created subframe to the previous subframes. The
-% collection of appended subframes are contained within |txGrid|. This
+% collection of appended subframes are contained within |frameGrid|. This
 % appending is repeated ten times to create a frame. When the OFDM
 % modulated time domain waveform is passed through a channel the waveform
 % will experience a delay. To avoid any samples being missed due to this
@@ -86,12 +86,12 @@ for sf = 0:10
 	% check whether we want to generate
 
 	% Append subframe to grid to be transmitted
-	txGrid = [txGrid subframe]; %#ok
+	frameGrid = [frameGrid subframe]; %#ok
 
 end
 
-[txWaveform,info] = lteOFDMModulate(enb,txGrid);
-info.OfdmEnergyScale = 1;
+[frameWaveform,frameInfo] = lteOFDMModulate(enb,frameGrid);
+frameInfo.OfdmEnergyScale = 1;
 
 
 end

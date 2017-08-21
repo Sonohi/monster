@@ -28,11 +28,10 @@ StationsNew = Stations;
 
 % In the stations copy, set the txWaveform etc from the dummy frames info
 for iStation = 1:length(StationsNew)
-	StationsNew(iStation).TxWaveform = StationsNew(iStation).Frame;
-	StationsNew(iStation).WaveformInfo = StationsNew(iStation).FrameInfo;
-	StationsNew(iStation).ReGrid = StationsNew(iStation).FrameGrid;
+	StationsNew(iStation).Tx.Waveform = StationsNew(iStation).Tx.Frame;
+	StationsNew(iStation).Tx.WaveformInfo = StationsNew(iStation).Tx.FrameInfo;
+	StationsNew(iStation).Tx.ReGrid = StationsNew(iStation).Tx.FrameGrid;
 end
-
 
 % Traverse channel
 sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
@@ -44,26 +43,26 @@ for p = 1:length(Users)
 	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeB));
 	% Compute offset
 	% TODO add try catch as lteDLFrameOffset could throw a size mismatch error
-    NotAbleToDemod = 1;
-    maxTries = 5;
-    tries = 0;
-    while NotAbleToDemod
-        try
-            if tries == maxTries
-                UsersNew(p).Rx.Offset = 0;
-                NotAbleToDemod = 0;
-            else
-                UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
-                NotAbleToDemod = 0;
-            end
+	NotAbleToDemod = 1;
+	maxTries = 5;
+	tries = 0;
+	while NotAbleToDemod
+		try
+			if tries == maxTries
+				UsersNew(p).Rx.Offset = 0;
+				NotAbleToDemod = 0;
+			else
+				UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
+				NotAbleToDemod = 0;
+			end
 
-        catch ME
-           sonohilog(sprintf('Not able to locate synchronization signal, trying again for user %i, (try %i)',p,tries),'WRN')
-           NotAbleToDemod = 1;
-           tries = tries +1;
-        end
-            
-    end
+		catch ME
+			sonohilog(sprintf('Not able to locate synchronization signal, trying again for user %i, (try %i)',p,tries),'WRN')
+			NotAbleToDemod = 1;
+			tries = tries +1;
+		end
+
+	end
 
 	%% DEBUGGING STUFF
 	if exist('ChannelEstimator', 'var')
@@ -94,7 +93,7 @@ for p = 1:length(Users)
 
 		%constDiagram(reshape(eqGrid,length(eqGrid(:,1))*length(eqGrid(1,:)),1))
 
-		txGrid = StationsNew(iSStation).ReGrid;
+		txGrid = StationsNew(iSStation).Tx.ReGrid;
 		%eqError = txGrid - eqGrid;
 		%rxError = txGrid - rxGrid;
 

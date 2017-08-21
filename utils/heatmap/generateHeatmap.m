@@ -63,9 +63,9 @@ for iStation = 1:length(Stations)
 	Stations(iStation).Users = ue.UeId;
 	ue.ENodeB = Stations(iStation).NCellID;
 	% Set the TxWaveform etc from the dummy frames info
-	Stations(iStation).TxWaveform = StationsCopy(iStation).Frame;
-	Stations(iStation).WaveformInfo = Stations(iStation).FrameInfo;
-	Stations(iStation).ReGrid = Stations(iStation).FrameGrid;
+	Stations(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
+	Stations(iStation).Tx.WaveformInfo = Stations(iStation).FrameInfo;
+	Stations(iStation).Tx.ReGrid = Stations(iStation).FrameGrid;
 
 	parfor iCluster = 1:length(Clusters)
 		%sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')

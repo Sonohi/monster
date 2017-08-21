@@ -80,11 +80,12 @@ classdef EvolvedNodeB
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
 			% TODO remove below as into TX
-			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(obj);
-			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
-			obj = setBCH(obj);
-			obj = resetResourceGrid(obj);
-			obj = initPDSCH(obj);
+			obj.Tx = TransmitterModule(obj, Param);
+% 			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(obj);
+% 			obj.TxWaveform = zeros(obj.NDLRB * 307.2, 1);
+% 			obj = setBCH(obj);
+% 			obj = resetResourceGrid(obj);
+% 			obj = initPDSCH(obj);
 		end
 
 		% Posiiton base station

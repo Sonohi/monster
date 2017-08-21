@@ -11,14 +11,47 @@ classdef TransmitterModule
 	end
 
 	methods
-
+		% Constructor
 		function obj = TransmitterModule(enb, Param)
-			obj.TxWaveform = zeros(enb.NDLRB * 307.2, 1);
+			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
 			obj = resetResourceGrid(obj, enb);
 			obj = initPDSCH(obj, enb.NDLRB);
+			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
 		end
 
+		% Setters
+		% set Frame
+		function obj = set.Frame(obj, frm)
+			obj.Frame = frm;
+		end
+
+		% set FrameInfo
+		function obj = set.FrameInfo(obj, info)
+			obj.FrameInfo = info;
+		end
+
+		% set FrameGrid
+		function obj = set.FrameGrid(obj, grid)
+			obj.FrameGrid = grid;
+		end
+
+		% set Waveform
+		function obj = set.Waveform(obj, wfm)
+			obj.Waveform = wfm;
+		end
+
+		% set WaveformInfo
+		function obj = set.WaveformInfo(obj, info)
+			obj.WaveformInfo = info;
+		end
+
+		% set ReGrid
+		function obj = set.ReGrid(obj, grid)
+			obj.ReGrid = grid;
+		end
+
+		% Methods
 		% set BCH
 		function obj = setBCH(obj, enbObj)
 			enb = cast2Struct(enbObj);

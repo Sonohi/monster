@@ -22,10 +22,9 @@ StationsC = Stations;
 % so to cover also the first case with no previously transmitted waveform
 
 for i = 1:length(StationsC)
-	if (sum([StationsC(i).TxWaveform]) == 0)
-		[StationsC(i).TxWaveform, StationsC(i).WaveformInfo, StationsC(i).ReGrid] = ...
+	if (sum([StationsC(i).Tx.Waveform]) == 0)
+		[StationsC(i).Tx.Waveform, StationsC(i).Tx.WaveformInfo, StationsC(i).Tx.ReGrid] = ...
 			generateDummyFrame(StationsC(i));
-		StationsC(i).WaveformInfo.OfdmEnergyScale = 1; % Full RB is used, so scale is set to one
 	end
 end
 
@@ -34,11 +33,11 @@ for (iUser = 1:length(Users))
 	% get UE position
 	uePos = Users(iUser).Position;
 	minLossDb = 200;
-	
+
 	stationCellID = Channel.getAssociation(StationsC,Users(iUser));
-	
+
 	Users(iUser).ENodeB = stationCellID;
-	
+
 	% Now that the assignement is done, write also on the side of the station
 	% TODO replace with matrix operation
 	for iStation = 1:length(Stations)

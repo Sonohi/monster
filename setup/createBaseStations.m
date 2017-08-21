@@ -27,8 +27,6 @@ function [Stations, h] = createBaseStations (Param)
 	end
 
 	% Add neighbours to each eNodeB
-	% TODO see if it is possible to combine the 2 loops even though all positions
-	% have to be set first
 	for iStation = 1:length(Stations)
 		Stations(iStation) = setNeighbours(Stations(iStation), Stations, Param);
 	end

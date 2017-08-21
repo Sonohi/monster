@@ -23,14 +23,14 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	[~, mod, ~] = lteMCS(min(listMCS));
 
 	% setup the PDSCH for this UE
-	enb.PDSCH.Modulation = mod;	% conservative modulation choice from above
-	enb.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+	enb.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
+	enb.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
 
 	% extract the codeword from the padded array
 	cwdEx(1:CwdInfo.cwdSize, 1) = cwd(1:CwdInfo.cwdSize,1);
 
 	% Get info and indexes
-	[pdschIxs, SymInfo] = ltePDSCHIndices(enb, enb.PDSCH, enb.PDSCH.PRBSet);
+	[pdschIxs, SymInfo] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 
 	% before generating the PDSCH, we need to check whether padding is needed based
 	% on the available/allocated resources

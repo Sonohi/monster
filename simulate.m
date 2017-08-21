@@ -74,7 +74,7 @@ for iRound = 0:(Param.schRounds-1)
 	end
 
 	% run sync routine
-    % TODO: Run syncRoutine before refresh of user association, such
+  % TODO: Run syncRoutine before refresh of user association, such
   % syncroutines determines and saves the channel seed/randomization
 	if mod(simTime, Param.syncRoutineTimer) == 0
 		sonohilog('Running sync routine', 'NFO');
@@ -101,10 +101,10 @@ for iRound = 0:(Param.schRounds-1)
 		% check if we need to regenerate that (except for iRound == 0 as it's regenerated
 		% when the object is created)
 		if (iRound ~= 0 && mod(iRound, 40) == 0)
-			Stations(iStation) = setBCH(Stations(iStation));
+			Stations(iStation).Tx = setBCH(Stations(iStation).Tx);
 		end
 		% Reset teh grid and put in the grid RS, PSS and SSS
-		Stations(iStation) = resetResourceGrid(Stations(iStation));
+		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 
 		% schedule only if at least 1 user is associated
 		if Stations(iStation).Users(1) ~= 0
@@ -185,11 +185,11 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------
 	sonohilog('eNodeB grid mapping and modulation block', 'NFO');
 	% TODO remove testing of TransmitterModule
-	%Stations = TxBulk(Stations, symMatrix, Param);
-	for iStation = 1:length(Stations)
-		Stations(iStation) = mapGridAndModulate(Stations(iStation), iStation, ...
-			symMatrix, Param);
-	end
+	Stations = TxBulk(Stations, symMatrix, Param);
+% 	for iStation = 1:length(Stations)
+% 		Stations(iStation) = mapGridAndModulate(Stations(iStation), iStation, ...
+% 			symMatrix, Param);
+% 	end
 
 	% ------------------
 	% CHANNEL TRAVERSE

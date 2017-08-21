@@ -18,7 +18,7 @@ function [Station] = schedule(Station, Users, Param, subframeNum)
 	sz = length(Station.Users);
 
 	% calculate number of available RBs available in the subframe for the PDSCH
-	res = length(find(abs(Station.ReGrid) == 0));
+	res = length(find(abs(Station.Tx.ReGrid) == 0));
 	prbsAv = floor(res/Param.prbRe);
 
 	switch (Param.scheduling)
