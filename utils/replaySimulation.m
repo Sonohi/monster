@@ -3,17 +3,17 @@ clear all
 close all
 
 
-mode = 'perUser'; %perUser
+mode = 'perStation'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 27;
-sStation = nan;
+sUser = 4;
+sStation = 3;
 
 %% Initialization
 fprintf('Loading results...')
 load('results/compiled.mat')
 Param.round_duration = 0.001; %seconds
-Param.no_rounds = length(ueOut(1,1,:,1));
+Param.no_rounds = length([ueOut(1,1,:,1)]);
 total_time = 0.001*Param.no_rounds; % seconds
 
 fprintf('done.\n')
@@ -37,6 +37,8 @@ end
 if strcmp(mode,'perStation')
 
   station = Stations(sStation);
+  
+  displayStation(enbOut,Stations,sStation,Param, ueOut, Users)
    
   
 elseif strcmp(mode, 'perUser')

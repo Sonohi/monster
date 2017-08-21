@@ -202,9 +202,9 @@ classdef ReceiverModule
 				end
 			end
 			
-			obj.Bits.tot = obj.Bits.tot + length(diff);
-			obj.Bits.err = obj.Bits.err + sum(diff) + errEx;
-			obj.Bits.ok = obj.Bits.ok + length(diff) - sum(diff) - errEx;
+			obj.Bits.tot = length(diff);
+			obj.Bits.err = sum(diff) + errEx;
+			obj.Bits.ok = length(diff) - sum(diff) - errEx;
 		end
 		
 		% Error bits

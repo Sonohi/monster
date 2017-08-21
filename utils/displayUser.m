@@ -16,20 +16,17 @@ function displayUser(ueOut,Users,sUser,Param)
   
   snr = [ueOut(1,1,:,sUser).snr];
   sinr = [ueOut(1,1,:,sUser).sinr];
-  
+  err_blocks = 0;
   for iRound = 1:Param.no_rounds
+    blocks = [ueOut(1,1,iRound,sUser).blocks];
     bits = [ueOut(1,1,iRound,sUser).bits];
-    if iRound == 1
-      total_bits(iRound) = sum([bits.tot]);
-    else
-      total_bits(iRound) = sum([bits.tot])-sum(total_bits(1:iRound-1));
-    end
-    bit_rate(iRound) = total_bits(iRound)/Param.round_duration;
+    bit_rate(iRound) = bits.tot/Param.round_duration;
+    bler(iRound) =  blocks.err/Param.round_duration;
+    ber(iRound) = bits.err/Param.round_duration;
 
   end
   min_bitrate = 0;
   max_bitrate = 10e6;
-
 
   figure
   set(gcf, 'Position', [181 595 1.4793e+03 656])
@@ -82,6 +79,13 @@ function displayUser(ueOut,Users,sUser,Param)
   set(ax_bitrate_plot,'XLim',[0 Param.no_rounds],'YLim',[min_bitrate max_bitrate]);
   xlabel('Round')
   ylabel('Bitrate (b/s)')
+  
+  subplot(2,4,8)
+  bler_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  ax_bler_plot = gca;
+  set(ax_bitrate_plot,'XLim',[0 Param.no_rounds]);
+  xlabel('Round')
+  ylabel('BER')
 
 
 
@@ -94,6 +98,7 @@ function displayUser(ueOut,Users,sUser,Param)
     addpoints(snr_plot,iRound,snr(iRound));
     addpoints(sinr_plot,iRound,sinr(iRound));
     addpoints(bitrate_plot,iRound,bit_rate(iRound));
+    addpoints(bler_plot,iRound,ber(iRound));
     drawnow
     pause(0.1)
 
