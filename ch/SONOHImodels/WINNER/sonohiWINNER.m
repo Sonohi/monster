@@ -70,7 +70,6 @@ classdef sonohiWINNER
                     % No users associated, skip the model.
                     continue
                 end
-
                 wimCh = comm.WINNER2Channel(obj.WconfigParset{model}, obj.WconfigLayout{model});
                 chanInfo = info(wimCh);
                 numTx    = chanInfo.NumBSElements(1);
@@ -78,6 +77,15 @@ classdef sonohiWINNER
                 obj.numRx{model} = chanInfo.NumLinks(1);
                 impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
                 h{model} = wimCh(impulseR);
+     
+%                 SA = dsp.SpectrumAnalyzer('SampleRate', Rs, ...
+%                   'YLimits', [-170, -100]);
+%                 
+%                 for ii = 1:50
+%                   impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
+%                   h{model} = wimCh(impulseR);
+%                   SA(h{model}{1});
+%                 end              
             end
             obj.h = h;
 
@@ -295,6 +303,7 @@ classdef sonohiWINNER
             % TODO: Add velocity vector of users
             for iUser = 1:length(cfgLayout.UserIdx)
                 cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Position(1:3)));
+                cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Velocity = [Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Velocity;0;0];
             end
 
         end
