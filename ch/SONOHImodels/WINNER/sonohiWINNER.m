@@ -112,7 +112,7 @@ classdef sonohiWINNER
                     Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
                     User = Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx));
                     % Get corresponding TxSig
-                    txSig = [Station.TxWaveform;zeros(25,1)];
+                    txSig = [Station.Tx.Waveform;zeros(25,1)];
                     txPw = 10*log10(bandpower(txSig));
 
                     %figure
@@ -172,7 +172,8 @@ classdef sonohiWINNER
             % This is based on the number of useed subcarriers.
             % Scale it by the number of used RE since the power is
             % equally distributed
-            Es = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft)*Station.WaveformInfo.OfdmEnergyScale);
+            Es = sqrt(2.0*Station.CellRefP*double(Station.Tx.WaveformInfo.Nfft) * ...
+							Station.Tx.WaveformInfo.OfdmEnergyScale);
 
             % Compute spectral noise density NO
             N0 = 1/(Es*SNRLin);
@@ -244,7 +245,7 @@ classdef sonohiWINNER
             end
 
             % User antenna array
-            
+
             if ~exist('UEAA.mat')
               ueAA = winner2.AntennaArray('ULA', 1,  0.05);
               save('UEAA.mat','ueAA')
@@ -254,9 +255,9 @@ classdef sonohiWINNER
               load('UEAA.mat')
               AA(2) = ueAA;
             end
-            
-            
-            
+
+
+
             % Number of sectors.
             numSec = 1;
             % TODO, requires changes ot the way pairing is done
@@ -323,7 +324,7 @@ classdef sonohiWINNER
                 % doubles...
                 distance = Ch.getDistance(cBs.Position,cMs.Position);
                 if cBs.BsClass == 'micro'
-        
+
                     if distance <= 20
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
                             stationIdx,userIdx,num2str(distance));
@@ -365,7 +366,7 @@ classdef sonohiWINNER
             % Use maximum fft size
             % However since the same BsClass is used these are most
             % likely to be identical
-            sw = [Stations(cfgLayout.StationIdx).WaveformInfo];
+            sw = [Stations(cfgLayout.StationIdx).Tx.WaveformInfo];
             swNfft = [sw.Nfft];
             swSamplingRate = [sw.SamplingRate];
             cf = max([Stations(cfgLayout.StationIdx).DlFreq]); % Given in MHz

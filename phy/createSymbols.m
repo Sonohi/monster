@@ -44,7 +44,7 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	% error handling for symbol creation
 
 	try
-		sym = ltePDSCH(enb, enb.PDSCH, cwdEx);
+		sym = ltePDSCH(enb, enb.Tx.PDSCH, cwdEx);
 	catch ME
 		fSpec = 'symbols generation failed for codeword with length %i\n';
 		s=sprintf(fSpec, length(cwdEx));

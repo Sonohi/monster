@@ -98,13 +98,13 @@ classdef ReceiverModule
 			obj.SchIndexes = obj.SchIndexes';
 			
 			% Now get the PDSCH symbols out of the whole grid for this receiver
-			pdschIndices = ltePDSCHIndices(enb, enb.PDSCH, obj.SchIndexes);
-			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.ReGrid);
+			pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
+			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.Tx.ReGrid);
 			
 			% Decode PDSCH
-			dlschBits = ltePDSCHDecode(enb, enb.PDSCH, pdschRx);
+			dlschBits = ltePDSCHDecode(enb, enb.Tx.PDSCH, pdschRx);
 			% Decode DL-SCH
-			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.PDSCH, ue.TransportBlockInfo.tbSize, ...
+			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ...
 				dlschBits);
 			% lteDLSCHDecode returns a cell array for the estimated TB, convert
 			% that to a matrix
@@ -117,13 +117,13 @@ classdef ReceiverModule
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PreEvm = EVM(enbObj.ReGrid,obj.Subframe);
+			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
 			sonohilog(s,'NFO0')
 			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PostEvm = EVM(enbObj.ReGrid,obj.EqSubframe);
+			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
 			sonohilog(s,'NFO0')
 		end
@@ -131,7 +131,7 @@ classdef ReceiverModule
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
-			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 		end
 		
 		% reference measurements

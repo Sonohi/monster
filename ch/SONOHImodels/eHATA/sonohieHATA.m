@@ -24,14 +24,14 @@ classdef sonohieHATA
 
         if strcmp(obj.Channel.fieldType,'full')
           RxSig = obj.addFading([...
-            station.TxWaveform;zeros(25,1)],station.WaveformInfo);
+            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo);
 
           [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,RxSig);
 
         elseif strcmp(obj.Channel.fieldType,'pathloss')
           [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
-            station,user,station.TxWaveform);
+            station,user,station.Tx.Waveform);
 
         end
         user.Rx.SNR = SNRLin;
@@ -108,7 +108,8 @@ classdef sonohieHATA
       % This is based on the number of useed subcarriers.
       % Scale it by the number of used RE since the power is
       % equally distributed
-      Es = sqrt(2.0*Station.CellRefP*double(Station.WaveformInfo.Nfft)*Station.WaveformInfo.OfdmEnergyScale);
+      Es = sqrt(2.0*Station.CellRefP*double(Station.Tx.WaveformInfo.Nfft) * ...
+				Station.Tx.WaveformInfo.OfdmEnergyScale);
 
       % Compute spectral noise density NO
       N0 = 1/(Es*SNRLin);
