@@ -102,7 +102,8 @@ classdef ReceiverModule
 			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.Tx.ReGrid);
 			
 			% Decode PDSCH
-			dlschBits = ltePDSCHDecode(enb, enb.Tx.PDSCH, pdschRx);
+			[dlschBits, decodedPdsch] = ltePDSCHDecode(enb, enb.Tx.PDSCH, pdschRx);
+			
 			% Decode DL-SCH
 			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ...
 				dlschBits);
@@ -158,7 +159,7 @@ classdef ReceiverModule
 		function obj  = logBlockReception(obj,ueObj)
 			validateRxLogBlockReception(obj);
 			% increase counters for BLER
-			if obj.Crc
+			if obj.Crc == 0
 				obj.Blocks.ok = obj.Blocks.ok + 1;
 			else
 				obj.Blocks.err = obj.Blocks.err + 1;
