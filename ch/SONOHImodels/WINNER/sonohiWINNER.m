@@ -77,15 +77,6 @@ classdef sonohiWINNER
                 obj.numRx{model} = chanInfo.NumLinks(1);
                 impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
                 h{model} = wimCh(impulseR);
-     
-%                 SA = dsp.SpectrumAnalyzer('SampleRate', Rs, ...
-%                   'YLimits', [-170, -100]);
-%                 
-%                 for ii = 1:50
-%                   impulseR = [ones(1, numTx); zeros(obj.WconfigParset{model}.NumTimeSamples-1, numTx)];
-%                   h{model} = wimCh(impulseR);
-%                   SA(h{model}{1});
-%                 end              
             end
             obj.h = h;
 
@@ -265,7 +256,6 @@ classdef sonohiWINNER
             end
 
 
-
             % Number of sectors.
             numSec = 1;
             % TODO, requires changes ot the way pairing is done
@@ -281,7 +271,7 @@ classdef sonohiWINNER
         function cfgLayout =initializeLayout(useridx, eNBidx, numLinks, AA, range)
             % Initialize layout struct by antenna array and number of
             % links.
-            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
+            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range, randi(99));
 
         end
 
@@ -304,7 +294,6 @@ classdef sonohiWINNER
             % TODO: Add velocity vector of users
             for iUser = 1:length(cfgLayout.UserIdx)
                 cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Position(1:3)));
-                cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Velocity = [Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Velocity;0;0];
             end
 
         end
@@ -331,7 +320,7 @@ classdef sonohiWINNER
                 % Apparently WINNERchan doesn't compute distance based
                 % on height, only on x,y distance. Also they can't be
                 % doubles...
-                distance = Ch.getDistance(cBs.Position,cMs.Position);
+                distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
                 if cBs.BsClass == 'micro'
 
                     if distance <= 20
@@ -375,9 +364,10 @@ classdef sonohiWINNER
             % Use maximum fft size
             % However since the same BsClass is used these are most
             % likely to be identical
-            sw = [Stations(cfgLayout.StationIdx).Tx.WaveformInfo];
-            swNfft = [sw.Nfft];
-            swSamplingRate = [sw.SamplingRate];
+            sw_tx = [Stations(cfgLayout.StationIdx).Tx];
+            sw_info = [sw_tx.WaveformInfo];
+            swNfft = [sw_info.Nfft];
+            swSamplingRate = [sw_info.SamplingRate];
             cf = max([Stations(cfgLayout.StationIdx).DlFreq]); % Given in MHz
 
             frmLen = double(max(swNfft));   % Frame length
@@ -389,6 +379,7 @@ classdef sonohiWINNER
 
 
             cfgModel = winner2.wimparset;
+            cfgModel.RandomSeed = randi(99999);
             cfgModel.CenterFrequency = cf*10e5; % Given in Hz
             cfgModel.NumTimeSamples     = frmLen; % Frame length
             cfgModel.IntraClusterDsUsed = 'yes';   % No cluster splitting

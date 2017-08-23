@@ -12,7 +12,7 @@ function res = recordUEResults(Users, Stations, res, ix)
 for iUser = 1:length(Users)
 	rx = Users(iUser).Rx;
 	iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
-	res(ix + 1, iUser) = struct(...
+	resM = struct(...
 		'blocks', rx.Blocks,...
 		'cqi', rx.WCQI, ...
 		'preEvm', rx.PreEvm, ...
@@ -22,5 +22,39 @@ for iUser = 1:length(Users)
 		'snr', rx.SNRdB, ...
 		'rxPosition', Users(iUser).Position, ...
 		'txPosition', Stations(iServingStation).Position);
+      user = Users(iUser);
+
+    % Check if user is scheduled.
+    station = Stations(iServingStation);
+    scheduled = checkUserSchedule(user,station);
+    if ~scheduled
+      res(ix + 1, iUser) = resultHook(resM);
+    else
+      res(ix + 1, iUser) = resM;
+    end
+      
 end
+
+
+  function userresM = resultHook(userres)
+    % Hook for adjusting saved results. 
+    % Removal of reception metrics (e.g. demodulated statistics) if not
+    % scheduled given the round
+    % 
+    %   Function fingerprint
+    %   userres    ->  results related to single user
+    
+    %   userresM   ->  Mutated results returned 
+    userres.blocks = NaN;
+    userres.cqi = NaN;
+    userres.preEvm = NaN;
+    userres.postEvm = NaN;
+    userres.bits = NaN;
+    userresM = userres;
+  end
+
+
 end
+
+
+
