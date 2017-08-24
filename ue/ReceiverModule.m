@@ -160,11 +160,11 @@ classdef ReceiverModule
 			validateRxLogBlockReception(obj);
 			% increase counters for BLER
 			if obj.Crc == 0
-				obj.Blocks.ok = obj.Blocks.ok + 1;
+				obj.Blocks.ok = 1;
 			else
-				obj.Blocks.err = obj.Blocks.err + 1;
+				obj.Blocks.err = 1;
 			end
-			obj.Blocks.tot = obj.Blocks.tot + 1;
+			obj.Blocks.tot = 1;
 			
 			%TB comparison and bit stats logging
 			% extract the original TB and cast it to uint
