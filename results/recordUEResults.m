@@ -27,7 +27,7 @@ for iUser = 1:length(Users)
 
 		% Check if user is scheduled.
     station = Stations(iServingStation);
-    scheduled = checkUserSchedule(user,station);
+    scheduled = checkUserSchedule(Users(iUser),station);
     if ~scheduled
       res(ix + 1, iUser) = resultHook(resM);
     else
