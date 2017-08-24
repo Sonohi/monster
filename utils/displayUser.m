@@ -29,6 +29,7 @@ function displayUser(ueOut,Users,sUser,Param)
     bits = [ueOut(1,1,iRound,sUser).bits];
     bit_rate(iRound) = bits.tot/Param.round_duration;
     bler(iRound) =  blocks.err/Param.round_duration;
+    err(iRound) = bits.err;
     ber(iRound) = bits.err/Param.round_duration;
     distance(iRound) = sqrt((xx_tx(iRound)-xx(iRound)).^2+(yy_tx(iRound)-yy(iRound)).^2+(zz_tx(iRound)-zz(iRound)).^2);
 
@@ -74,7 +75,7 @@ function displayUser(ueOut,Users,sUser,Param)
   yyaxis right
   sinr_plot = animatedline('Color','g');
   ax_sinr_plot = gca;
-  set(ax_sinr_plot,'YLim',[min(sinr) max(sinr)]);
+  set(ax_sinr_plot,'YLim',[min(real(sinr)) max(real(sinr))]);
   ylabel('SINR (dB)')
   legend('SNR','SINR')
 
@@ -100,14 +101,14 @@ function displayUser(ueOut,Users,sUser,Param)
 
 
   grid on
-  for iRound = 1:length(xx)-1e
+  for iRound = 1:length(xx)-1
     addpoints(pos_plot,xx(iRound),yy(iRound));
     addpoints(evm_plot,iRound,postEvm(iRound));
     addpoints(cqi_plot,iRound,cqi(iRound));
     addpoints(snr_plot,iRound,snr(iRound));
-    addpoints(sinr_plot,iRound,sinr(iRound));
+    addpoints(sinr_plot,iRound,real(sinr(iRound)));
     addpoints(bitrate_plot,iRound,bit_rate(iRound));
-    addpoints(bler_plot,iRound,ber(iRound));
+    addpoints(bler_plot,iRound,err(iRound));
     drawnow
 
 

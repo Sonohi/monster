@@ -45,11 +45,15 @@ end
     %   userres    ->  results related to single user
     
     %   userresM   ->  Mutated results returned 
-    userres.blocks = NaN;
     userres.cqi = NaN;
     userres.preEvm = NaN;
     userres.postEvm = NaN;
-    userres.bits = NaN;
+    userres.blocks.tot = NaN;
+    userres.blocks.err = NaN;
+    userres.blocks.ok = NaN;
+    userres.bits.tot = NaN;
+    userres.bits.err = NaN;
+    userres.bits.ok = NaN;
     userresM = userres;
   end
 
