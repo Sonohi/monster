@@ -31,6 +31,7 @@ classdef EvolvedNodeB
 		DeltaP;
 		Psleep;
 		Tx;
+		HarqProc;
 	end
 
 	methods
@@ -70,6 +71,7 @@ classdef EvolvedNodeB
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
+			obj.HarqProc = [];
 			obj.Tx = TransmitterModule(obj, Param);
 		end
 

@@ -227,16 +227,16 @@ classdef ReceiverModule
 					% the original sym was bigger than the received one, so test on the
 					% usable portion and log the rest as errors
 					sizeTest = length(symsTx) - sizeCheck;
-					symTest(1:sizeTest) = symsTx(1:sizeTest);
-					[diff, ratio] = biterr(symTest, symsRx);
+					symsTest(1:sizeTest) = symsTx(1:sizeTest);
+					[diff, ratio] = symerr(symsTest, symsRx);
 					errEx = sizeCheck;
 					tot = sizeTest;
 				else
 					% the original TB was smaller than the received one, so test on the
 					% usable portion and discard the rest
 					sizeTest = length(symsRx) - sizeCheck;
-					symsTest(1:sizeTest) = tbRx(1:sizeTest);
-					[diff, ratio] = biterr(tbTx, tbTest);
+					symsTest(1:sizeTest) = symsRx(1:sizeTest);
+					[diff, ratio] = symerr(symsTx, symsTest);
 					errEx = 0;
 					tot = sizeTest;
 				end
