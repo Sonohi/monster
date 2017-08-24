@@ -188,15 +188,17 @@ classdef ReceiverModule
 					% the original TB was bigger than the received one, so test on the
 					% usable portion and log the rest as errors
 					sizeTest = length(tbTx) - sizeCheck;
-					tbTest(1:sizeTest) = tbTx(1:sizeTest);
+					tbTest(1:sizeTest,1) = tbTx(1:sizeTest,1);
 					[diff, ratio] = biterr(tbTest, tbRx);
 					errEx = sizeCheck;
 					tot = sizeTest;
 				else
 					% the original TB was smaller than the received one, so test on the
 					% usable portion and discard the rest
+					% convert the difference to absolute value
+					sizeCheck = abs(sizeCheck);
 					sizeTest = length(tbRx) - sizeCheck;
-					tbTest(1:sizeTest) = tbRx(1:sizeTest);
+					tbTest(1:sizeTest,1) = tbRx(1:sizeTest,1);
 					[diff, ratio] = biterr(tbTx, tbTest);
 					errEx = 0;
 					tot = sizeTest;
@@ -227,15 +229,17 @@ classdef ReceiverModule
 					% the original sym was bigger than the received one, so test on the
 					% usable portion and log the rest as errors
 					sizeTest = length(symsTx) - sizeCheck;
-					symsTest(1:sizeTest) = symsTx(1:sizeTest);
+					symsTest(1:sizeTest,1) = symsTx(1:sizeTest,1);
 					[diff, ratio] = symerr(symsTest, symsRx);
 					errEx = sizeCheck;
 					tot = sizeTest;
 				else
-					% the original TB was smaller than the received one, so test on the
+					% the original sym was smaller than the received one, so test on the
 					% usable portion and discard the rest
+					% convert the difference to absolute value
+					sizeCheck = abs(sizeCheck);
 					sizeTest = length(symsRx) - sizeCheck;
-					symsTest(1:sizeTest) = symsRx(1:sizeTest);
+					symsTest(1:sizeTest,1) = symsRx(1:sizeTest,1);
 					[diff, ratio] = symerr(symsTx, symsTest);
 					errEx = 0;
 					tot = sizeTest;

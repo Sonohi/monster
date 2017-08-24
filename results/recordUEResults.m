@@ -11,6 +11,7 @@ function res = recordUEResults(Users, Stations, res, ix)
 
 for iUser = 1:length(Users)
 	rx = Users(iUser).Rx;
+	user = Users(iUser);
 	iServingStation = [Stations.NCellID] == Users(iUser).ENodeB;
 	resM = struct(...
 		'blocks', rx.Blocks,...
