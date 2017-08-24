@@ -30,6 +30,8 @@ for ll = 1:Param.no_rounds
     bits = [ueOut(1,1,ll,sUser).bits];
     bit_rate(ll,sUser) = bits.tot/Param.round_duration;
   end
+  agg_power(ll,:) = [enbOut(1,1,ll,:).power];
+  agg_util(ll,:) = [enbOut(1,1,ll,:).util];
 end
 min_bitrate = 0;
 max_bitrate = 10e8;
@@ -59,7 +61,7 @@ ylabel('Y (m)')
 
 %% Utility
 subplot(2,4,4)
-utility_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+utility_plot = animatedline('Color','b');
 ax_utility_plot = gca;
 set(ax_utility_plot,'XLim',[0 Param.no_rounds],'YLim',[min(utility_min) max(utility_max)]);
 xlabel('Round')
@@ -67,7 +69,7 @@ ylabel('Utility (%)')
 
 %% Power
 subplot(2,4,5)
-power_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+power_plot = animatedline('Color','b');
 ax_power_plot = gca;
 set(ax_power_plot,'XLim',[0 Param.no_rounds],'YLim',[min(power_min) max(power_max)]);
 xlabel('Round')
@@ -75,7 +77,7 @@ ylabel('Power (W)')
 
 %% Aggregated bitrate
 subplot(2,4,6)
-bitrate_agg_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+bitrate_agg_plot = animatedline('Color','b');
 ax_bitrate_plot = gca;
 set(ax_bitrate_plot,'XLim',[0 Param.no_rounds],'YLim',[min(min_bitrate) max(max_bitrate)],'YScale','log');
 xlabel('Round')
@@ -83,7 +85,7 @@ ylabel('Agg. Bitrate DL')
 
 %% Number of users.
 subplot(2,4,7)
-users_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+users_plot = animatedline('Color','b');
 ax_users_plot = gca;
 set(ax_users_plot,'XLim',[0 Param.no_rounds],'YLim',[0 length(ueOut(1,1,1,:))]);
 xlabel('Round')

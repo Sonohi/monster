@@ -3,8 +3,15 @@ function displayUser(ueOut,Users,sUser,Param)
   user = Users(sUser);
   
   positions = [ueOut(1,1,:,sUser).rxPosition];
+  txpositions = [ueOut(1,1,:,sUser).txPosition];
   xx = positions(1:3:end);
   yy = positions(2:3:end);
+  zz = positions(3:3:end);
+  xx_tx = txpositions(1:3:end);
+  yy_tx = txpositions(2:3:end);
+  zz_tx = txpositions(3:3:end);
+  
+  
 
   postEvm = [ueOut(1,1,:,sUser).postEvm];
   EVM_min = 0;
@@ -22,7 +29,9 @@ function displayUser(ueOut,Users,sUser,Param)
     bits = [ueOut(1,1,iRound,sUser).bits];
     bit_rate(iRound) = bits.tot/Param.round_duration;
     bler(iRound) =  blocks.err/Param.round_duration;
+    err(iRound) = bits.err;
     ber(iRound) = bits.err/Param.round_duration;
+    distance(iRound) = sqrt((xx_tx(iRound)-xx(iRound)).^2+(yy_tx(iRound)-yy(iRound)).^2+(zz_tx(iRound)-zz(iRound)).^2);
 
   end
   min_bitrate = 0;
@@ -41,7 +50,7 @@ function displayUser(ueOut,Users,sUser,Param)
   ylabel('Y (m)')
 
   subplot(2,4,4)
-  evm_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  evm_plot = animatedline('Color','b');
   ax_evm_plot = gca;
   set(ax_evm_plot,'XLim',[0 Param.no_rounds],'YLim',[min(EVM_min) max(EVM_max)]);
   xlabel('Round')
@@ -49,7 +58,7 @@ function displayUser(ueOut,Users,sUser,Param)
 
 
   subplot(2,4,5)
-  cqi_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  cqi_plot = animatedline('Color','b');
   ax_cqi_plot = gca;
   set(ax_cqi_plot,'XLim',[0 Param.no_rounds],'YLim',[cqi_min cqi_max]);
   xlabel('Round')
@@ -57,31 +66,32 @@ function displayUser(ueOut,Users,sUser,Param)
 
   subplot(2,4,6)
   yyaxis left
-  snr_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  snr_plot = animatedline('Color','b');
   ax_snr_plot = gca;
   set(ax_snr_plot,'XLim',[0 Param.no_rounds],'YLim',[min(snr) max(snr)]);
   xlabel('Round')
   ylabel('SNR (dB)')
   hold on
   yyaxis right
-  sinr_plot = animatedline('Color','g','Marker','o','MarkerSize',7,'MarkerFaceColor','g');
+  sinr_plot = animatedline('Color','g');
   ax_sinr_plot = gca;
-  set(ax_sinr_plot,'YLim',[min(sinr) max(sinr)]);
+  set(ax_sinr_plot,'YLim',[min(real(sinr)) max(real(sinr))]);
   ylabel('SINR (dB)')
+  legend('SNR','SINR')
 
   
   
   
   
   subplot(2,4,7)
-  bitrate_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  bitrate_plot = animatedline('Color','b');
   ax_bitrate_plot = gca;
   set(ax_bitrate_plot,'XLim',[0 Param.no_rounds],'YLim',[min_bitrate max_bitrate]);
   xlabel('Round')
   ylabel('Bitrate (b/s)')
   
   subplot(2,4,8)
-  bler_plot = animatedline('Color','b','Marker','x','MarkerSize',7);
+  bler_plot = animatedline('Color','b');
   ax_bler_plot = gca;
   set(ax_bitrate_plot,'XLim',[0 Param.no_rounds]);
   xlabel('Round')
@@ -96,13 +106,14 @@ function displayUser(ueOut,Users,sUser,Param)
     addpoints(evm_plot,iRound,postEvm(iRound));
     addpoints(cqi_plot,iRound,cqi(iRound));
     addpoints(snr_plot,iRound,snr(iRound));
-    addpoints(sinr_plot,iRound,sinr(iRound));
+    addpoints(sinr_plot,iRound,real(sinr(iRound)));
     addpoints(bitrate_plot,iRound,bit_rate(iRound));
-    addpoints(bler_plot,iRound,ber(iRound));
+    addpoints(bler_plot,iRound,err(iRound));
     drawnow
-    pause(0.1)
+
 
   end
-
+  
+  
 
 end

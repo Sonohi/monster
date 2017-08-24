@@ -102,7 +102,7 @@ for iRound = 0:(Param.schRounds-1)
 		% check if we need to regenerate that (except for iRound == 0 as it's regenerated
 		% when the object is created)
 		if (iRound ~= 0 && mod(iRound, 40) == 0)
-			Stations(iStation).Tx = setBCH(Stations(iStation).Tx);
+			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
 		end
 		% Reset teh grid and put in the grid RS, PSS and SSS
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));

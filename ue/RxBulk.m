@@ -48,6 +48,10 @@ function Users = RxBulk(Stations,Users, cec)
 			Users(iUser) = user;
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
+      user.Rx.PostEvm = 100;
+      user.Rx.PreEvm = 100;
+      user.Rx.WCQI = 1;
+      Users(iUser) = user;
       continue;
     end
   end
