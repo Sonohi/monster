@@ -16,6 +16,8 @@ classdef UserEquipment
 		Velocity;
 		RxAmpli;
 		Rx;
+		Symbols;
+		SymbolsInfo;
 		Codeword;
 		CodewordInfo;
 		TransportBlock;
@@ -49,8 +51,12 @@ classdef UserEquipment
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
 			obj.Rx = ReceiverModule(Param);
+			obj.Symbols = [];
+			obj.SymbolsInfo = [];
 			obj.Codeword = [];
+			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
+			obj.TransportBlockInfo = [];
 		end
 
 		% sets user trajectory
@@ -138,6 +144,16 @@ classdef UserEquipment
 			obj.CodewordInfo = info;
 		end
 
+		% set Symbols
+		function obj = set.Symbols(obj, sym)
+			obj.Symbols = sym;
+		end
+
+		% set SymbolsInfo
+		function obj = set.SymbolsInfo(obj, info)
+			obj.SymbolsInfo = info;
+		end
+
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
@@ -146,6 +162,8 @@ classdef UserEquipment
 		%Reset properties that change every round
 		function obj = resetUser(obj)
 			obj.Scheduled = false;
+			obj.Symbols = [];
+			obj.SymbolsInfo = [];
 			obj.Codeword = [];
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];

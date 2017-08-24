@@ -39,7 +39,8 @@ ueResults(1:Param.schRounds, 1:Param.numUsers) = struct(...
 	'sinr', 0,...
 	'snr',0,...
 	'rxPosition', [],...
-	'txPosition', []);
+	'txPosition', [], ...
+	'symbols', []);
 
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
@@ -141,7 +142,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	for iUser = 1:length(Users)
 		% get the eNodeB thie UE is connected to
-		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+		iServingStation = [Stations.NCellID] == Users(iUser).ENodeB;
 
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
@@ -164,6 +165,9 @@ for iRound = 0:(Param.schRounds-1)
 			if SymInfo.symSize > 0
 				symMatrix(iServingStation, iUser, :) = sym;
 				symMatrixInfo(iServingStation, iUser) = SymInfo;
+				% Store the pre-OFDM modulated symbols in the UE structure to calculate SER
+				Users(iUser).Symbols = sym;
+				Users(iUser).SymbolsInfo = SymInfo;
 			end
 
 			% Save to data structures

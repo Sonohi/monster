@@ -174,7 +174,7 @@ classdef ChBulk_v2
 				elseif strcmp(obj.Mode,'B2B')
 					sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
 					for iUser = 1:length(Users)
-						iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+						iServingStation = [Stations.NCellID] == Users(iUser).ENodeB;
 						Users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
 					end
 				end
