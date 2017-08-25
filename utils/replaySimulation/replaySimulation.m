@@ -3,10 +3,10 @@ clear all
 close all
 
 
-mode = 'perStation'; %perUser
+mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 4;
+sUser = 2;
 sStation = 3;
 
 %% Initialization
@@ -31,7 +31,14 @@ elseif strcmp(mode,'perUser')
   fprintf('Possibilities: %s',poss(1:end-1))
   sUser = input('\n');
 end
-end
+endedit
+
+
+%% Standard display values (axis ranges)
+
+Param.EVM = [0 100];
+Param.CQI = [0 15];
+Param.bitrate = [0 10e6];
 
 
 if strcmp(mode,'perStation')
@@ -43,7 +50,8 @@ if strcmp(mode,'perStation')
   
 elseif strcmp(mode, 'perUser')
   while true
-    displayUser(ueOut,Users,sUser,Param)
+    data = extractUserMetrics(ueOut,Users,Param);
+    displayUser(sUser,data,Param)
     fprintf('Replay? (y/n) ')
     rep = input('\n','s');
     if ~strcmp(rep,'y')

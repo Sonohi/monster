@@ -133,7 +133,9 @@ classdef ReceiverModule
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
-			[obj.WCQI, obj.SINR] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			[obj.WCQI, SINR] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+      SINR_lin = 10^(SINR/10);
+      obj.SINR = SINR_lin;
 		end
 
 		% reference measurements

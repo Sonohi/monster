@@ -337,7 +337,6 @@ classdef ChBulk_v2
         end
 
 
-
         Users(iUser) = user;
       end
 
