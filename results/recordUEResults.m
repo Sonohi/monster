@@ -23,7 +23,8 @@ for iUser = 1:length(Users)
 		'snr', rx.SNRdB, ...
 		'rxPosition', Users(iUser).Position, ...
 		'txPosition', Stations(iServingStation).Position,...
-		'symbols', rx.Symbols);
+		'symbols', rx.Symbols,...
+    'scheduled', user.Scheduled);
 
 		% Check if user is scheduled.
     station = Stations(iServingStation);
@@ -54,6 +55,8 @@ end
     userres.bits.tot = NaN;
     userres.bits.err = NaN;
     userres.bits.ok = NaN;
+    userres.snr = NaN;
+    userres.sinr = NaN;
     userresM = userres;
   end
 

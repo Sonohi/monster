@@ -6,7 +6,7 @@ close all
 mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 2;
+sUser = 1;
 sStation = 3;
 
 %% Initialization
@@ -31,7 +31,7 @@ elseif strcmp(mode,'perUser')
   fprintf('Possibilities: %s',poss(1:end-1))
   sUser = input('\n');
 end
-endedit
+end
 
 
 %% Standard display values (axis ranges)
@@ -39,6 +39,8 @@ endedit
 Param.EVM = [0 100];
 Param.CQI = [0 15];
 Param.bitrate = [0 10e6];
+Param.SNR = [-80 100];
+Param.SINR = [-80 100];
 
 
 if strcmp(mode,'perStation')

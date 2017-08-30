@@ -29,11 +29,12 @@ classdef sonohiWINNER
 
             for model = 1:numel(Snames)
                 type = Snames{model};
-                stations = types.(Snames{model});
+                stations = [Stations(types.(Snames{model})).NCellID];
 
                 % Get number of links associated with the station.
-                users = nonzeros([Stations(stations).Users]);
-                numLinks = nnz(users);
+                schedule = [Stations(ismember([Stations.NCellID],stations)).Schedule];
+                users = removeZeros(unique([schedule.UeId]));
+                numLinks = length(users);
 
                 if isempty(users)
                     % If no users are associated, skip the model
@@ -50,7 +51,7 @@ classdef sonohiWINNER
                 obj.WconfigLayout{model} = obj.setPositions(obj.WconfigLayout{model} ,Stations,Users);
 
 
-                obj.WconfigLayout{model}.Pairing = Channel.getPairing(Stations(obj.WconfigLayout{model}.StationIdx));
+                obj.WconfigLayout{model}.Pairing = Channel.getPairing(Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx)));
 
                 obj.WconfigLayout{model}  = obj.updateIndexing(obj.WconfigLayout{model} ,Stations);
 
@@ -107,9 +108,9 @@ classdef sonohiWINNER
                     % Get TX from the WINNER layout idx
                     txIdx = obj.WconfigLayout{model}.Pairing(1,link);
                     % Get RX from the WINNER layout idx
-                    rxIdx = obj.WconfigLayout{model}.Pairing(2,link)-length(obj.WconfigLayout{model}.StationIdx);
-                    Station = Stations(obj.WconfigLayout{model}.StationIdx(txIdx));
-                    User = Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx));
+                    rxIdx = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
+                    Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(txIdx)));
+                    User = Users([Users.UeId] == rxIdx);
                     % Get corresponding TxSig
                     txSig = [Station.Tx.Waveform;zeros(25,1)];
                     txPw = 10*log10(bandpower(txSig));
@@ -138,7 +139,7 @@ classdef sonohiWINNER
                     User.Rx.Waveform = rxSigNorm;
 
 
-                    Users([Users.UeId] == obj.WconfigLayout{model}.UserIdx(rxIdx)) = User;
+                    Users([Users.UeId] == rxIdx) = User;
                 end
 
             end
@@ -258,7 +259,6 @@ classdef sonohiWINNER
 
             % Number of sectors.
             numSec = 1;
-            % TODO, requires changes ot the way pairing is done
             eNBIdx = cell(length(stations),1);
             for iStation = 1:length(stations)
                 eNBIdx{iStation} = [ones(1,numSec)];
@@ -271,7 +271,7 @@ classdef sonohiWINNER
         function cfgLayout =initializeLayout(useridx, eNBidx, numLinks, AA, range)
             % Initialize layout struct by antenna array and number of
             % links.
-            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range, randi(99));
+            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
 
         end
 
@@ -287,7 +287,7 @@ classdef sonohiWINNER
         function cfgLayout = setPositions(cfgLayout, Stations, Users)
             % Set the position of the base station
             for iStation = 1:length(cfgLayout.StationIdx)
-                cfgLayout.Stations(iStation).Pos(1:3) = int64(floor(Stations(cfgLayout.StationIdx(iStation)).Position(1:3)));
+                cfgLayout.Stations(iStation).Pos(1:3) = int64(floor(Stations([Stations.NCellID] == cfgLayout.StationIdx(iStation)).Position(1:3)));
             end
 
             % Set the position of the users
@@ -302,8 +302,16 @@ classdef sonohiWINNER
             % Change useridx of pairing to reflect
             % cfgLayout.Stations, e.g. If only one station, user one is
             % at cfgLayout.Stations(2)
+            % This is to accomondate the mapping needed by winner which is
+            % dependent on the cfgLayout.Stations struct. 
+            for ll = 1:length(cfgLayout.Pairing(1,:))
+              [~,idx] = find(cfgLayout.StationIdx==cfgLayout.Pairing(1,ll));
+              cfgLayout.Pairing(1,ll) = idx;
+            end
+            
             for ll = 1:length(cfgLayout.Pairing(2,:))
-                cfgLayout.Pairing(2,ll) =  length(cfgLayout.StationIdx)+ll;
+                [~,idx] = find(cfgLayout.UserIdx==cfgLayout.Pairing(2,ll));
+                cfgLayout.Pairing(2,ll) =  max(cfgLayout.Pairing(1,:))+idx;
             end
 
 
@@ -313,9 +321,9 @@ classdef sonohiWINNER
             numLinks = length(cfgLayout.Pairing(1,:));
 
             for i = 1:numLinks
-                userIdx = cfgLayout.UserIdx(cfgLayout.Pairing(2,i)-length(cfgLayout.StationIdx));
-                stationIdx =  cfgLayout.StationIdx(cfgLayout.Pairing(1,i));
-                cBs = Stations(stationIdx);
+                userIdx = cfgLayout.UserIdx(cfgLayout.Pairing(2,i)-max(cfgLayout.Pairing(1,:)));
+                stationNCellId =  cfgLayout.StationIdx(cfgLayout.Pairing(1,i));
+                cBs = Stations([Stations.NCellID] == stationNCellId);
                 cMs = Users([Users.UeId] == userIdx);
                 % Apparently WINNERchan doesn't compute distance based
                 % on height, only on x,y distance. Also they can't be
@@ -325,7 +333,7 @@ classdef sonohiWINNER
 
                     if distance <= 20
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
-                            stationIdx,userIdx,num2str(distance));
+                            stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
@@ -333,7 +341,7 @@ classdef sonohiWINNER
 
                     elseif distance <= 50
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS',...
-                            stationIdx,userIdx,num2str(distance));
+                            stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
@@ -345,7 +353,7 @@ classdef sonohiWINNER
                 elseif cBs.BsClass == 'macro'
                     if distance < 50
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
-                            stationIdx,userIdx,num2str(distance));
+                            stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
                         cfgLayout.ScenarioVector(i) = 11; %
                         cfgLayout.PropagConditionVector(i) = 1; %
@@ -364,11 +372,11 @@ classdef sonohiWINNER
             % Use maximum fft size
             % However since the same BsClass is used these are most
             % likely to be identical
-            sw_tx = [Stations(cfgLayout.StationIdx).Tx];
+            sw_tx = [Stations(ismember([Stations.NCellID],cfgLayout.StationIdx)).Tx];
             sw_info = [sw_tx.WaveformInfo];
             swNfft = [sw_info.Nfft];
             swSamplingRate = [sw_info.SamplingRate];
-            cf = max([Stations(cfgLayout.StationIdx).DlFreq]); % Given in MHz
+            cf = max([Stations(ismember([Stations.NCellID],cfgLayout.StationIdx)).DlFreq]); % Given in MHz
 
             frmLen = double(max(swNfft));   % Frame length
 
@@ -379,7 +387,6 @@ classdef sonohiWINNER
 
 
             cfgModel = winner2.wimparset;
-            cfgModel.RandomSeed = randi(99999);
             cfgModel.CenterFrequency = cf*10e5; % Given in Hz
             cfgModel.NumTimeSamples     = frmLen; % Frame length
             cfgModel.IntraClusterDsUsed = 'yes';   % No cluster splitting
@@ -390,6 +397,7 @@ classdef sonohiWINNER
                 cfgModel.CenterFrequency/2/(maxMSVelocity/max(swSamplingRate)));
 
         end
+        
 
 
 

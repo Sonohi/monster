@@ -10,7 +10,7 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 %   heatMap 		->  2D matrix with combined pathloss levels
 
 % Reset channel function
-Channel = Channel.resetWinner;
+Channel = Channel.resetChannel;
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);

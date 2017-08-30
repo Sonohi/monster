@@ -14,11 +14,13 @@ classdef sonohieHATA
     end
 
     function Users = run(obj,Stations,Users)
-      users  = [Stations.Users];
-      numLinks = nnz(users);
+                      % Get number of links associated with the station.
+      
+      users = length(Users);
+      numLinks = length(Users);
       Pairing = obj.Channel.getPairing(Stations);
       for i = 1:numLinks
-        station = Stations(Pairing(1,i));
+        station = Stations([Stations.NCellID == Pairing(1,i)]);
         % Local copy for mutation
         user = Users(find([Users.UeId] == Pairing(2,i))); %#ok
 

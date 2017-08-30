@@ -35,14 +35,14 @@ function displayUser(sUser,data,Param)
   yyaxis left
   snr_plot = animatedline('Color','b');
   ax_snr_plot = gca;
-  set(ax_snr_plot,'XLim',[0 Param.no_rounds],'YLim',[min(data(sUser).snr) max(data(sUser).snr)]);
+  set(ax_snr_plot,'XLim',[0 Param.no_rounds],'YLim',[Param.SNR(1) Param.SNR(2)]);
   xlabel('Round')
   ylabel('SNR (dB)')
   hold on
   yyaxis right
   sinr_plot = animatedline('Color','g');
   ax_sinr_plot = gca;
-  set(ax_sinr_plot,'YLim',[min(real(data(sUser).sinr)) max(real(data(sUser).sinr))]);
+  set(ax_sinr_plot,'YLim',[Param.SINR(1) Param.SINR(2)]);
   ylabel('SINR (dB)')
   legend('SNR','SINR')
 

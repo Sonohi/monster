@@ -74,9 +74,9 @@ StationsCopy = Stations;
 for iStation = 1:length(Stations)
 	StationsCopy(iStation).Users = zeros(15,1);
 	% In the stations copy, set the txWaveform etc from the dummy frames info
-	StationsCopy(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
-	StationsCopy(iStation).Tx.WaveformInfo = StationsCopy(iStation).FrameInfo;
-	StationsCopy(iStation).Tx.ReGrid = StationsCopy(iStation).FrameGrid;
+	StationsCopy(iStation).Tx.Waveform = StationsCopy(iStation).Tx.Frame;
+	StationsCopy(iStation).Tx.WaveformInfo = StationsCopy(iStation).Tx.FrameInfo;
+	StationsCopy(iStation).Tx.ReGrid = StationsCopy(iStation).Tx.FrameGrid;
 end
 
 for model = 2:numel(Snames)
@@ -87,10 +87,11 @@ for model = 2:numel(Snames)
 		ueCopy = ue;
     StationsCopy_ = StationsCopy(stations);
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
-
+    
 		StationID = Channel.getAssociation(StationsCopy_,ueCopy);
-
+    StationsCopy_([StationsCopy_.NCellID] == StationID).resetSchedule();
 		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
+    StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.UeId;
 		ueCopy.ENodeB = StationID;
 
 		try

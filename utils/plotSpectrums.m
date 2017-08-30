@@ -7,7 +7,7 @@ function h1 = plotSpectrums(Users,Stations)
         hs(pp)=subplot(5,3,pp);
         station = Stations([Stations.NCellID] == Users(pp).ENodeB);
         if checkUserSchedule(Users(pp),station)
-          Fs = Stations([Stations.NCellID] == Users(pp).ENodeB).WaveformInfo.SamplingRate;
+          Fs = Stations([Stations.NCellID] == Users(pp).ENodeB).Tx.WaveformInfo.SamplingRate;
           sig = setPower(Users(pp).Rx.Waveform,Users(pp).Rx.RxPwdBm);
           F = fft(sig)./length(sig);
           Fpsd = 10*log10(fftshift(abs(F).^2))+30;
