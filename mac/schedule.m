@@ -1,4 +1,4 @@
-function [Station] = schedule(Station, Users, Param, subframeNum)
+function [Station, Users, dbgBfr, schLog, dbgAft] = schedule(Station, Users, Param, dbgBfr, schLog, dbgAft, iRound, iStation)
 
 %   SCHEDULE is used to return the allocation of PRBs for a schedule
 %
@@ -6,82 +6,132 @@ function [Station] = schedule(Station, Users, Param, subframeNum)
 %   Station					->  base Station
 %		Users						-> 	users list
 %   Param.prbSym		->  number of OFDM symbols per PRB
-%   subframeNum			->  subframe number (taken from the scheduling round)
 %
 %   Station		->  station with allocation array with:
 %             		--> ueId		id of the UE scheduled in that slot
 %									--> mcs 		modulation and coding scheme decided
 %									--> modOrd	modulation order as bits/OFDM symbol
 
-	% reset the allocation
-	Station = resetSchedule(Station);
-	sz = length(Station.Users);
+% reset the allocation
+Station = resetSchedule(Station);
+sz = length(Station.Users);
 
-	% calculate number of available RBs available in the subframe for the PDSCH
-	res = length(find(abs(Station.Tx.ReGrid) == 0));
-	prbsAv = floor(res/Param.prbRe);
+% calculate number of available RBs available in the subframe for the PDSCH
+res = length(find(abs(Station.Tx.ReGrid) == 0));
+prbsAv = floor(res/Param.prbRe);
 
-	switch (Param.scheduling)
-		case 'roundRobin'
-			if (Station.RrNext.UeId == 0)
-				Station.RrNext.UeId = Station.Users(1);
-				Station.RrNext.Index = 1;
-			end
+% TODO remove dbg
+%Debugging
+dbgBfr(iRound + 1, iStation) = struct(...
+	'sz', sz, ...
+	'res', res, ...
+	'prbsAv', prbsAv, ...
+	'Station', Station);
+logIx = 1;
 
-			maxRounds = sz;
-			iUser = Station.RrNext.Index;
-			while (iUser <= sz && maxRounds > 0)
-
-				% find user in main list
-				for (ixUser = 1:length(Users))
-					if (Users(ixUser).UeId == Station.Users(iUser))
-						iCurrUe = ixUser;
-						break;
-					end
+switch Param.scheduling
+	case 'roundRobin'
+		
+		maxRounds = sz;
+		iUser = Station.RrNext.Index;
+		while (iUser <= sz && maxRounds > 0)
+			% First off check if we are in an unused position or out
+			iUSer = checkIndexPosition(Param, Station, iUser);
+			
+			% find user in main list
+			for (ixUser = 1:length(Users))
+				if (Users(ixUser).UeId == Station.Users(iUser))
+					iCurrUe = ixUser;
+					break;
 				end
-
-				if (prbsAv > 0)
-					if (~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0)
-						modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
-						prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
-						prbsSch = 0;
-						if (prbsNeed >= prbsAv)
-							prbsSch = prbsAv;
-						else
-							prbsSch = prbsNeed;
-						end
-						prbsAv = prbsAv - prbsSch;
-						Users(iCurrUe) = setScheduled(Users(iCurrUe), true);
-						iUser = iUser + 1;
-						% write to schedule struct
-						for (iPrb = 1:Station.NDLRB)
-							if (Station.Schedule(iPrb).UeId == 0)
-								mcs = cqi2mcs(Users(iCurrUe).Rx.WCQI);
-								for (iSch = 0:prbsSch-1)
-									Station.Schedule(iPrb + iSch) = struct('UeId', Users(iCurrUe).UeId,...
-										'Mcs', mcs, 'ModOrd', modOrd);
-								end
-								break;
-							end
-						end
-					end
-					maxRounds = maxRounds -1;
-
-				else
-					% Keep track of the next user to be scheduled in the next round
-					if (iUser + 1 > sz || Station.Users(iUser + 1) == 0)
-						Station.RrNext.UeId = Station.Users(1);
-						Station.RrNext.Index = 1;
+			end
+			
+			% TODO remove dbg
+			schLog(iRound + 1, iStation, logIx).user = Users(iCurrUe);
+			schLog(iRound + 1, iStation, logIx).prbsAv = prbsAv;
+			
+			if prbsAv > 0
+				if ~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0
+					modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
+					prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
+					prbsSch = 0;
+					if prbsNeed >= prbsAv
+						prbsSch = prbsAv;
 					else
-						Station.RrNext.UeId = Station.Users(iUser + 1);
-						Station.RrNext.Index = iUser + 1;
+						prbsSch = prbsNeed;
 					end
-					% in both cases, stop the loop
-					iUser = sz +1;
+					
+					% TODO remove dbg
+					schLog(iRound + 1, iStation, logIx).prbsNeed = prbsNeed;
+					schLog(iRound + 1, iStation, logIx).prbsSch = prbsSch;
+					
+					prbsAv = prbsAv - prbsSch;
+					Users(iCurrUe) = setScheduled(Users(iCurrUe), true);
+					% write to schedule struct
+					for iPrb = 1:Station.NDLRB
+						if Station.Schedule(iPrb).UeId == 0
+							mcs = cqi2mcs(Users(iCurrUe).Rx.WCQI);
+							for iSch = 0:prbsSch-1
+								Station.Schedule(iPrb + iSch) = struct(...
+									'UeId', Users(iCurrUe).UeId,...
+									'Mcs', mcs,...
+									'ModOrd', modOrd);
+							end
+							break;
+						end
+					end
+					
+					% In case the UE is not receiving all the PRBs needed, the next loop
+					% will start again from it and we stop this round, otherwise
+					% continue
+					if prbsNeed > prbsSch
+						Station.RrNext.UeId = Station.Users(iUser);
+						Station.RrNext.Index = iUser;
+						iUser = sz + 1;
+					else
+						iUser = iUser + 1;
+					end
+					
 				end
+				maxRounds = maxRounds - 1;
+				
+			else
+				% There are no more PRBs available, this will be the first UE to be scheduled
+				% in the next round.
+				% Check first whether we went too far in the list and we need to restart
+				% from the beginning
+				iUser = checkIndexPosition(Param, Station, iUser);
+				Station.RrNext.UeId = Station.Users(iUser);
+				Station.RrNext.Index = iUser;
+				
+				% TODO remove dbg
+				schLog(iRound + 1, iStation, logIx).prbsNeed = -1;
+				schLog(iRound + 1, iStation, logIx).prbsSch = -1;
+				
+				% in both cases, stop the loop
+				iUser = sz + 1;
 			end
+			
+			% TODO remove dbg
+			logIx = logIx + 1;
+			
+			
+			
+		end
+		
+end
 
+% TODO remove dbg
+dbgAft(iRound + 1, iStation) = struct(...
+	'sz', sz, ...
+	'res', res, ...
+	'prbsAv', prbsAv, ...
+	'Station', Station);
+
+	function iUser = checkIndexPosition(Param, Station, iUser)
+		if iUser > Param.numUsers || Station.Users(iUser) == 0
+			iUser = 1;
+		end
 	end
-
 
 end
