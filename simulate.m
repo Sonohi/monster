@@ -211,12 +211,11 @@ for iRound = 0:(Param.schRounds-1)
     % CHANNEL SYNCHRONIZATION
     % ------------------------------------
     % Setup the channel based on scheduled users
-    Channel = Channel.setupChannel(Stations,Users);
-    sonohilog('Running sync routine', 'NFO');
-    [Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
+        Channel = Channel.setupChannel(Stations,Users);
+        sonohilog('Running sync routine', 'NFO');
+        [Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
 	%if mod(simTime, Param.syncRoutineTimer) == 0
 	%end
-    
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------

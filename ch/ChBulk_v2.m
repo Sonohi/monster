@@ -167,7 +167,7 @@ classdef ChBulk_v2
         obj.fieldType = 'full';
         
       end
-      
+      try
       if strcmp(obj.Mode,'winner')
         users = obj.WINNER.run(stations,users);
         
@@ -183,7 +183,9 @@ classdef ChBulk_v2
           Users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
         end
       end
-      
+      catch ME
+         sonohilog('Something went wrong....','WRN') 
+      end
       %Apply interference on all users if 'full' is enabled
       if strcmp(obj.fieldType,'full')
         users = obj.applyInterference(stations,users);
@@ -238,18 +240,18 @@ classdef ChBulk_v2
       RxPw = zeros(length(Stations),1);
       for iStation = 1:length(Stations)
         %Local copy of all stations
-        StationC = Stations;
+        StationC = Stations(iStation);
         
         % Associate user
-        StationC(iStation).resetSchedule();
-        StationC(iStation).Schedule(1).UeId = User.UeId;
-        User.ENodeB = StationC(iStation).NCellID;
+        StationC = StationC.resetSchedule();
+        StationC.Schedule(1).UeId = User.UeId;
+        User.ENodeB = StationC.NCellID;
         
         % TODO: move this guy so the Channel setup is used instead
         if strcmp(obj.Mode,'eHATA') 
             obj.eHATA = sonohieHATA(obj);
         elseif strcmp(obj.Mode,'winner')
-            obj.WINNER = sonohiWINNER(StationC(iStation),User, obj);
+            obj.WINNER = sonohiWINNER(StationC,User, obj);
             obj.WINNER = obj.WINNER.setup();  
         end
         
@@ -260,13 +262,13 @@ classdef ChBulk_v2
         
         % Traverse channel
         for ll = 1:5
-            [~, UserRx] = obj.traverse(StationC(iStation),User,'field','pathloss');
+            [~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
             RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
         end
         % Reset schedule
         
         % Debug distance
-        distance(iStation) = obj.getDistance(StationC(iStation).Position,User.Position);
+        distance(iStation) = obj.getDistance(StationC.Position,User.Position);
         
       end
       [minDistance, minStation] = min(distance);

@@ -547,7 +547,7 @@ methods(Access = private)
         
         obj.pNumChannelTaps(idxNL) = diff(obj.pTapIdxRange(:,idxNL)) + 1;
         
-        if obj.pNumChannelTaps(idxNL) > 400
+        if obj.pNumChannelTaps(idxNL) > 800
             coder.internal.warning( ...
                 'winner2:WINNER2Channel:ExcessiveChanFiltLen', idxNL, 400);
         end   

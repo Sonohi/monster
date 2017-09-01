@@ -29,9 +29,12 @@ for ll = 1:Param.no_rounds
   for sUser = 1:length(uniques_list{ll})
     bits = [ueOut(1,1,ll,sUser).bits];
     bit_rate(ll,sUser) = bits.tot/Param.round_duration;
+    positionx(ll,sUser) = [ueOut(1,1,ll,sUser).rxPosition(1)];
+    positiony(ll,sUser) = [ueOut(1,1,ll,sUser).rxPosition(2)];
   end
   agg_power(ll,:) = [enbOut(1,1,ll,:).power];
   agg_util(ll,:) = [enbOut(1,1,ll,:).util];
+
 end
 min_bitrate = 0;
 max_bitrate = 10e8;
@@ -65,7 +68,7 @@ utility_plot = animatedline('Color','b');
 ax_utility_plot = gca;
 set(ax_utility_plot,'XLim',[0 Param.no_rounds],'YLim',[min(utility_min) max(utility_max)]);
 xlabel('Round')
-ylabel('Utility (%)')
+ylabel('Utilization (%)')
 
 %% Power
 subplot(2,4,5)
@@ -99,19 +102,19 @@ for iRound = 1:Param.no_rounds
   addpoints(users_plot,iRound,length(scheduled_users{iRound}))
   
   %% Update position plot
-  delete(ax_pos_plot)
+  delete(ax_pos_plot);
   subplot(2,4,[1,3])
   hold on
   for ll = 1:length(scheduled_users{iRound})
     users = Users(scheduled_users{iRound});
-    plot([xx users(ll).Position(1)],[yy users(ll).Position(2)],'--o')
+    plot([xx positionx(iRound,ll)],[yy positiony(iRound,ll)],'--o')
   end
   plot(xx,yy,'Color','r','Marker','o','MarkerFaceColor','r','MarkerSize',8)
   for ll = 1:length(Stations)-1
     plot(xx_unused(ll),yy_unused(ll),'Color','k','Marker','o','MarkerFaceColor','k','MarkerSize',8)
   end
   ax_pos_plot = gca;
-  set(ax_pos_plot,'XLim',[0 290],'YLim',[0 290]);
+  set(ax_pos_plot,'XLim',[0 300],'YLim',[0 300]);
   xlabel('X (m)')
   ylabel('Y (m)')
   drawnow

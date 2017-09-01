@@ -6,8 +6,8 @@ close all
 mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 1;
-sStation = 3;
+sUser = 3;
+sStation = 4;
 
 %% Initialization
 fprintf('Loading results...')
@@ -15,7 +15,6 @@ load('results/compiled.mat')
 Param.round_duration = 0.001; %seconds
 Param.no_rounds = length([ueOut(1,1,:,1)]);
 total_time = 0.001*Param.no_rounds; % seconds
-
 fprintf('done.\n')
 
 if isnan(sUser) && isnan(sStation)
