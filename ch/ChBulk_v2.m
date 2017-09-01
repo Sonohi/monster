@@ -165,26 +165,14 @@ classdef ChBulk_v2
         end
       else
         obj.fieldType = 'full';
+        
       end
       
       if strcmp(obj.Mode,'winner')
-        %Check if transfer function is already computed:
-        % If empty, e.g. not computed, compute impulse response and
-        % store it for next syncroutine.
-        if isempty(obj.WINNER)
-          obj.WINNER = sonohiWINNER(stations,users, obj);
-          obj.WINNER = obj.WINNER.setup();
-        else
-          sonohilog('Using previously computed WINNER','NFO0')
-        end
-        
         users = obj.WINNER.run(stations,users);
         
       elseif strcmp(obj.Mode,'eHATA')
-        
-        if isempty(obj.eHATA)
-          obj.eHATA = sonohieHATA(obj);
-        end
+        obj.eHATA.Channel = obj;
         users = obj.eHATA.run(stations,users);
         
       elseif strcmp(obj.Mode,'B2B')
@@ -257,28 +245,49 @@ classdef ChBulk_v2
         StationC(iStation).Schedule(1).UeId = User.UeId;
         User.ENodeB = StationC(iStation).NCellID;
         
+        % TODO: move this guy so the Channel setup is used instead
+        if strcmp(obj.Mode,'eHATA') 
+            obj.eHATA = sonohieHATA(obj);
+        elseif strcmp(obj.Mode,'winner')
+            obj.WINNER = sonohiWINNER(StationC(iStation),User, obj);
+            obj.WINNER = obj.WINNER.setup();  
+        end
+        
         % Reset any existing channel conditions
         %if strcmp(obj.Mode,'winner')
         %    obj.resetWinner;
         %end
         
-        % Set mode for eHATA (increased computational speed)
-        obj.Mode = 'eHATA';
-        
         % Traverse channel
-        [~, UserRx] = obj.traverse(StationC(iStation),User,'field','pathloss');
-        RxPw(iStation) = UserRx.Rx.RxPwdBm;
-        
+        for ll = 1:5
+            [~, UserRx] = obj.traverse(StationC(iStation),User,'field','pathloss');
+            RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
+        end
         % Reset schedule
         
+        % Debug distance
+        distance(iStation) = obj.getDistance(StationC(iStation).Position,User.Position);
+        
       end
-      [maxPw,maxStation] = max(RxPw);
+      [minDistance, minStation] = min(distance);
+      [maxPw,maxStation] = max(mean(RxPw,2));
       stationID = Stations(maxStation).NCellID;
     end
     
     function obj = resetChannel(obj)
       obj.WINNER = [];
       obj.eHATA = [];
+    end
+    
+    function obj = setupChannel(obj,Stations,Users)
+        [stations, users] = obj.getScheduled(Stations, Users);
+        if strcmp(obj.Mode,'winner')
+            obj.WINNER = sonohiWINNER(stations,users, obj);
+            obj.WINNER = obj.WINNER.setup();
+        elseif strcmp(obj.Mode,'eHATA')
+            obj.eHATA = sonohieHATA(obj);
+        end
+        
     end
     
     function Users = applyInterference(obj,Stations,Users)

@@ -11,8 +11,6 @@ function [UsersNew, ChannelNew]  = syncRoutine(Stations, Users, Channel, Param, 
 % TODO Validate input
 
 validateChannel(Channel);
-validateEmptyChannel(Channel);
-
 sonohilog('Performing full frame sync routine...','NFO')
 if nargin > 5
 	nVargs = length(varargin);

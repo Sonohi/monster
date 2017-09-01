@@ -86,12 +86,14 @@ for iRound = 0:(Param.schRounds-1)
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
   sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
+  
+  
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
 		sonohilog('Refreshing user association', 'NFO');
 		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
-  end
+    end
 
 
 	% Update RLC transmission queues for the users and reset the scheduled flag
@@ -135,7 +137,7 @@ for iRound = 0:(Param.schRounds-1)
 		end
 
 		% calculate the power that will be used in this round by this eNodeB
-		pIn = getPowerIn(Stations(iStation), utilPercent/100);
+		pIn = GetPowerIn(Stations(iStation), utilPercent/100);
 
 		% store eNodeB-space results
 		resultsStore(iStation).util = utilPercent;
@@ -150,13 +152,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SCHEDULE END
 	% -------------------
 
-  	% run sync routine
-  % TODO: Run syncRoutine before refresh of user association, such
-  % syncroutines determines and saves the channel seed/randomization
-	if mod(simTime, Param.syncRoutineTimer) == 0
-		sonohilog('Running sync routine', 'NFO');
-		[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
-	end
+
   
 	% ----------------------------------------------
 	% ENODEB CREATE DL-SCH TB TO PDSCH SYMBOLS START
@@ -211,6 +207,16 @@ for iRound = 0:(Param.schRounds-1)
 	sonohilog('eNodeB grid mapping and modulation', 'NFO');
 	Stations = TxBulk(Stations, symMatrix, Param);
 
+    % ----------------------------------
+    % CHANNEL SYNCHRONIZATION
+    % ------------------------------------
+    % Setup the channel based on scheduled users
+    Channel = Channel.setupChannel(Stations,Users);
+    sonohilog('Running sync routine', 'NFO');
+    [Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
+	%if mod(simTime, Param.syncRoutineTimer) == 0
+	%end
+    
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
@@ -258,8 +264,8 @@ for iRound = 0:(Param.schRounds-1)
 	sonohilog('Resetting objects for next simulation round', 'NFO');
 	for iUser = 1:length(Users)
 		Users(iUser) = Users(iUser).resetUser();
+    end
     Channel = Channel.resetChannel();
-	end
 
 end % end round
 
