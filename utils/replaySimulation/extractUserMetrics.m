@@ -14,6 +14,7 @@ for iUser = 1:length(Users)
   cqi = [ueOut(1,1,:,iUser).cqi];
   snr = [ueOut(1,1,:,iUser).snr];
   sinr = [ueOut(1,1,:,iUser).sinr];
+  servingStation = [ueOut(1,1,:,iUser).servingStation];
   err_blocks = 0;
   for iRound = 1:Param.no_rounds
     blocks = [ueOut(1,1,iRound,iUser).blocks];
@@ -27,8 +28,8 @@ for iUser = 1:length(Users)
     
   end
   data(iUser) = struct('postEvm',postEvm,'cqi',cqi,'snr',snr,'sinr',sinr,...
-    'bit_rate',bit_rate,'distance',distance,'rxpos',[xx; yy],...
-    'bler',bler,'ble',ble,'biterr',err);
+    'bit_rate',bit_rate,'distance',distance,'txpos',[xx_tx;yy_tx],'rxpos',[xx; yy],...
+    'bler',bler,'ble',ble,'biterr',err,'servingStation',servingStation);
 end
 
 

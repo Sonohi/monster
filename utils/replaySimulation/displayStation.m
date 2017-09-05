@@ -37,7 +37,7 @@ for ll = 1:Param.no_rounds
 
 end
 min_bitrate = 0;
-max_bitrate = 10e8;
+max_bitrate = 10e11;
 
 scheduled_users = cellfun(@unique, uniques_list, 'UniformOutput', false);
 

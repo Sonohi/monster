@@ -6,8 +6,8 @@ close all
 mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 3;
-sStation = 4;
+sUser = 4;
+sStation = 1;
 
 %% Initialization
 fprintf('Loading results...')
@@ -37,9 +37,17 @@ end
 
 Param.EVM = [0 100];
 Param.CQI = [0 15];
-Param.bitrate = [0 10e6];
-Param.SNR = [-80 100];
-Param.SINR = [-80 100];
+Param.bitrate = [0 10e11];
+Param.SNR = [-80 120];
+Param.SINR = [-80 120];
+Param.distance = [0 300];
+
+Param.Area = [0 300 0 300];
+Param.NoStations = length(Stations);
+
+temp = [Stations.Position]; 
+Param.StationPos = reshape(temp,3,Param.NoStations);
+
 
 
 if strcmp(mode,'perStation')

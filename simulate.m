@@ -41,7 +41,8 @@ ueResults(1:Param.schRounds, 1:Param.numUsers) = struct(...
 	'rxPosition', [],...
 	'txPosition', [], ...
 	'symbols', [], ...
-  'scheduled',NaN);
+  'scheduled',NaN,...
+  'servingStation',NaN);
 
 infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
@@ -137,7 +138,7 @@ for iRound = 0:(Param.schRounds-1)
 		end
 
 		% calculate the power that will be used in this round by this eNodeB
-		pIn = GetPowerIn(Stations(iStation), utilPercent/100);
+		pIn = getPowerIn(Stations(iStation), utilPercent/100);
 
 		% store eNodeB-space results
 		resultsStore(iStation).util = utilPercent;
