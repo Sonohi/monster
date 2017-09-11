@@ -6,12 +6,13 @@ function Clusters = generateHeatMapClass(Stations, Channel, Param)
 %   Stations		->  array of eNodeBs
 %
 %   heatMap 		->  2D matrix with combined pathloss levels
-
+for iter = 1:20
 % Reset channel function
 Channel = Channel.resetChannel;
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);
+ue.Scheduled = 1;
 
 % cluster the grid based on the chosen resoultion
 % get grid dimensions
@@ -81,33 +82,35 @@ end
 
 for model = 2:numel(Snames)
 	stations = types.(Snames{model});
-	parfor iCluster = 1:length(Clusters)
+  for iCluster = 1:length(Clusters)
     warning('off','all')
 		% local copy
 		ueCopy = ue;
     StationsCopy_ = StationsCopy(stations);
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
-    
 		StationID = Channel.getAssociation(StationsCopy_,ueCopy);
     StationsCopy_([StationsCopy_.NCellID] == StationID).resetSchedule();
 		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
     StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.UeId;
 		ueCopy.ENodeB = StationID;
+    
+    Channel_ = Channel.setupChannel(StationsCopy_,ueCopy);
+    [ueCopy, Channel_] = syncRoutine(StationsCopy_, ueCopy, Channel_, Param);
 
-		try
-			[~, ueCopy] = Channel.traverse(StationsCopy_,ueCopy);
+	
+			[~, ueCopy] = Channel_.traverse(StationsCopy_,ueCopy);
 			Clusters(iCluster).snrVals(model) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;
 			Clusters(iCluster).intSigLoss(model) = ueCopy.Rx.IntSigLoss;
 			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPwdBm),num2str(ueCopy.Rx.SINRdB)),'NFO');
-		catch ME
-			Clusters(iCluster).snrVals(model) = NaN;
-			Clusters(iCluster).rxPw(model) = NaN;
-			Clusters(iCluster).SINR(model) = NaN;
-			Clusters(iCluster).intSigLoss(model) = NaN;
-			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
-		end
+% 		catch ME
+% 			Clusters(iCluster).snrVals(model) = NaN;
+% 			Clusters(iCluster).rxPw(model) = NaN;
+% 			Clusters(iCluster).SINR(model) = NaN;
+% 			Clusters(iCluster).intSigLoss(model) = NaN;
+% 			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
+% 		end
 
 	end
 
@@ -117,5 +120,7 @@ end
 % Renaming to avoid fuck-ups
 HeatMap = Clusters;
 EnodeBs = StationsCopy;
-save('HeatmapClass.mat','HeatMap','EnodeBs');
+save(sprintf('HeatmapClass_%i.mat',iter),'HeatMap','EnodeBs');
+
+end
 end
