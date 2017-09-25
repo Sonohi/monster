@@ -40,6 +40,7 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
 Param.channel.mode = Param.channelMode;
 Param.channel.region = Param.channelRegion;
+Param.bsNoiseFigure = 3;
 
 sonohi(Param.reset);
 
@@ -86,6 +87,7 @@ status = [
 	"boot"];
 
 % Main loop
+
 for iUtilLo = 1: length(utilLo)
 	for iUtilHi = 1:length(utilHi)
 		simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));

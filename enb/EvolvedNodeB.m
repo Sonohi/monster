@@ -31,6 +31,7 @@ classdef EvolvedNodeB
 		DeltaP;
 		Psleep;
 		Tx;
+		Rx;
 		HarqProc;
 	end
 
@@ -72,7 +73,8 @@ classdef EvolvedNodeB
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
 			obj.HarqProc = [];
-			obj.Tx = TransmitterModule(obj, Param);
+			obj.Tx = BSTransmitterModule(obj, Param);
+			obj.Rx = BSReceiverModule(Param);
 		end
 
 		% Posiiton base station
@@ -96,11 +98,11 @@ classdef EvolvedNodeB
 			obj.NSubframe =  num;
 		end
 
-    function [indPdsch, info] = getPDSCHindicies(obj)
-      enb = cast2Struct(obj);
-      % get PDSCH indexes
-      [indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
-    end
+	    function [indPdsch, info] = getPDSCHindicies(obj)
+	      enb = cast2Struct(obj);
+	      % get PDSCH indexes
+	      [indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+	    end
 
 		% create list of neighbours
 		function obj = setNeighbours(obj, Stations, Param)

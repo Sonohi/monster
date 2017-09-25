@@ -1,4 +1,4 @@
-function Stations = TxBulk(Stations, symbols, Param)
+function Stations = BSTxBulk(Stations, symbols, Param)
 
 	%   TX Bulk performs bulk operations on the recivers
 	%
