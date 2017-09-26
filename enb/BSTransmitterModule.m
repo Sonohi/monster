@@ -1,4 +1,4 @@
-classdef TransmitterModule
+classdef BSTransmitterModule
 	properties
 		Waveform;
 		WaveformInfo;
@@ -12,7 +12,7 @@ classdef TransmitterModule
 
 	methods
 		% Constructor
-		function obj = TransmitterModule(enb, Param)
+		function obj = BSTransmitterModule(enb, Param)
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
 			obj = resetResourceGrid(obj, enb);

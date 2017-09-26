@@ -44,6 +44,7 @@ Param.harq.rtxMax = Param.harqRtx;
 Param.harq.rv = Param.rvSeq;
 Param.harq.proc = Param.harqProc;
 Param.harq.tout = Param.harqProc/2 -1;
+Param.bsNoiseFigure = 3;
 
 sonohi(Param.reset);
 
@@ -90,6 +91,7 @@ status = [
 	"boot"];
 
 % Main loop
+
 for iUtilLo = 1: length(utilLo)
 	for iUtilHi = 1:length(utilHi)
 		simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));

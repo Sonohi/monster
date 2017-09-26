@@ -206,7 +206,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB GRID MAPPING AND MODULATION
 	% ----------------------------------
 	sonohilog('eNodeB grid mapping and modulation', 'NFO');
-	Stations = TxBulk(Stations, symMatrix, Param);
+	Stations = BSTxBulk(Stations, symMatrix, Param);
 
     % ----------------------------------
     % CHANNEL SYNCHRONIZATION
@@ -229,7 +229,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE RECEPTION
 	% ------------
 	sonohilog('UE reception block', 'NFO');
-	Users = RxBulk(Stations, Users, ChannelEstimator);
+	Users = UERxBulk(Stations, Users, ChannelEstimator);
 
 	% --------------------------
 	% ENODEB SPACE METRICS RECORDING
@@ -243,6 +243,15 @@ for iRound = 0:(Param.schRounds-1)
 	sonohilog('UE-space metrics recording', 'NFO');
 	ueResults = recordUEResults(Users, Stations, ueResults, iRound);
 
+
+
+	% --------------------------
+	% UE UPLINK
+	% ---------------------------
+	sonohilog('Uplink transmission', 'NFO');
+  stations = UETxBulk(Stations, Users, iRound, mod(iRound,10));
+
+
 	% -----------
 	% UE MOVEMENT
 	% -----------
@@ -255,7 +264,7 @@ for iRound = 0:(Param.schRounds-1)
 		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		[hGrids(1), hGrids(2)] = plotReGrids(Users);
 		[hSpectrums(1)] = plotSpectrums(Users,Stations);
-  end
+  	end
 
 
 	% --------------------

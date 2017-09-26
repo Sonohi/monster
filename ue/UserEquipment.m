@@ -16,6 +16,7 @@ classdef UserEquipment
 		Velocity;
 		RxAmpli;
 		Rx;
+		Tx;
 		Symbols;
 		SymbolsInfo;
 		Codeword;
@@ -50,7 +51,8 @@ classdef UserEquipment
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Rx = ReceiverModule(Param);
+			obj.Rx = UEReceiverModule(Param);
+			obj.Tx = UETransmitterModule(Param);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];
