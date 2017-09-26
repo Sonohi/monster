@@ -1,3 +1,5 @@
+%   HARQ TX defines a value class for creating anf handling a single HARQ transmitter
+
 classdef HarqTx
 	properties
 		processId;
@@ -23,6 +25,11 @@ classdef HarqTx
 			obj.state = 0;
 		end
 
+		% set TB
+		function obj = set.tb(obj, tb)
+			obj.tb =  tb;
+		end
+
 		% Handle the reception of a ACK/NACk
 		function obj = handleReply(ack, Param)
 			if ack.msg == 1
@@ -38,8 +45,9 @@ classdef HarqTx
 				% check whether the maximum number has been exceeded
 				if obj.rtxCount > Param.harq.rtxMax
 					% log failure (and notify RLC?)
-					obj.state = 2;
+					obj.state = 3;
 				else
+					% log rtx
 					obj.rtxCount = obj.rtxCount + 1;
 					obj.rv = Param.harq.rv(obj.rtxCount);
 					obj.state = 1;
@@ -48,6 +56,12 @@ classdef HarqTx
 		end
 
 		% Handle the expiration of the retransmission timer
-		function obj = handleTimeout()
-			
+		function obj = handleTimeout(tnow)
+			% log failure
+			obj.rtxCount = obj.rtxCount + 1;
+			obj.rv = Param.harq.rv(obj.rtxCount);
+			obj.state = 2;
+			obj.tStart = tnow;
 		end
+	end
+end
