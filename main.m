@@ -40,6 +40,10 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
 Param.channel.mode = Param.channelMode;
 Param.channel.region = Param.channelRegion;
+Param.harq.rtxMax = Param.harqRtx;
+Param.harq.rv = Param.rvSeq;
+Param.harq.proc = Param.harqProc;
+Param.harq.tout = Param.harqProc/2 -1;
 
 sonohi(Param.reset);
 

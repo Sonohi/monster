@@ -19,6 +19,8 @@ function param = loadConfig(path)
 			switch tokenList{4}
 				case 'AD' % Array of double
 					param.(tokenList{1}) = str2num(tokenList{3}); %#ok<*ST2NM>
+				case 'AI' % Array of Integer
+					param.(tokenList{1}) = str2num(tokenList{3}); %#ok<*ST2NM>
 				case 'B' % Boolean
 					param.(tokenList{1}) = round(str2double(tokenList{3}));
 				case 'C' % Char array
