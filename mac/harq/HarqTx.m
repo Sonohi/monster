@@ -52,6 +52,7 @@ classdef HarqTx
 					obj.rv = Param.harq.rv(obj.rtxCount);
 					obj.state = 1;
 					obj.tStart = tnow;
+				end
 			end
 		end
 
