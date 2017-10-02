@@ -12,6 +12,7 @@ classdef UETransmitterModule
     ReGrid;
     pucchformat;
     NCellID;
+    RNTI;
   end
   
   methods
@@ -57,7 +58,7 @@ classdef UETransmitterModule
         % Get size of resource grid and map channels.
         dims = lteULResourceGridSize(obj);
          
-        % Decide on format of PUCCH (1, 2 or 3)
+        %% Decide on format of PUCCH (1, 2 or 3)
         % Format 1 is Scheduling request with/without bits for HARQ
         % Format 2 is CQI with/without bits for HARQ
         % Format 3 Bits for HARQ
@@ -87,17 +88,42 @@ classdef UETransmitterModule
             drsSeqind = ltePUCCH3DRSIndices(obj,chs);
         end
         
-        % Configure PUSCH 
+        %% Configure PUSCH
+        % TODO If we use RNTI
+        obj.RNTI = 1;
         
-        % Configure SRS
+        chs.Modulation = 'QPSK';
+        chs.PRBSet = [0:obj.NULRB-1].';
+        chs.RV = 0; %	Redundancy version (RV) indicator in initial subframe
+        
+        % Reference data
+        % TODO replace this with actual data
+        frc = lteRMCUL('A1-1');
+        trBlk  = randi([0,1],frc.PUSCH.TrBlkSizes(1),1);
+        cw = lteULSCH(obj,chs,trBlk );
+        
+        puschsym = ltePUSCH(obj,chs,cw);
+        puschind = ltePUSCHIndices(obj,chs);
+        puschdrsSeq = ltePUSCHDRS(obj,chs);
+        puschdrsSeqind = ltePUSCHDRSIndices(obj,chs);
+        
+        %% Configure SRS
+        srssym = lteSRS(obj,chs);
+        srsind = lteSRSIndices(obj,chs);
         
         % Modulate SCFDMA
+        obj.ReGrid = lteULResourceGrid(obj);
+        obj.ReGrid(pucchind) = pucchsym;
+        obj.ReGrid(drsSeqind) = drsSeq;
+        obj.ReGrid(puschind) = puschsym;
+        obj.ReGrid(puschdrsSeqind) = puschdrsSeq;
+        obj.ReGrid(srsind) = srssym;
         
         % filler symbols
-        obj.reGrid = reshape(lteSymbolModulate(randi([0,1],prod(dims)*2,1), ...
-          'QPSK'),dims);
+        %obj.ReGrid = reshape(lteSymbolModulate(randi([0,1],prod(dims)*2,1), ...
+        %  'QPSK'),dims);
         
-        obj.Waveform = lteSCFDMAModulate(obj,obj.reGrid);
+        obj.Waveform = lteSCFDMAModulate(obj,obj.ReGrid);
         
       end
     end
