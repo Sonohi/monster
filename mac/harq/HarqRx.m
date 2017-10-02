@@ -7,39 +7,40 @@ classdef HarqRx
 		rxId;
 		tb;
 		copiesNeeded;
+		copiesReceived;
 		state;
 	end;
 
 	methods
 		% Constructor
 		function obj = HarqRx(transmitter, receiver, process, tb)
-			obj.rtxCount = 0;
 			obj.txId = transmitter;
 			obj.rxId = receiver;
 			obj.processId = process;
 			obj.tb = tb;
+			obj.state = 1;
 			obj.copiesNeeded = 1:
+			obj.copiesReceived = 0:
 		end
 
 		% Handle the reception of a TB
 		function obj = handleReply(crc, Param)
+			obj.copiesReceived = obj.copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly, so we need to close off
-
-			else
-				% check whether the maximum number has been exceeded
-				if obj.rtxCount > Param.harq.rtxMax
-					% log failure (and notify RLC?)
-					obj.state = 3;
+				obj.state = 2;
+			else if obj.copiesNeeded > 1
+				% else we need to check whether the number of copies received is enough
+				if obj.copiesNeeded == obj.copiesReceived
+					obj.state = 2;
 				else
-					% log rtx
-					obj.rtxCount = obj.rtxCount + 1;
-					obj.rv = Param.harq.rv(obj.rtxCount);
-					obj.state = 1;
-					obj.tStart = tnow;
+					obj.state = 3;
+				end
+			else
+				% we are starting a retransmission session where we need more than 1 copy
+				obj.copiesNeeded = estiamteCrcCopies(crc);
+				obj.state = 3;
 			end
 		end
-
-
 	end
 end
