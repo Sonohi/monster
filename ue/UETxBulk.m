@@ -14,7 +14,7 @@ function Stations = UETxBulk(Stations,Users, Subframe, Frame)
 
     % Create waveform
     % TODO: Make sure the root of the sequence is set correcttly
-    user.Tx = user.Tx.modulateTxWaveform(Subframe,Frame);
+    user.Tx = user.Tx.mapGridAndModulate(user.ENodeB,Subframe,Frame);
 
     % Propagate channel
     channel_out = user.Tx.Waveform;
