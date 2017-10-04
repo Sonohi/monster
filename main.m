@@ -44,6 +44,8 @@ Param.harq.rtxMax = Param.harqRtx;
 Param.harq.rv = Param.rvSeq;
 Param.harq.proc = Param.harqProc;
 Param.harq.tout = Param.harqProc/2 -1;
+Param.rlc.maxBufferSize = Param.rlcBufferSize;
+Param.rlc.bufferFlushTimer = Param.rlcBufferFlush;
 Param.bsNoiseFigure = 3;
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 
