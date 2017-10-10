@@ -99,27 +99,38 @@ classdef UEReceiverModule
 			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
 			obj.SchIndexes = obj.SchIndexes';
 
-% 			% Now get the PDSCH symbols out of the whole grid for this receiver
-% 			pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
-% 			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.Tx.ReGrid);
-% 
-% 			% Decode PDSCH
-% 			[fullDlschBits, fullPDSCH] = ltePDSCHDecode(enb, enb.Tx.PDSCH, enb.Tx.ReGrid);
-      pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
+			% Now get all the PDSCH indexes and symbols out of the received grid and decode them      
       fullPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
-			[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, enb.Tx.ReGrid);
+			[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, obj.EqSubframe);
 
 			% Decode PDSCH
-			[fullDlschBits, fullPDSCH] = ltePDSCHDecode(enb, enb.Tx.PDSCH, fullPdschRx);
-      
+			[fullDlschBits, fullPdsch] = ltePDSCHDecode(enb, enb.Tx.PDSCH, fullPdschRx);
+			% Get the data out of the cells
+			fullDlschBits = fullDlschBits{1};
+			fullPdsch = fullPdsch{1};
+
+			% Filter out the PDSCH symbols and bits that are meant for this receiver.
+			rxPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
+			% The indices obtained with the function refer to positions in the main grid
+			rxPdsch = zeros(length(rxPdschIndices), 1);
+			modOrd = cqi2modOrd(obj.WCQI);
+			rxDlschBits = zeros(length(rxPdschIndices)*modOrd, 1);
+			for iSym = 1:length(rxPdschIndices)
+				% Extract Symbols
+				iMap = find(fullPdschIndices == rxPdschIndices(iSym));
+				rxPdsch(iSym) = fullPdsch(iMap);
+				% Extract decoded bits based on modulation order
+				for iMod = modOrd - 1:-1:0
+					rxDlschBits(iSym*modOrd - iMod) = fullDlschBits(iMap*modOrd - iMod);
+				end
+			end
       
 			% The decoded DL-SCH bits are always returned as a cell array, so for 1 CW
 			% cases convert it
-			dlschBits = dlschBits{1};
-			obj.PDSCH = obj.PDSCH{1};
+			obj.PDSCH = rxPdsch;
 			% Decode DL-SCH
 			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ...
-				dlschBits);
+				rxDlschBits);
 		end
 
 		% calculate the EVM

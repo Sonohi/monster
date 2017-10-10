@@ -63,24 +63,6 @@ end
 % 	drawHeatMap(HeatMap, Stations);
 % end
 
-% TODO remove dbg
-dbgBfr(1:Param.schRounds, 1:length(Stations)) = struct(...
-	'sz', 0, ...
-	'res', 0, ...
-	'prbsAv', 0, ...
-	'Station', []);
-schLog(1:Param.schRounds, 1:length(Stations), 1:Param.numUsers) = struct(...
-	'user', [], ...
-	'prbsAv', 0, ...
-	'prbsNeed', 0,...
-	'prbsSch', 0);
-dbgAft(1:Param.schRounds, 1:length(Stations)) = struct(...
-	'sz', 0, ...
-	'res', 0, ...
-	'prbsAv', 0, ...
-	'Station', []);
-
-
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
 for iRound = 0:(Param.schRounds-1)
   % TODO: Add log print that states which round is being simulated.
@@ -118,14 +100,12 @@ for iRound = 0:(Param.schRounds-1)
 		if (iRound ~= 0 && mod(iRound, 40) == 0)
 			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
 		end
-		% Reset teh grid and put in the grid RS, PSS and SSS
+		% Reset the grid and put in the grid RS, PSS and SSS
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 
 		% schedule only if at least 1 user is associated
 		if Stations(iStation).Users(1) ~= 0
-			% [Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
-			% TODO remove dbg
-			[Stations(iStation), Users,dbgBfr, schLog, dbgAft] = schedule(Stations(iStation), Users, Param, dbgBfr, schLog, dbgAft, iRound, iStation);
+			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 
 		% Check utilisation

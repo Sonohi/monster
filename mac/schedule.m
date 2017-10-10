@@ -1,4 +1,4 @@
-function [Station, Users, dbgBfr, schLog, dbgAft] = schedule(Station, Users, Param, dbgBfr, schLog, dbgAft, iRound, iStation)
+function [Station, Users] = schedule(Station, Users, Param)
 
 %   SCHEDULE is used to return the allocation of PRBs for a schedule
 %
@@ -20,15 +20,6 @@ sz = length(Station.Users);
 res = length(find(abs(Station.Tx.ReGrid) == 0));
 prbsAv = floor(res/Param.prbRe);
 
-% TODO remove dbg
-%Debugging
-dbgBfr(iRound + 1, iStation) = struct(...
-	'sz', sz, ...
-	'res', res, ...
-	'prbsAv', prbsAv, ...
-	'Station', Station);
-logIx = 1;
-
 switch Param.scheduling
 	case 'roundRobin'
 		
@@ -46,10 +37,6 @@ switch Param.scheduling
 				end
 			end
 			
-			% TODO remove dbg
-			schLog(iRound + 1, iStation, logIx).user = Users(iCurrUe);
-			schLog(iRound + 1, iStation, logIx).prbsAv = prbsAv;
-			
 			if prbsAv > 0
 				if ~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0
 					modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
@@ -60,10 +47,6 @@ switch Param.scheduling
 					else
 						prbsSch = prbsNeed;
 					end
-					
-					% TODO remove dbg
-					schLog(iRound + 1, iStation, logIx).prbsNeed = prbsNeed;
-					schLog(iRound + 1, iStation, logIx).prbsSch = prbsSch;
 					
 					prbsAv = prbsAv - prbsSch;
 					Users(iCurrUe) = setScheduled(Users(iCurrUe), true);
@@ -104,29 +87,11 @@ switch Param.scheduling
 				Station.RrNext.UeId = Station.Users(iUser);
 				Station.RrNext.Index = iUser;
 				
-				% TODO remove dbg
-				schLog(iRound + 1, iStation, logIx).prbsNeed = -1;
-				schLog(iRound + 1, iStation, logIx).prbsSch = -1;
-				
 				% in both cases, stop the loop
 				iUser = sz + 1;
-			end
-			
-			% TODO remove dbg
-			logIx = logIx + 1;
-			
-			
-			
+			end			
 		end
-		
-end
-
-% TODO remove dbg
-dbgAft(iRound + 1, iStation) = struct(...
-	'sz', sz, ...
-	'res', res, ...
-	'prbsAv', prbsAv, ...
-	'Station', Station);
+	end
 
 	function iUser = checkIndexPosition(Param, Station, iUser)
 		if iUser > Param.numUsers || Station.Users(iUser) == 0
