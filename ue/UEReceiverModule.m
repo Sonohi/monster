@@ -99,13 +99,20 @@ classdef UEReceiverModule
 			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
 			obj.SchIndexes = obj.SchIndexes';
 
-			% Now get the PDSCH symbols out of the whole grid for this receiver
-			pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
-			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.Tx.ReGrid);
+% 			% Now get the PDSCH symbols out of the whole grid for this receiver
+% 			pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
+% 			[pdschRx, ~] = lteExtractResources(pdschIndices, enb.Tx.ReGrid);
+% 
+% 			% Decode PDSCH
+% 			[fullDlschBits, fullPDSCH] = ltePDSCHDecode(enb, enb.Tx.PDSCH, enb.Tx.ReGrid);
+      pdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
+      fullPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+			[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, enb.Tx.ReGrid);
 
 			% Decode PDSCH
-			[dlschBits, obj.PDSCH] = ltePDSCHDecode(enb, enb.Tx.PDSCH, pdschRx);
-
+			[fullDlschBits, fullPDSCH] = ltePDSCHDecode(enb, enb.Tx.PDSCH, fullPdschRx);
+      
+      
 			% The decoded DL-SCH bits are always returned as a cell array, so for 1 CW
 			% cases convert it
 			dlschBits = dlschBits{1};

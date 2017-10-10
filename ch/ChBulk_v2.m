@@ -168,23 +168,24 @@ classdef ChBulk_v2
         
       end
       try
-      if strcmp(obj.Mode,'winner')
-        users = obj.WINNER.run(stations,users);
-        
-      elseif strcmp(obj.Mode,'eHATA')
-        obj.eHATA.Channel = obj;
-        users = obj.eHATA.run(stations,users);
-        
-      elseif strcmp(obj.Mode,'B2B')
-        
-        sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
-        for iUser = 1:length(users)
-          iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
-          Users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
+        if strcmp(obj.Mode,'winner')
+          users = obj.WINNER.run(stations,users);
+          
+        elseif strcmp(obj.Mode,'eHATA')
+          obj.eHATA.Channel = obj;
+          users = obj.eHATA.run(stations,users);
+          
+        elseif strcmp(obj.Mode,'B2B')
+          
+          sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
+          for iUser = 1:length(users)
+            iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+            users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
+            users(iUser).Rx.RxPwdBm = Stations(iServingStation).Pmax;
+          end
         end
-      end
       catch ME
-         sonohilog('Something went wrong....','WRN') 
+        sonohilog('Something went wrong....','WRN')
       end
       %Apply interference on all users if 'full' is enabled
       if strcmp(obj.fieldType,'full')
@@ -248,11 +249,11 @@ classdef ChBulk_v2
         User.ENodeB = StationC.NCellID;
         
         % TODO: move this guy so the Channel setup is used instead
-        if strcmp(obj.Mode,'eHATA') 
-            obj.eHATA = sonohieHATA(obj);
+        if strcmp(obj.Mode,'eHATA')
+          obj.eHATA = sonohieHATA(obj);
         elseif strcmp(obj.Mode,'winner')
-            obj.WINNER = sonohiWINNER(StationC,User, obj);
-            obj.WINNER = obj.WINNER.setup();  
+          obj.WINNER = sonohiWINNER(StationC,User, obj);
+          obj.WINNER = obj.WINNER.setup();
         end
         
         % Reset any existing channel conditions
@@ -262,8 +263,8 @@ classdef ChBulk_v2
         
         % Traverse channel
         for ll = 1:5
-            [~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
-            RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
+          [~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
+          RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
         end
         % Reset schedule
         
@@ -282,14 +283,14 @@ classdef ChBulk_v2
     end
     
     function obj = setupChannel(obj,Stations,Users)
-        [stations, users] = obj.getScheduled(Stations, Users);
-        if strcmp(obj.Mode,'winner')
-            obj.WINNER = sonohiWINNER(stations,users, obj);
-            obj.WINNER = obj.WINNER.setup();
-        elseif strcmp(obj.Mode,'eHATA')
-            obj.eHATA = sonohieHATA(obj);
-        end
-        
+      [stations, users] = obj.getScheduled(Stations, Users);
+      if strcmp(obj.Mode,'winner')
+        obj.WINNER = sonohiWINNER(stations,users, obj);
+        obj.WINNER = obj.WINNER.setup();
+      elseif strcmp(obj.Mode,'eHATA')
+        obj.eHATA = sonohieHATA(obj);
+      end
+      
     end
     
     function Users = applyInterference(obj,Stations,Users)
