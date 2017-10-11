@@ -110,7 +110,7 @@ classdef BSTransmitterModule
 
 		% map elements to grid and modulate waveform to transmit
 		function obj = mapGridAndModulate(obj, enbObj, iStation, sym, Param)
-			% the last step in the DL transmisison chain is to map the symbols to the
+			% the last step in the DL transmission chain is to map the symbols to the
 			% resource grid and modulate the grid to get the TX waveform
 
 			% extract all the symbols this eNodeB has to transmit

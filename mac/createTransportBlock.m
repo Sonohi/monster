@@ -12,11 +12,13 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 %   TbInfo 						->  actual size and rate matching
 
 	% get a single MCS and modulation order across all the PRBs assigned to a UE
+	enb = struct(Station);
 	numPRB = 0;
 	avMCS = 0;
 	avMOrd = 0;
 	qsz = User.Queue.Size;
-	sch = Station.Schedule;
+	sch = enb.Schedule;
+	ixPRBs = find([sch.UeId] == User.UeId);
 	for (iPrb = 1:length(sch))
 		if (sch(iPrb).UeId == User.UeId)
 			numPRB = numPRB + 1;
@@ -32,20 +34,24 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 		avMOrd = round(avMOrd/numPRB);
 	end
 
-	% the transport block is created of a size that is the minimum between the
-	% traffic queue size and the maximum size of the uncoded transport block
+	% the transport block is created of a size that matches the allocation that the 
+	% PDCSH symbols will have on the grid 
+	[~, mod, ~] = lteMCS(avMCS);
+	enb.Tx.PDSCH.Modulation = mod;
+	enb.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	
+	[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+	TbInfo.tbSize = info.Gd;
+	TbInfo.rateMatch = info.Gd;
 	% the redundacy version (RV) is defaulted to 0
-	TbInfo.tbSize = min(qsz, lteTBS(numPRB, avMCS));	
-	TbInfo.rateMatch = lteTBS(numPRB, avMCS);
 	TbInfo.rv = 0;
 
 	tb = randi([0 1], TbInfo.tbSize, 1);
-	% pad the rest of the TB for storage with -1
-	padding(1:Param.maxTbSize - TbInfo.tbSize, 1) = -1;
-	% concatenate the padding
-	tb = cat(1, tb, padding);
 
-	% update User queue by reducing the bits sent
-	User.Queue.Size = User.Queue.Size - TbInfo.tbSize;
+	% update User queue by reducing the data bits sent
+	if qsz <= TbInfo.tbSize
+		User.Queue.Size = User.Queue.Size - qsz;
+	else
+		User.Queue.Size = User.Queue.Size - TbInfo.tbSize;
+	end
 
 end

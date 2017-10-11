@@ -25,7 +25,7 @@ function [cwd, CwdInfo] = createCodeword(tb, TbInfo, Param)
 
 	% padding
 	CwdInfo.cwdSize = length(cwd);
-	padding(1:Param.maxCwdSize - CwdInfo.cwdSize, 1) = -1;
-	cwd = cat(1, cwd, padding);
+% 	padding(1:Param.maxCwdSize - CwdInfo.cwdSize, 1) = -1;
+% 	cwd = cat(1, cwd, padding);
 
 end
