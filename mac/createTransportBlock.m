@@ -41,7 +41,7 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 	enb.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	
 	[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 	TbInfo.tbSize = info.Gd;
-	TbInfo.rateMatch = info.Gd;
+	TbInfo.rateMatch = info.G;
 	% the redundacy version (RV) is defaulted to 0
 	TbInfo.rv = 0;
 

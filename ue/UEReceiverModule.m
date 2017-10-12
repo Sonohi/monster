@@ -96,41 +96,56 @@ classdef UEReceiverModule
 			validateRxEstimatePdsch(obj);
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
+			
 			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
-			obj.SchIndexes = obj.SchIndexes';
-
+			[~, mod, ~] = lteMCS(enb.Schedule(obj.SchIndexes(1)).Mcs);
+			enb.Tx.PDSCH.Modulation = mod;
+			
 			% Now get all the PDSCH indexes and symbols out of the received grid and decode them      
       fullPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 			[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, obj.EqSubframe);
-
 			% Decode PDSCH
-			[fullDlschBits, fullPdsch] = ltePDSCHDecode(enb, enb.Tx.PDSCH, fullPdschRx);
+			[fullDlsch, fullPdsch] = ltePDSCHDecode(enb, enb.Tx.PDSCH, fullPdschRx);
 			% Get the data out of the cells
-			fullDlschBits = fullDlschBits{1};
+			fullDlsch = fullDlsch{1};
 			fullPdsch = fullPdsch{1};
+			
+			enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';	
 
+			uePdschIndices = ue.SymbolsInfo.pdschIxs;
+			
 			% Filter out the PDSCH symbols and bits that are meant for this receiver.
-			rxPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, obj.SchIndexes);
 			% The indices obtained with the function refer to positions in the main grid
-			rxPdsch = zeros(length(rxPdschIndices), 1);
+			uePdsch = zeros(length(uePdschIndices), 1);
 			modOrd = cqi2modOrd(obj.WCQI);
-			rxDlschBits = zeros(length(rxPdschIndices)*modOrd, 1);
-			for iSym = 1:length(rxPdschIndices)
-				% Extract Symbols
-				iMap = find(fullPdschIndices == rxPdschIndices(iSym));
-				rxPdsch(iSym) = fullPdsch(iMap);
-				% Extract decoded bits based on modulation order
-				for iMod = modOrd - 1:-1:0
-					rxDlschBits(iSym*modOrd - iMod) = fullDlschBits(iMap*modOrd - iMod);
+			ueDlsch = zeros(length(uePdschIndices)*modOrd, 1);
+
+			% find the first and last indices for the PDSCH and the DLSCH
+			uePdschStartIx = find(fullPdschIndices == uePdschIndices(1));
+			uePdsch = fullPdsch(uePdschStartIx:uePdschStartIx + length(uePdschIndices) - 1);
+
+			% To find the codeword start we need to look at the overall schedule 
+			% of the eNodeB to understand how the PRBs previous to the first one
+			% used by this UE have been modulated 
+			startPrb = obj.SchIndexes(1);
+			if startPrb ~= 1
+				bitShift = 0;
+				for iPrb = 1:startPrb - 1
+					if enb.Schedule(iPrb).UeId ~= 0
+						bitShift = bitShift + 150*enb.Schedule(iPrb).ModOrd;
+					end
 				end
+			else
+				bitShift = 1;
 			end
+			ueDlsch =  fullDlsch(bitShift: bitShift + length(uePdschIndices)*modOrd - 1);
       
 			% The decoded DL-SCH bits are always returned as a cell array, so for 1 CW
 			% cases convert it
-			obj.PDSCH = rxPdsch;
+			obj.PDSCH = uePdsch;
 			% Decode DL-SCH
 			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ...
-				rxDlschBits);
+				ueDlsch);
 		end
 
 		% calculate the EVM
