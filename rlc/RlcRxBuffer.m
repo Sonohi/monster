@@ -1,6 +1,6 @@
 %   RLC BUFFER defines a value class for a reordering buffer for RLC
 
-classdef RlcBuffer
+classdef RlcRxBuffer
 	properties
 		sqnExpected;
 		sqnReceived;
@@ -12,7 +12,7 @@ classdef RlcBuffer
 
 	methods
 		% Constructor
-		function obj = RlcBuffer(Param)
+		function obj = RlcRxBuffer(Param)
 			obj.sqnExpected = 1;
 			obj.sqnReceived = 0;
 			obj.sqnNext = 2;
@@ -25,7 +25,7 @@ classdef RlcBuffer
 		end
 
 		% Handle the arrival of a new TB
-		function obj = handleTb(tb, sqn, timeNow)
+		function obj = handleTbReception(tb, sqn, timeNow)
 			% update the buffer object
 			obj.sqnReceived = sqn;
 			% now check for reordering
@@ -63,6 +63,7 @@ classdef RlcBuffer
 				end
 			end
 		end
+
 	end
 
 	methods (Access = private)
