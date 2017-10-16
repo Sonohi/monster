@@ -32,7 +32,8 @@ classdef EvolvedNodeB
 		Psleep;
 		Tx;
 		Rx;
-		HarqProc;
+		Mac;
+		Rlc;
 	end
 
 	methods
@@ -72,7 +73,8 @@ classdef EvolvedNodeB
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
-			obj.HarqProc = [];
+			obj.Mac = struct('HarqProc', []);
+			obj.Rlc = struct('sqn', 0);
 			obj.Tx = BSTransmitterModule(obj, Param);
 			obj.Rx = BSReceiverModule(Param);
 		end
