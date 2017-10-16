@@ -12,7 +12,7 @@ function [cwd, CwdInfo] = createCodeword(tb, TbInfo, Param)
 
   % perform CRC encoding with 24A poly
 	% TB has to be a vector for the LTE library, extract the actual
-  encTB = lteCRCEncode(tb(1:TbInfo.rateMatch,1), '24A');
+  encTB = lteCRCEncode(tb, '24A');
 
   % create code block segments
   cbs = lteCodeBlockSegment(encTB);
@@ -23,9 +23,5 @@ function [cwd, CwdInfo] = createCodeword(tb, TbInfo, Param)
   % finally rate match and return codeword
   cwd = lteRateMatchTurbo(turboEncCbs, TbInfo.rateMatch, TbInfo.rv);
 
-	% padding
 	CwdInfo.cwdSize = length(cwd);
-	padding(1:Param.maxCwdSize - CwdInfo.cwdSize, 1) = -1;
-	cwd = cat(1, cwd, padding);
-
 end

@@ -5,7 +5,7 @@ function validateRxEstimatePdsch(rx)
 	%   Function fingerprint
 	%   rx		->  test
 
-	validateattributes(rx,{'ReceiverModule'},{'size',[1,1]});
+	validateattributes(rx,{'UEReceiverModule'},{'size',[1,1]});
 	if isempty(rx.NoiseEst)
 		sonohiLog('Receiver has empty parameters for PDSCH estimation', 'ERR');
 	end
