@@ -100,8 +100,15 @@ for iRound = 0:(Param.schRounds-1)
 		if (iRound ~= 0 && mod(iRound, 40) == 0)
 			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
 		end
+		
 		% Reset the grid and put in the grid RS, PSS and SSS
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
+
+		% If retransmissions are enabled, refresh the queues
+		if Param.rtxOn 
+			[Stations(iStation), Users] = setArqQueues(Stations(iStation), Users, simTime);
+			[Stations(iStation), Users] = setHarqQueues(Stations(iStation), Users, simTime);
+		end
 		
 		% schedule only if at least 1 user is associated
 		if Stations(iStation).Users(1) ~= 0
