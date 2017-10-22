@@ -45,7 +45,17 @@ function [tb, TbInfo] = createTransportBlock(Station, User, Param)
 	% the redundacy version (RV) is defaulted to 0
 	TbInfo.rv = 0;
 
-	tb = randi([0 1], TbInfo.tbSize, 1);
+	% Now we need to encode the SQN and the HARQ process ID into the TB if retransmissions are enabled
+	% We use the first 13 bits for that; the first 10 are the SQN number of this TB, the other 3 are the HARQ PID
+	if Param.rtxOn 
+		sqn = getSqn(Station, User, 'format', 'b');
+		harqPid = getHarqPid(Station, User, sqn, 'outFormat', 'b', 'inFormat', 'b');
+		ctrlBits = cat(1, sqn, harqPid);
+		tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);
+		tb = cat(1, ctrlBits, tbPayload);
+	else
+		tb = randi([0 1], TbInfo.tbSize, 1);
+	end
 
 	% update User queue by reducing the data bits sent
 	if qsz <= TbInfo.tbSize

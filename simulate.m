@@ -100,7 +100,7 @@ for iRound = 0:(Param.schRounds-1)
 		if (iRound ~= 0 && mod(iRound, 40) == 0)
 			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
 		end
-		
+
 		% Reset the grid and put in the grid RS, PSS and SSS
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 
@@ -119,7 +119,7 @@ for iRound = 0:(Param.schRounds-1)
 		sch = [Stations(iStation).Schedule.UeId];
 		utilPercent = 100*find(sch, 1, 'last' )/length(sch);
 		
-		% check utilPercent and cahnge to 0 if null
+		% check utilPercent and change to 0 if null
 		if isempty(utilPercent)
 			utilPercent = 0;
 		end
