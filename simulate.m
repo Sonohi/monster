@@ -150,8 +150,8 @@ for iRound = 0:(Param.schRounds-1)
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
 			% generate transport block for the user
-			[Users(iUser).TransportBlock, Users(iUser).TransportBlockInfo] =...
-				createTransportBlock(Stations(iServingStation), Users(iUser), Param);
+			[Stations(iServingStation), Users(iUser)] = ... 
+				createTransportBlock(Stations(iServingStation), Users(iUser), Param, simTime);
 			
 			% generate codeword (RV defaulted to 0)
 			[Users(iUser).Codeword, Users(iUser).CodewordInfo] = createCodeword(...

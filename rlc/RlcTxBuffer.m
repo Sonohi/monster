@@ -5,8 +5,11 @@ classdef RlcTxBuffer
 		sqn;
 		bitsSize;
 		tbSize;
-		tbBuffer;
-	end;
+		tbBuffer(1024, 1) = struct(...
+			'tb', [], ...
+			'sqn', 0, ...
+			'timeIn', 0);
+	end
 
 	methods
 		% Constructor
@@ -14,10 +17,6 @@ classdef RlcTxBuffer
 			obj.sqn = 0;
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
-			obj.tbBuffer(1:Param.rlc.maxBufferSize, 1) = struct(...
-				'tb', [], ...
-				'sqn', 0, ...
-				'timeIn', 0);
 		end
 
 		% Handle the insert of a new TB
