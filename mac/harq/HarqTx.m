@@ -1,6 +1,7 @@
 %   HARQ TX defines a value class for creating anf handling a single HARQ transmitter
 %		a property called state is used to handle the protocol behaviour of each individual process
-%		0 means idle, 1 means in use, 2 means retransmitting, 3 means failure
+%		0 means idle, 1 means in use, 2 means awaiting retransmission slot, 3 means retransmitting
+% 	4 means retransmission failure
 
 classdef HarqTx
 	properties
@@ -8,6 +9,8 @@ classdef HarqTx
 		rxId;
 		bitsSize = 0;
 		tbSize = 0;
+		rrCurrentProc = -1;
+		rrNextProc = -1;
 		processes(8,1) = struct(...
 			'rtxCount',0,...
 			'rv', 0, ....
@@ -47,11 +50,68 @@ classdef HarqTx
 			end
 		end
 
-		% set tb
-		function obj = setTb(obj, pid, timeNow, tb)
+		% Used to insert a new TB and start a new HARQ process
+		function obj = handleTbInsert(obj, pid, timeNow, tb)
 			iProc = find([obj.processes.procId] == pid);
 			obj.processes(iProc).tb = tb;
 			obj.processes(iProc).timeStart = timeNow;
+			obj.bitsSize = obj.bitsSize + length(tb);
+			obj.tbSize = obj.tbSize + 1;
+		end
+
+		% Utility to check whether any retransmission should be done
+		function info = getRetransmissionState(obj)
+			% check if this receiver has anything at all
+			if obj.bitsSize > 0 
+				rtxProcessesIndices = find([obj.processes.state] == 2);
+				if length(rtxBuffersIndices) == 0
+					info.flag = false;
+				else
+					info.flag = true;
+					% In case we need to take a TB from a HARQ process, we apply a RR scheme among the 
+					% 8 processes to choose which one to schedule for this turn.
+					rtxProcesses = obj.processes(rtxBuffersIndices);
+					% Starting case where the current is the first one and the next is set if it exists
+					if obj.rrCurrentProc == -1 
+						obj.rrCurrentProc = rtxProcesses(1).procId;
+						if length(rtxProcessesIndices) > 1
+							obj.rrNextProc = rtxProcesses(2).procId;
+						else
+							obj.rrNextProc = obj.rrCurrentProc;
+						end
+					else
+						nextProcIndex = find([rtxProcesses.procId] == obj.rrNextProc);
+						if ~isempty(nextProcIndex)
+							% We found the process that should be scheduled for this turn
+							% update the attributes in the overall object
+							obj.rrCurrentProc = obj.rrNextProc;
+							info.procId = obj.rrCurrentProc;
+							% find the index of the process that will be the next one 
+							procIndexInRtxList = find([rtxProcesses.procId] == obj.rrCurrentProc);
+							if procIndexInRtxList ~= length(rtxProcesses)
+								% set the next in line 
+								obj.rrNextProc = rtxProcesses(procIndexInRtxList + 1).procId;
+							else
+								% restart the round 
+								obj.rrNextProc = rtxProcesses(1).procId;
+							end
+						else
+							% the process that should have used this retransmission slot is no longer
+							% in an "awaiting retransmission" state, so restart from the beginning
+							% TODO check this
+							obj.rrCurrentProc = rtxProcesses(1).procId;
+							if length(rtxProcessesIndices) > 1
+								obj.rrNextProc = rtxProcesses(2).procId;
+							else
+								obj.rrNextProc = obj.rrCurrentProc;
+							end
+						end
+					end
+				end
+			else
+				info.flag = false;
+			end	
+		end
 		end
 
 		% Handle the reception of a ACK/NACk
@@ -69,12 +129,12 @@ classdef HarqTx
 				% check whether the maximum number has been exceeded
 				if obj.processes(iProc).rtxCount > Param.harq.rtxMax
 					% log failure (and notify RLC?)
-					obj.processes(iProc).state = 3;
+					obj.processes(iProc).state = 4;
 				else
 					% log rtx
 					obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
 					obj.processes(iProc).rv = Param.harq.rv(obj.rtxCount);
-					obj.processes(iProc).state = 2;
+					obj.processes(iProc).state = 3;
 					obj.processes(iProc).timeStart = timeNow;
 				end
 			end

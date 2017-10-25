@@ -154,8 +154,7 @@ for iRound = 0:(Param.schRounds-1)
 				createTransportBlock(Stations(iServingStation), Users(iUser), Param, simTime);
 			
 			% generate codeword (RV defaulted to 0)
-			[Users(iUser).Codeword, Users(iUser).CodewordInfo] = createCodeword(...
-				Users(iUser).TransportBlock,Users(iUser).TransportBlockInfo, Param);
+			Users(iUser) = createCodeword(Users(iUser), Param);
 			
 			% finally, generate the arrays of complex symbols by setting the
 			% correspondent values per each eNodeB-UE pair

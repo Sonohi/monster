@@ -1,6 +1,6 @@
-%   RLC BUFFER defines a value class for a reordering buffer for RLC
+%   ARQ RX defines a value class for a reordering buffer for ARQ receiver
 
-classdef RlcRxBuffer
+classdef ArqRx
 	properties
 		sqnExpected;
 		sqnReceived;
@@ -12,7 +12,7 @@ classdef RlcRxBuffer
 
 	methods
 		% Constructor
-		function obj = RlcRxBuffer(Param)
+		function obj = ArqRx(Param)
 			obj.sqnExpected = 1;
 			obj.sqnReceived = 0;
 			obj.sqnNext = 2;

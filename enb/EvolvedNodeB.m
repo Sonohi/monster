@@ -74,7 +74,7 @@ classdef EvolvedNodeB
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
 			obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-			obj.Rlc = struct('ArqTxBuffers', rlcBufferBulk(Param));
+			obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
 			obj.Tx = BSTransmitterModule(obj, Param);
 			obj.Rx = BSReceiverModule(Param);
 		end

@@ -36,6 +36,12 @@ switch Param.scheduling
 					break;
 				end
 			end
+
+			% If the retransmissions are on, then check beforehand whether this UE has anything to be sent
+			retransmissionsInfo = struct('flag', false, 'sqn', -1, 'harq');
+			if Param.rtxOn
+				retransmissionsInfo = checkRetransmissionQueues(Station, Users(iCurrUe).UeId);
+			end
 			
 			if prbsAv > 0
 				if ~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0
