@@ -37,16 +37,35 @@ switch Param.scheduling
 				end
 			end
 
-			% If the retransmissions are on, then check beforehand whether this UE has anything to be sent
-			retransmissionsInfo = struct('flag', false, 'sqn', -1, 'harq');
+			% If the retransmissions are on, check awaiting retransmissions
+			rtxInfo = struct('proto', [], 'identifier', [], 'iUser', -1);
 			if Param.rtxOn
-				retransmissionsInfo = checkRetransmissionQueues(Station, Users(iCurrUe).UeId);
+				rtxInfo = checkRetransmissionQueues(Station, Users(iCurrUe).UeId);
 			end
+
+			% Boolean flags for scheduling for readability
+			schedulingFlag = ~Users(iCurrUe).Scheduled;
+			noRtxSchedulingFlag = Users(iCurrUe).Queue.Size > 0 && (~Param.rtxOn || ...
+														(Param.rtxOn && rtxInfo.proto == 'none'));
+			rtxSchedulingFlag = Param.rtxOn && rtxInfo.proto ~= 'none';
 			
+			% If there are still PRBs available, then we can schedule either a new TB or a RTX
 			if prbsAv > 0
-				if ~Users(iCurrUe).Scheduled && Users(iCurrUe).Queue.Size > 0
+				if schedulingFlag && (noRtxSchedulingFlag || rtxSchedulingFlag)
 					modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
-					prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
+					if noRtxSchedulingFlag
+						prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
+					else
+						% In this case load the TB picked for retransmission
+						tb = [];
+						switch rtxInfo.proto
+							case 'arq'
+								tb = Station.Rlc.ArqTxBuffers(rtxInfo.iUser).tbBuffer(rtxInfo.identifier).tb;
+							case 'harq'
+								tb = Station.Mac.HarqTxProcesses(rtxInfo.iUser).processes(rtxInfo.identifier).tb;
+						end
+						prbsNeed = ceil(length(tb)/(modOrd * Param.prbSym));
+					end
 					prbsSch = 0;
 					if prbsNeed >= prbsAv
 						prbsSch = prbsAv;
@@ -56,6 +75,9 @@ switch Param.scheduling
 					
 					prbsAv = prbsAv - prbsSch;
 					Users(iCurrUe) = setScheduled(Users(iCurrUe), true);
+					if rtxSchedulingFlag
+						Station = initRetransmission(Station, rtxInfo);
+					end
 					% write to schedule struct
 					for iPrb = 1:Station.NDLRB
 						if Station.Schedule(iPrb).UeId == 0

@@ -1,4 +1,4 @@
-function info = checkRetransmissionQueues(Station, UeId)
+function rtxInfo = checkRetransmissionQueues(Station, UeId)
 
 %   CHECK RETRANSMISSION QUEUES returns the status of the RLC and MAC queues
 %
@@ -6,17 +6,28 @@ function info = checkRetransmissionQueues(Station, UeId)
 % 	Station			->	the eNodeB object			
 %   UeID      	->  the UE ID
 %
-%   info				->  the info struct with the queue stats
+%   rtxInfo			->  the rtxInfo struct with the queue stats
 
 	% RLC queue check
-	iUser = find([Station.Rlc.ArqTxBuffers.receiver] == UeId);
-	arqInfo = getRetransmissionState(Station.Rlc.ArqTxBuffers(iUser));
+	iUserRlc = find([Station.Rlc.ArqTxBuffers.receiver] == UeId);
+	arqrtxInfo = getRetransmissionState(Station.Rlc.ArqTxBuffers(iUserRlc));
 
 	% MAC queues check
-	iUser = find([Station.Mac.HarqTxProcesses.receiver] == UeId);
-	harqInfo = getRetransmissionState(Station.Mac.HarqTxProcesses(iUser));
+	iUserMac = find([Station.Mac.HarqTxProcesses.receiver] == UeId);
+	harqrtxInfo = getRetransmissionState(Station.Mac.HarqTxProcesses(iUserMac));
 
-	
-
+	% HARQ retransmissions have the priority 
+	if harqrtxInfo.flag
+		rtxInfo.proto = 'harq';
+		rtxInfo.identifier = procId;
+		rtxInfo.iUser = iUserMac;
+	else if arqrtxInfo.flag
+		rtxInfo.proto = 'arq';
+		rtxInfo.identifier = arqrtxInfo.bufferIndex;
+		rtxInfo.iUser = iUserRlc;
+	else
+		rtxInfo.proto = 'none';
+		rtxInfo.identifier = [];
+	end
 
 end

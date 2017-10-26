@@ -64,7 +64,7 @@ classdef HarqTx
 			% check if this receiver has anything at all
 			if obj.bitsSize > 0 
 				rtxProcessesIndices = find([obj.processes.state] == 2);
-				if length(rtxBuffersIndices) == 0
+				if isempty(rtxBuffersIndices)
 					info.flag = false;
 				else
 					info.flag = true;
@@ -112,7 +112,13 @@ classdef HarqTx
 				info.flag = false;
 			end	
 		end
-		end
+
+		% Set a process in retransmission state
+		function obj = setRetransmissionState(obj, procId){
+			iProc = find([obj.processes.procId] == procId);
+			obj.processes(iProc).state = 3;
+			obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
+		}
 
 		% Handle the reception of a ACK/NACk
 		function obj = handleReply(obj, ack, procId, timeNow, Param)
@@ -166,14 +172,14 @@ classdef HarqTx
 		% Decode the SQN from a TB in storage and returns it
 		function sqn = decodeSqn(tb, varargin)
 			% Check if there are any options, otherwise assume default
-			outFmt = 'd'
+			outFmt = 'd';
 			if nargin > 0
 				if varargin{1} == 'format'
 					outFmt = varargin{2};
 				end
 			end
 
-			if length(tb) > 0
+			if ~isempty(tb)
 				sqnBits(1:10, 1) = tb(1:10,1); 
 				if outFmt == 'b'
 					sqn = sqnBits;
@@ -186,10 +192,10 @@ classdef HarqTx
 		end
 
 		% Utility to start a new process 
-		function [obj, pid] = startNewProcess(obj, sqn)
+		function [obj, pid] = startNewProcess(obj)
 			% First of all, find whether there is any process that is not used currently
 			idleProcsIndices = find([obj.processes.state] == 0);
-			if length(idleProcsIndices ~= 0)
+			if ~isempty(idleProcsIndices ~= 0)
 				% A free process is available
 				iProc = idleProcsIndices(1);
 				obj.processes(iProc).state = 1;

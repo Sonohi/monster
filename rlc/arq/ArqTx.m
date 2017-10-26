@@ -50,6 +50,12 @@ classdef ArqTx
 			end	
 		end
 
+		% Set a TB in retransmission state
+		function obj = setRetransmissionState(obj, iTb){
+			obj.processes(iTb).state = 3;
+			obj.processes(iTb).rtxCount = obj.processes(iTb).rtxCount + 1;
+		}
+
 		% Handle the insert of a new TB
 		function obj = handleTbInsert(tb, timeNow)
 			obj.sqn = obj.sqn + 1;
