@@ -12,7 +12,12 @@ function Station = setHarqTb(Station, User, pid, timeNow, tb)
 %   Station     ->  the updated UE object
 
 	% Find index
-	iUser = find([Station.Mac.HarqTxProcesses.receiver] == User.UeId);
-	% Set TB
-	Station.Mac.HarqTxProcesses(iUser) = setTb(Station.Mac.HarqTxProcesses(iUser), pid, timeNow, tb);	
+	iUser = find([Station.Mac.HarqTxProcesses.rxId] == User.UeId);
+	
+	% Check whether the pid has bene passed in decimal or binary
+	if length(pid) > 1
+		pid = bi2de(pid', 'left-msb');
+	end
+ 	% Set TB
+	Station.Mac.HarqTxProcesses(iUser) = handleTbInsert(Station.Mac.HarqTxProcesses(iUser), pid, timeNow, tb);	
 end

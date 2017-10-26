@@ -1,4 +1,4 @@
-function [buffers] = arqTxBulk(Param, txId, rxList, timeNow)
+function buffers = arqTxBulk(Param, txId, rxList, timeNow)
 
 %   RLC BUFFER BULK is used to create a bulk of RLC buffers
 %
@@ -11,7 +11,7 @@ function [buffers] = arqTxBulk(Param, txId, rxList, timeNow)
 %   buffers		->  RLC buffers
 
 	for iRx = 1:length(rxList)
-		buffers(ix) = ArqTx(Param, txId, rxList(iRx), timeNow);
+		buffers(iRx) = ArqTx(Param, txId, rxList(iRx), timeNow);
 	end
 
 end

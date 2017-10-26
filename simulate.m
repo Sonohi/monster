@@ -65,7 +65,6 @@ end
 
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
 for iRound = 0:(Param.schRounds-1)
-	% TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
 	sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
@@ -103,12 +102,6 @@ for iRound = 0:(Param.schRounds-1)
 
 		% Reset the grid and put in the grid RS, PSS and SSS
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
-
-		% If retransmissions are enabled, refresh the queues
-		if Param.rtxOn 
-			[Stations(iStation), Users] = setArqQueues(Stations(iStation), Users, simTime);
-			[Stations(iStation), Users] = setHarqQueues(Stations(iStation), Users, simTime);
-		end
 		
 		% schedule only if at least 1 user is associated
 		if Stations(iStation).Users(1) ~= 0
@@ -159,7 +152,7 @@ for iRound = 0:(Param.schRounds-1)
 			% finally, generate the arrays of complex symbols by setting the
 			% correspondent values per each eNodeB-UE pair
 			% setup current subframe for serving eNodeB
-			if Users(iUser).CodewordInfo.cwdSize ~= 0 % is this even necessary?
+			if Users(iUser).CodewordInfo.cwdSize ~= 0
 				[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser),...
 					Users(iUser).Codeword, Users(iUser).CodewordInfo, Param);
 			end

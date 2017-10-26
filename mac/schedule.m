@@ -46,8 +46,8 @@ switch Param.scheduling
 			% Boolean flags for scheduling for readability
 			schedulingFlag = ~Users(iCurrUe).Scheduled;
 			noRtxSchedulingFlag = Users(iCurrUe).Queue.Size > 0 && (~Param.rtxOn || ...
-														(Param.rtxOn && rtxInfo.proto == 'none'));
-			rtxSchedulingFlag = Param.rtxOn && rtxInfo.proto ~= 'none';
+														(Param.rtxOn && rtxInfo.proto == 0));
+			rtxSchedulingFlag = Param.rtxOn && rtxInfo.proto ~= 0;
 			
 			% If there are still PRBs available, then we can schedule either a new TB or a RTX
 			if prbsAv > 0
@@ -59,14 +59,13 @@ switch Param.scheduling
 						% In this case load the TB picked for retransmission
 						tb = [];
 						switch rtxInfo.proto
-							case 'arq'
-								tb = Station.Rlc.ArqTxBuffers(rtxInfo.iUser).tbBuffer(rtxInfo.identifier).tb;
-							case 'harq'
+							case 1
 								tb = Station.Mac.HarqTxProcesses(rtxInfo.iUser).processes(rtxInfo.identifier).tb;
+							case 2
+								tb = Station.Rlc.ArqTxBuffers(rtxInfo.iUser).tbBuffer(rtxInfo.identifier).tb;
 						end
 						prbsNeed = ceil(length(tb)/(modOrd * Param.prbSym));
 					end
-					prbsSch = 0;
 					if prbsNeed >= prbsAv
 						prbsSch = prbsAv;
 					else

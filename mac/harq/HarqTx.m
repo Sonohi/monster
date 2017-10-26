@@ -37,14 +37,14 @@ classdef HarqTx
 			procs = obj.processes;
 			pid = -1;
 			for iProc = 1:length(procs)
-				if sqn == decodeSqn(procs(iProc).tb)
+				if sqn == decodeSqn(obj, iProc)
 					pid = procs(iProc).procId;
 				else 
 					if iProc == length(procs)
 					% if there is no match for the SQN and we are at the last process slot
 					% then we need to start a new process 
 					newTb = true;
-					[obj, pid] = startNewProcess(obj, sqn);
+					[obj, pid] = startNewProcess(obj);
 					end
 				end
 			end
@@ -114,11 +114,11 @@ classdef HarqTx
 		end
 
 		% Set a process in retransmission state
-		function obj = setRetransmissionState(obj, procId){
+		function obj = setRetransmissionState(obj, procId)
 			iProc = find([obj.processes.procId] == procId);
 			obj.processes(iProc).state = 3;
 			obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
-		}
+		end
 
 		% Handle the reception of a ACK/NACk
 		function obj = handleReply(obj, ack, procId, timeNow, Param)
@@ -164,16 +164,17 @@ classdef HarqTx
 			% TODO check if pre-allocation can be removed or better the entire
 			% function
 			for iProc = 1:Param.harq.proc
-				obj.processes(iProc).procId = iProc;
+				obj.processes(iProc).procId = iProc - 1;
 				obj.processes(iProc).timeStart = timeNow;
 			end
 		end
 
 		% Decode the SQN from a TB in storage and returns it
-		function sqn = decodeSqn(tb, varargin)
+		function sqn = decodeSqn(obj, iProc, varargin)
+			tb = obj.processes(iProc).tb;
 			% Check if there are any options, otherwise assume default
 			outFmt = 'd';
-			if nargin > 0
+			if nargin > 2
 				if varargin{1} == 'format'
 					outFmt = varargin{2};
 				end

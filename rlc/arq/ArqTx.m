@@ -5,8 +5,8 @@
 
 classdef ArqTx
 	properties
-		transmitter;
-		receiver;
+		txId;
+		rxId;
 		sqn;
 		bitsSize;
 		tbSize;
@@ -33,14 +33,13 @@ classdef ArqTx
 			% check if this receiver has anything at all in the buffer
 			if obj.bitsSize > 0 
 				rtxBuffersIndices = find([obj.tbBuffer.state] == 2);
-				if length(rtxBuffersIndices) == 0
+				if isempty(rtxBuffersIndices)
 					info.flag = false;
 				else
 					info.flag = true;
 					% of all the TBs that are awaiting retransmission, pick the one that has the lowest SQN
 					rtxBuffers = obj.tbBuffer(rtxBuffersIndices);
 					sqnValues = [rtxBuffers.sqn];
-					minSqn = min(sqnValues);
 					% find the process in the main array 
 					% do not start the process as this is decided by the controller
 					info.bufferIndex = find([obj.tbBuffer.sqn] == min(sqnValues));
@@ -50,11 +49,20 @@ classdef ArqTx
 			end	
 		end
 
+		% Get SQN 
+		function [obj, sqn] = getNextSqn(obj)
+			sqn = obj.sqn;
+			obj.sqn = obj.sqn + 1;
+			if obj.sqn == 1024
+				obj.sqn = 0;
+			end
+		end
+
 		% Set a TB in retransmission state
-		function obj = setRetransmissionState(obj, iTb){
+		function obj = setRetransmissionState(obj, iTb)
 			obj.processes(iTb).state = 3;
 			obj.processes(iTb).rtxCount = obj.processes(iTb).rtxCount + 1;
-		}
+		end
 
 		% Handle the insert of a new TB
 		function obj = handleTbInsert(tb, timeNow)
@@ -95,11 +103,6 @@ classdef ArqTx
 			obj.tbBuffer(ix).tb = [];
 			obj.tbBuffer(ix).sqn = 0;
 			obj.tbBuffer(ix).timeStart = 0;
-		end
-
-		% Method to reset the SQN
-		function obj = resetSqn()
-			%TODO
 		end
 	end
 end

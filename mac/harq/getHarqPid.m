@@ -1,4 +1,4 @@
-function [Station, pid, newTb] = getHarqPid(Station, User, sqn, varargin)
+function [Station, harqPid, newTb] = getHarqPid(Station, User, sqn, varargin)
 
 %   GET HARQ PROCESS ID returns the process ID for the combination of UE, eNodeB and SQN
 %
@@ -15,7 +15,7 @@ function [Station, pid, newTb] = getHarqPid(Station, User, sqn, varargin)
 	% Check if there are any options, otherwise assume default
 	outFmt = 'd';
 	inFmt = 'd';
-	if nargin > 0
+	if nargin > 3
 		if varargin{1} == 'outFormat'
 			outFmt = varargin{2};
 		end
@@ -30,17 +30,17 @@ function [Station, pid, newTb] = getHarqPid(Station, User, sqn, varargin)
 	end
 
 	% Find index
-	iUser = find([Station.Mac.HarqTxProcesses.receiver] == User.UeId);
+	iUser = find([Station.Mac.HarqTxProcesses.rxId] == User.UeId);
 	% Find pid
-	[Station.Mac.HarqTxProcesses(iUser), harqPid, newTb] = findProcess(Station.Mac.HarqTxProcesses(iUser), sqn);	
+	[Station.Mac.HarqTxProcesses(iUser), harqPidTemp, newTb] = findProcess(Station.Mac.HarqTxProcesses(iUser), sqn);	
 
 	% Finally check the output format
 	if outFmt ~= 'd'
-		pid = de2bi(harqPid)';
-		if length(pid) ~= 3
-			pid = cat(1, zeros(3-length(pid), 1), pid);
+		harqPid = de2bi(harqPidTemp)';
+		if length(harqPid) ~= 3
+			harqPid = cat(1, zeros(3-length(harqPid), 1), harqPid);
 		end
 	else
-		pid = harqPid;
+		harqPid = harqPidTemp;
 	end
 end
