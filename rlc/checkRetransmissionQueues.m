@@ -21,7 +21,7 @@ function rtxInfo = checkRetransmissionQueues(Station, UeId)
 		rtxInfo.proto = 1;
 		rtxInfo.identifier = procId;
 		rtxInfo.iUser = iUserMac;
-	else if arqrtxInfo.flag
+	elseif arqrtxInfo.flag
 		rtxInfo.proto = 2;
 		rtxInfo.identifier = arqrtxInfo.bufferIndex;
 		rtxInfo.iUser = iUserRlc;

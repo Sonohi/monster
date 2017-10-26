@@ -223,7 +223,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE UPLINK
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
-	stations = UETxBulk(Stations, Users, iRound, mod(iRound,10));
+	Stations = UETxBulk(Stations, Users, iRound, mod(iRound,10));
 	
 	
 	% -----------

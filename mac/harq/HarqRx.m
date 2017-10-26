@@ -2,25 +2,23 @@
 
 classdef HarqRx
 	properties
-		processId;
-		txId;
-		rxId;
-		tb;
-		copiesNeeded;
-		copiesReceived;
-		state;
-	end;
+		bitsSize;
+		tbSize;
+		processes(8,1) = struct(...
+			'copiesNeeded',1,...
+			'copiesReceived',0,...
+			'tb', [],...
+			'state', 0, ...
+			'timeStart', -1,...
+			'procId', -1);
+	end
 
 	methods
 		% Constructor
-		function obj = HarqRx(transmitter, receiver, process, tb)
-			obj.txId = transmitter;
-			obj.rxId = receiver;
-			obj.processId = process;
-			obj.tb = tb;
-			obj.state = 1;
-			obj.copiesNeeded = 1:
-			obj.copiesReceived = 0:
+		function obj = HarqRx(Param, timeNow)
+			obj.bitsSize = 0;
+			obj.tbSize = 0;
+			obj = createProcesses(obj, Param, timeNow);
 		end
 
 		% Handle the reception of a TB
@@ -29,7 +27,7 @@ classdef HarqRx
 			if crc == 0
 				% All good, the TB can be decoded correctly, so we need to close off
 				obj.state = 2;
-			else if obj.copiesNeeded > 1
+			elseif obj.copiesNeeded > 1
 				% else we need to check whether the number of copies received is enough
 				if obj.copiesNeeded == obj.copiesReceived
 					obj.state = 2;
@@ -40,6 +38,17 @@ classdef HarqRx
 				% we are starting a retransmission session where we need more than 1 copy
 				obj.copiesNeeded = estiamteCrcCopies(crc);
 				obj.state = 3;
+			end
+		end
+	end
+
+	methods (Access = private)
+		function obj = createProcesses(obj, Param, timeNow)
+			% TODO check if pre-allocation can be removed or better the entire
+			% function
+			for iProc = 1:Param.harq.proc
+				obj.processes(iProc).procId = iProc - 1;
+				obj.processes(iProc).timeStart = timeNow;
 			end
 		end
 	end

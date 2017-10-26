@@ -24,6 +24,8 @@ classdef UserEquipment
 		TransportBlock;
 		TransportBlockInfo;
 		WCQI;
+		Mac;
+		Rlc;
 	end
 
 	methods
@@ -59,6 +61,8 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
+			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0));
+			obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
 		end
 
 		% sets user trajectory

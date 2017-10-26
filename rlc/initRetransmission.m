@@ -9,12 +9,12 @@ function Station = initRetransmission(Station, rtxInfo)
 %   Station			->  the updated eNodeB object
 
 	switch rtxInfo.proto
-	case 'arq'
-		Station.Rlc.ArqTxBuffers(rtxInfo.iUser) = ...
-			setRetransmissionState(Station.Rlc.ArqTxBuffers(rtxInfo.iUser), rtxInfo.identifier);
-	case 
+	case 1
 		Station.Mac.HarqTxProcesses(rtxInfo.iUser) = ...
 			setRetransmissionState(Station.Mac.HarqTxProcesses(rtxInfo(iUser), rtxInfo.identifier));
+	case 2
+		Station.Rlc.ArqTxBuffers(rtxInfo.iUser) = ...
+			setRetransmissionState(Station.Rlc.ArqTxBuffers(rtxInfo.iUser), rtxInfo.identifier);
 	end
 
 end
