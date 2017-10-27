@@ -1,4 +1,4 @@
-function Stations = UETxBulk(Stations,Users, Subframe, Frame)
+function Stations = ueTxBulk(Stations,Users, Subframe, Frame)
 
 	%   TX Bulk performs bulk operations on the transmitters for uplink
 	%

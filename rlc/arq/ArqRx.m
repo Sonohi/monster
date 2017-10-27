@@ -16,15 +16,15 @@ classdef ArqRx
 	methods
 		% Constructor
 		function obj = ArqRx(Param, timeNow)
-			obj.sqnExpected = 1;
+			obj.sqnExpected = 0;
 			obj.sqnReceived = 0;
-			obj.sqnNext = 2;
+			obj.sqnNext = 1;
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
 		end
 
 		% Handle the arrival of a new TB
-		function obj = handleTbReception(tb, sqn, timeNow)
+		function obj = handleTbReception(sqn, tb, timeNow)
 			% update the buffer object
 			obj.sqnReceived = sqn;
 			% now check for reordering
@@ -39,7 +39,7 @@ classdef ArqRx
 				% update the flags
 				obj.sqnExpected = obj.sqnReceived + 1;
 				if obj.sqnExpected > length(obj.tbBuffer)
-					obj = resetSqn();
+					obj.sqnExpected = 0;
 				end
 				obj.sqnNext = obj.sqnExpected + 1;
 
@@ -49,7 +49,7 @@ classdef ArqRx
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-
+				
 				% log exception
 			end
 		end

@@ -75,8 +75,8 @@ classdef EvolvedNodeB
 			obj.DlFreq = Param.dlFreq;
 			obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
 			obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-			obj.Tx = BSTransmitterModule(obj, Param);
-			obj.Rx = BSReceiverModule(Param);
+			obj.Tx = enbTransmitterModule(obj, Param);
+			obj.Rx = enbReceiverModule(Param);
 		end
 
 		% Posiiton base station

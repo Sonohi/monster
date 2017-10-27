@@ -1,6 +1,6 @@
-function Users = RxBulk(Stations,Users, cec)
+function Users = ueRxBulk(Stations,Users, cec)
 
-	%   RX Bulk performs bulk operations on the recivers
+	%   UE RX Bulk performs bulk operations on the recivers
 	%
 	%   Function fingerprint
 	%   Stations	->  EvolvedNodeB array

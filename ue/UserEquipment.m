@@ -53,8 +53,8 @@ classdef UserEquipment
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Rx = UEReceiverModule(Param);
-			obj.Tx = UETransmitterModule(Param);
+			obj.Rx = ueReceiverModule(Param);
+			obj.Tx = ueTransmitterModule(Param);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];

@@ -1,6 +1,6 @@
-function Stations = BSTxBulk(Stations, symbols, Param)
+function Stations = enbTxBulk(Stations, symbols, Param)
 
-	%   TX Bulk performs bulk operations on the recivers
+	%   ENODEB TX Bulk performs bulk operations for eNodeB transmissions
 	%
 	%   Function fingerprint
 	%   Stations	->  EvolvedNodeB array

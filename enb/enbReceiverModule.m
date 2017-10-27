@@ -1,4 +1,4 @@
-classdef BSReceiverModule
+classdef enbReceiverModule
 	properties
 		NoiseFigure;
 		Waveform;
@@ -6,7 +6,7 @@ classdef BSReceiverModule
 
 	methods
 
-		function obj = BSReceiverModule(Param)
+		function obj = enbReceiverModule(Param)
 			obj.NoiseFigure = Param.bsNoiseFigure;
 		end
 

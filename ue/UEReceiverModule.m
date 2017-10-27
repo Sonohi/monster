@@ -1,4 +1,4 @@
-classdef UEReceiverModule
+classdef ueReceiverModule
 	properties
 		NoiseFigure;
 		EstChannelGrid;
@@ -32,7 +32,7 @@ classdef UEReceiverModule
 
 	methods
 
-		function obj = UEReceiverModule(Param)
+		function obj = ueReceiverModule(Param)
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.WCQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);

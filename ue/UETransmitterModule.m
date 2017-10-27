@@ -1,4 +1,4 @@
-classdef UETransmitterModule
+classdef ueTransmitterModule
   properties
     NULRB;
     DuplexMode;
@@ -17,7 +17,7 @@ classdef UETransmitterModule
   
   methods
     
-    function obj = UETransmitterModule(Param)
+    function obj = ueTransmitterModule(Param)
       
       obj.NULRB = 6;                   % 6 Resource Blocks
       obj.DuplexMode = 'FDD';          % Frequency Division Duplexing (FDD)

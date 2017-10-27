@@ -1,4 +1,8 @@
-%   HARQ RX defines a value class for creating anf handling a single HARQ receiver
+%   HARQ RX defines a value class for the receiver end of the HARQ protocol.
+%		a property called state is used to model the protocol behaviour of the receiver process
+% 	it assumes value 0 for a default state that corresponds to an unused or successful process
+% 	and value 1 for a process awaiting retransmission copies
+
 
 classdef HarqRx
 	properties
@@ -22,23 +26,34 @@ classdef HarqRx
 		end
 
 		% Handle the reception of a TB
-		function obj = handleReply(crc, Param)
+		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Param, timeNow)
 			obj.copiesReceived = obj.copiesReceived + 1;
 			if crc == 0
-				% All good, the TB can be decoded correctly, so we need to close off
-				obj.state = 2;
+				% All good, the TB can be decoded correctly so no need to proceed further
+				obj.state = 0;
 			elseif obj.copiesNeeded > 1
-				% else we need to check whether the number of copies received is enough
+				% in this case it means we already started earlier for retransmissions 
+				% for this process and we need to check whether the number of copies is sufficient
 				if obj.copiesNeeded == obj.copiesReceived
-					obj.state = 2;
+					obj.state = 0;
 				else
-					obj.state = 3;
+					obj.state = 1;
 				end
 			else
-				% we are starting a retransmission session where we need more than 1 copy
-				obj.copiesNeeded = estiamteCrcCopies(crc);
-				obj.state = 3;
+				% in this last case, we are starting a retransmission session 
+				% so we need to know how many copies will be needed 
+				obj.copiesNeeded = estimateCrcCopies(crc);
+				obj.state = 1;
+				obj.tb = tb;
+				obj.timeStart = timeNow;
 			end
+		end
+
+		% Decodes a HARQ PID from the header of the TB
+		function [pid, pidIndex] = decodeHarqPid(obj, tb)
+			harqBits' = tb(1:3, 1);
+			pid = bi2de(harqBits, 'left-msb');
+			pidIndex = find([obj.processes.procId] == pid]);
 		end
 	end
 

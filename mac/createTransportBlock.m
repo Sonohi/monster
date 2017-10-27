@@ -46,12 +46,12 @@ function [Station, User] = createTransportBlock(Station, User, Param, timeNow)
 	TbInfo.rv = 0;
 
 	% Now we need to encode the SQN and the HARQ process ID into the TB if retransmissions are enabled
-	% We use the first 13 bits for that; the first 10 are the SQN number of this TB, the other 3 are the HARQ PID
+	% We use the first 13 bits for that; the first 3 are the HARQ PID. the other 10 are the SQN
 	newTb = false;
 	if Param.rtxOn 
 		[Station, sqn] = getSqn(Station, User.UeId, 'outFormat', 'b');
 		[Station, harqPid, newTb] = getHarqPid(Station, User, sqn, 'outFormat', 'b', 'inFormat', 'b');
-		ctrlBits = cat(1, sqn, harqPid);
+		ctrlBits = cat(1, harqPid, sqn);
 		tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);
 		tb = cat(1, ctrlBits, tbPayload);
 		if newTb
