@@ -15,25 +15,32 @@ function [Stations, Users] = ueDataDecoding(Stations, Users, Param, timeNow)
 	% respective receiver process
 	for iUser = 1:length(Users)
 		if ~isempty(Users(iUser).Rx.TransportBlock)
-			[harqPid, iProc] = decodeHarqPid(Users(iUser).Mac.HarqRxProcesses, Users(iUser).Rx.TransportBlock);
+			[harqPid, iProc] = Users(iUser).Mac.HarqRxProcesses.decodeHarqPid(...
+				Users(iUser).Rx.TransportBlock);
+			harqPidBits = de2bi(harqPid)';
+			if length(harqPidBits) ~= 3
+				harqPidBits = cat(1, zeros(3-length(harqPidBits), 1), harqPidBits);
+			end
 			if ~isempty(iProc)
 				% Handle HARQ TB reception
-				[Users(iUser).Mac.HarqRxProcesses, state] = handleTbReception(iProc, Users(iUser).Mac.HarqRxProcesses,...
+				[Users(iUser).Mac.HarqRxProcesses, state] = ...
+					Users(iUser).Mac.HarqRxProcesses.handleTbReception(iProc,...
 					Users(iUser).Rx.TransportBlock, Users(iUser).Rx.Crc, Param, timeNow);
 				% Depending on the state the process is, contact ARQ
 				if state == 0
-					sqn = decodeSqn(Users(iUser).Rlc.ArqRxBuffer, Users(iUser).Rx.TransportBlock);
+					sqn = Users(iUser).Rlc.ArqRxBuffer.decodeSqn(Users(iUser).Rx.TransportBlock);
 					if ~isempty(sqn)
-						Users(iUser).Rlc.ArqRxBuffer = handleTbReception(sqn, Users(iUser).Rx.TransportBlock, timeNow);
+						Users(iUser).Rlc.ArqRxBuffer = Users(iUser).Rlc.ArqRxBuffer.handleTbReception(...
+							sqn, Users(iUser).Rx.TransportBlock, timeNow);
 					end	
-					% Send back an ACK for this TB
-					% TODO ACK transmission 
-
+					% Set ACK and PID information for this UE to report back to the serving eNodeB 
+					Users(iUser).Mac.HarqReport.pid = harqPidBits;
+					Users(iUser).Mac.HarqReport.ack = 1;
 				else
 					% in this case, the process has entered or remained in the state where it needs TB copies
 					% we should not then contact the ARQ, but just send back a NACK
-					% TODO NACK transmission 	
-					
+					Users(iUser).Mac.HarqReport.pid = harqPidBits;
+					Users(iUser).Mac.HarqReport.ack = 0;
 				end	
 			end
 		end

@@ -9,7 +9,7 @@ function [ h1, h2 ] = plotConstDiagram_rx(Stations,Users)
                 dims = size(Users(pp).Rx.Subframe);
                 sps = 1;
                 if dims ~= [0 0]
-                    iServingStation = find([Stations.NCellID] == Users(pp).ENodeB);
+                    iServingStation = find([Stations.NCellID] == Users(pp).NCellID);
                     [indPdsch, info] = Stations(iServingStation).getPDSCHindicies;
                     est_SubFrame = Users(pp).Rx.Subframe(indPdsch);
                     plot(est_SubFrame,'.')
@@ -31,7 +31,7 @@ function [ h1, h2 ] = plotConstDiagram_rx(Stations,Users)
                 dims = size(Users(pp).Rx.EqSubframe);
                 sps = 1;
                 if dims ~= [0 0]
-                    iServingStation = find([Stations.NCellID] == Users(pp).ENodeB);
+                    iServingStation = find([Stations.NCellID] == Users(pp).NCellID);
                     [indPdsch, info] = Stations(iServingStation).getPDSCHindicies;
                     est_SubFrame = Users(pp).Rx.EqSubframe(indPdsch);
                     plot(est_SubFrame,'.')

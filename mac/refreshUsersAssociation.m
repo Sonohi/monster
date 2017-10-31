@@ -36,12 +36,12 @@ for (iUser = 1:length(Users))
 
 	stationCellID = Channel.getAssociation(StationsC,Users(iUser));
 
-	Users(iUser).ENodeB = stationCellID;
+	Users(iUser).NCellID = stationCellID;
 
 	% Now that the assignement is done, write also on the side of the station
 	% TODO replace with matrix operation
 	for iStation = 1:length(Stations)
-		if Stations(iStation).NCellID == Users(iUser).ENodeB
+		if Stations(iStation).NCellID == Users(iUser).NCellID
 			for ix = 1:Param.numUsers
 				if Stations(iStation).Users(ix) == 0
 					Stations(iStation).Users(ix) = Users(iUser).UeId;

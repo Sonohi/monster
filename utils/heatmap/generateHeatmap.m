@@ -61,7 +61,7 @@ end
 for iStation = 1:length(Stations)
 	% Associate user with stations
 	Stations(iStation).Users = ue.UeId;
-	ue.ENodeB = Stations(iStation).NCellID;
+	ue.NCellID = Stations(iStation).NCellID;
 	% Set the TxWaveform etc from the dummy frames info
 	Stations(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
 	Stations(iStation).Tx.WaveformInfo = Stations(iStation).FrameInfo;

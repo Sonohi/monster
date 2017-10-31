@@ -10,7 +10,7 @@ classdef ueTransmitterModule
     NSubframe;
     NFrame;
     ReGrid;
-    pucchformat;
+    pucch;
     NCellID;
     RNTI;
   end
@@ -23,7 +23,8 @@ classdef ueTransmitterModule
       obj.DuplexMode = 'FDD';          % Frequency Division Duplexing (FDD)
       obj.CyclicPrefixUL = 'Normal';   % Normal cyclic prefix length
       obj.NTxAnts = 1;                 % Number of transmission antennas
-      obj.pucchformat = 1;
+      obj.RNTI = 1;
+      obj.pucch.format = 1;
       obj.prach.Interval = Param.PRACHInterval;
       obj.prach.Format = 0;          % PRACH format: TS36.104, Table 8.4.2.1-1, CP length of 0.10 ms, typical cell range of 15km
       obj.prach.SeqIdx = 22;         % Logical sequence index: TS36.141, Table A.6-1
@@ -31,23 +32,19 @@ classdef ueTransmitterModule
       obj.prach.HighSpeed = 0;       % Normal mode: TS36.104, Table 8.4.2.1-1
       obj.prach.FreqOffset = 0;      % Default frequency location
       obj.prach.PreambleIdx = 32;    % Preamble index: TS36.141, Table A.6-1
-      obj.prachinfo = ltePRACHInfo(obj, obj.prach);
-      
-      
+      obj.prachinfo = ltePRACHInfo(obj, obj.prach);      
     end
-    
-    
     
     function obj = setPRACH(obj)
       obj.prach.TimingOffset = obj.prachinfo.BaseOffset + obj.NSubframe/10.0;
       obj.Waveform = ltePRACH(obj, obj.prach);
     end
 
-    function obj = mapGridAndModulate(obj, CellID, NSubframe, NFrame)
+    function obj = mapGridAndModulate(obj, User, NSubframe, NFrame)
 
       obj.NSubframe = NSubframe;
       obj.NFrame = NFrame;
-      obj.NCellID = CellID;
+      obj.NCellID = User.NCellID;
       % Check if upllink needs to consist of PRACH
       % TODO: changes to sequence and preambleidx given unique user ids
       if mod(obj.NSubframe,obj.prach.Interval) == 0
@@ -62,27 +59,33 @@ classdef ueTransmitterModule
         % Format 1 is Scheduling request with/without bits for HARQ
         % Format 2 is CQI with/without bits for HARQ
         % Format 3 Bits for HARQ
-  
+
+        % Get HARQ and CQI info for this report from the MAC layer bits
+        harqAck = User.Mac.HarqReport.ack;
+        harqPid = User.Mac.HarqReport.pid;
+        harqBits = cat(1, harqPid, harqAck);
+        cqiBits = de2bi(User.Rx.WCQI)';
+        if length(cqiBits) ~= 4
+          cqiBits = cat(1, zeros(4- length(cqiBits), 1), cqiBits);
+        end
         chs.ResourceIdx = 0;
         switch obj.pucchformat
           case 1
-            % TODO Add HARQ indicator value
-            pucchsym = ltePUCCH1(obj,chs,[]);
+            pucchsym = ltePUCCH1(obj,chs,harqAck);
             pucchind = ltePUCCH1Indices(obj,chs);
             drsSeq = ltePUCCH1DRS(obj,chs);
             drsSeqind = ltePUCCH1DRSIndices(obj,chs);
-            
           case 2
-            % TODO Add coded CQI/PMI bits to PUCCH
-            % TODO Add HARQ bits
-            pucchsym = ltePUCCH2(obj,chs,[]);
+            pucch2Bits = cat(1, cqiBits, harqBits);
+            if length(pucch2Bits ~= 20)
+              pucch2Bits = cat(1, zeros(20-length(pucch2Bits), 1), pucch2Bits);
+            end         
+            pucchsym = ltePUCCH2(obj,chs,pucch2Bits);
             pucchind = ltePUCCH2Indices(obj,chs);
             drsSeq = ltePUCCH2DRS(obj,chs);
-            drsSeqind = ltePUCCH2DRSIndices(obj,chs);
-            
+            drsSeqind = ltePUCCH2DRSIndices(obj,chs);            
           case 3
-            % TODO Add HARQ bits
-            pucchsym = ltePUCCH3(obj,chs,[])
+            pucchsym = ltePUCCH3(obj,chs,harqBits)
             pucchind = ltePUCCH3Indices(obj,chs);
             drsSeq = ltePUCCH3DRS(obj,chs);
             drsSeqind = ltePUCCH3DRSIndices(obj,chs);
@@ -90,8 +93,7 @@ classdef ueTransmitterModule
         
         %% Configure PUSCH
         % TODO If we use RNTI
-        obj.RNTI = 1;
-        
+
         chs.Modulation = 'QPSK';
         chs.PRBSet = [0:obj.NULRB-1].';
         chs.RV = 0; %	Redundancy version (RV) indicator in initial subframe

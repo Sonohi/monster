@@ -78,7 +78,7 @@ classdef ArqTx
 			end;
 		end
 
-		% Handle the insert of an ACK
+		% Handle the 
 		function obj = handleAck(ack, sqn)
 			
 		end

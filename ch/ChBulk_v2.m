@@ -179,7 +179,7 @@ classdef ChBulk_v2
           
           sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
           for iUser = 1:length(users)
-            iServingStation = find([Stations.NCellID] == Users(iUser).ENodeB);
+            iServingStation = find([Stations.NCellID] == Users(iUser).NCellID);
             users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
             users(iUser).Rx.RxPwdBm = Stations(iServingStation).Pmax;
           end
@@ -246,7 +246,7 @@ classdef ChBulk_v2
         % Associate user
         StationC = StationC.resetSchedule();
         StationC.Schedule(1).UeId = User.UeId;
-        User.ENodeB = StationC.NCellID;
+        User.NCellID = StationC.NCellID;
         
         % TODO: move this guy so the Channel setup is used instead
         if strcmp(obj.Mode,'eHATA')
@@ -302,7 +302,7 @@ classdef ChBulk_v2
       validateUsers(Users);
       for iUser = 1:length(Users)
         user = Users(iUser);
-        station = Stations(find([Stations.NCellID] == Users(iUser).ENodeB));
+        station = Stations(find([Stations.NCellID] == Users(iUser).NCellID));
         
         if isempty(station)
           user.Rx.SINR = user.Rx.SNR;

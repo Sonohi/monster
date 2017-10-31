@@ -3,7 +3,7 @@
 classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
-		ENodeB;
+		NCellID;
 		Position;
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
@@ -31,7 +31,7 @@ classdef UserEquipment
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
-			obj.ENodeB = 0;
+			obj.NCellID = 0;
 			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
 			obj.Scheduled = false;
 			obj.UeId = userId;
@@ -61,7 +61,7 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0));
+			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
 			obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
 		end
 

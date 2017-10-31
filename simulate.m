@@ -138,7 +138,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	for iUser = 1:length(Users)
 		% get the eNodeB this UE is connected to
-		iServingStation = [Stations.NCellID] == Users(iUser).ENodeB;
+		iServingStation = [Stations.NCellID] == Users(iUser).NCellID;
 		
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
@@ -229,7 +229,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE UPLINK
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
-	Stations = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
+	[Stations, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
 	
 	% --------------------------
 	% ENODEB RECEPTION

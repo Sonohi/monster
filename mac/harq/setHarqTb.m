@@ -19,5 +19,5 @@ function Station = setHarqTb(Station, User, pid, timeNow, tb)
 		pid = bi2de(pid', 'left-msb');
 	end
  	% Set TB
-	Station.Mac.HarqTxProcesses(iUser) = handleTbInsert(Station.Mac.HarqTxProcesses(iUser), pid, timeNow, tb);	
+	Station.Mac.HarqTxProcesses(iUser) = Station.Mac.HarqTxProcesses(iUser).handleTbInsert(pid, timeNow, tb);	
 end

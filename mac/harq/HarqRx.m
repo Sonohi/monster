@@ -27,33 +27,34 @@ classdef HarqRx
 
 		% Handle the reception of a TB
 		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Param, timeNow)
-			obj.copiesReceived = obj.copiesReceived + 1;
+			obj.processes(iProc).copiesReceived = obj.processes(iProc).copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly so no need to proceed further
-				obj.state = 0;
-			elseif obj.copiesNeeded > 1
+				obj.processes(iProc).state = 0;
+			elseif obj.processes(iProc).copiesNeeded > 1
 				% in this case it means we already started earlier for retransmissions 
 				% for this process and we need to check whether the number of copies is sufficient
-				if obj.copiesNeeded == obj.copiesReceived
-					obj.state = 0;
+				if obj.processes(iProc).copiesNeeded == obj.processes(iProc).copiesReceived
+					obj.processes(iProc).state = 0;
 				else
-					obj.state = 1;
+					obj.processes(iProc).state = 1;
 				end
 			else
 				% in this last case, we are starting a retransmission session 
 				% so we need to know how many copies will be needed 
-				obj.copiesNeeded = estimateCrcCopies(crc);
-				obj.state = 1;
-				obj.tb = tb;
-				obj.timeStart = timeNow;
+				obj.processes(iProc).copiesNeeded = estimateCrcCopies(crc);
+				obj.processes(iProc).state = 1;
+				obj.processes(iProc).tb = tb;
+				obj.processes(iProc).timeStart = timeNow;
 			end
+			state = obj.processes(iProc).state;
 		end
 
 		% Decodes a HARQ PID from the header of the TB
 		function [pid, pidIndex] = decodeHarqPid(obj, tb)
-			harqBits' = tb(1:3, 1);
-			pid = bi2de(harqBits, 'left-msb');
-			pidIndex = find([obj.processes.procId] == pid]);
+			harqBits = tb(1:3, 1);
+			pid = bi2de(harqBits', 'left-msb');
+			pidIndex = find([obj.processes.procId] == pid);
 		end
 	end
 

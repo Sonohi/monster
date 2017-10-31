@@ -92,7 +92,7 @@ for model = 2:numel(Snames)
     StationsCopy_([StationsCopy_.NCellID] == StationID).resetSchedule();
 		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
     StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.UeId;
-		ueCopy.ENodeB = StationID;
+		ueCopy.NCellID = StationID;
     
     Channel_ = Channel.setupChannel(StationsCopy_,ueCopy);
     [ueCopy, Channel_] = syncRoutine(StationsCopy_, ueCopy, Channel_, Param);

@@ -9,9 +9,9 @@ classdef ArqRx
 		tbSize;
 		tbBuffer(1024, 1) = struct(...
 			'tb', [], ...
-			'sqn', 0, ...
+			'sqn', -1, ...
 			'timeStart', 0);
-	end;
+	end
 
 	methods
 		% Constructor
@@ -24,7 +24,7 @@ classdef ArqRx
 		end
 
 		% Handle the arrival of a new TB
-		function obj = handleTbReception(sqn, tb, timeNow)
+		function obj = handleTbReception(obj, sqn, tb, timeNow)
 			% update the buffer object
 			obj.sqnReceived = sqn;
 			% now check for reordering
@@ -32,8 +32,8 @@ classdef ArqRx
 				% this is the ideal case, so the TB should not be put in the buffer
 				% we also have to check whether there is any TB to be removed
 				for iTb = 1:length(obj.tbBuffer)
-					if obj.tbBuffer(iTb).sqn <= obj.sqnExpected
-						obj = pop(iTb);
+					if obj.tbBuffer(iTb).sqn <= obj.sqnExpected && obj.tbBuffer(iTb).sqn ~= -1
+						obj = pop(obj, iTb);
 					end
 				end
 				% update the flags
@@ -45,13 +45,18 @@ classdef ArqRx
 
 			elseif obj.sqnReceived > obj.sqnExpected
 				% store this TB
-				obj = push(tb, timeNow, sqn);
+				obj = push(obj, tb, timeNow, sqn);
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-				
-				% log exception
+				sonohilog('ARQ received duplicate TB', 'NFO');
 			end
+		end
+
+		% Method to decode the SQN in a TB
+		function sqn = decodeSqn(obj, tb)
+			sqnBits = tb(4:13);
+			sqn = bi2de(sqnBits', 'left-msb');
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
@@ -67,17 +72,27 @@ classdef ArqRx
 
 	methods (Access = private)
 		% Method to execute a pop
-		function obj = pop(ix)
-			% update stats
-			obj.bitsSize = obj.bitsSize - length(obj.tbBuffer(ix).tb);
-			obj.tbSize = obj.tbSize - 1;
+		function obj = pop(obj, ix)
+			% update stats and check that we don't go below 0
+			szTemp = obj.bitsSize - length(obj.tbBuffer(ix).tb);
+			if szTemp > 0
+				obj.bitsSize = szTemp;
+			else
+				obj.bitsSize = 0;
+			end
+			szTemp = obj.tbSize - 1;
+			if szTemp > 0
+				obj.tbSize = szTemp;
+			else
+				obj.tbSize = 0;
+			end
 			obj.tbBuffer(ix).tb = [];
-			obj.tbBuffer(ix).sqn = 0;
-			obj.tbBuffer(ix).timeStart = 0;
+			obj.tbBuffer(ix).sqn = -1;
+			obj.tbBuffer(ix).timeStart = -1;
 		end
 
 		% Method to execute a push
-		function obj = push(tb, timeNow, sqn)
+		function obj = push(obj, tb, timeNow, sqn)
 			% pushing occurs on the first unused slot
 			for ix = 1:length(obj.tbBuffer)
 				if ~isempty(obj.tbBuffer(ix).tb)
