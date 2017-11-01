@@ -18,15 +18,15 @@ classdef enbReceiverModule
 			end
 		end
 
-		function [returnCode, obj] = demod(obj,ueObj)
+		function [returnCode, obj] = demodulate(obj,ueObj)
 			% TODO: validate that a waveform exist.
 			ue = cast2Struct(ueObj);
-			Subframe = lteSCFDMADemodulate(ue, obj.Waveform); %#ok
+			Subframe = lteSCFDMADemodulate(ue, obj.Waveform);
 
-			if all(Subframe(:) == 0) %#ok
+			if all(Subframe(:) == 0)
 				returnCode = 0;
 			else
-				obj.Subframe = Subframe; %#ok
+				obj.Subframe = Subframe; 
 				returnCode = 1;
 			end
 

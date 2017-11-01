@@ -205,7 +205,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE RECEPTION
 	% ------------
 	sonohilog('UE reception block', 'NFO');
-	Users = ueRxBulk(Stations, Users, ChannelEstimator);
+	Users = ueRxBulk(Stations, Users, ChannelEstimator.Downlink);
 
 	% ----------------
 	% UE DATA DECODING
@@ -235,7 +235,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB RECEPTION
 	% ---------------------------
 	sonohilog('Uplink data decoding', 'NFO');
-	Stations = enbRxBulk(Stations, Users, simTime);
+	Stations = enbRxBulk(Stations, Users, simTime, ChannelEstimator.Uplink);
 
 	% -----------
 	% UE MOVEMENT
