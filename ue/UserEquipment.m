@@ -4,6 +4,12 @@ classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
 		NCellID;
+		NULRB;
+		DuplexMode;
+    CyclicPrefixUL;
+		NSubframe;
+    NFrame;
+    NTxAnts;
 		Position;
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
@@ -23,15 +29,21 @@ classdef UserEquipment
 		CodewordInfo;
 		TransportBlock;
 		TransportBlockInfo;
-		WCQI;
 		Mac;
 		Rlc;
+		SchedulingSlots;
 	end
 
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = 0;
+			obj.NULRB = Param.numSubFramesUE;
+			obj.DuplexMode = 'FDD';
+			obj.CyclicPrefixUL = 'Normal';
+			obj.NSubframe = 0;
+			obj.NFrame = 0;
+			obj.NTxAnts = 1;
 			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
 			obj.Scheduled = false;
 			obj.UeId = userId;
@@ -160,10 +172,25 @@ classdef UserEquipment
 			obj.SymbolsInfo = info;
 		end
 
+		% set NSubframe
+		function obj = set.NSubframe(obj, num)
+			obj.NSubframe = num;
+		end
+
+		% set NFrame
+		function obj = set.NFrame(obj, num)
+			obj.NFrame = num;
+		end
+
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
 		end
+
+		% FInd indexes in the serving eNodeB for the UL scheduling
+		function obj = setSchedulingSlots(obj, User, Station)
+      obj.SchedulingSlots = find(Station.ScheduleUL == User.NCellID);
+    end
 
 		%Reset properties that change every round
 		function obj = resetUser(obj)

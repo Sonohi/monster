@@ -1,4 +1,4 @@
-function [Stations, Users] = ueTxBulk(Stations,Users, Subframe, Frame)
+function [Stations, Users] = ueTxBulk(Stations,Users, NSubframe, NFrame)
 
 	%   TX Bulk performs bulk operations on the transmitters for uplink
 	%
@@ -9,13 +9,21 @@ function [Stations, Users] = ueTxBulk(Stations,Users, Subframe, Frame)
 	%   stations  		-> EvolvedNodeB with updated Rx attributes
 
   for iUser = 1:length(Users)
-    % Create waveform
-    % TODO: Make sure the root of the sequence is set correcttly
-    Users(iUser).Tx = Users(iUser).Tx.mapGridAndModulate(Users(iUser), Subframe, Frame);
+    % FInd the serving eNodeB
+    iServingStation = [Stations.NCellID] == Users(iUser).NCellID;
+    ue = Users(iUser);
+    enb = Stations(iServingStation);
 
-    % Propagate channel
-    channel_out = user.Tx.Waveform;
-    % Assign to the association stations Rx module
-    Stations([Stations.NCellID] == user.NCellID).Rx.Waveform = channel_out;
+    % Set the scheduling slots for this UE
+    ue = ue.setSchedulingSlots(enb);
+
+    % set subframe and frame number 
+    ue.NSubframe = NSubframe;
+    ue.NFrame = Nframe;
+    
+    % Create local resource grid and modulate
+    ue.Tx = ue.Tx.mapGridAndModulate(ue);
+    
+    Users(iUser) = ue;
   end
 end

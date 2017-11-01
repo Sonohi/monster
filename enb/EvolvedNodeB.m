@@ -17,7 +17,8 @@ classdef EvolvedNodeB
 		OCNG;
 		Windowing;
 		Users;
-		Schedule;
+		ScheduleDL;
+		ScheduleUL;
 		RrNext;
 		Channel;
 		NSubframe;
@@ -67,7 +68,8 @@ classdef EvolvedNodeB
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
 			obj.Users = zeros(Param.numUsers, 1);
-			obj = resetSchedule(obj);
+			obj = resetScheduleDL(obj);
+			obj.ScheduleUL = [];
 			obj.Status = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
@@ -90,14 +92,14 @@ classdef EvolvedNodeB
 		end
 
 		% reset schedule
-		function obj = resetSchedule(obj)
+		function obj = resetScheduleDL(obj)
 			temp(1:obj.NDLRB,1) = struct('UeId', 0, 'Mcs', 0, 'ModOrd', 0);
-			obj.Schedule = temp;
+			obj.ScheduleDL = temp;
 		end
 
 		% set subframe number
 		function obj = set.NSubframe(obj, num)
-			obj.NSubframe =  num;
+			obj.NSubframe = num;
 		end
 
     function [indPdsch, info] = getPDSCHindicies(obj)
@@ -208,6 +210,28 @@ classdef EvolvedNodeB
 		% cast object to struct
 		function enbStruct = cast2Struct(obj)
 			enbStruct = struct(obj);
+		end
+a = 3;
+b = [1 5 6 9];
+c = zeros(length(b)*a,1);
+for i = 1:length(b)
+	start = (i-1)*a;
+	stop = start + a;
+	c(start + 1:stop) = b(i);
+end
+		% set uplink static scheduling 
+		function obj = setScheduleUL(obj, Param)
+			% Check the number of users associated snd split the BW
+			ueCount = find([obj.Users] ~= 0);
+			if length(ueCount > 0)
+				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
+				temp = zeros(length(ueCount)*prbQuota, 1);
+				for iUser = 1:length(ueCount)
+					iStart = (iUser - 1)*prbQuota;
+					iStop = iStart + prbQuota;
+					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser));
+				end
+			end
 		end
 
 	end

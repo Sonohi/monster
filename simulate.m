@@ -214,18 +214,6 @@ for iRound = 0:(Param.schRounds-1)
 	[Stations, Users] = ueDataDecoding(Stations, Users, Param, simTime);
 	
 	% --------------------------
-	% ENODEB SPACE METRICS RECORDING
-	% ---------------------------
-	sonohilog('eNodeB-space metrics recording', 'NFO');
-	[enbResults, resultsStore] = recordEnBResults(Stations, resultsStore, enbResults, iRound);
-	
-	% --------------------------
-	% UE SPACE METRICS RECORDING
-	% ---------------------------
-	sonohilog('UE-space metrics recording', 'NFO');
-	ueResults = recordUEResults(Users, Stations, ueResults, iRound);
-	
-	% --------------------------
 	% UE UPLINK
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
@@ -237,9 +225,22 @@ for iRound = 0:(Param.schRounds-1)
 	sonohilog('Uplink data decoding', 'NFO');
 	Stations = enbRxBulk(Stations, Users, simTime, ChannelEstimator.Uplink);
 
+	% --------------------------
+	% ENODEB SPACE METRICS RECORDING
+	% ---------------------------
+	sonohilog('eNodeB-space metrics recording', 'NFO');
+	[enbResults, resultsStore] = recordEnBResults(Stations, resultsStore, enbResults, iRound);
+	
+	% --------------------------
+	% UE SPACE METRICS RECORDING
+	% ---------------------------
+	sonohilog('UE-space metrics recording', 'NFO');
+	ueResults = recordUEResults(Users, Stations, ueResults, iRound);
+
 	% -----------
 	% UE MOVEMENT
 	% -----------
+	sonohilog('UE movement', 'NFO');
 	for iUser = 1:length(Users)
 		Users(iUser) = move(Users(iUser), simTime, Param);
 	end

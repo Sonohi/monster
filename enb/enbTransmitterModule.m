@@ -11,7 +11,7 @@ classdef enbTransmitterModule
 	end
 
 	methods
-		% Constructor
+		% Constructor`
 		function obj = enbTransmitterModule(enb, Param)
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
