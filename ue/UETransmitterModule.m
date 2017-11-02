@@ -39,7 +39,7 @@ classdef ueTransmitterModule
         % Get size of resource grid and map channels.
         dims = lteULResourceGridSize(ueObj);
          
-        %% Decide on format of PUCCH (1, 2 or 3)
+        % Decide on format of PUCCH (1, 2 or 3)
         % Format 1 is Scheduling request with/without bits for HARQ
         % Format 2 is CQI with/without bits for HARQ
         % Format 3 Bits for HARQ
@@ -74,6 +74,15 @@ classdef ueTransmitterModule
             drsSeq = ltePUCCH3DRS(ueObj,chs);
             drsSeqind = ltePUCCH3DRSIndices(ueObj,chs);
         end
+
+        % Set number of PRBs based on scheduling allocation
+        schPrbs = length(ueObj.SchedulingSlots);
+        ueObj.NULRB = schPrbs;
+        reGrid = lteULResourceGrid(ueObj);
+        reGrid(pucchind) = pucchsym;
+        obj.ReGrid = reGrid;
+        obj.Waveform = lteSCFDMAModulate(ueObj,obj.ReGrid);
+        
         
 %         %% Configure PUSCH
 %         % TODO If we use RNTI
@@ -98,7 +107,7 @@ classdef ueTransmitterModule
 %         srsind = lteSRSIndices(obj,chs);
 %         
 %         % Modulate SCFDMA
-%         obj.ReGrid = lteULResourceGrid(obj);
+%         
 %         obj.ReGrid(pucchind) = pucchsym;
 %         obj.ReGrid(drsSeqind) = drsSeq;
 %         obj.ReGrid(puschind) = puschsym;

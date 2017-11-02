@@ -211,19 +211,12 @@ classdef EvolvedNodeB
 		function enbStruct = cast2Struct(obj)
 			enbStruct = struct(obj);
 		end
-a = 3;
-b = [1 5 6 9];
-c = zeros(length(b)*a,1);
-for i = 1:length(b)
-	start = (i-1)*a;
-	stop = start + a;
-	c(start + 1:stop) = b(i);
-end
+
 		% set uplink static scheduling 
 		function obj = setScheduleUL(obj, Param)
 			% Check the number of users associated snd split the BW
 			ueCount = find([obj.Users] ~= 0);
-			if length(ueCount > 0)
+			if ~isempty(ueCount)
 				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
 				temp = zeros(length(ueCount)*prbQuota, 1);
 				for iUser = 1:length(ueCount)

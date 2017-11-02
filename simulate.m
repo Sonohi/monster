@@ -198,7 +198,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------------
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
-	sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode), 'NFO');
+	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.mode), 'NFO');
 	[Stations, Users] = Channel.traverse(Stations,Users);
 	
 	% ------------
@@ -218,6 +218,12 @@ for iRound = 0:(Param.schRounds-1)
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
 	[Stations, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
+
+	% ------------------
+	% CHANNEL TRAVERSE
+	% ------------------
+	sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
+	[Stations, Users] = Channel.traverse(Stations,Users);
 	
 	% --------------------------
 	% ENODEB RECEPTION
