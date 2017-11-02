@@ -217,13 +217,13 @@ for iRound = 0:(Param.schRounds-1)
 	% UE UPLINK
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
-	[Stations, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
+	[Stations, compoundWaveforms, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
 
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
 	sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
-	[Stations, Users] = Channel.traverse(Stations,Users);
+	[Stations, Users] = Channel.traverse(Stations, Users);
 	
 	% --------------------------
 	% ENODEB RECEPTION
