@@ -109,13 +109,13 @@ classdef ueReceiverModule
 			offset = 1;
 			if obj.SchIndexes(1) ~= 1
 				% extract the unique UE IDs from the schedule
-				uniqueIds = removeZeros(unique([enb.Schedule.UeId]));
+				uniqueIds = removeZeros(unique([enb.ScheduleDL.UeId]));
 				for iUser = 1:length(uniqueIds) 
 					if uniqueIds(iUser) ~= ue.UeId
 						% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
-						prbIndices = find([enb.Schedule.UeId] == uniqueIds(iUser));
+						prbIndices = find([enb.ScheduleDL.UeId] == uniqueIds(iUser));
 						if prbIndices(1) < obj.SchIndexes(1)
-							[~, mod, ~] = lteMCS(enb.Schedule(prbIndices(1)).Mcs);
+							[~, mod, ~] = lteMCS(enb.ScheduleDL(prbIndices(1)).Mcs);
 							enb.Tx.PDSCH.Modulation = mod;
 							enb.Tx.PDSCH.PRBSet = (prbIndices - 1).';
 							uePdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);

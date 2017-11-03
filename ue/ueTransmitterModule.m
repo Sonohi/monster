@@ -31,11 +31,11 @@ classdef ueTransmitterModule
     function obj = mapGridAndModulate(obj, ueObj)
       % Check if upllink needs to consist of PRACH
       % TODO: changes to sequence and preambleidx given unique user ids
-      if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
-  
-         obj = obj.setPRACH(ueObj, ueObj.NSubframe);
-        
-      else
+%       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
+%   
+%          obj = obj.setPRACH(ueObj, ueObj.NSubframe);
+%         
+%       else
         % Get size of resource grid and map channels.
         dims = lteULResourceGridSize(ueObj);
          
@@ -120,7 +120,7 @@ classdef ueTransmitterModule
 %         
 %         obj.Waveform = lteSCFDMAModulate(obj,obj.ReGrid);
         
-      end
+      %end
     end
   end
   

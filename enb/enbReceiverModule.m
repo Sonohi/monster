@@ -11,11 +11,7 @@ classdef enbReceiverModule
 		end
 
 		function obj = set.Waveform(obj,Sig)
-			if isempty(obj.Waveform)
-				obj.Waveform = Sig;
-			else
-				obj.Waveform = obj.Waveform + Sig;
-			end
+			obj.Waveform = Sig;
 		end
 
 		function [returnCode, obj] = demodulate(obj,ueObj)
