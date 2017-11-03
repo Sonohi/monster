@@ -15,7 +15,7 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	% cast eNodeB object to struct for the processing
 	enb = struct(Station);
 	% find all the PRBs assigned to this UE to find the most conservative MCS (min)
-	sch = enb.Schedule;
+	sch = enb.ScheduleDL;
 	ixPRBs = find([sch.UeId] == User.UeId);
 	listMCS = [sch(ixPRBs).Mcs];
 

@@ -43,7 +43,7 @@ classdef ChBulk_v2
     
     function [stations, users]  = getScheduled(Stations,Users)
       % Find stations that have scheduled users.
-      schedules = {Stations.Schedule};
+      schedules = {Stations.ScheduleDL};
       usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
       stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
       stationsS = ~cellfun('isempty',stationsS);
@@ -244,8 +244,8 @@ classdef ChBulk_v2
         StationC = Stations(iStation);
         
         % Associate user
-        StationC = StationC.resetSchedule();
-        StationC.Schedule(1).UeId = User.UeId;
+        StationC = StationC.resetScheduleDL();
+        StationC.ScheduleDL(1).UeId = User.UeId;
         User.NCellID = StationC.NCellID;
         
         % TODO: move this guy so the Channel setup is used instead

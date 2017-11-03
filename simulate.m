@@ -109,7 +109,7 @@ for iRound = 0:(Param.schRounds-1)
 		end
 		
 		% Check utilisation
-		sch = [Stations(iStation).Schedule.UeId];
+		sch = [Stations(iStation).ScheduleDL.UeId];
 		utilPercent = 100*find(sch, 1, 'last' )/length(sch);
 		
 		% check utilPercent and change to 0 if null
@@ -123,7 +123,7 @@ for iRound = 0:(Param.schRounds-1)
 		% store eNodeB-space results
 		resultsStore(iStation).util = utilPercent;
 		resultsStore(iStation).power = pIn;
-		resultsStore(iStation).schedule = Stations(iStation).Schedule;
+		resultsStore(iStation).schedule = Stations(iStation).ScheduleDL;
 		
 		% Check utilisation metrics and change status if needed
 		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...

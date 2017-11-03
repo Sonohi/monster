@@ -15,7 +15,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
     'txWaveform', []);
     
   for iStation = 1:length(Stations)
-    enb = Stations(iServingStation);
+    enb = Stations(iStation);
     cwf = compoundWaveforms(iStation);
 
     cwf.eNodeBId = enb.NCellID;
@@ -28,7 +28,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
 
       % set subframe and frame number 
       ue.NSubframe = NSubframe;
-      ue.NFrame = Nframe;
+      ue.NFrame = NFrame;
       
       % Create local resource grid and modulate
       ue.Tx = ue.Tx.mapGridAndModulate(ue);

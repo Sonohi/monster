@@ -32,7 +32,7 @@ classdef ueReceiverModule
 
 	methods
 
-		function obj = ueReceiverModule(Param)
+		function obj = ueReceiverModule(Param, ueObj)
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.WCQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
@@ -97,7 +97,7 @@ classdef ueReceiverModule
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
 			
-			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
+			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.UeId);
 
 			% Store the full PRB set for extraction
 			fullPrbSet = enb.Tx.PDSCH.PRBSet;
@@ -126,7 +126,7 @@ classdef ueReceiverModule
 			end
 
 			% Set the parameters of the PDSCH to those of the current UE
-			[~, mod, ~] = lteMCS(enb.Schedule(obj.SchIndexes(1)).Mcs);
+			[~, mod, ~] = lteMCS(enb.ScheduleDL(obj.SchIndexes(1)).Mcs);
 			enb.Tx.PDSCH.Modulation = mod;
 			enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';	
 			

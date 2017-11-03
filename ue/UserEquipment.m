@@ -37,7 +37,7 @@ classdef UserEquipment
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
-			obj.NCellID = 0;
+			obj.NCellID = userId;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.DuplexMode = 'FDD';
 			obj.CyclicPrefixUL = 'Normal';
@@ -65,8 +65,8 @@ classdef UserEquipment
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Rx = ueReceiverModule(Param);
-			obj.Tx = ueTransmitterModule(Param);
+			obj.Rx = ueReceiverModule(Param, obj);
+			obj.Tx = ueTransmitterModule(Param, obj);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];
@@ -188,8 +188,8 @@ classdef UserEquipment
 		end
 
 		% FInd indexes in the serving eNodeB for the UL scheduling
-		function obj = setSchedulingSlots(obj, User, Station)
-      obj.SchedulingSlots = find(Station.ScheduleUL == User.NCellID);
+		function obj = setSchedulingSlots(obj, Station)
+      obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
     end
 
 		%Reset properties that change every round

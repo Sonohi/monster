@@ -10,7 +10,7 @@ classdef ueTransmitterModule
   
   methods
     
-    function obj = ueTransmitterModule(Param)
+    function obj = ueTransmitterModule(Param, ueObj)
       obj.RNTI = 1;
       obj.PUCCH.format = Param.pucchFormat;
       obj.PRACH.Interval = Param.PRACHInterval;
@@ -20,12 +20,12 @@ classdef ueTransmitterModule
       obj.PRACH.HighSpeed = 0;       % Normal mode: TS36.104, Table 8.4.2.1-1
       obj.PRACH.FreqOffset = 0;      % Default frequency location
       obj.PRACH.PreambleIdx = 32;    % Preamble index: TS36.141, Table A.6-1
-      obj.PRACHInfo = ltePRACHInfo(obj, obj.PRACH);      
+      obj.PRACHInfo = ltePRACHInfo(ueObj, obj.PRACH);      
     end
     
-    function obj = setPRACH(obj, NSubframe)
+    function obj = setPRACH(obj, ueObj, NSubframe)
       obj.PRACH.TimingOffset = obj.PRACHInfo.BaseOffset + NSubframe/10.0;
-      obj.Waveform = ltePRACH(obj, obj.PRACH);
+      obj.Waveform = ltePRACH(ueObj, obj.PRACH);
     end
 
     function obj = mapGridAndModulate(obj, ueObj)
@@ -33,7 +33,7 @@ classdef ueTransmitterModule
       % TODO: changes to sequence and preambleidx given unique user ids
       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
   
-         obj = obj.setPRACH(ueObj.NSubframe);
+         obj = obj.setPRACH(ueObj, ueObj.NSubframe);
         
       else
         % Get size of resource grid and map channels.

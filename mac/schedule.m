@@ -13,7 +13,7 @@ function [Station, Users] = schedule(Station, Users, Param)
 %									--> modOrd	modulation order as bits/OFDM symbol
 
 % reset the allocation
-Station = resetSchedule(Station);
+Station = resetScheduleDL(Station);
 sz = length(Station.Users);
 
 % calculate number of available RBs available in the subframe for the PDSCH
@@ -79,10 +79,10 @@ switch Param.scheduling
 					end
 					% write to schedule struct
 					for iPrb = 1:Station.NDLRB
-						if Station.Schedule(iPrb).UeId == 0
+						if Station.ScheduleDL(iPrb).UeId == 0
 							mcs = cqi2mcs(Users(iCurrUe).Rx.WCQI);
 							for iSch = 0:prbsSch-1
-								Station.Schedule(iPrb + iSch) = struct(...
+								Station.ScheduleDL(iPrb + iSch) = struct(...
 									'UeId', Users(iCurrUe).UeId,...
 									'Mcs', mcs,...
 									'ModOrd', modOrd);
