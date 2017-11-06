@@ -98,7 +98,7 @@ for model = 2:numel(Snames)
     [ueCopy, Channel_] = syncRoutine(StationsCopy_, ueCopy, Channel_, Param);
 
 	
-			[~, ueCopy] = Channel_.traverse(StationsCopy_,ueCopy);
+			[~, ueCopy] = Channel_.traverse(StationsCopy_,ueCopy,'downlink');
 			Clusters(iCluster).snrVals(model) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;

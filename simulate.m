@@ -199,7 +199,7 @@ for iRound = 0:(Param.schRounds-1)
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
 	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.mode), 'NFO');
-	[Stations, Users] = Channel.traverse(Stations,Users);
+	[Stations, Users] = Channel.traverse(Stations,Users,'downlink');
 	
 	% ------------
 	% UE RECEPTION
@@ -224,7 +224,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------------
 	% TODO for testing, UL channel traverse is disabled and we just set the txWaveform to the eNodeB
 	%sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
-	%[Stations, Users] = Channel.traverse(Stations, Users);
+	%[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
 	
 	% TODO remove B2B testing
 	for iStation = 1:length(Stations)

@@ -33,7 +33,7 @@ end
 
 % Traverse channel
 sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
-[StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users);
+[StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users,'downlink');
 
 % Compute offset
 for p = 1:length(Users)

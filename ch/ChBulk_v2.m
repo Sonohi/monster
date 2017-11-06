@@ -1,65 +1,4 @@
-classdef ChBulk_v2
-  %CHBULK_V2 Summary of this class goes here
-  %   Detailed explanation goes here
-  
-  properties
-    Area;
-    Mode;
-    Buildings;
-    Draw;
-    Region;
-    WINNER;
-    eHATA;
-    fieldType;
-  end
-  
-  methods(Static)
-    
-    
-    function distance = getDistance(txPos,rxPos)
-      distance = norm(rxPos-txPos);
-    end
-    
-    function thermalNoise = ThermalNoise(NDLRB)
-      switch NDLRB
-        case 6
-          BW = 1.4e6;
-        case 15
-          BW = 3e6;
-        case 25
-          BW = 5e6;
-        case 50
-          BW = 10e6;
-        case 75
-          BW = 15e6;
-        case 100
-          BW = 20e6;
-      end
-      
-      T = 290;
-      k = physconst('Boltzmann');
-      thermalNoise = k*T*BW;
-    end
-    
-    function [stations, users]  = getScheduled(Stations,Users)
-      % Find stations that have scheduled users.
-      schedules = {Stations.ScheduleDL};
-      usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
-      stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
-      stationsS = ~cellfun('isempty',stationsS);
-      stations = Stations(stationsS);
-      
-      % Find users that are scheduled.
-      lens = sum(cellfun('length',usersS),1);
-      usersC = zeros(max(lens),numel(lens));
-      usersC(bsxfun(@le,[1:max(lens)]',lens)) = horzcat(usersS{:});
-      usersC = reshape( usersC ,1,numel(usersC));
-      usersC = usersC(usersC ~= 0);
-      users = Users(ismember([Users.UeId],usersC));
-      
-    end
-    
-  end
+classdef ChBulk_v2 < SonohiChannel
   
   methods(Access = private)
     function [intSig, intSigdBm] = getInterferers(obj,Stations,station,user)
@@ -146,10 +85,8 @@ classdef ChBulk_v2
       obj.Draw = Param.draw;
       obj.Region = Param.channel.region;
     end
-    
-    
-    
-    function [Stations,Users,obj] = traverse(obj,Stations,Users,varargin)
+
+    function [Stations,Users,obj] = downlink(obj,Stations,Users,varargin)
       validateChannel(obj);
       validateStations(Stations);
       validateUsers(Users);
@@ -197,7 +134,23 @@ classdef ChBulk_v2
         ueId = users(iUser).UeId;
         Users([Users.UeId] == ueId) = users(iUser);
       end
+  
+
+    end
+
+    function [Stations,Users,obj] = uplink(obj,Stations,Users,varargin)
+      sonohilog('Not implemented yet.','ERR')
+
+    end
+
+    function [Stations,Users,obj] = traverse(obj,Stations,Users,chtype,varargin)
       
+      switch chtype
+        case 'downlink'
+          [Stations,Users,obj] = obj.downlink(Stations,Users,varargin);
+        case 'uplink'
+          [Stations,Users,obj] = obj.uplink(Stations,Users,varargin);
+      end
       
     end
     
@@ -218,7 +171,8 @@ classdef ChBulk_v2
       
       nlink=1;
       for i = 1:length(Stations)
-        schedule = [Stations(i).Schedule];
+          % TODO: refactorize for uplink also
+        schedule = [Stations(i).ScheduleDL];
         users = removeZeros(unique([schedule.UeId]));
         for ii = 1:length(users)
           Pairing(:,nlink) = [Stations(i).NCellID; users(ii)]; %#ok
@@ -263,7 +217,7 @@ classdef ChBulk_v2
         
         % Traverse channel
         for ll = 1:5
-          [~, UserRx] = obj.traverse(StationC,User,'field','pathloss');
+          [~, UserRx] = obj.traverse(StationC,User,'downlink','field','pathloss');
           RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
         end
         % Reset schedule

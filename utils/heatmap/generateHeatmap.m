@@ -74,7 +74,7 @@ for iStation = 1:length(Stations)
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
 
 		try
-			[~, ueCopy] = Channel.traverse(Stations(iStation),ueCopy);
+			[~, ueCopy] = Channel.traverse(Stations(iStation),ueCopy,'downlink');
 			Clusters(iCluster).snrVals(iStation) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(iStation) = ueCopy.Rx.RxPw;
 			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.Rx.SNRdB),...

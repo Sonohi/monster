@@ -32,7 +32,8 @@ classdef sonohiWINNER
                 stations = [Stations(types.(Snames{model})).NCellID];
 
                 % Get number of links associated with the station.
-                schedule = [Stations(ismember([Stations.NCellID],stations)).Schedule];
+                % TODO: refactorize this for uplink also
+                schedule = [Stations(ismember([Stations.NCellID],stations)).ScheduleDL];
                 users = removeZeros(unique([schedule.UeId]));
                 numLinks = length(users);
 
