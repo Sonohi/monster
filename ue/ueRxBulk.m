@@ -1,4 +1,4 @@
-function Users = ueRxBulk(Stations,Users, cec)
+function Users = ueRxBulk(Stations, Users, cec)
 
 	%   UE RX Bulk performs bulk operations on the recivers
 	%

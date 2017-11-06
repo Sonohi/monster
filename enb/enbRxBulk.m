@@ -11,22 +11,27 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
 	%   Stations	-> updated eNodeB objects
 
   for iStation = 1:length(Stations)
-		% TODO which User do we assign for demodulation to the eNodeB receiver???
 		enb = Stations(iStation);
-		user = Users(1);	
+		% First off, find all UEs that are linked to this station in this round
+		ueGroup = find([Users.NCellID] == enb.NCellID);
 
-		% Demodulate received waveform
-    [demodBool, enb.Rx] = enb.Rx.demodulate(user);
-		if demodBool
-			% Decode PUSCH 
-			enb.Rx = enb.Rx.estimateChannel(user, cec);
-			% For each TB, check the CRC and the HARQ PID
+		enbUsers = Users(ueGroup);
 
-			% Call the correct HARQ process handler to take care of the reply
+		% Parse received waveform
+    enb.Rx = enb.Rx.parseWaveform(enb);
 
-			% Depending on the return state, decode SQN and send to the correct RLC buffer group
-
-		end
+		% Demodulate received waveforms
+    enb.Rx = enb.Rx.demodulate(enbUsers);
 		
+		% Estimate Channel 
+		enb.Rx = enb.Rx.estimateChannel(enb, cec);
+
+		% Equalise
+		enb.Rx = enb.Rx.equalise(enb);
+
+		% Estimate PUCCH (Main UL control channel) for UEs
+		enb.Rx = enb.Rx.estimatePucch(enb, timeNow)
+
+		Stations(iStation) = enb;
 	end
 end

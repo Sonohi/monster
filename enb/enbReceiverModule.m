@@ -2,6 +2,7 @@ classdef enbReceiverModule
 	properties
 		NoiseFigure;
 		Waveform;
+		UeData;
 	end
 
 	methods
@@ -14,20 +15,49 @@ classdef enbReceiverModule
 			obj.Waveform = Sig;
 		end
 
-		function [returnCode, obj] = demodulate(obj,ueObj)
-			% TODO: validate that a waveform exist.
-			ue = cast2Struct(ueObj);
-			Subframe = lteSCFDMADemodulate(ue, obj.Waveform);
+		% Used to split the received waveform into the different portions of the different 
+		% UEs scheduled in the UL
+		function obj = parseWaveform(obj, enbObj)
+			uniqueUes = unique([enbObj.ScheduleUL]);
+			scFraction = length(obj.Waveform)/length(uniqueUes);
+			for iUser = 1:length(uniqueUes)
+				scStart = (iUser - 1)*scFraction ;
+				scEnd = scStart + scFraction;
+				obj.UeData(iUser).UeId = uniqueUes(iUser);
+				obj.UeData(iUser).Waveform = obj.Waveform(scStart + 1 : scEnd, 1);
+			end
+		end
 
-			if all(Subframe(:) == 0)
-				returnCode = 0;
-			else
-				obj.Subframe = Subframe; 
-				returnCode = 1;
+		% Used to demodulate each single UE waveform separately
+		function obj = demodulate(obj, ueObjs)
+			for iUser = 1:length(ueObjs)
+				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
+				ue = cast2Struct(ueObjs(iUser));
+
+				testSubframe = lteSCFDMADemodulate(ue, obj.UeData(localIndex).Waveform);
+
+				if all(testSubframe(:) == 0)
+					obj.UeData(localIndex).Subframe = [];
+					obj.UeData(localIndex).DemodBool = 0;
+				else
+					obj.UeData(localIndex).Subframe = testSubframe;
+					obj.UeData(localIndex).DemodBool = 1;
+				end
 			end
 
 		end
 
+		function obj = estimateChannel(obj, enbObj, cec)
+		
+		end
+
+		function obj = equalise(obj, enbObj)
+		
+		end
+
+		function obj = estimatePucch(obj, enbObj, timeNow)
+		
+		end
 
 	end
 

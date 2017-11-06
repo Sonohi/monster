@@ -5,14 +5,12 @@ classdef ueTransmitterModule
     Waveform;
     ReGrid;
     PUCCH;
-    RNTI;
   end
   
   methods
     
     function obj = ueTransmitterModule(Param, ueObj)
-      obj.RNTI = 1;
-      obj.PUCCH.format = Param.pucchFormat;
+      obj.PUCCH.Format = Param.pucchFormat;
       obj.PRACH.Interval = Param.PRACHInterval;
       obj.PRACH.Format = 0;          % PRACH format: TS36.104, Table 8.4.2.1-1, CP length of 0.10 ms, typical cell range of 15km
       obj.PRACH.SeqIdx = 22;         % Logical sequence index: TS36.141, Table A.6-1
@@ -28,7 +26,7 @@ classdef ueTransmitterModule
       obj.Waveform = ltePRACH(ueObj, obj.PRACH);
     end
 
-    function obj = mapGridAndModulate(obj, ueObj)
+    function [obj, schPrbs] = mapGridAndModulate(obj, ueObj)
       % Check if upllink needs to consist of PRACH
       % TODO: changes to sequence and preambleidx given unique user ids
 %       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
@@ -36,8 +34,10 @@ classdef ueTransmitterModule
 %          obj = obj.setPRACH(ueObj, ueObj.NSubframe);
 %         
 %       else
-        % Get size of resource grid and map channels.
-        dims = lteULResourceGridSize(ueObj);
+
+        % Set number of PRBs based on scheduling allocation
+        schPrbs = length(ueObj.SchedulingSlots);
+        ueObj.NULRB = schPrbs;
          
         % Decide on format of PUCCH (1, 2 or 3)
         % Format 1 is Scheduling request with/without bits for HARQ
@@ -48,7 +48,11 @@ classdef ueTransmitterModule
         harqAck = ueObj.Mac.HarqReport.ack;
         harqPid = ueObj.Mac.HarqReport.pid;
         harqBits = cat(1, harqPid, harqAck);
-        cqiBits = de2bi(User.Rx.WCQI)';
+        cqiBits = de2bi(ueObj.Rx.WCQI)';
+				pucch2Bits = cat(1, cqiBits, harqBits);
+				if ~isempty(pucch2Bits ~= 20)
+					pucch2Bits = cat(1, zeros(20-length(pucch2Bits), 1), pucch2Bits);
+				end   
         if length(cqiBits) ~= 4
           cqiBits = cat(1, zeros(4- length(cqiBits), 1), cqiBits);
         end
@@ -57,27 +61,15 @@ classdef ueTransmitterModule
           case 1
             pucchsym = ltePUCCH1(ueObj,chs,harqAck);
             pucchind = ltePUCCH1Indices(ueObj,chs);
-            drsSeq = ltePUCCH1DRS(ueObj,chs);
-            drsSeqind = ltePUCCH1DRSIndices(ueObj,chs);
           case 2
-            pucch2Bits = cat(1, cqiBits, harqBits);
-            if length(pucch2Bits ~= 20)
-              pucch2Bits = cat(1, zeros(20-length(pucch2Bits), 1), pucch2Bits);
-            end         
+                  
             pucchsym = ltePUCCH2(ueObj,chs,pucch2Bits);
-            pucchind = ltePUCCH2Indices(ueObj,chs);
-            drsSeq = ltePUCCH2DRS(ueObj,chs);
-            drsSeqind = ltePUCCH2DRSIndices(ueObj,chs);            
+            pucchind = ltePUCCH2Indices(ueObj,chs);            
           case 3
-            pucchsym = ltePUCCH3(ueObj,chs,harqBits)
+            pucchsym = ltePUCCH3(ueObj,chs,pucch2Bits)
             pucchind = ltePUCCH3Indices(ueObj,chs);
-            drsSeq = ltePUCCH3DRS(ueObj,chs);
-            drsSeqind = ltePUCCH3DRSIndices(ueObj,chs);
-        end
-
-        % Set number of PRBs based on scheduling allocation
-        schPrbs = length(ueObj.SchedulingSlots);
-        ueObj.NULRB = schPrbs;
+				end
+        
         reGrid = lteULResourceGrid(ueObj);
         reGrid(pucchind) = pucchsym;
         obj.ReGrid = reGrid;

@@ -57,4 +57,8 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Channel,Para
 	for iStation = 1:length(Stations)
 		Stations(iStation) = Stations(iStation).setScheduleUL(Param);
 	end
+	for iUser = 1:length(Users)
+		iServingStation = [Stations.NCellID] == Users(iUser).NCellID;
+		Users(iUser) = Users(iUser).setSchedulingSlots(Stations(iServingStation));
+	end
 end

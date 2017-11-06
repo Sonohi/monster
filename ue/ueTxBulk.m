@@ -22,8 +22,8 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
     cwf(iStation).ueGroup = find([Users.NCellID] == enb.NCellID);
 
     for iUser = 1:length(cwf.ueGroup)
-      ue = Users(iUser);
-        % Set the scheduling slots for this UE
+      ue = Users((cwf.ueGroup(iUser)));
+      % Set the scheduling slots for this UE
       ue = ue.setSchedulingSlots(enb);
 
       % set subframe and frame number 
@@ -31,8 +31,10 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
       ue.NFrame = NFrame;
       
       % Create local resource grid and modulate
-      ue.Tx = ue.Tx.mapGridAndModulate(ue);
+      [ue.Tx, schPrbs] = ue.Tx.mapGridAndModulate(ue);
 
+      % Set current number of allocated UL PRBs
+      ue.NULRB = schPrbs;
       % Append waveform to compound one
       % TODO check shaping and positioning
       cwf.txWaveform = cat(1, cwf.txWaveform, ue.Tx.Waveform);

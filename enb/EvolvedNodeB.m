@@ -224,6 +224,7 @@ classdef EvolvedNodeB
 					iStop = iStart + prbQuota;
 					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser));
 				end
+				obj.ScheduleUL = temp;
 			end
 		end
 

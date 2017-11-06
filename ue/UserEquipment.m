@@ -5,6 +5,7 @@ classdef UserEquipment
 	properties
 		NCellID;
 		NULRB;
+		RNTI;
 		DuplexMode;
     CyclicPrefixUL;
 		NSubframe;
@@ -39,6 +40,7 @@ classdef UserEquipment
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = userId;
 			obj.NULRB = Param.numSubFramesUE;
+			obj.RNTI = 1;
 			obj.DuplexMode = 'FDD';
 			obj.CyclicPrefixUL = 'Normal';
 			obj.NSubframe = 0;
@@ -180,6 +182,11 @@ classdef UserEquipment
 		% set NFrame
 		function obj = set.NFrame(obj, num)
 			obj.NFrame = num;
+		end
+
+		% set NULRB
+		function obj = set.NULRB(obj, num)
+			obj.NULRB = num;
 		end
 
 		% cast object to struct
