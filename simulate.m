@@ -186,10 +186,10 @@ for iRound = 0:(Param.schRounds-1)
 	Stations = enbTxBulk(Stations, symMatrix, Param);
 	
 	% ----------------------------------
-	% CHANNEL SYNCHRONIZATION
+	% DL CHANNEL SYNCHRONIZATION
 	% ------------------------------------
 	% Setup the channel based on scheduled users
-	Channel = Channel.setupChannel(Stations,Users);
+	Channel = Channel.setupChannelDL(Stations,Users);
 	sonohilog('Running sync routine', 'NFO');
 	[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
 	

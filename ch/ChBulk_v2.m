@@ -91,7 +91,7 @@ classdef ChBulk_v2 < SonohiChannel
       validateStations(Stations);
       validateUsers(Users);
       
-      [stations, users] = obj.getScheduled(Stations, Users);
+      [stations, users] = obj.getScheduledDL(Stations, Users);
       
       if nargin > 3
         nVargs = length(varargin);
@@ -231,21 +231,7 @@ classdef ChBulk_v2 < SonohiChannel
       stationID = Stations(maxStation).NCellID;
     end
     
-    function obj = resetChannel(obj)
-      obj.WINNER = [];
-      obj.eHATA = [];
-    end
-    
-    function obj = setupChannel(obj,Stations,Users)
-      [stations, users] = obj.getScheduled(Stations, Users);
-      if strcmp(obj.Mode,'winner')
-        obj.WINNER = sonohiWINNER(stations,users, obj);
-        obj.WINNER = obj.WINNER.setup();
-      elseif strcmp(obj.Mode,'eHATA')
-        obj.eHATA = sonohieHATA(obj);
-      end
-      
-    end
+
     
     function Users = applyInterference(obj,Stations,Users)
       % Method used to apply the interference on a specific received waveform

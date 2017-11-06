@@ -42,10 +42,10 @@ methods(Static)
       thermalNoise = k*T*BW;
     end
 
-    function [stations, users]  = getScheduled(Stations,Users)
+    function [stations, users]  = getScheduled(Stations,Users,schedule)
       % Find stations that have scheduled users.
-      % TODO: refactorize to uplink
-      schedules = {Stations.ScheduleDL};
+     
+      schedules = {schedule};
       usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
       stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
       stationsS = ~cellfun('isempty',stationsS);
@@ -60,7 +60,53 @@ methods(Static)
       users = Users(ismember([Users.UeId],usersC));
       
     end
+    
+        function [stations, users] = getScheduledDL(Stations,Users)
+
+        [stations, users] = SonohiChannel.getScheduled(Stations,Users,Stations.ScheduleDL);
+
+    end
+
+    function [stations, users] = getScheduledUL(Stations,Users)
+
+        [stations, users] = SonohiChannel.getScheduled(Stations,Users,Stations.ScheduleUL);
+
+    end
 
 end
+
+methods 
+
+    function obj = resetChannel(obj)
+    % Resets any channel setup
+      obj.WINNER = [];
+      obj.eHATA = [];
+    end
+    
+    function obj = setupChannelDL(obj,Stations,Users)
+    % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
+      [stations, users] = obj.getScheduledDL(Stations, Users);
+      obj = obj.setupChannel(stations,users);
+
+    end
+
+end
+
+methods(Access=private)
+
+    function obj = setupChannel(obj,Stations,Users)
+    % Setup association to traverse
+
+      if strcmp(obj.Mode,'winner')
+        obj.WINNER = sonohiWINNER(Stations,Users, obj);
+        obj.WINNER = obj.WINNER.setup();
+      elseif strcmp(obj.Mode,'eHATA')
+        obj.eHATA = sonohieHATA(obj);
+      end
+      
+    end
+    
+end
+
 
 end
