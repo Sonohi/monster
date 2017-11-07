@@ -99,7 +99,7 @@ classdef enbReceiverModule
 			end
 		end
 
-		function obj = estimatePusch(obj, ueObjs)
+		function obj = estimatePusch(obj, enbObj, ueObjs, timeNow)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
 				ue = cast2Struct(ueObjs(iUser));

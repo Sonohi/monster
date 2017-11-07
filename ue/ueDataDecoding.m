@@ -26,6 +26,7 @@ function [Stations, Users] = ueDataDecoding(Stations, Users, Param, timeNow)
 				[Users(iUser).Mac.HarqRxProcesses, state] = ...
 					Users(iUser).Mac.HarqRxProcesses.handleTbReception(iProc,...
 					Users(iUser).Rx.TransportBlock, Users(iUser).Rx.Crc, Param, timeNow);
+					
 				% Depending on the state the process is, contact ARQ
 				if state == 0
 					sqn = Users(iUser).Rlc.ArqRxBuffer.decodeSqn(Users(iUser).Rx.TransportBlock);

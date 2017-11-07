@@ -39,13 +39,22 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
 Param.channel.mode = Param.channelMode;
+Param = rmfield(Param, 'channelMode');
 Param.channel.region = Param.channelRegion;
+Param = rmfield(Param, 'channelRegion');
 Param.harq.rtxMax = Param.harqRtx;
+Param = rmfield(Param, 'harqRtx');
 Param.harq.rv = Param.rvSeq;
+Param = rmfield(Param, 'rvSeq');
 Param.harq.proc = Param.harqProc;
-Param.harq.tout = Param.harqProc/2 -1;
-Param.rlc.maxBufferSize = Param.rlcBufferSize;
-Param.rlc.bufferFlushTimer = Param.rlcBufferFlush;
+Param = rmfield(Param, 'harqProc');
+Param.harq.tout = Param.harq.proc/2 -1;
+Param.arq.maxBufferSize = Param.arqBufferSize;
+Param = rmfield(Param, 'arqBufferSize');
+Param.arq.bufferFlushTimer = Param.arqBufferFlush;
+Param = rmfield(Param, 'arqBufferFlush');
+Param.arq.rtxMax = Param.arqRtx;
+Param = rmfield(Param, 'arqRtx');
 Param.bsNoiseFigure = 3;
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 

@@ -55,6 +55,7 @@ function [Station, User] = createTransportBlock(Station, User, Param, timeNow)
 		tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);
 		tb = cat(1, ctrlBits, tbPayload);
 		if newTb
+			Station = setArqTb(Station, User, sqn, timeNow, tb);
 			Station = setHarqTb(Station, User, harqPid, timeNow, tb);
 		end
 	else

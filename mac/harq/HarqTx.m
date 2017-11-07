@@ -64,7 +64,7 @@ classdef HarqTx
 			% check if this receiver has anything at all
 			if obj.bitsSize > 0 
 				rtxProcessesIndices = find([obj.processes.state] == 2);
-				if isempty(rtxBuffersIndices)
+				if isempty(rtxProcessesIndices)
 					info.flag = false;
 				else
 					info.flag = true;
@@ -120,11 +120,20 @@ classdef HarqTx
 			obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
 		end
 
+		% Decodes a HARQ PID from the PUCCH
+		function [pid, ack] = decodeHarqFeedback(obj, pucch)
+			harqBits = pucch(17:19, 1);
+			ack = pucch(20);
+			pid = bi2de(harqBits', 'left-msb');
+		end
+
 		% Handle the reception of a ACK/NACk
-		function obj = handleReply(obj, ack, procId, timeNow, Param)
+		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Param)
 			% find index
 			iProc = [obj.processes.procId] == procId;
-			if ack.msg == 1
+			sqnBits = obj.processes(iProc).tb(4:13);
+			sqn = bi2de(sqnBits', 'left-msb');
+			if ack
 				% clean
 				obj.processes(iProc).rtxCount = 0;
 				obj.processes(iProc).rv = 0;
@@ -144,6 +153,7 @@ classdef HarqTx
 					obj.processes(iProc).timeStart = timeNow;
 				end
 			end
+			state = obj.processes(iProc).state;
 		end
 
 		% Handle the expiration of the retransmission timer

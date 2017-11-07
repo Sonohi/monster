@@ -12,7 +12,7 @@ classdef ArqTx
 		tbSize;
 		tbBuffer(1024, 1) = struct(...
 			'tb', [], ...
-			'sqn', 0, ...
+			'sqn', -1, ...
 			'timeStart', 0,...
 			'rtxCount', 0,...
 			'state', 0);
@@ -65,29 +65,47 @@ classdef ArqTx
 		end
 
 		% Handle the insert of a new TB
-		function obj = handleTbInsert(tb, timeNow)
-			obj.sqn = obj.sqn + 1;
+		function obj = handleTbInsert(obj, sqn, timeNow, tb)
 			for ix = 1:length(obj.tbBuffer)
-				if ~isempty(obj.tbBuffer(ix).tb)
+				if obj.tbBuffer(ix).state == 0
 					obj.tbBuffer(ix).tb = tb;
 					obj.tbBuffer(ix).sqn = sqn;
+					obj.tbBuffer(ix).state = 1;
 					obj.tbBuffer(ix).timeStart = timeNow;
 					obj.bitsSize = obj.bitsSize + length(tb);
 					obj.tbSize = obj.tbSize + 1;
+					break;
 				end
-			end;
+			end
 		end
 
 		% Handle the 
-		function obj = handleAck(ack, sqn)
+		function obj = handleAck(obj, ack, sqn)
+			% find buffer index
+			iBuf = find([obj.tbBuffer.sqn] == sqn);
+
+			if ack
+				% clean
+				obj = obj.pop(iBuf);
+			else
+				% check whether the maximum number has been exceeded
+				if obj.tbBuffer(iBuf).rtxCount > Param.arq.rtxMax
+					obj.tbBuffer(iBuf).state = 4;
+				else
+					% log rtx
+					obj.tbBuffer(iBuf).rtxCount = obj.tbBuffer(iBuf).rtxCount + 1;
+					obj.tbBuffer(iBuf).state = 3;
+					obj.tbBuffer(iBuf).timeStart = timeNow;
+				end
+			end
 			
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
 		function obj = flush(timeNow, Param)
-			for iTb = length(1:obj.tbBuffer)
-				if timeNow - obj.tbBuffer(iTb).timeStart > Param.rlc.bufferFlushTimer/1000
-					obj = pop(iTb);
+			for iBuf = length(1:obj.tbBuffer)
+				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
+					obj = obj.pop(iBuf);
 				end
 			end
 		end
@@ -96,13 +114,15 @@ classdef ArqTx
 
 	methods (Access = private)
 		% Method to execute a pop
-		function obj = pop(ix)
+		function obj = pop(obj, ix)
 			% update stats
 			obj.bitsSize = obj.bitsSize - length(obj.tbBuffer(ix).tb);
 			obj.tbSize = obj.tbSize - 1;
 			obj.tbBuffer(ix).tb = [];
-			obj.tbBuffer(ix).sqn = 0;
-			obj.tbBuffer(ix).timeStart = 0;
+			obj.tbBuffer(ix).sqn = -1;
+			obj.tbBuffer(ix).timeStart = -1;
+			obj.tbBuffer(ix).rtxCount = 0;
+			obj.tbBuffer(ix).state = 0;
 		end
 	end
 end

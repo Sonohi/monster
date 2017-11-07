@@ -30,10 +30,10 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
 		enb.Rx = enb.Rx.equaliseSubframes(enbUsers);
 
 		% Estimate PUCCH (Main UL control channel) for UEs
-		enb.Rx = enb.Rx.estimatePucch(enb, enbUsers, timeNow)
+		enb.Rx = enb.Rx.estimatePucch(enb, enbUsers, timeNow);
 
 		% Estimate PUSCH (Main UL control channel) for UEs
-		enb.Rx = enb.Rx.estimatePusch(enb, enbUsers, timeNow)
+		enb.Rx = enb.Rx.estimatePusch(enb, enbUsers, timeNow);
 
 		Stations(iStation) = enb;
 	end

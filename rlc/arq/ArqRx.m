@@ -62,7 +62,7 @@ classdef ArqRx
 		% Method to flush TBs that have been in the buffer longer than the flush timer
 		function obj = flush(timeNow, Param)
 			for iTb = length(1:obj.tbBuffer)
-				if timeNow - obj.tbBuffer(iTb).timeStart > Param.rlc.bufferFlushTimer/1000
+				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
 					obj = pop(iTb);
 				end
 			end
