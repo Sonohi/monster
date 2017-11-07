@@ -25,7 +25,7 @@ function Users = ueRxBulk(Stations, Users, cec)
     user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
 
     % Try demodulation
-    [demodBool, user.Rx] = user.Rx.demod(station);
+    [demodBool, user.Rx] = user.Rx.demodulateWaveform(station);
     % demodulate received waveform, if it returns 1 (true) then demodulated
     if demodBool
 			% Conduct reference measurements
@@ -33,7 +33,7 @@ function Users = ueRxBulk(Stations, Users, cec)
       % Estimate Channel
 			user.Rx = user.Rx.estimateChannel(station, cec);
       % Equalize signal
-			user.Rx = user.Rx.equalise();
+			user.Rx = user.Rx.equaliseSubframe();
       % Estimate PDSCH (main data channel)
 			user.Rx = user.Rx.estimatePdsch(user, station);
 			% calculate EVM

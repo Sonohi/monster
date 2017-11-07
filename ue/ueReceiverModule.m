@@ -64,7 +64,7 @@ classdef ueReceiverModule
 			obj.Offset = offset;
 		end
 
-		function [returnCode, obj] = demod(obj,enbObj)
+		function [returnCode, obj] = demodulateWaveform(obj,enbObj)
 			% TODO: validate that a waveform exist.
 			enb = cast2Struct(enbObj);
 			Subframe = lteOFDMDemodulate(enb, obj.Waveform); %#ok
@@ -87,7 +87,7 @@ classdef ueReceiverModule
 		end
 
 		% equalize at the receiver
-		function obj = equalise(obj)
+		function obj = equaliseSubframe(obj)
 			validateRxEqualise(obj);
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end

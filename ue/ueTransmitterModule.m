@@ -5,6 +5,7 @@ classdef ueTransmitterModule
     Waveform;
     ReGrid;
     PUCCH;
+    PUSCH;
   end
   
   methods
@@ -18,7 +19,12 @@ classdef ueTransmitterModule
       obj.PRACH.HighSpeed = 0;       % Normal mode: TS36.104, Table 8.4.2.1-1
       obj.PRACH.FreqOffset = 0;      % Default frequency location
       obj.PRACH.PreambleIdx = 32;    % Preamble index: TS36.141, Table A.6-1
-      obj.PRACHInfo = ltePRACHInfo(ueObj, obj.PRACH);      
+      obj.PRACHInfo = ltePRACHInfo(ueObj, obj.PRACH); 
+      obj.PUSCH = struct(...
+        'Active', 0,... 
+        'Modulation', 'QPSK',...
+        'PRBSet', [],...
+        'NLayers', 1);    
     end
     
     function obj = setPRACH(obj, ueObj, NSubframe)
@@ -59,19 +65,21 @@ classdef ueTransmitterModule
         chs.ResourceIdx = 0;
         switch obj.PUCCH.Format
           case 1
-            pucchsym = ltePUCCH1(ueObj,chs,harqAck);
-            pucchind = ltePUCCH1Indices(ueObj,chs);
+            obj.PUCCH.Bits = harqAck;
+            obj.PUCCH.Symbols = ltePUCCH1(ueObj,chs,harqAck);
+            obj.PUCCH.Indices = ltePUCCH1Indices(ueObj,chs);
           case 2
-                  
-            pucchsym = ltePUCCH2(ueObj,chs,pucch2Bits);
-            pucchind = ltePUCCH2Indices(ueObj,chs);            
+            obj.PUCCH.Bits = pucch2Bits;
+            obj.PUCCH.Symbols = ltePUCCH2(ueObj,chs,pucch2Bits);
+            obj.PUCCH.Indices = ltePUCCH2Indices(ueObj,chs);            
           case 3
-            pucchsym = ltePUCCH3(ueObj,chs,pucch2Bits)
-            pucchind = ltePUCCH3Indices(ueObj,chs);
+            obj.PUCCH.Bits = pucch2Bits;
+            obj.PUCCH.Symbols = ltePUCCH3(ueObj,chs,pucch2Bits)
+            obj.PUCCH.Indices = ltePUCCH3Indices(ueObj,chs);
 				end
         
         reGrid = lteULResourceGrid(ueObj);
-        reGrid(pucchind) = pucchsym;
+        reGrid(obj.PUCCH.Indices) = obj.PUCCH.Symbols;
         obj.ReGrid = reGrid;
         obj.Waveform = lteSCFDMAModulate(ueObj,obj.ReGrid);
         

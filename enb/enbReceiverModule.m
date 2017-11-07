@@ -29,7 +29,7 @@ classdef enbReceiverModule
 		end
 
 		% Used to demodulate each single UE waveform separately
-		function obj = demodulate(obj, ueObjs)
+		function obj = demodulateWaveforms(obj, ueObjs)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
 				ue = cast2Struct(ueObjs(iUser));
@@ -47,16 +47,66 @@ classdef enbReceiverModule
 
 		end
 
-		function obj = estimateChannel(obj, enbObj, cec)
-		
+		function obj = estimateChannels(obj, ueObjs, cec)
+			for iUser = 1:length(ueObjs)
+				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
+				ue = cast2Struct(ueObjs(iUser));
+				if (ue.Tx.PUSCH.Active)
+					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
+						lteULChannelEstimate(ue, cec, obj.UeData(localIndex).Subframe);
+				end
+			end
 		end
 
-		function obj = equalise(obj, enbObj)
-		
+		function obj = equaliseSubframes(obj, ueObjs)
+			for iUser = 1:length(ueObjs)
+				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
+				ue = cast2Struct(ueObjs(iUser));
+				if (ue.Tx.PUSCH.Active)
+					obj.UeData(localIndex).EqSubframe = lteEqualizeMMSE(obj.UeData(localIndex).Subframe,...
+						obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst);
+				end
+			end
 		end
 
-		function obj = estimatePucch(obj, enbObj, timeNow)
-		
+		function obj = estimatePucch(obj, enbObj, ueObjs, timeNow)
+			for iUser = 1:length(ueObjs)
+				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
+				ue = cast2Struct(ueObjs(iUser));
+
+				switch ue.Tx.PUCCH.Format
+          case 1
+						obj.UeData(localIndex).PUCCH = ltePUCCH1Decode(ue, ue.Tx.PUCCH, 0, ...
+							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
+          case 2
+            obj.UeData(localIndex).PUCCH = ltePUCCH2Decode(ue, ue.Tx.PUCCH, ...
+							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));        
+          case 3
+            obj.UeData(localIndex).PUCCH = ltePUCCH3Decode(ue, ue.Tx.PUCCH, ...
+							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));     
+				end
+
+				% Estimate soft bits to hard bits
+				% TODO this feels a bit dumb, let's try something smarter
+				for iSym = 1:length(obj.UeData(localIndex).PUCCH)
+					if obj.UeData(localIndex).PUCCH(iSym) > 0
+						obj.UeData(localIndex).PUCCH(iSym) = int8(1);
+					else
+						obj.UeData(localIndex).PUCCH(iSym) = int8(0);
+					end
+				end
+				
+			end
+		end
+
+		function obj = estimatePusch(obj, ueObjs)
+			for iUser = 1:length(ueObjs)
+				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
+				ue = cast2Struct(ueObjs(iUser));
+				if (ue.Tx.PUSCH.Active)
+					
+				end
+			end
 		end
 
 	end

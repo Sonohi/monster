@@ -21,16 +21,19 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
     enb.Rx = enb.Rx.parseWaveform(enb);
 
 		% Demodulate received waveforms
-    enb.Rx = enb.Rx.demodulate(enbUsers);
+    enb.Rx = enb.Rx.demodulateWaveforms(enbUsers);
 		
 		% Estimate Channel 
-		enb.Rx = enb.Rx.estimateChannel(enb, cec);
+		enb.Rx = enb.Rx.estimateChannels(enbUsers, cec);
 
 		% Equalise
-		enb.Rx = enb.Rx.equalise(enb);
+		enb.Rx = enb.Rx.equaliseSubframes(enbUsers);
 
 		% Estimate PUCCH (Main UL control channel) for UEs
-		enb.Rx = enb.Rx.estimatePucch(enb, timeNow)
+		enb.Rx = enb.Rx.estimatePucch(enb, enbUsers, timeNow)
+
+		% Estimate PUSCH (Main UL control channel) for UEs
+		enb.Rx = enb.Rx.estimatePusch(enb, enbUsers, timeNow)
 
 		Stations(iStation) = enb;
 	end

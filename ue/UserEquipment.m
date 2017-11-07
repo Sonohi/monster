@@ -214,7 +214,7 @@ classdef UserEquipment
 	end
 
 	methods (Access = private)
-
+		
 	end
 
 end
