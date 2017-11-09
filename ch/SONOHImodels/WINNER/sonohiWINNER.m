@@ -111,7 +111,7 @@ classdef sonohiWINNER
                     % Get RX from the WINNER layout idx
                     rxIdx = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
                     Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(txIdx)));
-                    User = Users([Users.UeId] == rxIdx);
+                    User = Users([Users.NCellID] == rxIdx);
                     % Get corresponding TxSig
                     txSig = [Station.Tx.Waveform;zeros(25,1)];
                     txPw = 10*log10(bandpower(txSig));
