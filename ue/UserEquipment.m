@@ -4,6 +4,7 @@ classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
 		NCellID;
+		ENodeBID;
 		NULRB;
 		RNTI;
 		DuplexMode;
@@ -19,7 +20,6 @@ classdef UserEquipment
 		Sinr;
 		TLast; % timestamp of the latest movement done by the UE
 		Trajectory;
-		UeId;
 		Velocity;
 		RxAmpli;
 		Rx;
@@ -39,6 +39,7 @@ classdef UserEquipment
 		% Constructor
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = userId;
+			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
 			obj.DuplexMode = 'FDD';
@@ -48,7 +49,6 @@ classdef UserEquipment
 			obj.NTxAnts = 1;
 			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
 			obj.Scheduled = false;
-			obj.UeId = userId;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
 				'edgeColour', [0.1 0.1 0.1], ...
@@ -86,7 +86,7 @@ classdef UserEquipment
 			obj.Trajectory(1:length(y),2) = y;
 			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
 
-			% Plot UE posiiton and trajectory in scenario
+			% Plot UE position and trajectory in scenario
 			if Param.draw
 				plotUEinScenario(obj, Param);
 			end
@@ -214,7 +214,7 @@ classdef UserEquipment
 	end
 
 	methods (Access = private)
-		
+
 	end
 
 end

@@ -90,8 +90,8 @@ for model = 2:numel(Snames)
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
 		StationID = Channel.getAssociation(StationsCopy_,ueCopy);
     StationsCopy_([StationsCopy_.NCellID] == StationID).resetSchedule();
-		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
-    StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.UeId;
+		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.NCellID;
+    StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.NCellID;
 		ueCopy.NCellID = StationID;
     
     Channel_ = Channel.setupChannel(StationsCopy_,ueCopy);

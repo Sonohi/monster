@@ -12,7 +12,7 @@ function Station = setArqTb(Station, User, sqn, timeNow, tb)
 %   Station     ->  the updated UE object
 
 	% Find index
-	iUser = find([Station.Rlc.ArqTxBuffers.rxId] == User.UeId);
+	iUser = find([Station.Rlc.ArqTxBuffers.rxId] == User.NCellID);
 	
 	% Check whether the SQN has been passed in decimal or binary
 	if length(sqn) > 1

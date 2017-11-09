@@ -18,9 +18,9 @@ function [Station, User] = createTransportBlock(Station, User, Param, timeNow)
 	avMOrd = 0;
 	qsz = User.Queue.Size;
 	sch = enb.ScheduleDL;
-	ixPRBs = find([sch.UeId] == User.UeId);
+	ixPRBs = find([sch.UeId] == User.NCellID);
 	for (iPrb = 1:length(sch))
-		if (sch(iPrb).UeId == User.UeId)
+		if (sch(iPrb).UeId == User.NCellID)
 			numPRB = numPRB + 1;
 			avMCS = avMCS + sch(iPrb).Mcs;
 			avMOrd = avMOrd + sch(iPrb).ModOrd;

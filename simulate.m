@@ -104,7 +104,7 @@ for iRound = 0:(Param.schRounds-1)
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 		
 		% schedule only if at least 1 user is associated
-		if Stations(iStation).Users(1) ~= 0
+		if Stations(iStation).Users(1).UeId ~= -1
 			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 		
@@ -138,7 +138,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	for iUser = 1:length(Users)
 		% get the eNodeB this UE is connected to
-		iServingStation = [Stations.NCellID] == Users(iUser).NCellID;
+		iServingStation = [Stations.NCellID] == Users(iUser).ENodeBID;
 		
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
@@ -199,7 +199,7 @@ for iRound = 0:(Param.schRounds-1)
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
 	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.mode), 'NFO');
-	[Stations, Users] = Channel.traverse(Stations,Users,'downlink');
+	[Stations, Users] = Channel.traverse(Stations, Users, 'downlink');
 	
 	% ------------
 	% UE RECEPTION

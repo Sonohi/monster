@@ -30,7 +30,7 @@ function [Station, harqPid, newTb] = getHarqPid(Station, User, sqn, varargin)
 	end
 
 	% Find index
-	iUser = find([Station.Mac.HarqTxProcesses.rxId] == User.UeId);
+	iUser = find([Station.Mac.HarqTxProcesses.rxId] == User.NCellID);
 	% Find pid
 	[Station.Mac.HarqTxProcesses(iUser), harqPidTemp, newTb] = findProcess(Station.Mac.HarqTxProcesses(iUser), sqn);	
 

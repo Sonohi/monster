@@ -60,8 +60,8 @@ end
 % now for each station, place the UE at the centre of each cluster and calculate
 for iStation = 1:length(Stations)
 	% Associate user with stations
-	Stations(iStation).Users = ue.UeId;
-	ue.NCellID = Stations(iStation).NCellID;
+	Stations(iStation).Users.UeId = ue.NCellID;
+	ue.ENodeBID = Stations(iStation).NCellID;
 	% Set the TxWaveform etc from the dummy frames info
 	Stations(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
 	Stations(iStation).Tx.WaveformInfo = Stations(iStation).FrameInfo;

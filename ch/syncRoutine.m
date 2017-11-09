@@ -38,7 +38,7 @@ sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
 % Compute offset
 for p = 1:length(Users)
 	% Find serving station
-	station = StationsNew(find([StationsNew.NCellID] == Users(p).NCellID));
+	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeBID));
 	% Compute offset
 	% TODO add try catch as lteDLFrameOffset could throw a size mismatch error
 	NotAbleToDemod = 1;

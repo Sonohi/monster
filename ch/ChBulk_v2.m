@@ -23,9 +23,9 @@ classdef ChBulk_v2 < SonohiChannel
           StationC = Stations(iStation);
           
           StationC = StationC.resetSchedule();
-          StationC.Users = zeros(1,length(Stations(iStation).Users));
-          StationC.Users(1) = user.UeId;
-          StationC.Schedule(1).UeId = user.UeId;
+          StationC.Users(1:length(Stations(iStation).Users)) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+          StationC.Users(1).UeId = user.NCellID;
+          StationC.Schedule(1).UeId = user.NCellID;
           user.Rx.Waveform = [];
           if strcmp(obj.Mode,'eHATA')
             eHATA = sonohieHATA(obj);
@@ -116,7 +116,7 @@ classdef ChBulk_v2 < SonohiChannel
           
           sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
           for iUser = 1:length(users)
-            iServingStation = find([Stations.NCellID] == Users(iUser).NCellID);
+            iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
             users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
             users(iUser).Rx.RxPwdBm = Stations(iServingStation).Pmax;
           end
@@ -190,7 +190,7 @@ classdef ChBulk_v2 < SonohiChannel
       
       % For user try association with all stations and select
       % the one with highest Rx power
-      sonohilog(sprintf('Finding User association for User(%i) based on Rx power...',User.UeId),'NFO0')
+      sonohilog(sprintf('Finding User association for User(%i) based on Rx power...',User.NCellID),'NFO0')
       
       RxPw = zeros(length(Stations),1);
       for iStation = 1:length(Stations)
@@ -199,8 +199,8 @@ classdef ChBulk_v2 < SonohiChannel
         
         % Associate user
         StationC = StationC.resetScheduleDL();
-        StationC.ScheduleDL(1).UeId = User.UeId;
-        User.NCellID = StationC.NCellID;
+        StationC.ScheduleDL(1).UeId = User.NCellID;
+        User.ENodeBID = StationC.NCellID;
         
         % TODO: move this guy so the Channel setup is used instead
         if strcmp(obj.Mode,'eHATA')
@@ -242,7 +242,7 @@ classdef ChBulk_v2 < SonohiChannel
       validateUsers(Users);
       for iUser = 1:length(Users)
         user = Users(iUser);
-        station = Stations(find([Stations.NCellID] == Users(iUser).NCellID));
+        station = Stations(find([Stations.NCellID] == Users(iUser).ENodeBID));
         
         if isempty(station)
           user.Rx.SINR = user.Rx.SNR;

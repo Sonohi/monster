@@ -19,7 +19,7 @@ classdef ueReceiverModule
 		Crc;
 		PreEvm;
 		PostEvm;
-		WCQI;
+		CQI;
 		Offset;
 		BLER;
 		Throughput;
@@ -34,7 +34,7 @@ classdef ueReceiverModule
 
 		function obj = ueReceiverModule(Param, ueObj)
 			obj.NoiseFigure = Param.ueNoiseFigure;
-			obj.WCQI = 3;
+			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Symbols = struct('ok', 0, 'err', 0, 'tot', 0);
@@ -171,7 +171,7 @@ classdef ueReceiverModule
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
-			[obj.WCQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
 		% reference measurements

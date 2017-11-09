@@ -14,7 +14,7 @@ classdef sonohieHATA
     end
 
     function Users = run(obj,Stations,Users)
-                      % Get number of links associated with the station.
+      % Get number of links associated with the station.
       
       users = length(Users);
       numLinks = length(Users);
@@ -22,7 +22,7 @@ classdef sonohieHATA
       for i = 1:numLinks
         station = Stations([Stations.NCellID] == Pairing(1,i));
         % Local copy for mutation
-        user = Users(find([Users.UeId] == Pairing(2,i))); %#ok
+        user = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
 
         if strcmp(obj.Channel.fieldType,'full')
           RxSig = obj.addFading([...
@@ -40,7 +40,7 @@ classdef sonohieHATA
         user.Rx.RxPwdBm = rxPwdBm;
         user.Rx.Waveform = RxSig;
         % Write changes to user object in array.
-        Users(find([Users.UeId] == Pairing(2,i))) = user; %#ok
+        Users(find([Users.NCellID] == Pairing(2,i))) = user; %#ok
       end
     end
 
@@ -101,7 +101,7 @@ classdef sonohieHATA
       SNR = rxPwdBm-rxNoiseFloor;
       SNRLin = 10^(SNR/10);
       str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
-        Station.NCellID,User.UeId,num2str(distance),num2str(SNR),num2str(rxPwdBm));
+        Station.NCellID,User.NCellID,num2str(distance),num2str(SNR),num2str(rxPwdBm));
       sonohilog(str1,'NFO0');
 
       %% Apply SNR

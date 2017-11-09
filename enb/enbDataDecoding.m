@@ -14,14 +14,17 @@ function [Stations, Users] = enbDataDecoding(Stations, Users, Param, timeNow)
 	for iStation = 1:length(Stations)
 		enb = Stations(iStation);
 		% First off, find all UEs that are linked to this station in this round
-		ueGroup = find([Users.NCellID] == enb.NCellID);
+		ueGroup = find([Users.ENodeBID] == enb.NCellID);
 
 		enbUsers = Users(ueGroup);
 
 		for iUser = 1:length(enb.Rx.UeData)
 			if ~isempty(enb.Rx.UeData(iUser).PUCCH)
 				cqi = decodeCqi(enb.Rx.UeData(iUser).PUCCH);
-				% TODO update the received CQI in enb.Users
+				ueEnodeBIX = find([enb.Users.UeId] == enb.Rx.UeData(iUser).UeId);
+				if ~isempty(ueEnodeBIX)
+					enb.Users(ueEnodeBIX).CQI = cqi;
+				end
 
 				% Find the transmitting HARQ process for this UE
 				harqIndex = find([enb.Mac.HarqTxProcesses.rxId] == enb.Rx.UeData(iUser).UeId);

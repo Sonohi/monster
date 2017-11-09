@@ -140,7 +140,7 @@ classdef sonohiWINNER
                     User.Rx.Waveform = rxSigNorm;
 
 
-                    Users([Users.UeId] == rxIdx) = User;
+                    Users([Users.NCellID] == rxIdx) = User;
                 end
 
             end
@@ -164,7 +164,7 @@ classdef sonohiWINNER
             SNR = rxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
             str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
-                Station.NCellID,User.UeId,num2str(distance),num2str(SNR));
+                Station.NCellID,User.NCellID,num2str(distance),num2str(SNR));
             sonohilog(str1,'NFO0');
 
             %% Apply SNR
@@ -294,7 +294,7 @@ classdef sonohiWINNER
             % Set the position of the users
             % TODO: Add velocity vector of users
             for iUser = 1:length(cfgLayout.UserIdx)
-                cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users([Users.UeId] == cfgLayout.UserIdx(iUser)).Position(1:3)));
+                cfgLayout.Stations(iUser+length(cfgLayout.StationIdx)).Pos(1:3) = int64(ceil(Users([Users.NCellID] == cfgLayout.UserIdx(iUser)).Position(1:3)));
             end
 
         end
@@ -325,7 +325,7 @@ classdef sonohiWINNER
                 userIdx = cfgLayout.UserIdx(cfgLayout.Pairing(2,i)-max(cfgLayout.Pairing(1,:)));
                 stationNCellId =  cfgLayout.StationIdx(cfgLayout.Pairing(1,i));
                 cBs = Stations([Stations.NCellID] == stationNCellId);
-                cMs = Users([Users.UeId] == userIdx);
+                cMs = Users([Users.NCellID] == userIdx);
                 % Apparently WINNERchan doesn't compute distance based
                 % on height, only on x,y distance. Also they can't be
                 % doubles...

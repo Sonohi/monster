@@ -31,7 +31,7 @@ switch Param.scheduling
 			
 			% find user in main list
 			for (ixUser = 1:length(Users))
-				if (Users(ixUser).UeId == Station.Users(iUser))
+				if (Users(ixUser).NCellID == Station.Users(iUser).UeId)
 					iCurrUe = ixUser;
 					break;
 				end
@@ -40,7 +40,7 @@ switch Param.scheduling
 			% If the retransmissions are on, check awaiting retransmissions
 			rtxInfo = struct('proto', [], 'identifier', [], 'iUser', -1);
 			if Param.rtxOn
-				rtxInfo = checkRetransmissionQueues(Station, Users(iCurrUe).UeId);
+				rtxInfo = checkRetransmissionQueues(Station, Users(iCurrUe).NCellID);
 			end
 
 			% Boolean flags for scheduling for readability
@@ -52,7 +52,7 @@ switch Param.scheduling
 			% If there are still PRBs available, then we can schedule either a new TB or a RTX
 			if prbsAv > 0
 				if schedulingFlag && (noRtxSchedulingFlag || rtxSchedulingFlag)
-					modOrd = cqi2modOrd(Users(iCurrUe).Rx.WCQI);
+					modOrd = cqi2modOrd(Users(iCurrUe).Rx.CQI);
 					if noRtxSchedulingFlag
 						prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
 					else
@@ -80,10 +80,10 @@ switch Param.scheduling
 					% write to schedule struct
 					for iPrb = 1:Station.NDLRB
 						if Station.ScheduleDL(iPrb).UeId == 0
-							mcs = cqi2mcs(Users(iCurrUe).Rx.WCQI);
+							mcs = cqi2mcs(Users(iCurrUe).Rx.CQI);
 							for iSch = 0:prbsSch-1
 								Station.ScheduleDL(iPrb + iSch) = struct(...
-									'UeId', Users(iCurrUe).UeId,...
+									'UeId', Users(iCurrUe).NCellID,...
 									'Mcs', mcs,...
 									'ModOrd', modOrd);
 							end
@@ -95,7 +95,7 @@ switch Param.scheduling
 					% will start again from it and we stop this round, otherwise
 					% continue
 					if prbsNeed > prbsSch
-						Station.RrNext.UeId = Station.Users(iUser);
+						Station.RrNext.UeId = Station.Users(iUser).UeId;
 						Station.RrNext.Index = iUser;
 						iUser = sz + 1;
 					else
@@ -111,7 +111,7 @@ switch Param.scheduling
 				% Check first whether we went too far in the list and we need to restart
 				% from the beginning
 				iUser = checkIndexPosition(Param, Station, iUser);
-				Station.RrNext.UeId = Station.Users(iUser);
+				Station.RrNext.UeId = Station.Users(iUser).UeId;
 				Station.RrNext.Index = iUser;
 				
 				% in both cases, stop the loop
@@ -121,7 +121,7 @@ switch Param.scheduling
 	end
 
 	function iUser = checkIndexPosition(Param, Station, iUser)
-		if iUser > Param.numUsers || Station.Users(iUser) == 0
+		if iUser > Param.numUsers || Station.Users(iUser).UeId == -1
 			iUser = 1;
 		end
 	end

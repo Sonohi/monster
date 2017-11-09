@@ -46,7 +46,7 @@ methods(Static)
       % Find stations that have scheduled users.
      
       schedules = {schedule};
-      usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
+      usersS = cellfun(@(x) unique([x.NCellID]), schedules, 'UniformOutput', false);
       stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
       stationsS = ~cellfun('isempty',stationsS);
       stations = Stations(stationsS);
@@ -57,7 +57,7 @@ methods(Static)
       usersC(bsxfun(@le,[1:max(lens)]',lens)) = horzcat(usersS{:});
       usersC = reshape( usersC ,1,numel(usersC));
       usersC = usersC(usersC ~= 0);
-      users = Users(ismember([Users.UeId],usersC));
+      users = Users(ismember([Users.NCellID],usersC));
       
     end
     

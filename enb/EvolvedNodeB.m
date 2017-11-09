@@ -67,7 +67,7 @@ classdef EvolvedNodeB
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
-			obj.Users = zeros(Param.numUsers, 1);
+			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.Status = 1;
@@ -215,14 +215,14 @@ classdef EvolvedNodeB
 		% set uplink static scheduling 
 		function obj = setScheduleUL(obj, Param)
 			% Check the number of users associated snd split the BW
-			ueCount = find([obj.Users] ~= 0);
+			ueCount = find([obj.Users.UeId] ~= -1);
 			if ~isempty(ueCount)
 				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
 				temp = zeros(length(ueCount)*prbQuota, 1);
 				for iUser = 1:length(ueCount)
 					iStart = (iUser - 1)*prbQuota;
 					iStop = iStart + prbQuota;
-					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser));
+					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser)).UeId;
 				end
 				obj.ScheduleUL = temp;
 			end

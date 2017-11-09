@@ -13,7 +13,7 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
   for iStation = 1:length(Stations)
 		enb = Stations(iStation);
 		% First off, find all UEs that are linked to this station in this round
-		ueGroup = find([Users.NCellID] == enb.NCellID);
+		ueGroup = find([Users.ENodeBID] == enb.NCellID);
 
 		enbUsers = Users(ueGroup);
 

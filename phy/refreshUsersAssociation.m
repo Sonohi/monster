@@ -36,15 +36,17 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Channel,Para
 
 		stationCellID = Channel.getAssociation(StationsC,Users(iUser));
 
-		Users(iUser).NCellID = stationCellID;
+		Users(iUser).ENodeBID = stationCellID;
 
 		% Now that the assignement is done, write also on the side of the station
 		% TODO replace with matrix operation
 		for iStation = 1:length(Stations)
-			if Stations(iStation).NCellID == Users(iUser).NCellID
+			if Stations(iStation).NCellID == Users(iUser).ENodeBID
 				for ix = 1:Param.numUsers
 					if Stations(iStation).Users(ix) == 0
-						Stations(iStation).Users(ix) = Users(iUser).UeId;
+						Stations(iStation).Users(ix).UeId = Users(iUser).NCellID;
+						Stations(iStation).Users(ix).CQI = Users(iUser).Rx.CQI;
+						Stations(iStation).Users(ix).RSSI = Users(iUser).Rx.RSSIdBm;
 						break;
 					end
 				end
@@ -58,7 +60,7 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Channel,Para
 		Stations(iStation) = Stations(iStation).setScheduleUL(Param);
 	end
 	for iUser = 1:length(Users)
-		iServingStation = [Stations.NCellID] == Users(iUser).NCellID;
+		iServingStation = [Stations.NCellID] == Users(iUser).ENodeBID;
 		Users(iUser) = Users(iUser).setSchedulingSlots(Stations(iServingStation));
 	end
 end
