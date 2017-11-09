@@ -131,8 +131,8 @@ classdef ChBulk_v2 < SonohiChannel
       
       % Overwrite in input struct
       for iUser = 1:length(users)
-        ueId = users(iUser).UeId;
-        Users([Users.UeId] == ueId) = users(iUser);
+        ueId = users(iUser).NCellID;
+        Users([Users.NCellID] == ueId) = users(iUser);
       end
   
 

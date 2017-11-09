@@ -97,7 +97,7 @@ classdef ueReceiverModule
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
 			
-			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.UeId);
+			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.NCellID);
 
 			% Store the full PRB set for extraction
 			fullPrbSet = enb.Tx.PDSCH.PRBSet;
@@ -111,7 +111,7 @@ classdef ueReceiverModule
 				% extract the unique UE IDs from the schedule
 				uniqueIds = removeZeros(unique([enb.ScheduleDL.UeId]));
 				for iUser = 1:length(uniqueIds) 
-					if uniqueIds(iUser) ~= ue.UeId
+					if uniqueIds(iUser) ~= ue.NCellID
 						% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
 						prbIndices = find([enb.ScheduleDL.UeId] == uniqueIds(iUser));
 						if prbIndices(1) < obj.SchIndexes(1)

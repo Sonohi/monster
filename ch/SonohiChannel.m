@@ -46,7 +46,7 @@ methods(Static)
       % Find stations that have scheduled users.
      
       schedules = {schedule};
-      usersS = cellfun(@(x) unique([x.NCellID]), schedules, 'UniformOutput', false);
+      usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
       stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
       stationsS = ~cellfun('isempty',stationsS);
       stations = Stations(stationsS);

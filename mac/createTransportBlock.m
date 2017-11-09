@@ -49,7 +49,7 @@ function [Station, User] = createTransportBlock(Station, User, Param, timeNow)
 	% We use the first 13 bits for that; the first 3 are the HARQ PID. the other 10 are the SQN
 	newTb = false;
 	if Param.rtxOn 
-		[Station, sqn] = getSqn(Station, User.UeId, 'outFormat', 'b');
+		[Station, sqn] = getSqn(Station, User.NCellID, 'outFormat', 'b');
 		[Station, harqPid, newTb] = getHarqPid(Station, User, sqn, 'outFormat', 'b', 'inFormat', 'b');
 		ctrlBits = cat(1, harqPid, sqn);
 		tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);

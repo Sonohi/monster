@@ -43,7 +43,7 @@ function [Users, Stations] = refreshUsersAssociation(Users,Stations,Channel,Para
 		for iStation = 1:length(Stations)
 			if Stations(iStation).NCellID == Users(iUser).ENodeBID
 				for ix = 1:Param.numUsers
-					if Stations(iStation).Users(ix) == 0
+					if Stations(iStation).Users(ix).UeId == -1
 						Stations(iStation).Users(ix).UeId = Users(iUser).NCellID;
 						Stations(iStation).Users(ix).CQI = Users(iUser).Rx.CQI;
 						Stations(iStation).Users(ix).RSSI = Users(iUser).Rx.RSSIdBm;

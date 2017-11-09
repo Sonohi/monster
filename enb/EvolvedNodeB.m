@@ -16,7 +16,7 @@ classdef EvolvedNodeB
 		TotSubframes;
 		OCNG;
 		Windowing;
-		Users;
+		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		ScheduleDL;
 		ScheduleUL;
 		RrNext;
@@ -67,7 +67,6 @@ classdef EvolvedNodeB
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
-			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.Status = 1;
@@ -79,6 +78,7 @@ classdef EvolvedNodeB
 			obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
 			obj.Tx = enbTransmitterModule(obj, Param);
 			obj.Rx = enbReceiverModule(Param);
+			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 
 		% Posiiton base station
@@ -88,7 +88,7 @@ classdef EvolvedNodeB
 
 		% reset users
 		function obj = resetUsers(obj, Param)
-			obj.Users = zeros(Param.numUsers, 1);
+			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 
 		% reset schedule
