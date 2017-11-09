@@ -130,11 +130,13 @@ classdef HarqTx
 		% Handle the reception of a ACK/NACk
 		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Param)
 			% find index
-			iProc = [obj.processes.procId] == procId;
+			iProc = find([obj.processes.procId] == procId);
 			sqnBits = obj.processes(iProc).tb(4:13);
 			sqn = bi2de(sqnBits', 'left-msb');
 			if ack
 				% clean
+				obj.bitsSize = obj.bitsSize - length(obj.processes(iProc).tb);
+				obj.tbSize = obj.tbSize - 1;
 				obj.processes(iProc).rtxCount = 0;
 				obj.processes(iProc).rv = 0;
 				obj.processes(iProc).tb = [];

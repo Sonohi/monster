@@ -13,7 +13,7 @@ classdef ArqTx
 		tbBuffer(1024, 1) = struct(...
 			'tb', [], ...
 			'sqn', -1, ...
-			'timeStart', 0,...
+			'timeStart', -1,...
 			'rtxCount', 0,...
 			'state', 0);
 	end
@@ -79,7 +79,7 @@ classdef ArqTx
 			end
 		end
 
-		% Handle the 
+		% Handle the reception of an ACK
 		function obj = handleAck(obj, ack, sqn)
 			% find buffer index
 			iBuf = find([obj.tbBuffer.sqn] == sqn);
@@ -102,7 +102,7 @@ classdef ArqTx
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
-		function obj = flush(timeNow, Param)
+		function obj = flush(obj, timeNow, Param)
 			for iBuf = length(1:obj.tbBuffer)
 				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
 					obj = obj.pop(iBuf);
