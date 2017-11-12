@@ -13,9 +13,9 @@ classdef sonohieHATA
 
     end
 
-    function Users = run(obj,Stations,Users)
+    function Users = run(obj,Stations,Users, Channel)
       % Get number of links associated with the station.
-      
+      obj.Channel = Channel;
       users = length(Users);
       numLinks = length(Users);
       Pairing = obj.Channel.getPairing(Stations);

@@ -279,7 +279,7 @@ for iRound = 0:(Param.schRounds-1)
 	for iUser = 1:length(Users)
 		Users(iUser) = Users(iUser).resetUser();
 	end
-	Channel = Channel.resetChannel();
+	Channel = Channel.resetChannelModels();
 	
 end % end round
 

@@ -93,40 +93,40 @@ classdef ChBulk_v2 < SonohiChannel
       
       [stations, users] = obj.getScheduledDL(Stations, Users);
       
-      if nargin > 3
-        nVargs = length(varargin);
+      if isempty(varargin{1})
+           obj.fieldType = 'full';
+      else
+         vargs = varargin{1};
+        nVargs = length(vargs);
+        
         for k = 1:nVargs
-          if strcmp(varargin{k},'field')
-            obj.fieldType = varargin{k+1};
+          if strcmp(vargs{k},'field')
+            obj.fieldType = vargs{k+1};
           end
         end
-      else
-        obj.fieldType = 'full';
-        
       end
-      try
-        if strcmp(obj.Mode,'winner')
-          users = obj.WINNER.run(stations,users);
-          
-        elseif strcmp(obj.Mode,'eHATA')
-          obj.eHATA.Channel = obj;
-          users = obj.eHATA.run(stations,users);
-          
-        elseif strcmp(obj.Mode,'B2B')
-          
+      %try
+        if strcmp(obj.Mode,'B2B')
+                 
           sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
           for iUser = 1:length(users)
             iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
             users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
             users(iUser).Rx.RxPwdBm = Stations(iServingStation).Pmax;
           end
+
+        else
+
+          users = obj.DownlinkModel.run(stations,users,obj);
+
+ 
         end
-      catch ME
-        sonohilog('Something went wrong....','WRN')
-      end
+      %catch ME
+      %  sonohilog('Something went wrong....','WRN')
+      %end
       %Apply interference on all users if 'full' is enabled
       if strcmp(obj.fieldType,'full')
-        users = obj.applyInterference(stations,users);
+        users = obj.applyInterference(stations,users,'downlink');
       end
       
       % Overwrite in input struct
@@ -202,13 +202,8 @@ classdef ChBulk_v2 < SonohiChannel
         StationC.ScheduleDL(1).UeId = User.NCellID;
         User.ENodeBID = StationC.NCellID;
         
-        % TODO: move this guy so the Channel setup is used instead
-        if strcmp(obj.Mode,'eHATA')
-          obj.eHATA = sonohieHATA(obj);
-        elseif strcmp(obj.Mode,'winner')
-          obj.WINNER = sonohiWINNER(StationC,User, obj);
-          obj.WINNER = obj.WINNER.setup();
-        end
+
+        obj = obj.setupChannelDL(StationC, User);
         
         % Reset any existing channel conditions
         %if strcmp(obj.Mode,'winner')
@@ -233,7 +228,21 @@ classdef ChBulk_v2 < SonohiChannel
     
 
     
-    function Users = applyInterference(obj,Stations,Users)
+    function Users = applyInterference(obj,Stations,Users,chtype)
+
+      switch chtype
+        case 'downlink'
+            Users = obj.applyDownlinkInteference(Stations,Users);
+        case 'uplink'
+            sonohilog('Not implemented yet.','ERR')
+        end
+      
+      
+    end
+
+
+    function Users = applyDownlinkInteference(obj, Stations, Users)
+
       % Method used to apply the interference on a specific received waveform
       sonohilog('Computing and applying interference based on station class...','NFO')
       % Validate arguments
@@ -315,8 +324,7 @@ classdef ChBulk_v2 < SonohiChannel
         Users(iUser) = user;
       end
       
-      
-      
+
     end
     
   end

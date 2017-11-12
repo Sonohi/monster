@@ -86,7 +86,8 @@ classdef sonohiWINNER
 
         end
 
-        function Users = run(obj,Stations,Users)
+        function Users = run(obj,Stations,Users,Channel)
+            obj.Channel = Channel;
             for model = 1:length(obj.WconfigLayout)
 
                 if isempty(obj.WconfigLayout{model})
