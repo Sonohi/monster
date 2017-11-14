@@ -46,7 +46,7 @@ classdef SonohiChannel
         function [stations, users]  = getScheduled(Stations,Users,schedule)
             % Find stations that have scheduled users.
             
-            schedules = {schedule};
+            schedules = schedule;
             usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
             stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
             stationsS = ~cellfun('isempty',stationsS);
@@ -64,13 +64,13 @@ classdef SonohiChannel
         
         function [stations, users] = getScheduledDL(Stations,Users)
             
-            [stations, users] = SonohiChannel.getScheduled(Stations,Users,Stations.ScheduleDL);
+            [stations, users] = SonohiChannel.getScheduled(Stations,Users,{Stations.ScheduleDL});
             
         end
         
         function [stations, users] = getScheduledUL(Stations,Users)
             
-            [stations, users] = SonohiChannel.getScheduled(Stations,Users,Stations.ScheduleUL);
+            [stations, users] = SonohiChannel.getScheduled(Stations,Users,{Stations.ScheduleUL});
             
         end
         
@@ -113,7 +113,7 @@ classdef SonohiChannel
                 WINNER = sonohiWINNER(Stations,Users, obj,chtype);
                 chModel = WINNER.setup();
             elseif strcmp(mode,'eHATA')
-                chModel = sonohieHATA(obj);
+                chModel = sonohieHATA(obj, chtype);
             elseif strcmp(mode, 'B2B')
                 chModel = sonohiB2B(obj, chtype);
             end

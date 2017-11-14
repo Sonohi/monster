@@ -22,18 +22,18 @@ classdef ChBulk_v2 < SonohiChannel
                     % Get rx of all other stations
                     StationC = Stations(iStation);
                     
-                    StationC = StationC.resetSchedule();
+                    StationC = StationC.resetScheduleDL();
                     StationC.Users(1:length(Stations(iStation).Users)) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
                     StationC.Users(1).UeId = user.NCellID;
-                    StationC.Schedule(1).UeId = user.NCellID;
+                    StationC.ScheduleDL(1).UeId = user.NCellID;
                     user.Rx.Waveform = [];
-                    if strcmp(obj.Mode,'eHATA')
+                    if strcmp(obj.DLMode,'eHATA')
                         eHATA = sonohieHATA(obj);
                         Users = eHATA.run(StationC,user);
-                    elseif strcmp(obj.Mode, 'winner')
-                        WINNER = sonohiWINNER(StationC,user, obj);
+                    elseif strcmp(obj.DLMode, 'winner')
+                        WINNER = sonohiWINNER(StationC,user, obj,'downlink');
                         WINNER = WINNER.setup();
-                        Users = WINNER.run(StationC,user);
+                        [~, Users] = WINNER.run(StationC,user);
                     end
                     RxPw(iStation) = Users.Rx.RxPwdBm;
                     rxSignorm = Users.Rx.Waveform;
@@ -95,7 +95,7 @@ classdef ChBulk_v2 < SonohiChannel
             [stations, users] = obj.getScheduledDL(Stations, Users);
             %try
                
-            [~, users] = obj.DownlinkModel.run(stations,users);
+            [~, users] = obj.DownlinkModel.run(stations,users,'channel',obj);
              
             %catch ME
             %  sonohilog('Something went wrong....','WRN')

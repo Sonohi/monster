@@ -3,20 +3,44 @@ classdef sonohieHATA
   properties
     Channel;
     Seed;
+    Chtype;
   end
 
   methods
 
-    function obj = sonohieHATA(Channel)
+    function obj = sonohieHATA(Channel, Chtype)
       obj.Channel = Channel;
       obj.Seed = randi(99999);
+      obj.Chtype = Chtype;
+    end
+
+    function [stations,users] = run(obj,Stations,Users,varargin)
+
+        if ~isempty(varargin)
+            vargs = varargin;
+            nVargs = length(vargs);
+            
+            for k = 1:nVargs
+                if strcmp(vargs{k},'channel')
+                    obj.Channel = vargs{k+1};
+                end
+            end
+        end
+
+
+       switch obj.Chtype
+            case 'downlink'
+                users = obj.downlink(Stations,Users);
+                stations = Stations;
+            case 'uplink'
+                stations = obj.uplink(Stations,Users);
+                users = Users;
+        end
 
     end
 
-    function Users = run(obj,Stations,Users, Channel)
-      % Get number of links associated with the station.
-      obj.Channel = Channel;
-      users = length(Users);
+    function [users] = downlink(obj,Stations,Users)
+      users = Users;
       numLinks = length(Users);
       Pairing = obj.Channel.getPairing(Stations);
       for i = 1:numLinks
@@ -40,9 +64,14 @@ classdef sonohieHATA
         user.Rx.RxPwdBm = rxPwdBm;
         user.Rx.Waveform = RxSig;
         % Write changes to user object in array.
-        Users(find([Users.NCellID] == Pairing(2,i))) = user; %#ok
+        users(find([Users.NCellID] == Pairing(2,i))) = user; %#ok
       end
     end
+
+    function [stations] = uplink(obj,Stations,Users)
+        % Update the Rx module of stations
+    end
+
 
     function rx = addFading(obj,tx,info)
       cfg.SamplingRate = info.SamplingRate;
