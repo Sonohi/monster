@@ -7,13 +7,15 @@ classdef sonohiWINNER
         h; % Stored impulse response
         Channel;
         AA;
+        Chtype; %Downlink or Uplink
     end
 
     methods
 
-        function obj = sonohiWINNER(Stations, Users, Channel)
+        function obj = sonohiWINNER(Stations, Users, Channel, Chtype)
             sonohilog('Initializing WINNER II channel model...','NFO0')
             obj.Channel = Channel;
+            obj.Chtype = Chtype;
             classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};
@@ -33,7 +35,12 @@ classdef sonohiWINNER
 
                 % Get number of links associated with the station.
                 % TODO: refactorize this for uplink also
+                switch Chtype
+                 case 'downlink'
                 schedule = [Stations(ismember([Stations.NCellID],stations)).ScheduleDL];
+                case 'uplink'
+                    schedule = [Stations(ismember([Stations.NCellID],stations)).ScheduleUL];
+                end
                 users = removeZeros(unique([schedule.UeId]));
                 numLinks = length(users);
 
@@ -86,45 +93,27 @@ classdef sonohiWINNER
 
         end
 
-        function Users = run(obj,Stations,Users,Channel)
-            obj.Channel = Channel;
+        function [users] = downlink(obj,Stations,Users)
+            users = Users;
             for model = 1:length(obj.WconfigLayout)
 
                 if isempty(obj.WconfigLayout{model})
                     sonohilog(sprintf('Nothing assigned to %i model',model),'NFO0')
                     continue
                 end
-
-
-
-                % Debugging code. Use of direct waveform for validating
-                % transferfunction
-                %release(wimCh)
-                %rxSig2 = wimCh(Stations(obj.WconfigLayout{model}.StationIdx(1)).TxWaveform);
-
-                % Go through all links for the given scenario
-                % 1. Compute transfer function for each link
-                % 2. Apply transferfunction and  compute loss
-                % 3. Add loss as AWGN
                 for link = 1:obj.numRx{model}
-                    % Get TX from the WINNER layout idx
-                    txIdx = obj.WconfigLayout{model}.Pairing(1,link);
-                    % Get RX from the WINNER layout idx
-                    rxIdx = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
-                    Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(txIdx)));
-                    User = Users([Users.NCellID] == rxIdx);
+
+                    StationId = obj.WconfigLayout{model}.Pairing(1,link);
+                    UserId = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
+                    Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(StationId)));
+                    User = users([users.NCellID] == UserId);
                     % Get corresponding TxSig
                     txSig = [Station.Tx.Waveform;zeros(25,1)];
                     txPw = 10*log10(bandpower(txSig));
 
-                    %figure
-                    %plot(10*log10(abs(fftshift(fft(txSig)).^2)))
-                    %hold on
-
                     rxSig = obj.addFading(txSig,obj.h{model}{link});
 
                     rxPw_ = 10*log10(bandpower(rxSig));
-
                     lossdB = txPw-rxPw_;
                     %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
                     %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
@@ -141,31 +130,89 @@ classdef sonohiWINNER
                     User.Rx.Waveform = rxSigNorm;
 
 
-                    Users([Users.NCellID] == rxIdx) = User;
+                    users([Users.NCellID] == UserId) = User;
                 end
+            end
+        end
 
+        function [stations] = uplink(obj,Stations,Users)
+            stations = Stations;
+            for model = 1:length(obj.WconfigLayout)
+
+                if isempty(obj.WconfigLayout{model})
+                    sonohilog(sprintf('Nothing assigned to %i model',model),'NFO0')
+                    continue
+                end
+                for link = 1:obj.numRx{model}
+
+                    StationId = obj.WconfigLayout{model}.Pairing(1,link);
+                    UserId = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
+                    Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(StationId)));
+                    User = users([users.NCellID] == UserId);
+                    % Get corresponding TxSig
+                    txSig = [User.Tx.Waveform;zeros(25,1)];
+                    txPw = 10*log10(bandpower(txSig));
+
+                    rxSig = obj.addFading(txSig,obj.h{model}{link});
+
+                    rxPw_ = 10*log10(bandpower(rxSig));
+                    lossdB = txPw-rxPw_;
+                    %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
+                    %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
+
+                    % Normalize signal and add loss as AWGN based on
+                    % noise floor
+                    rxSigNorm = rxSig.*10^(lossdB/20);
+                    [rxSigNorm, SNRLin, RxPwdBm] = obj.addPathlossAwgn(User, Station, rxSigNorm, lossdB);
+
+                    %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
+
+                    Station.Rx.SNR = SNRLin;
+                    Station.Rx.RxPwdBm = RxPwdBm;
+                    Station.Rx.Waveform = rxSigNorm;
+
+
+                    stations([Stations.NCellID] == StationId) = Station;
+                end
             end
 
         end
+        
 
+        function [stations,users] = run(obj,Stations,Users)
 
-       function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, Station, User, txSig, lossdB)
+        switch obj.Chtype
+            case 'downlink'
+                users = obj.downlink(Stations,Users);
+                stations = Stations;
+            case 'uplink'
+                stations = obj.uplink(Stations,Users);
+                users = Users;
+        end
+
+        end
+
+        function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, TxNode, RxNode, txSig, lossdB)
             % Compute thermalnoise based on bandwidth
-            thermalNoise = obj.Channel.ThermalNoise(Station.NDLRB);
+            if isprop(TxNode,'NDLRB') % Station is TxNode
+                thermalNoise = obj.Channel.ThermalNoise(TxNode.NDLRB);
+            elseif isprop(TxNode,'NULRB')
+                thermalNoise = obj.Channel.ThermalNoise(TxNode.NULRB);
+            end
             % Get distance of Tx - Rx
-            distance = obj.Channel.getDistance(Station.Position,User.Position)/1e3;
+            distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3;
 
             % Compute transmission power
-            txPw = 10*log10(Station.Pmax)+30; %dBm.
+            txPw = 10*log10(TxNode.Pmax)+30; %dBm.
 
             % Setup link budget
             rxPwdBm = txPw-lossdB; %dBm
             % SNR = P_rx_db - P_noise_db
-            rxNoiseFloor = 10*log10(thermalNoise)+User.Rx.NoiseFigure;
+            rxNoiseFloor = 10*log10(thermalNoise)+RxNode.Rx.NoiseFigure;
             SNR = rxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
-            str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n',...
-                Station.NCellID,User.NCellID,num2str(distance),num2str(SNR));
+            str1 = sprintf('Node(%i) to Node(%i)\n Distance: %s\n SNR:  %s\n',...
+                TxNode.NCellID,RxNode.NCellID,num2str(distance),num2str(SNR));
             sonohilog(str1,'NFO0');
 
             %% Apply SNR
@@ -174,8 +221,8 @@ classdef sonohiWINNER
             % This is based on the number of useed subcarriers.
             % Scale it by the number of used RE since the power is
             % equally distributed
-            Es = sqrt(2.0*Station.CellRefP*double(Station.Tx.WaveformInfo.Nfft) * ...
-							Station.Tx.WaveformInfo.OfdmEnergyScale);
+            Es = sqrt(2.0*TxNode.CellRefP*double(TxNode.Tx.WaveformInfo.Nfft) * ...
+							TxNode.Tx.WaveformInfo.OfdmEnergyScale);
 
             % Compute spectral noise density NO
             N0 = 1/(Es*SNRLin);
@@ -189,11 +236,9 @@ classdef sonohiWINNER
 
 
         end
-
-
+    
     end
-
-
+    
     methods(Static)
 
         function rx = addFading(tx,h)
@@ -203,10 +248,6 @@ classdef sonohiWINNER
             Y = X.*H;
             rx = ifft(Y)*length(tx);
         end
-
-
-
-
 
         function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
 

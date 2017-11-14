@@ -9,8 +9,6 @@ properties
     Region;
     DownlinkModel;
     UplinkModel;
-    WINNER;
-    eHATA;
     fieldType;
 end
 
@@ -88,24 +86,24 @@ methods
     function obj = setupChannelDL(obj,Stations,Users)
     % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
       [stations, users] = obj.getScheduledDL(Stations, Users);
-      obj.DownlinkModel = obj.setupChannel(stations,users);
+      obj.DownlinkModel = obj.setupChannel(stations,users,'downlink');
     end
 
     function obj = setupChannelUL(obj, Stations, Users)
       % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
       [stations, users] = obj.getScheduledUL(Stations, Users);
-      obj.UplinkModel = obj.setupChannel(stations,users);
+      obj.UplinkModel = obj.setupChannel(stations,users,'uplink');
     end
 
 end
 
 methods(Access=private)
 
-    function chModel = setupChannel(obj,Stations,Users)
+    function chModel = setupChannel(obj,Stations,Users,chtype)
     % Setup association to traverse
 
       if strcmp(obj.Mode,'winner')
-        WINNER = sonohiWINNER(Stations,Users, obj);
+        WINNER = sonohiWINNER(Stations,Users, obj,chtype);
         chModel = WINNER.setup();
       elseif strcmp(obj.Mode,'eHATA')
         chModel = sonohieHATA(obj);
