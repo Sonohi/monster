@@ -80,46 +80,23 @@ classdef ChBulk_v2 < SonohiChannel
     methods
         function obj = ChBulk_v2(Param)
             obj.Area = Param.area;
-            obj.Mode = Param.channel.mode;
+            obj.DLMode = Param.channel.modeDL;
+            obj.ULMode = Param.channel.modeUL;
             obj.Buildings = Param.buildings;
             obj.Draw = Param.draw;
             obj.Region = Param.channel.region;
         end
         
-        function [Users,obj] = downlink(obj,Stations,Users,varargin)
+        function [Users,obj] = downlink(obj,Stations,Users)
             validateChannel(obj);
             validateStations(Stations);
             validateUsers(Users);
             
             [stations, users] = obj.getScheduledDL(Stations, Users);
-            
-            if isempty(varargin{1})
-                obj.fieldType = 'full';
-            else
-                vargs = varargin{1};
-                nVargs = length(vargs);
-                
-                for k = 1:nVargs
-                    if strcmp(vargs{k},'field')
-                        obj.fieldType = vargs{k+1};
-                    end
-                end
-            end
             %try
-            if strcmp(obj.Mode,'B2B')
-                
-                sonohilog('Back2Back channel mode selected, no channel actually traversed', 'WRN');
-                for iUser = 1:length(users)
-                    iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
-                    users(iUser).Rx.Waveform = Stations(iServingStation).Tx.Waveform;
-                    users(iUser).Rx.RxPwdBm = Stations(iServingStation).Pmax;
-                end
-                
-            else
                
-                [~, users] = obj.DownlinkModel.run(stations,users);
+            [~, users] = obj.DownlinkModel.run(stations,users);
              
-            end
             %catch ME
             %  sonohilog('Something went wrong....','WRN')
             %end
@@ -139,16 +116,53 @@ classdef ChBulk_v2 < SonohiChannel
         
         function [Stations,Users,obj] = uplink(obj,Stations,Users,varargin)
             sonohilog('Not implemented yet.','ERR')
+
+            validateChannel(obj);
+            validateStations(Stations);
+            validateUsers(Users);
+            
+            [stations, users] = obj.getScheduledUL(Stations, Users);
+            %try
+               
+            [~, users] = obj.UplinkModel.run(stations,users);
+   
+            %catch ME
+            %  sonohilog('Something went wrong....','WRN')
+            %end
+            %Apply interference on all users if 'full' is enabled
+            if strcmp(obj.fieldType,'full')
+                users = obj.applyInterference(stations,users,'downlink');
+            end
+            
+            % Overwrite in input struct
+            for iUser = 1:length(users)
+                ueId = users(iUser).NCellID;
+                Users([Users.NCellID] == ueId) = users(iUser);
+            end
+            
             
         end
+           
         
         function [Stations,Users,obj] = traverse(obj,Stations,Users,chtype,varargin)
+            if isempty(varargin)
+                obj.fieldType = 'full';
+            else
+                vargs = varargin;
+                nVargs = length(vargs);
+                
+                for k = 1:nVargs
+                    if strcmp(vargs{k},'field')
+                        obj.fieldType = vargs{k+1};
+                    end
+                end
+            end
             
             switch chtype
                 case 'downlink'
-                    [Users,obj] = obj.downlink(Stations,Users,varargin);
+                    [Users,obj] = obj.downlink(Stations,Users);
                 case 'uplink'
-                    [Stations,obj] = obj.uplink(Stations,Users,varargin);
+                    [Stations,obj] = obj.uplink(Stations,Users);
             end
             
         end

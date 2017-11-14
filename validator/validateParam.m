@@ -43,7 +43,8 @@ function validateParam(Param)
 	validateattributes(Param.generateHeatMap, {'numeric'}, [{'>=',0}, {'<=',1}]);
 	validateattributes(Param.heatMapType, {'char'}, {'nonempty'});
 	validateattributes(Param.heatMapRes, {'numeric'}, {'>=',0});
-	validateattributes(Param.channelMode, {'char'}, {'nonempty'});
+	validateattributes(Param.channelModeDL, {'char'}, {'nonempty'});
+	validateattributes(Param.channelModeUL, {'char'}, {'nonempty'});
 	validateattributes(Param.channelRegion, {'char'}, {'nonempty'});
 	validateattributes(Param.scheduling, {'char'}, {'nonempty'});
 	validateattributes(Param.buildings, {'char'}, {'nonempty'});
