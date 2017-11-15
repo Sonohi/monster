@@ -110,6 +110,19 @@ classdef ArqTx
 			end
 		end
 
+		% Method to reset a transmitter
+		function obj = resetTransmitter(obj)
+			obj.sqn = 0;
+			obj.bitsSize = 0;
+			obj.tbSize = 0;
+			obj.tbBuffer(1024, 1) = struct(...
+				'tb', [], ...
+				'sqn', -1, ...
+				'timeStart', -1,...
+				'rtxCount', 0,...
+				'state', 0);
+		end
+
 	end
 
 	methods (Access = private)

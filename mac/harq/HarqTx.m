@@ -169,6 +169,21 @@ classdef HarqTx
 			obj.processes(iProc).timeStart = timeNow;
 		end
 
+		% Method to reset a transmitter
+		function obj = resetTransmitter(obj)
+			obj.bitsSize = 0;
+			obj.tbSize = 0;
+			obj.rrCurrentProc = -1;
+			obj.rrNextProc = -1;
+			obj.processes(8,1) = struct(...
+			'rtxCount',0,...
+			'rv', 0, ....
+			'tb', [],...
+			'state', 0, ...
+			'timeStart', -1,...
+			'procId', -1);
+		end
+
 	end
 
 	methods (Access = private)

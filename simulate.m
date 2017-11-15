@@ -69,12 +69,11 @@ for iRound = 0:(Param.schRounds-1)
 	% allocate PRBs through the scheduling function per each station
 	sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
 	
-	
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
 		sonohilog('Refreshing user association', 'NFO');
-		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, simTime);
 	end
 	
 	
@@ -138,7 +137,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	for iUser = 1:length(Users)
 		% get the eNodeB this UE is connected to
-		iServingStation = [Stations.NCellID] == Users(iUser).ENodeBID;
+		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
 		
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))

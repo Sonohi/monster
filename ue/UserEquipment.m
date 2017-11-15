@@ -33,6 +33,7 @@ classdef UserEquipment
 		Mac;
 		Rlc;
 		SchedulingSlots;
+		Hangover;
 	end
 
 	methods
@@ -77,6 +78,7 @@ classdef UserEquipment
 			obj.TransportBlockInfo = [];
 			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
 			obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
+			obj.Hangover = struct('TargetEnb', -1, 'HoStatus', 0, 'HoStart', -1, 'HoComplete', -1);
 		end
 
 		% sets user trajectory

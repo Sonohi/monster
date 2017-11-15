@@ -1,42 +1,30 @@
-function [Users, Stations] = refreshUsersAssociation(Users,Stations,Channel,Param)
+function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, timeNow)
 
 %   REFRESH USERS ASSOCIATION links UEs to a eNodeB
 %
 %   Function fingerprint
 %   Users   		->  array of UEs
 %   Stations		->  array of eNodeBs
+%		Param				->	the simulation parameters 
+% 	timeNow			->	the current simulation time
 %
-%   nodeUsers ->  Users indexes associated with node
+%   Users   		->  updated array of UEs
+%   Stations		->  updated array of eNodeBs
 
-	% reset stations
-	for (iStation = 1:length(Stations))
-		Stations(iStation) = resetUsers(Stations(iStation), Param);
-	end
-
-	% Create copy of stations that is used computing associating, e.g.
-	% no users associated but the one in the loop. No UeId should be saved
-	% to this one.
+	% Create a local copy
 	StationsC = Stations;
+	%Set the stored dummy frame as current waveform
+	StationsC.Tx.Waveform = StationsC.Tx.Frame;
+	StationsC.Tx.WaveformInfo = StationsC.Tx.FrameInfo;
+	StationsC.Tx.Grid = StationsC.Tx.FrameGrid;
+	
+	% Now loop the users to get the association based on the signal attenuation
+	for iUser = 1:length(Users)
+		% Get the ID of the eNodeB this UE has the best signal to 
+		targetEnbID = Channel.getAssociation(StationsC,Users(iUser));
 
-	% Now check what round we are in. A waveform is needed to simulate the association
-	% so to cover also the first case with no previously transmitted waveform
-
-	for i = 1:length(StationsC)
-		if (sum([StationsC(i).Tx.Waveform]) == 0)
-			[StationsC(i).Tx.Waveform, StationsC(i).Tx.WaveformInfo, StationsC(i).Tx.ReGrid] = ...
-				generateDummyFrame(StationsC(i));
-		end
-	end
-
-	d0=1; % m
-	for (iUser = 1:length(Users))
-		% get UE position
-		uePos = Users(iUser).Position;
-		minLossDb = 200;
-
-		stationCellID = Channel.getAssociation(StationsC,Users(iUser));
-
-		Users(iUser).ENodeBID = stationCellID;
+		% Call the handler for the handover that will take care of processing the change
+		[Users(iUser), StationsC] = handleHangover(Users(iUser), StationsC, targetEnbID, Param, timeNow);
 
 		% Now that the assignment is done, write also on the side of the station
 		% TODO replace with matrix operation
