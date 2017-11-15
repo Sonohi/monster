@@ -14,9 +14,12 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 	% Create a local copy
 	StationsC = Stations;
 	%Set the stored dummy frame as current waveform
-	StationsC.Tx.Waveform = StationsC.Tx.Frame;
-	StationsC.Tx.WaveformInfo = StationsC.Tx.FrameInfo;
-	StationsC.Tx.Grid = StationsC.Tx.FrameGrid;
+	for iStation = 1:length(Stations)
+		StationsC(iStation).Tx.Waveform = StationsC(iStation).Tx.Frame;
+		StationsC(iStation).Tx.WaveformInfo = StationsC(iStation).Tx.FrameInfo;
+		StationsC(iStation).Tx.ReGrid = StationsC(iStation).Tx.FrameGrid;
+	end
+	
 	
 	% Now loop the users to get the association based on the signal attenuation
 	for iUser = 1:length(Users)
@@ -25,22 +28,6 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 
 		% Call the handler for the handover that will take care of processing the change
 		[Users(iUser), StationsC] = handleHangover(Users(iUser), StationsC, targetEnbID, Param, timeNow);
-
-		% Now that the assignment is done, write also on the side of the station
-		% TODO replace with matrix operation
-		for iStation = 1:length(Stations)
-			if Stations(iStation).NCellID == Users(iUser).ENodeBID
-				for ix = 1:Param.numUsers
-					if Stations(iStation).Users(ix).UeId == -1
-						Stations(iStation).Users(ix).UeId = Users(iUser).NCellID;
-						Stations(iStation).Users(ix).CQI = Users(iUser).Rx.CQI;
-						Stations(iStation).Users(ix).RSSI = Users(iUser).Rx.RSSIdBm;
-						break;
-					end
-				end
-				break;
-			end
-		end
 	end
 
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
