@@ -50,7 +50,7 @@ function Users = ueRxBulk(Stations, Users, cec)
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
       user.Rx.PostEvm = 100;
       user.Rx.PreEvm = 100;
-      user.Rx.WCQI = 1;
+      user.Rx.CQI = 1;
       Users(iUser) = user;
       continue;
     end

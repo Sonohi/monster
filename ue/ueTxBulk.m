@@ -12,7 +12,8 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
   compoundWaveforms(1:length(Stations), 1) = struct(...
     'eNodeBId', -1,...
     'ueGroup', [],...
-    'txWaveform', []);
+    'txWaveform', [],...
+    'Pmax',[]);
     
   for iStation = 1:length(Stations)
     enb = Stations(iStation);
@@ -38,7 +39,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
       % Append waveform to compound one
       % TODO check shaping and positioning
       cwf.txWaveform = cat(1, cwf.txWaveform, ue.Tx.Waveform);
-
+      cwf.Pmax = ue.Pmax;
       % Update the UE in the main data structure that we return
       mainIUser = find([Users.NCellID] == ue.NCellID);
       Users(mainIUser) = ue;

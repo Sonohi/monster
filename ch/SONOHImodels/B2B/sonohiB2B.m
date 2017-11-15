@@ -3,6 +3,7 @@ classdef sonohiB2B
     properties
         Channel;
         Chtype; %Downlink or Uplink
+        CompoundWaveform
     end
 
     methods
@@ -20,6 +21,7 @@ classdef sonohiB2B
         
 
         function [stations,users] = run(obj,Stations,Users, varargin)
+            
 
         switch obj.Chtype
             case 'downlink'
@@ -52,11 +54,14 @@ classdef sonohiB2B
             % Update the Rx module of stations
 
             stations = Stations;
-            for iStation = 1:length(stations)
-                iServingUser = find([Users.ENodeBID] == Stations(iStation).NCellID);
-                stations(iStation).Rx.Waveform = Users(iServingUser).Tx.Waveform;
-                stations(iStation).Rx.RxPwdBm = Users(iServingUser).Pmax;
+            
+            
+            for iStation = 1:length(Stations)
+                iCfw = find([obj.CompoundWaveform.eNodeBId] == Stations(iStation).NCellID);
+                stations(iStation).Rx.Waveform = obj.CompoundWaveform(iCfw).txWaveform;
+                stations(iStation).Rx.RxPwdBm = obj.CompoundWaveform(iCfw).Pmax;
             end
+
         end
         
         function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, TxNode, RxNode, txSig, lossdB)

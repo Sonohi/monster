@@ -91,8 +91,12 @@ classdef ChBulk_v2 < SonohiChannel
             validateChannel(obj);
             validateStations(Stations);
             validateUsers(Users);
+            stations = Stations;
+            users = Users;
             
-            [stations, users] = obj.getScheduledDL(Stations, Users);
+            [stations,users] = obj.getAssociated(Stations,Users);
+
+            %[stations, users] = obj.getScheduledDL(Stations, Users);
             %try
                
             [~, users] = obj.DownlinkModel.run(stations,users,'channel',obj);
@@ -120,20 +124,8 @@ classdef ChBulk_v2 < SonohiChannel
             validateChannel(obj);
             validateStations(Stations);
             validateUsers(Users);
-            
-            [stations, users] = obj.getScheduledUL(Stations, Users);
-            %try
-               
-            [stations,~] = obj.UplinkModel.run(stations,users);
-   
-            %catch ME
-            %  sonohilog('Something went wrong....','WRN')
-            %end
-            %Apply interference on all users if 'full' is enabled
-            %if strcmp(obj.fieldType,'full')
-            %    users = obj.applyInterference(stations,users,'downlink');
-            %end
-            
+            [stations,users] = obj.getAssociated(Stations,Users);
+            [stations,~] = obj.UplinkModel.run(stations,users,varargin);
             % Overwrite in input struct
             for iStation = 1:length(stations)
                 StationID = stations(iStation).NCellID;
@@ -158,13 +150,21 @@ classdef ChBulk_v2 < SonohiChannel
                 end
             end
             
-            switch chtype
-                case 'downlink'
-                    [Users,obj] = obj.downlink(Stations,Users);
-                case 'uplink'
-                    [Stations,obj] = obj.uplink(Stations,Users);
-            end
             
+            [stations,users] = obj.getAssociated(Stations,Users);
+
+         
+            if ~isempty(stations)
+                switch chtype
+                    case 'downlink'
+                        [Users,obj] = obj.downlink(Stations,Users);
+                    case 'uplink'
+                        [Stations,obj] = obj.uplink(Stations,Users,varargin);
+                end
+            else
+                sonohilog('No users found for any of the stations. Is this supposed to happen?','WRN')
+            end
+
         end
         
         function Pairing = getPairing(obj,Stations)
@@ -184,8 +184,7 @@ classdef ChBulk_v2 < SonohiChannel
             
             nlink=1;
             for i = 1:length(Stations)
-                % TODO: refactorize for uplink also
-                schedule = [Stations(i).ScheduleDL];
+                schedule = [Stations(i).Users];
                 users = removeZeros(unique([schedule.UeId]));
                 for ii = 1:length(users)
                     Pairing(:,nlink) = [Stations(i).NCellID; users(ii)]; %#ok
@@ -212,6 +211,7 @@ classdef ChBulk_v2 < SonohiChannel
                 
                 % Associate user
                 StationC = StationC.resetScheduleDL();
+                StationC.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
                 StationC.ScheduleDL(1).UeId = User.NCellID;
                 User.ENodeBID = StationC.NCellID;
                 

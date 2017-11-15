@@ -32,16 +32,10 @@ classdef sonohiWINNER
             for model = 1:numel(Snames)
                 type = Snames{model};
                 stations = [Stations(types.(Snames{model})).NCellID];
-
-                % Get number of links associated with the station.
-                % TODO: refactorize this for uplink also
-                switch Chtype
-                 case 'downlink'
-                schedule = [Stations(ismember([Stations.NCellID],stations)).ScheduleDL];
-                case 'uplink'
-                    schedule = [Stations(ismember([Stations.NCellID],stations)).ScheduleUL];
-                end
-                users = removeZeros(unique([schedule.UeId]));
+                
+                [~,users] = obj.Channel.getAssociated(Stations(ismember([Stations.NCellID],stations)),Users);
+             
+                users = [users.NCellID];
                 numLinks = length(users);
 
                 if isempty(users)

@@ -223,15 +223,11 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------------
 	% TODO for testing, UL channel traverse is disabled and we just set the txWaveform to the eNodeB
 	%sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
-	Channel = Channel.setupChannelUL(Stations,Users);
+	Channel = Channel.setupChannelUL(Stations,Users,'compoundWaveform',compoundWaveforms);
 	[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
 	
 	% TODO remove B2B testing
-% 	for iStation = 1:length(Stations)
-% 		iCfw = find([compoundWaveforms.eNodeBId] == Stations(iStation).NCellID);
-% 		Stations(iStation).Rx.Waveform = compoundWaveforms(iCfw).txWaveform;
-% 	end
-% 	
+
 	% --------------------------
 	% ENODEB RECEPTION
 	% ---------------------------

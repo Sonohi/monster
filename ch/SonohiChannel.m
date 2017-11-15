@@ -43,6 +43,8 @@ classdef SonohiChannel
             thermalNoise = k*T*BW;
         end
         
+        %% Decrepicated code, TODO: remove when time is right.
+        
         function [stations, users]  = getScheduled(Stations,Users,schedule)
             
             % Find stations that have scheduled users.
@@ -92,6 +94,28 @@ classdef SonohiChannel
             
         end
         
+        %%
+        
+        function [stations, users] = getAssociated(Stations,Users)
+            % Returns stations and users that are associated
+            stations = [];
+            for istation = 1:length(Stations)
+                UsersAssociated = [Stations(istation).Users.UeId];
+                UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
+                if ~isempty(UsersAssociated)
+                    stations = [stations, Stations(istation)];
+                end
+            end
+          
+            
+            UsersAssociated = [Stations.Users];
+            UserIds = [UsersAssociated.UeId];
+            UserIds = unique(UserIds);
+            UserIds = UserIds(UserIds ~= -1);
+            users = Users(find([Users.NCellID] == UserIds));
+            
+        end
+        
     end
     
     methods
@@ -104,14 +128,25 @@ classdef SonohiChannel
         
         function obj = setupChannelDL(obj,Stations,Users)
             % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
-            [stations, users] = obj.getScheduledDL(Stations, Users);
+            [stations, users] = obj.getAssociated(Stations, Users);
             obj.DownlinkModel = obj.setupChannel(stations,users,'downlink');
         end
         
-        function obj = setupChannelUL(obj, Stations, Users)
+        function obj = setupChannelUL(obj, Stations, Users,varargin)
             % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
+             if ~isempty(varargin)
+                vargs = varargin;
+                nVargs = length(vargs);
+                
+                for k = 1:nVargs
+                    if strcmp(vargs{k},'compoundWaveform')
+                        compoundWaveform = vargs{k+1};
+                    end
+                end
+            end
             [stations, users] = obj.getScheduledUL(Stations, Users);
             obj.UplinkModel = obj.setupChannel(stations,users,'uplink');
+            obj.UplinkModel.CompoundWaveform = compoundWaveform;
         end
         
     end
