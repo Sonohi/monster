@@ -19,7 +19,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
     cwf = compoundWaveforms(iStation);
 
     cwf.eNodeBId = enb.NCellID;
-    cwf(iStation).ueGroup = find([Users.ENodeBID] == enb.NCellID);
+    cwf.ueGroup = find([Users.ENodeBID] == enb.NCellID);
 
     for iUser = 1:length(cwf.ueGroup)
       ue = Users((cwf.ueGroup(iUser)));

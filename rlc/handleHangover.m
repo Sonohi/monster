@@ -33,19 +33,19 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Param, tim
 			iUser = find([Stations(iServingStation).Users.UeId] == User.NCellID);
 			ueContext = Stations(iServingStation).Users(iUser);
 			% Clean the serving eNodeB
-			Stations(iServingStation).Users.UeId = -1;
-			Stations(iServingStation).Users.CQI = -1;
-			Stations(iServingStation).Users.RSSI = -1;
+			Stations(iServingStation).Users(iUser).UeId = -1;
+			Stations(iServingStation).Users(iUser).CQI = -1;
+			Stations(iServingStation).Users(iUser).RSSI = -1;
 
 			% Find an empty slot and set the context and the new eNodeBID
-			iFree = find([Stations(iServingStation).Users.UeId == -1]);
+			iFree = find([Stations(iServingStation).Users.UeId] == -1);
 			iFree = iFree(1);
 			Stations(iTargetStation).Users(iFree) = ueContext;
 			User.ENodeBID = targetEnbID;
 
 			% Now move the HARQ and ARQ processes (if any)
 			iServingRlc = find([Stations(iServingStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
-			if iUserRlcServing
+			if iServingRlc
 				% Clean the transmitter in the serving
 				arqTxObject = Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc);
 				% Edit the TtxId field to the target eNodeB
@@ -59,7 +59,7 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Param, tim
 			end
 
 			% Do similarly for MAC
-			iServingMac = find([Station(iServingStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
+			iServingMac = find([Stations(iServingStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
 			if iServingMac
 				% Clean the transmitter in the serving
 				harqTxObject = Stations(iServingStation).Mac.HarqTxProcesses(iServingMac);
