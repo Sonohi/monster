@@ -225,8 +225,6 @@ for iRound = 0:(Param.schRounds-1)
 	%sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
 	Channel = Channel.setupChannelUL(Stations,Users,'compoundWaveform',compoundWaveforms);
 	[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
-	
-	% TODO remove B2B testing
 
 	% --------------------------
 	% ENODEB RECEPTION
@@ -237,8 +235,8 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------
 	% ENODEB DATA DECODING
 	% ----------------
-	sonohilog('ENODEB data decoding block', 'NFO');
-	[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
+	%sonohilog('ENODEB data decoding block', 'NFO');
+	%[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
 
 	% --------------------------
 	% ENODEB SPACE METRICS RECORDING

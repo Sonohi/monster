@@ -112,7 +112,7 @@ classdef SonohiChannel
             UserIds = [UsersAssociated.UeId];
             UserIds = unique(UserIds);
             UserIds = UserIds(UserIds ~= -1);
-            users = Users(find([Users.NCellID] == UserIds));
+            users = Users(ismember([Users.NCellID],UserIds));
             
         end
         
@@ -144,7 +144,7 @@ classdef SonohiChannel
                     end
                 end
             end
-            [stations, users] = obj.getScheduledUL(Stations, Users);
+            [stations, users] = obj.getAssociated(Stations, Users);
             obj.UplinkModel = obj.setupChannel(stations,users,'uplink');
             obj.UplinkModel.CompoundWaveform = compoundWaveform;
         end

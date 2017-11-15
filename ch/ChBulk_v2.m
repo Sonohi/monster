@@ -180,12 +180,11 @@ classdef ChBulk_v2 < SonohiChannel
             
             % Get number of links associated with the station.
             
-            
-            
             nlink=1;
             for i = 1:length(Stations)
                 schedule = [Stations(i).Users];
                 users = removeZeros(unique([schedule.UeId]));
+                users = users(users ~= -1);
                 for ii = 1:length(users)
                     Pairing(:,nlink) = [Stations(i).NCellID; users(ii)]; %#ok
                     nlink = nlink+1;
