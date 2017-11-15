@@ -53,7 +53,7 @@ classdef sonohiB2B
 
             stations = Stations;
             for iStation = 1:length(stations)
-                iServingUser = find([Users.NCellID] == Stations(iStation).ENodeBID);
+                iServingUser = find([Users.ENodeBID] == Stations(iStation).NCellID);
                 stations(iStation).Rx.Waveform = Users(iServingUser).Tx.Waveform;
                 stations(iStation).Rx.RxPwdBm = Users(iServingUser).Pmax;
             end

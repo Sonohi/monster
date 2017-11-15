@@ -115,7 +115,7 @@ classdef ChBulk_v2 < SonohiChannel
         end
         
         function [Stations,Users,obj] = uplink(obj,Stations,Users,varargin)
-            sonohilog('Not implemented yet.','ERR')
+%            sonohilog('Not implemented yet.','ERR')
 
             validateChannel(obj);
             validateStations(Stations);
@@ -124,20 +124,20 @@ classdef ChBulk_v2 < SonohiChannel
             [stations, users] = obj.getScheduledUL(Stations, Users);
             %try
                
-            [~, users] = obj.UplinkModel.run(stations,users);
+            [stations,~] = obj.UplinkModel.run(stations,users);
    
             %catch ME
             %  sonohilog('Something went wrong....','WRN')
             %end
             %Apply interference on all users if 'full' is enabled
-            if strcmp(obj.fieldType,'full')
-                users = obj.applyInterference(stations,users,'downlink');
-            end
+            %if strcmp(obj.fieldType,'full')
+            %    users = obj.applyInterference(stations,users,'downlink');
+            %end
             
             % Overwrite in input struct
-            for iUser = 1:length(users)
-                ueId = users(iUser).NCellID;
-                Users([Users.NCellID] == ueId) = users(iUser);
+            for iStation = 1:length(stations)
+                StationID = stations(iStation).NCellID;
+                Stations([Stations.NCellID] == StationID) = stations(iStation);
             end
             
             

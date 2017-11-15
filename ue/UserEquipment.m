@@ -34,6 +34,7 @@ classdef UserEquipment
 		Rlc;
 		SchedulingSlots;
 		Hangover;
+		Pmax;
 	end
 
 	methods
@@ -79,6 +80,7 @@ classdef UserEquipment
 			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
 			obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
+			obj.Pmax = 10; %10dBm
 		end
 
 		% sets user trajectory

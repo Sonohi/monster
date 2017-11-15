@@ -3,6 +3,7 @@ classdef enbReceiverModule
 		NoiseFigure;
 		Waveform;
 		UeData;
+		RxPwdBm;
 	end
 
 	methods
@@ -13,6 +14,10 @@ classdef enbReceiverModule
 
 		function obj = set.Waveform(obj,Sig)
 			obj.Waveform = Sig;
+		end
+
+		function obj = set.RxPwdBm(obj,RxPwdBm)
+			obj.RxPwdBm = RxPwdBm;
 		end
 
 		% Used to split the received waveform into the different portions of the different 
