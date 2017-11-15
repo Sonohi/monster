@@ -47,7 +47,7 @@ function Users = ueRxBulk(Stations, Users, cec)
 			% Update parent structure
 			Users(iUser) = user;
     else
-      sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
+      sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
       user.Rx.PostEvm = 100;
       user.Rx.PreEvm = 100;
       user.Rx.WCQI = 1;

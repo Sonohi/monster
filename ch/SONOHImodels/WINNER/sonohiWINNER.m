@@ -179,7 +179,7 @@ classdef sonohiWINNER
         end
         
 
-        function [stations,users] = run(obj,Stations,Users)
+        function [stations,users] = run(obj,Stations,Users, varargin)
 
         switch obj.Chtype
             case 'downlink'

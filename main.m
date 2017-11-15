@@ -38,8 +38,10 @@ Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-Param.channel.mode = Param.channelMode;
-Param = rmfield(Param, 'channelMode');
+Param.channel.modeDL = Param.channelModeDL;
+Param.channel.modeUL = Param.channelModeUL;
+Param = rmfield(Param, 'channelModeDL');
+Param = rmfield(Param, 'channelModeUL');
 Param.channel.region = Param.channelRegion;
 Param = rmfield(Param, 'channelRegion');
 Param.harq.rtxMax = Param.harqRtx;

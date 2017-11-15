@@ -32,7 +32,7 @@ for iStation = 1:length(StationsNew)
 end
 
 % Traverse channel
-sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
+sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.modeDL),'NFO')
 [StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users,'downlink');
 
 % Compute offset
