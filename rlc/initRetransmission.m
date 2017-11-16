@@ -11,7 +11,7 @@ function Station = initRetransmission(Station, rtxInfo)
 	switch rtxInfo.proto
 	case 1
 		Station.Mac.HarqTxProcesses(rtxInfo.iUser) = ...
-			setRetransmissionState(Station.Mac.HarqTxProcesses(rtxInfo(iUser), rtxInfo.identifier));
+			setRetransmissionState(Station.Mac.HarqTxProcesses(rtxInfo.iUser), rtxInfo.identifier);
 	case 2
 		Station.Rlc.ArqTxBuffers(rtxInfo.iUser) = ...
 			setRetransmissionState(Station.Rlc.ArqTxBuffers(rtxInfo.iUser), rtxInfo.identifier);

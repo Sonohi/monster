@@ -30,12 +30,13 @@ classdef HarqRx
 			obj.processes(iProc).copiesReceived = obj.processes(iProc).copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly so no need to proceed further
-				obj.processes(iProc).state = 0;
+				% Reset process
+				obj = obj.resetProcess(iProc);
 			elseif obj.processes(iProc).copiesNeeded > 1
 				% in this case it means we already started earlier for retransmissions 
 				% for this process and we need to check whether the number of copies is sufficient
 				if obj.processes(iProc).copiesNeeded == obj.processes(iProc).copiesReceived
-					obj.processes(iProc).state = 0;
+					obj = obj.resetProcess(iProc);
 				else
 					obj.processes(iProc).state = 1;
 				end
@@ -64,8 +65,15 @@ classdef HarqRx
 			% function
 			for iProc = 1:Param.harq.proc
 				obj.processes(iProc).procId = iProc - 1;
-				obj.processes(iProc).timeStart = timeNow;
 			end
 		end
+
+		%Utility to reset a process
+		function obj = resetProcess(obj, iProc)
+			obj.processes(iProc).state = 0;
+			obj.processes(iProc).copiesReceived = 0;
+			obj.processes(iProc).timeStart = -1;
+		end
+	
 	end
 end

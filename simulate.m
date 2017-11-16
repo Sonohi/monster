@@ -235,8 +235,8 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------
 	% ENODEB DATA DECODING
 	% ----------------
-	%sonohilog('ENODEB data decoding block', 'NFO');
-	%[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
+	sonohilog('ENODEB data decoding block', 'NFO');
+	[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
 
 	% --------------------------
 	% ENODEB SPACE METRICS RECORDING

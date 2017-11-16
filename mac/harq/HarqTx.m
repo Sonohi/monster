@@ -70,7 +70,7 @@ classdef HarqTx
 					info.flag = true;
 					% In case we need to take a TB from a HARQ process, we apply a RR scheme among the 
 					% 8 processes to choose which one to schedule for this turn.
-					rtxProcesses = obj.processes(rtxBuffersIndices);
+					rtxProcesses = obj.processes(rtxProcessesIndices);
 					% Starting case where the current is the first one and the next is set if it exists
 					if obj.rrCurrentProc == -1 
 						obj.rrCurrentProc = rtxProcesses(1).procId;
@@ -80,12 +80,11 @@ classdef HarqTx
 							obj.rrNextProc = obj.rrCurrentProc;
 						end
 					else
-						nextProcIndex = find([rtxProcesses.procId] == obj.rrNextProc);
+						nextProcIndex = find([rtxProcesses.procId] == obj.rrNextProc, 1);
 						if ~isempty(nextProcIndex)
 							% We found the process that should be scheduled for this turn
 							% update the attributes in the overall object
 							obj.rrCurrentProc = obj.rrNextProc;
-							info.procId = obj.rrCurrentProc;
 							% find the index of the process that will be the next one 
 							procIndexInRtxList = find([rtxProcesses.procId] == obj.rrCurrentProc);
 							if procIndexInRtxList ~= length(rtxProcesses)
@@ -107,6 +106,8 @@ classdef HarqTx
 							end
 						end
 					end
+					% In both cases, set the info struct 
+					info.procIndex = find([obj.processes.procId] == obj.rrCurrentProc);
 				end
 			else
 				info.flag = false;
@@ -114,8 +115,7 @@ classdef HarqTx
 		end
 
 		% Set a process in retransmission state
-		function obj = setRetransmissionState(obj, procId)
-			iProc = find([obj.processes.procId] == procId);
+		function obj = setRetransmissionState(obj, iProc)
 			obj.processes(iProc).state = 3;
 			obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
 		end
@@ -150,8 +150,8 @@ classdef HarqTx
 				else
 					% log rtx
 					obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
-					obj.processes(iProc).rv = Param.harq.rv(obj.rtxCount);
-					obj.processes(iProc).state = 3;
+					obj.processes(iProc).rv = Param.harq.rv(obj.processes(iProc).rtxCount);
+					obj.processes(iProc).state = 2;
 					obj.processes(iProc).timeStart = timeNow;
 				end
 			end
@@ -192,7 +192,6 @@ classdef HarqTx
 			% function
 			for iProc = 1:Param.harq.proc
 				obj.processes(iProc).procId = iProc - 1;
-				obj.processes(iProc).timeStart = timeNow;
 			end
 		end
 

@@ -10,20 +10,20 @@ function rtxInfo = checkRetransmissionQueues(Station, UeId)
 
 	% RLC queue check
 	iUserRlc = find([Station.Rlc.ArqTxBuffers.rxId] == UeId);
-	arqrtxInfo = Station.Rlc.ArqTxBuffers(iUserRlc).getRetransmissionState();
+	arqRtxInfo = Station.Rlc.ArqTxBuffers(iUserRlc).getRetransmissionState();
 
 	% MAC queues check
 	iUserMac = find([Station.Mac.HarqTxProcesses.rxId] == UeId);
-	harqrtxInfo = Station.Mac.HarqTxProcesses(iUserMac).getRetransmissionState();
+	harqRtxInfo = Station.Mac.HarqTxProcesses(iUserMac).getRetransmissionState();
 
 	% HARQ retransmissions have the priority 
-	if harqrtxInfo.flag
+	if harqRtxInfo.flag
 		rtxInfo.proto = 1;
-		rtxInfo.identifier = procId;
+		rtxInfo.identifier = harqRtxInfo.procIndex;
 		rtxInfo.iUser = iUserMac;
-	elseif arqrtxInfo.flag
+	elseif arqRtxInfo.flag
 		rtxInfo.proto = 2;
-		rtxInfo.identifier = arqrtxInfo.bufferIndex;
+		rtxInfo.identifier = arqRtxInfo.bufferIndex;
 		rtxInfo.iUser = iUserRlc;
 	else
 		rtxInfo.proto = 0;

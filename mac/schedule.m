@@ -27,11 +27,11 @@ switch Param.scheduling
 		iUser = Station.RrNext.Index;
 		while (iUser <= sz && maxRounds > 0)
 			% First off check if we are in an unused position or out
-			iUSer = checkIndexPosition(Param, Station, iUser);
+			iUser = checkIndexPosition(Param, Station, iUser);
 			
 			% find user in main list
-			for (ixUser = 1:length(Users))
-				if (Users(ixUser).NCellID == Station.Users(iUser).UeId)
+			for ixUser = 1:length(Users)
+				if Users(ixUser).NCellID == Station.Users(iUser).UeId
 					iCurrUe = ixUser;
 					break;
 				end
