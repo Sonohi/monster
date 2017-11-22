@@ -32,7 +32,7 @@ classdef ueTransmitterModule
       obj.Waveform = ltePRACH(ueObj, obj.PRACH);
     end
 
-    function [obj, schPrbs] = mapGridAndModulate(obj, ueObj)
+    function obj = mapGridAndModulate(obj, ueObj)
       % Check if upllink needs to consist of PRACH
       % TODO: changes to sequence and preambleidx given unique user ids
 %       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
@@ -40,12 +40,8 @@ classdef ueTransmitterModule
 %          obj = obj.setPRACH(ueObj, ueObj.NSubframe);
 %         
 %       else
-
-        % Set number of PRBs based on scheduling allocation
-        schPrbs = length(ueObj.SchedulingSlots);
-        ueObj.NULRB = schPrbs;
          
-        % Decide on format of PUCCH (1, 2 or 3)
+        % PUCCH configuration
         % Format 1 is Scheduling request with/without bits for HARQ
         % Format 2 is CQI with/without bits for HARQ
         % Format 3 Bits for HARQ
@@ -74,7 +70,7 @@ classdef ueTransmitterModule
             obj.PUCCH.Indices = ltePUCCH2Indices(ueObj,chs);            
           case 3
             obj.PUCCH.Bits = pucch2Bits;
-            obj.PUCCH.Symbols = ltePUCCH3(ueObj,chs,pucch2Bits)
+            obj.PUCCH.Symbols = ltePUCCH3(ueObj,chs,pucch2Bits);
             obj.PUCCH.Indices = ltePUCCH3Indices(ueObj,chs);
 				end
         

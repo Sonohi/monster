@@ -88,7 +88,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SCHEDULE START
 	% ---------------------
 	for iStation = 1:length(Stations)
-		% First off, set the number of the current subframe withing the frame
+		% First off, set the number of the current subframe within the frame
 		% this is the scheduling round modulo 10 (the frame is 10ms)
 		Stations(iStation).NSubframe = mod(iRound,10);
 		
@@ -103,12 +103,12 @@ for iRound = 0:(Param.schRounds-1)
 		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 		
 		% schedule only if at least 1 user is associated
-		if Stations(iStation).Users(1).UeId ~= -1
+		if ~isempty(find([Stations(iStation).Users.UeId] ~= -1))
 			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 		
 		% Check utilisation
-		sch = [Stations(iStation).ScheduleDL.UeId];
+		sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
 		utilPercent = 100*find(sch, 1, 'last' )/length(sch);
 		
 		% check utilPercent and change to 0 if null
@@ -221,21 +221,20 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
-	% TODO for testing, UL channel traverse is disabled and we just set the txWaveform to the eNodeB
-	%sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.mode), 'NFO');
+	sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.modeUL), 'NFO');
 	Channel = Channel.setupChannelUL(Stations,Users,'compoundWaveform',compoundWaveforms);
 	[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
 
 	% --------------------------
 	% ENODEB RECEPTION
 	% ---------------------------
-	sonohilog('Uplink data decoding', 'NFO');
+	sonohilog('eNodeB reception block', 'NFO');
 	Stations = enbRxBulk(Stations, Users, simTime, ChannelEstimator.Uplink);
 
 	% ----------------
 	% ENODEB DATA DECODING
 	% ----------------
-	sonohilog('ENODEB data decoding block', 'NFO');
+	sonohilog('eNodeB data decoding block', 'NFO');
 	[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
 
 	% --------------------------

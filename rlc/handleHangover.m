@@ -35,14 +35,20 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Param, tim
 			% Clean the serving eNodeB
 			Stations(iServingStation).Users(iUser).UeId = -1;
 			Stations(iServingStation).Users(iUser).CQI = -1;
-			Stations(iServingStation).Users(iUser).RSSI = -1;
+			Stations(iServingStation).Users(iUser).RSSI = [];
 
 			% Find an empty slot and set the context and the new eNodeBID
-			iFree = find([Stations(iServingStation).Users.UeId] == -1);
+			iFree = find([Stations(iTargetStation).Users.UeId] == -1);
 			iFree = iFree(1);
 			Stations(iTargetStation).Users(iFree) = ueContext;
 			User.ENodeBID = targetEnbID;
 
+			% Clean hangover struct
+			User.Hangover.HoState = 0;
+			User.Hangover.TargetEnb = -1;
+			User.Hangover.HoStart = -1;
+			User.Hangover.HoComplete = -1;
+			
 			% Now move the HARQ and ARQ processes (if any)
 			iServingRlc = find([Stations(iServingStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
 			if iServingRlc

@@ -14,7 +14,8 @@ function [Station, Users] = schedule(Station, Users, Param)
 
 % reset the allocation
 Station = resetScheduleDL(Station);
-sz = length(Station.Users);
+% Set a flag for the overall number of valid UE attached
+sz = length(find([Station.Users.UeId] ~= -1));
 
 % calculate number of available RBs available in the subframe for the PDSCH
 res = length(find(abs(Station.Tx.ReGrid) == 0));
@@ -79,7 +80,7 @@ switch Param.scheduling
 					end
 					% write to schedule struct
 					for iPrb = 1:Station.NDLRB
-						if Station.ScheduleDL(iPrb).UeId == 0
+						if Station.ScheduleDL(iPrb).UeId == -1
 							mcs = cqi2mcs(Users(iCurrUe).Rx.CQI);
 							for iSch = 0:prbsSch-1
 								Station.ScheduleDL(iPrb + iSch) = struct(...
@@ -120,9 +121,13 @@ switch Param.scheduling
 		end
 	end
 
-	function iUser = checkIndexPosition(Param, Station, iUser)
+	function validIndex = checkIndexPosition(Param, Station, iUser)
 		if iUser > Param.numUsers || Station.Users(iUser).UeId == -1
-			iUser = 1;
+			% In this case we need to reset to the first active and valid UE
+			validUeIndexes = find([Station.Users.UeId] ~= -1);
+			validIndex = validUeIndexes(1);
+		else
+			validIndex = iUser;
 		end
 	end
 

@@ -10,7 +10,7 @@ function [sch] = checkUserSchedule(User, Station)
 
 
 	sch = false;
-	for (iPRB = 1:length(Station.ScheduleDL))
+	for iPRB = 1:length(Station.ScheduleDL)
 		if (Station.ScheduleDL(iPRB).UeId == User.NCellID && User.Queue.Size > 0)
 			sch = true;
 			break;

@@ -11,7 +11,7 @@ function enbSyms = extractStationSyms(Station, ix, syms, Param)
 % 	enbSyms							->	collated station symbols
 
 	% extract the unique UE IDs from the schedule
-	uniqueIds = removeZeros(unique([Station.ScheduleDL.UeId]));
+	uniqueIds = extractUniqueIds([Station.ScheduleDL.UeId]);
 
 	temp = [];
 	% loop through the overall matrix of symbols and concatenate

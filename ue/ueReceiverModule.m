@@ -109,7 +109,7 @@ classdef ueReceiverModule
 			offset = 1;
 			if obj.SchIndexes(1) ~= 1
 				% extract the unique UE IDs from the schedule
-				uniqueIds = removeZeros(unique([enb.ScheduleDL.UeId]));
+				uniqueIds = extractUniqueIds([enb.ScheduleDL.UeId]);
 				for iUser = 1:length(uniqueIds) 
 					if uniqueIds(iUser) ~= ue.NCellID
 						% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE

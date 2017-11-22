@@ -32,10 +32,8 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
       ue.NFrame = NFrame;
       
       % Create local resource grid and modulate
-      [ue.Tx, schPrbs] = ue.Tx.mapGridAndModulate(ue);
+      ue.Tx = ue.Tx.mapGridAndModulate(ue);
 
-      % Set current number of allocated UL PRBs
-      ue.NULRB = schPrbs;
       % Append waveform to compound one
       % TODO check shaping and positioning
       cwf.txWaveform = cat(1, cwf.txWaveform, ue.Tx.Waveform);

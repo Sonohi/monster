@@ -81,7 +81,7 @@ classdef EvolvedNodeB
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 
-		% Posiiton base station
+		% Position eNodeB 
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
 		end
@@ -93,7 +93,7 @@ classdef EvolvedNodeB
 
 		% reset schedule
 		function obj = resetScheduleDL(obj)
-			temp(1:obj.NDLRB,1) = struct('UeId', 0, 'Mcs', 0, 'ModOrd', 0);
+			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
 			obj.ScheduleDL = temp;
 		end
 

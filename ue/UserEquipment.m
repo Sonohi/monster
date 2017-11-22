@@ -201,6 +201,7 @@ classdef UserEquipment
 		% FInd indexes in the serving eNodeB for the UL scheduling
 		function obj = setSchedulingSlots(obj, Station)
       obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
+			obj.NULRB = length(obj.SchedulingSlots);
     end
 
 		%Reset properties that change every round
