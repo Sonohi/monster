@@ -17,7 +17,7 @@ function [Stations, Users] = ueDataDecoding(Stations, Users, Param, timeNow)
 		if ~isempty(Users(iUser).Rx.TransportBlock)
 			[harqPid, iProc] = Users(iUser).Mac.HarqRxProcesses.decodeHarqPid(...
 				Users(iUser).Rx.TransportBlock);
-			harqPidBits = de2bi(harqPid)';
+			harqPidBits = de2bi(harqPid, 3, 'left-msb')';
 			if length(harqPidBits) ~= 3
 				harqPidBits = cat(1, zeros(3-length(harqPidBits), 1), harqPidBits);
 			end

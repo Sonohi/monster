@@ -15,7 +15,7 @@ function [Station, Users] = schedule(Station, Users, Param)
 % reset the allocation
 Station = resetScheduleDL(Station);
 % Set a flag for the overall number of valid UE attached
-sz = length(find([Station.Users.UeId] ~= -1));
+sz = length(extractUniqueIds([Station.Users.UeId]));
 
 % calculate number of available RBs available in the subframe for the PDSCH
 res = length(find(abs(Station.Tx.ReGrid) == 0));

@@ -23,12 +23,9 @@ function [Station, sqn] = getSqn(Station, UeId, varargin)
 	iUser = find([Station.Rlc.ArqTxBuffers.rxId] == UeId);
 	[Station.Rlc.ArqTxBuffers(iUser), sqnTemp] = getNextSqn(Station.Rlc.ArqTxBuffers(iUser));
 
-	% Finally check the output format
+	% Finally check the output format and if binary pad to 10 bits in total
 	if outFmt ~= 'd'
-		sqn = de2bi(sqnTemp)';
-		if length(sqn) ~= 10
-			sqn = cat(1, zeros(10-length(sqn), 1), sqn);
-		end
+		sqn = de2bi(sqnTemp, 10, 'left-msb')';
 	else
 		sqn = sqnTemp;
 	end

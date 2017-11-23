@@ -26,7 +26,7 @@ function [Station, harqPid, newTb] = getHarqPid(Station, User, sqn, varargin)
 
 	% In case the SQN has been passed as binary, convert it to decimal
 	if inFmt == 'b'
-		sqn = bi2de(sqn');
+		sqn = bi2de(sqn', 'left-msb');
 	end
 
 	% Find index
@@ -34,12 +34,9 @@ function [Station, harqPid, newTb] = getHarqPid(Station, User, sqn, varargin)
 	% Find pid
 	[Station.Mac.HarqTxProcesses(iUser), harqPidTemp, newTb] = findProcess(Station.Mac.HarqTxProcesses(iUser), sqn);	
 
-	% Finally check the output format
+	% Finally check the output format and pad to 3 bits with zeros
 	if outFmt ~= 'd'
-		harqPid = de2bi(harqPidTemp)';
-		if length(harqPid) ~= 3
-			harqPid = cat(1, zeros(3-length(harqPid), 1), harqPid);
-		end
+		harqPid = de2bi(harqPidTemp, 3, 'left-msb')';
 	else
 		harqPid = harqPidTemp;
 	end

@@ -50,10 +50,7 @@ classdef ueTransmitterModule
         harqAck = ueObj.Mac.HarqReport.ack;
         harqPid = ueObj.Mac.HarqReport.pid;
         harqBits = cat(1, harqPid, harqAck);
-        cqiBits = de2bi(ueObj.Rx.CQI)';
-        if length(cqiBits) ~= 4
-          cqiBits = cat(1, zeros(4-length(cqiBits), 1), cqiBits);
-        end
+        cqiBits = de2bi(ueObj.Rx.CQI, 4, 'left-msb')';
 				pucch2Bits = cat(1, cqiBits, harqBits);
 				if ~isempty(pucch2Bits ~= 20)
 					pucch2Bits = cat(1, zeros(20-length(pucch2Bits), 1), pucch2Bits);

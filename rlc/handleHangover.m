@@ -59,7 +59,7 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Param, tim
 				Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc) = ...
 					Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc).resetTransmitter();
 
-				% find the user slot in the target and set the object
+				% find the user slot in the target, update the SQN and set the object
 				iTargetRlc = find([Stations(iTargetStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
 				Stations(iTargetStation).Rlc.ArqTxBuffers(iTargetRlc) = arqTxObject;
 			end
