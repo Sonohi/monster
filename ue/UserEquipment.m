@@ -198,12 +198,17 @@ classdef UserEquipment
 			objstruct = struct(obj);
 		end
 
-		% FInd indexes in the serving eNodeB for the UL scheduling
+		% Find indexes in the serving eNodeB for the UL scheduling
 		function obj = setSchedulingSlots(obj, Station)
       obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
 			obj.NULRB = length(obj.SchedulingSlots);
     end
 
+		% Reset the HARQ report
+		function obj = resetHarqReport(obj)
+			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
+		end
+		
 		%Reset properties that change every round
 		function obj = resetUser(obj)
 			obj.Scheduled = false;

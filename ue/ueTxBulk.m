@@ -32,8 +32,11 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
       ue.NFrame = NFrame;
       
       % Create local resource grid and modulate
-      ue.Tx = ue.Tx.mapGridAndModulate(ue);
+      [ue.Tx, harqReportReset] = ue.Tx.mapGridAndModulate(ue);
 
+      if harqReportReset
+        ue = ue.resetHarqReport();
+      end
       % Append waveform to compound one
       % TODO check shaping and positioning
       cwf.txWaveform = cat(1, cwf.txWaveform, ue.Tx.Waveform);

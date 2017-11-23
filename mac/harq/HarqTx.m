@@ -122,9 +122,15 @@ classdef HarqTx
 
 		% Decodes a HARQ PID from the PUCCH
 		function [pid, ack] = decodeHarqFeedback(obj, pucch)
-			harqBits = pucch(17:19, 1);
-			ack = pucch(20);
-			pid = bi2de(harqBits', 'left-msb');
+			% First off, check if there was a HARQ report
+			if pucch(1,1)
+				harqBits = pucch(17:19, 1);
+				ack = pucch(20);
+				pid = bi2de(harqBits', 'left-msb');
+			else
+				pid = [];
+				ack = -1;
+			end
 		end
 
 		% Handle the reception of a ACK/NACk
