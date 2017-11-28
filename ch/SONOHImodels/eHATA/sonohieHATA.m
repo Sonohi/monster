@@ -50,7 +50,7 @@ classdef sonohieHATA
 
         if strcmp(obj.Channel.fieldType,'full')
           RxSig = obj.addFading([...
-            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo);
+            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo, user.Seed);
 
           [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,RxSig);
@@ -73,9 +73,9 @@ classdef sonohieHATA
     end
 
 
-    function rx = addFading(obj,tx,info)
+    function rx = addFading(obj,tx,info,userseed)
       cfg.SamplingRate = info.SamplingRate;
-      cfg.Seed = obj.Seed;                  % Random channel seed
+      cfg.Seed = userseed;           % Random channel seed
       cfg.NRxAnts = 1;               % 1 receive antenna
       cfg.DelayProfile = 'EPA';      % EVA delay spread
       cfg.DopplerFreq = 5;         % 120Hz Doppler frequency

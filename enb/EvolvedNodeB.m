@@ -35,6 +35,7 @@ classdef EvolvedNodeB
 		Rx;
 		Mac;
 		Rlc;
+        Seed;
 	end
 
 	methods
@@ -56,6 +57,7 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
+            obj.Seed = cellId*Param.BaseSeed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -74,9 +76,11 @@ classdef EvolvedNodeB
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
-			obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-			obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-			obj.Tx = enbTransmitterModule(obj, Param);
+            if Param.rtxOn
+                obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+                obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+            end
+            obj.Tx = enbTransmitterModule(obj, Param);
 			obj.Rx = enbReceiverModule(Param);
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end

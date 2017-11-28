@@ -35,12 +35,14 @@ classdef UserEquipment
 		SchedulingSlots;
 		Hangover;
 		Pmax;
+        Seed;
 	end
 
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
-			obj.NCellID = userId;
+            obj.NCellID = userId;
+            obj.Seed = userId*Param.BaseSeed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
@@ -49,7 +51,7 @@ classdef UserEquipment
 			obj.NSubframe = 0;
 			obj.NFrame = 0;
 			obj.NTxAnts = 1;
-			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
+			obj = setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
 			obj.Scheduled = false;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
@@ -59,8 +61,13 @@ classdef UserEquipment
 			switch Param.mobilityScenario
 				case 1
 					obj.Velocity = 1; % in m/s
+                    obj = setTrajectory(obj, Param);
 				case 2
 					obj.Velocity = 10; % in m/s
+                    obj = setTrajectory(obj, Param);
+				case 3
+					obj.Velocity = 0; % in m/s
+                    obj.Trajectory = 0;
 				otherwise
 					sonohilog('Unknown mobility scenario selected','ERR');
 					return;
@@ -77,9 +84,11 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
-			obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
-			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
+            if Param.rtxOn
+                obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
+                obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
+            end
+            obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
 		end
 
