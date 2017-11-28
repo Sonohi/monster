@@ -58,6 +58,7 @@ Param = rmfield(Param, 'arqBufferFlush');
 Param.arq.rtxMax = Param.arqRtx;
 Param = rmfield(Param, 'arqRtx');
 Param.bsNoiseFigure = 3;
+Param.BaseSeed = 42;
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 
 sonohi(Param.reset);

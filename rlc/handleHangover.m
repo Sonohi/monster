@@ -48,38 +48,38 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Param, tim
 			User.Hangover.TargetEnb = -1;
 			User.Hangover.HoStart = -1;
 			User.Hangover.HoComplete = -1;
-			
-			% Now move the HARQ and ARQ processes (if any)
-			iServingRlc = find([Stations(iServingStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
-			if iServingRlc
-				% Clean the transmitter in the serving
-				arqTxObject = Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc);
-				% Edit the TtxId field to the target eNodeB
-				arqTxObject.txId = targetEnbID;
-				Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc) = ...
-					Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc).resetTransmitter();
+			if Param.rtxOn
+                % Now move the HARQ and ARQ processes (if any)
+                iServingRlc = find([Stations(iServingStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
+                if iServingRlc
+                    % Clean the transmitter in the serving
+                    arqTxObject = Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc);
+                    % Edit the TtxId field to the target eNodeB
+                    arqTxObject.txId = targetEnbID;
+                    Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc) = ...
+                        Stations(iServingStation).Rlc.ArqTxBuffers(iServingRlc).resetTransmitter();
 
-				% find the user slot in the target, update the SQN and set the object
-				iTargetRlc = find([Stations(iTargetStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
-				Stations(iTargetStation).Rlc.ArqTxBuffers(iTargetRlc) = arqTxObject;
-			end
+                    % find the user slot in the target, update the SQN and set the object
+                    iTargetRlc = find([Stations(iTargetStation).Rlc.ArqTxBuffers.rxId] == User.NCellID);
+                    Stations(iTargetStation).Rlc.ArqTxBuffers(iTargetRlc) = arqTxObject;
+                end
 
-			% Do similarly for MAC
-			iServingMac = find([Stations(iServingStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
-			if iServingMac
-				% Clean the transmitter in the serving
-				harqTxObject = Stations(iServingStation).Mac.HarqTxProcesses(iServingMac);
-				% Edit the TtxId field to the target eNodeB
-				harqTxObject.txId = targetEnbID;
-				% Reset the object in the serving station
-				Stations(iServingStation).Mac.HarqTxProcesses(iServingMac) = ...
-					Stations(iServingStation).Mac.HarqTxProcesses(iServingMac).resetTransmitter();
+                % Do similarly for MAC
+                iServingMac = find([Stations(iServingStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
+                if iServingMac
+                    % Clean the transmitter in the serving
+                    harqTxObject = Stations(iServingStation).Mac.HarqTxProcesses(iServingMac);
+                    % Edit the TtxId field to the target eNodeB
+                    harqTxObject.txId = targetEnbID;
+                    % Reset the object in the serving station
+                    Stations(iServingStation).Mac.HarqTxProcesses(iServingMac) = ...
+                        Stations(iServingStation).Mac.HarqTxProcesses(iServingMac).resetTransmitter();
 
-				% find the user slot in the target and set the object
-				iTargetMac = find([Stations(iTargetStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
-				Stations(iTargetStation).Mac.HarqTxProcesses(iTargetMac) = harqTxObject;
-			end
-
+                    % find the user slot in the target and set the object
+                    iTargetMac = find([Stations(iTargetStation).Mac.HarqTxProcesses.rxId] == User.NCellID);
+                    Stations(iTargetStation).Mac.HarqTxProcesses(iTargetMac) = harqTxObject;
+                end
+            end
 		else
 			%in all the other cases we either do not need to perform HO at all or the timer has not expired yet 
 			
