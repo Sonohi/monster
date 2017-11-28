@@ -3,7 +3,7 @@ clear all
 close all
 
 
-mode = 'perStation'; %perUser
+mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
 sUser = 1;

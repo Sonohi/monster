@@ -59,20 +59,22 @@ classdef UserEquipment
 				'markerSize', 8, ...
 				'lineWidth', 2);
 			switch Param.mobilityScenario
-				case 1
+				case 'pedestrian'
 					obj.Velocity = 1; % in m/s
-                    obj = setTrajectory(obj, Param);
-				case 2
+          obj = setTrajectory(obj, 1, Param);
+				case 'vehicular'
 					obj.Velocity = 10; % in m/s
-                    obj = setTrajectory(obj, Param);
-				case 3
+          obj = setTrajectory(obj, 2, Param);
+				case 'static'
 					obj.Velocity = 0; % in m/s
-                    obj.Trajectory = 0;
+          obj.Trajectory = 0;
+				case 'superman'
+					obj.Velocity = 100; % in m/s
+          obj = setTrajectory(obj, 1, Param);
 				otherwise
 					sonohilog('Unknown mobility scenario selected','ERR');
 					return;
 			end
-			obj = setTrajectory(obj, Param);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
@@ -84,17 +86,17 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-            if Param.rtxOn
-                obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
-                obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
-            end
-            obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
+			if Param.rtxOn
+					obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
+					obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
+			end
+			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
 		end
 
 		% sets user trajectory
-		function obj = setTrajectory(obj, Param)
-			[x, y] = mobility(Param.mobilityScenario);
+		function obj = setTrajectory(obj, scenarioCode, Param)
+			[x, y] = mobility(scenarioCode, obj.Velocity);
 			obj.Trajectory(1:length(x),1) = x;
 			obj.Trajectory(1:length(y),2) = y;
 			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
