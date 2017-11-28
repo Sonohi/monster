@@ -28,8 +28,8 @@ classdef ChBulk_v2 < SonohiChannel
                     StationC.ScheduleDL(1).UeId = user.NCellID;
                     user.Rx.Waveform = [];
                     if strcmp(obj.DLMode,'eHATA')
-                        eHATA = sonohieHATA(obj);
-                        Users = eHATA.run(StationC,user);
+                        eHATA = sonohieHATA(obj,'downlink');
+                        [~, Users] = eHATA.run(StationC,user);
                     elseif strcmp(obj.DLMode, 'winner')
                         WINNER = sonohiWINNER(StationC,user, obj,'downlink');
                         WINNER = WINNER.setup();
@@ -148,6 +148,14 @@ classdef ChBulk_v2 < SonohiChannel
                         obj.fieldType = vargs{k+1};
                     end
                 end
+            end
+
+            if isempty(obj.DownlinkModel) && strcmp(chtype,'downlink')
+                sonohilog('Hey... no downlink channel is setup. Please run Channel.setup.','ERR')
+            end
+
+           if isempty(obj.UplinkModel) && strcmp(chtype,'uplink')
+                sonohilog('Hey... no uplink channel is setup. Please run Channel.setup.','ERR')
             end
             
             
