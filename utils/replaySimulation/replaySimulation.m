@@ -3,10 +3,10 @@ clear all
 close all
 
 
-mode = 'perUser'; %perUser
+mode = 'perStation'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 4;
+sUser = 1;
 sStation = 1;
 
 %% Initialization

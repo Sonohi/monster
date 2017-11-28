@@ -35,15 +35,18 @@ function [Station, User] = createTransportBlock(Station, User, Param, timeNow)
 	end
 
 	% the transport block is created of a size that matches the allocation that the 
-	% PDCSH symbols will have on the grid 
+	% PDCSH symbols will have on the grid and the rate matching for the CWD
 	[~, mod, ~] = lteMCS(avMCS);
 	enb.Tx.PDSCH.Modulation = mod;
 	enb.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	
 	[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
-	TbInfo.tbSize = info.Gd;
 	TbInfo.rateMatch = info.G;
 	% the redundacy version (RV) is defaulted to 0
 	TbInfo.rv = 0;
+
+	% Finally, we need to calculate the TB size given the scheduling
+	%TbInfo.tbSize = info.Gd;
+	TbInfo.tbSize = lteTBS(numPRB, avMCS);
 
 	% Now we need to encode the SQN and the HARQ process ID into the TB if retransmissions are enabled
 	% We use the first 13 bits for that; the first 3 are the HARQ PID. the other 10 are the SQN

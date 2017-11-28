@@ -137,31 +137,40 @@ classdef HarqTx
 		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Param)
 			% find index
 			iProc = find([obj.processes.procId] == procId);
-			sqnBits = obj.processes(iProc).tb(4:13);
-			sqn = bi2de(sqnBits', 'left-msb');
-			if ack
-				% clean
-				obj.bitsSize = obj.bitsSize - length(obj.processes(iProc).tb);
-				obj.tbSize = obj.tbSize - 1;
-				obj.processes(iProc).rtxCount = 0;
-				obj.processes(iProc).rv = 0;
-				obj.processes(iProc).tb = [];
-				obj.processes(iProc).timeStart = -1;
-				obj.processes(iProc).state = 0;
+			% Check it this is an outdated report 
+			if isempty(obj.processes(iProc).tb)
+				fSpec = 'Delayed ACK/NACK received at HARQ TX for process %i\n';
+				s=sprintf(fSpec, procId);
+    		sonohilog(s,'WRN');
+				sqn = [];
+				state = [];
 			else
-				% check whether the maximum number has been exceeded
-				if obj.processes(iProc).rtxCount > Param.harq.rtxMax
-					% log failure (and notify RLC?)
-					obj.processes(iProc).state = 4;
+				sqnBits = obj.processes(iProc).tb(4:13);
+				sqn = bi2de(sqnBits', 'left-msb');
+				if ack
+					% clean
+					obj.bitsSize = obj.bitsSize - length(obj.processes(iProc).tb);
+					obj.tbSize = obj.tbSize - 1;
+					obj.processes(iProc).rtxCount = 0;
+					obj.processes(iProc).rv = 0;
+					obj.processes(iProc).tb = [];
+					obj.processes(iProc).timeStart = -1;
+					obj.processes(iProc).state = 0;
 				else
-					% log rtx
-					obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
-					obj.processes(iProc).rv = Param.harq.rv(obj.processes(iProc).rtxCount);
-					obj.processes(iProc).state = 2;
-					obj.processes(iProc).timeStart = timeNow;
+					% check whether the maximum number has been exceeded
+					if obj.processes(iProc).rtxCount > Param.harq.rtxMax
+						% log failure (and notify RLC?)
+						obj.processes(iProc).state = 4;
+					else
+						% log rtx
+						obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
+						obj.processes(iProc).rv = Param.harq.rv(obj.processes(iProc).rtxCount);
+						obj.processes(iProc).state = 2;
+						obj.processes(iProc).timeStart = timeNow;
+					end
 				end
+				state = obj.processes(iProc).state;
 			end
-			state = obj.processes(iProc).state;
 		end
 
 		% Handle the expiration of the retransmission timer
