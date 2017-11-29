@@ -12,8 +12,6 @@ function [Station, Users] = schedule(Station, Users, Param)
 %									--> mcs 		modulation and coding scheme decided
 %									--> modOrd	modulation order as bits/OFDM symbol
 
-% reset the allocation
-Station = resetScheduleDL(Station);
 % Set a flag for the overall number of valid UE attached
 sz = length(extractUniqueIds([Station.Users.UeId]));
 

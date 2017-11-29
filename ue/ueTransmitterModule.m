@@ -122,6 +122,13 @@ classdef ueTransmitterModule
 			
 			%end
 		end
+	
+		% Utility to reset the UE transmitter module between rounds
+		function obj = reset(obj)
+			obj.Waveform = [];
+			obj.ReGrid = [];
+		end	
+		
 	end
 	
 end

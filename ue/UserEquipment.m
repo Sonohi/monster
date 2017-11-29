@@ -221,7 +221,7 @@ classdef UserEquipment
 		end
 		
 		%Reset properties that change every round
-		function obj = resetUser(obj)
+		function obj = reset(obj)
 			obj.Scheduled = false;
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
@@ -229,7 +229,8 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			obj.Rx = obj.Rx.resetReceiver();
+			obj.Tx = obj.Tx.reset();
+			obj.Rx = obj.Rx.reset();
 		end
 
 	end

@@ -19,6 +19,10 @@ classdef enbReceiverModule
 		function obj = set.RxPwdBm(obj,RxPwdBm)
 			obj.RxPwdBm = RxPwdBm;
 		end
+
+		function obj = set.UeData(obj,UeData)
+			obj.UeData = UeData;
+		end
 		
 		% Used to split the received waveform into the different portions of the different
 		% UEs scheduled in the UL
@@ -112,6 +116,12 @@ classdef enbReceiverModule
 					
 				end
 			end
+		end
+
+		function obj = reset(obj)
+			obj.UeData = [];
+			obj.Waveform = [];
+			obj.RxPwdBm = [];
 		end
 		
 	end

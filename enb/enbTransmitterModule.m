@@ -128,6 +128,22 @@ classdef enbTransmitterModule
 			txStruct = struct(obj);
 		end
 
+		% Reser transmitter
+		function obj = reset(obj, enbObj, nextSchRound)
+			% every 40 ms the cell has to broadcast its identity with the BCH
+			% check if we need to regenerate that 
+			if mod(nextSchRound, 40) == 0
+				obj = obj.setBCH(enbObj);
+			end
+
+			% Reset the grid and put in the grid RS, PSS and SSS
+			obj = obj.resetResourceGrid(enbObj);
+
+			% Reset the waveform and the grid transmitted
+			obj.Waveform = [];
+			obj.WaveformInfo = [];
+		end
+
 
 	end
 

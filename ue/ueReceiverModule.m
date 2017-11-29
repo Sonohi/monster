@@ -295,7 +295,7 @@ classdef ueReceiverModule
 		end
 
 		% Reset receiver
-		function obj = resetReceiver(obj)
+		function obj = reset(obj)
 			obj.NoiseEst = [];
 			obj.RSSIdBm = 0;
 			obj.RSRQdB = 0;
@@ -317,6 +317,7 @@ classdef ueReceiverModule
 			obj.BLER = 0;
 			obj.Throughput = 0;
 			obj.SchIndexes = [];
+			obj.PDSCH = [];
 		end
 
 	end

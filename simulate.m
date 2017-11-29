@@ -76,31 +76,16 @@ for iRound = 0:(Param.schRounds-1)
 		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, simTime);
 	end
 	
-	
 	% Update RLC transmission queues for the users and reset the scheduled flag
 	for iUser = 1:length(Users)
 		queue = updateTrQueue(trSource, simTime, Users(iUser));
 		Users(iUser) = setQueue(Users(iUser), queue);
-		Users(iUser) = setScheduled(Users(iUser), false);
 	end
 	
 	% ---------------------
 	% ENODEB SCHEDULE START
 	% ---------------------
 	for iStation = 1:length(Stations)
-		% First off, set the number of the current subframe within the frame
-		% this is the scheduling round modulo 10 (the frame is 10ms)
-		Stations(iStation).NSubframe = mod(iRound,10);
-		
-		% every 40 ms the cell has to broadcast its identity with the BCH
-		% check if we need to regenerate that (except for iRound == 0 as it's regenerated
-		% when the object is created)
-		if (iRound ~= 0 && mod(iRound, 40) == 0)
-			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
-		end
-
-		% Reset the grid and put in the grid RS, PSS and SSS
-		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 		
 		% schedule only if at least 1 user is associated
 		if ~isempty(find([Stations(iStation).Users.UeId] ~= -1))
@@ -270,7 +255,10 @@ for iRound = 0:(Param.schRounds-1)
 	% --------------------
 	sonohilog('Resetting objects for next simulation round', 'NFO');
 	for iUser = 1:length(Users)
-		Users(iUser) = Users(iUser).resetUser();
+		Users(iUser) = Users(iUser).reset();
+	end
+	for iStation = 1:length(Stations)
+		Stations(iStation) = Stations(iStation).reset(iRound + 1);
 	end
 	Channel = Channel.resetChannelModels();
 	

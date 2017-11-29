@@ -76,11 +76,11 @@ classdef EvolvedNodeB
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
-            if Param.rtxOn
-                obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-                obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-            end
-            obj.Tx = enbTransmitterModule(obj, Param);
+			if Param.rtxOn
+				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+			end
+			obj.Tx = enbTransmitterModule(obj, Param);
 			obj.Rx = enbReceiverModule(Param);
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
@@ -230,6 +230,23 @@ classdef EvolvedNodeB
 				end
 				obj.ScheduleUL = temp;
 			end
+		end
+
+		% Reset an eNodeB at the end of a scheduling round
+		function obj = reset(obj, nextSchRound)
+			% First off, set the number of the next subframe within the frame
+			% this is the scheduling round modulo 10 (the frame is 10ms)
+			obj.NSubframe = mod(nextSchRound,10);
+		
+			% Reset the DL schedule
+			obj = obj.resetScheduleDL();
+
+			% Reset the transmitter
+			obj.Tx = obj.Tx.reset(obj, nextSchRound);
+		
+			% Reset the receiver
+			obj.Rx = obj.Rx.reset();
+			
 		end
 
 	end
