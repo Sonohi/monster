@@ -29,6 +29,7 @@ classdef ueReceiverModule
 		Symbols;
 		PDSCH;
 		PropDelay;
+        HistoryStats;
 	end
 
 	methods
@@ -39,16 +40,38 @@ classdef ueReceiverModule
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Symbols = struct('ok', 0, 'err', 0, 'tot', 0);
+			for iStation = 1:(Param.numMacro + Param.numMicro)
+                cellstring = char(strcat("NCellID",int2str(iStation)));
+				obj.HistoryStats.(cellstring) = struct('SINRdB',[],'SNRdB',[],'RxPwdBm',[]);
+			end
+        end
+        
+		function old_values = getFromHistory(obj, field, stationID)
+			stationfield = strcat('NCellID',int2str(stationID));
+            path = {'HistoryStats', stationfield, field};
+			old_values = getfield(obj, path{:});
 		end
+
+        function obj = addToHistory(obj, field, stationID)
+            
+            old_values = obj.getFromHistory(field, stationID);
+            stationfield = strcat('NCellID',int2str(stationID));
+            path = {'HistoryStats', stationfield, field};
+			new_value = getfield(obj, field);
+			new_array = [old_values, new_value];
+            obj = setfield(obj, path{:}, new_array);
+            
+        end
 
 		function obj = set.Waveform(obj,Sig)
 			obj.Waveform = Sig;
 		end
 
-		function obj = set.SINR(obj,SINR)
+		function obj = set.SINR(obj,SINR,stationID)
 			% SINR given linear
 			obj.SINR = SINR;
 			obj.SINRdB = 10*log10(SINR);
+            
 		end
 
 		function obj = set.SNR(obj,SNR)

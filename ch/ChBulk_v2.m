@@ -210,7 +210,7 @@ classdef ChBulk_v2 < SonohiChannel
             % the one with highest Rx power
             sonohilog(sprintf('Finding User association for User(%i) based on Rx power...',User.NCellID),'NFO0')
             
-            RxPw = zeros(length(Stations),1);
+            RxPw = cell(length(Stations),1);
             for iStation = 1:length(Stations)
                 %Local copy of all stations
                 StationC = Stations(iStation);
@@ -220,8 +220,7 @@ classdef ChBulk_v2 < SonohiChannel
                 StationC.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
                 StationC.ScheduleDL(1).UeId = User.NCellID;
                 User.ENodeBID = StationC.NCellID;
-                
-                
+
                 obj = obj.setupChannelDL(StationC, User);
                 
                 % Reset any existing channel conditions
@@ -230,18 +229,30 @@ classdef ChBulk_v2 < SonohiChannel
                 %end
                 
                 % Traverse channel
-                for ll = 1:5
-                    [~, UserRx] = obj.traverse(StationC,User,'downlink','field','pathloss');
-                    RxPw(iStation,ll) = UserRx.Rx.RxPwdBm;
+                [~, UserRx] = obj.traverse(StationC,User,'downlink','field','pathloss');
+                RxPw{iStation} = UserRx.Rx.RxPwdBm;
+          
+                % Get power measurements from last rounds, maximum of 10 rounds.
+                previous_measurements = UserRx.Rx.getFromHistory('RxPwdBm',StationC.NCellID);
+                
+                if length(previous_measurements) > 10
+                     RxPw{iStation} = [RxPw{iStation} previous_measurements(end-10:end)]';
+                elseif length(previous_measurements) <= 10 && length(previous_measurements) ~= 0
+                     RxPw{iStation} = [RxPw{iStation} previous_measurements];
                 end
-                % Reset schedule
                 
                 % Debug distance
                 distance(iStation) = obj.getDistance(StationC.Position,User.Position);
                 
             end
-            [minDistance, minStation] = min(distance);
-            [maxPw,maxStation] = max(mean(RxPw,2));
+            
+            % History can contain zeros, loop to remove these per row and
+            % provide with mean value
+            for iStation = 1:length(Stations)
+                measurements = RxPw{iStation};
+                mean_power(iStation) = mean(measurements(measurements ~= 0));
+            end
+            [maxPw,maxStation] = max(mean_power);
             stationID = Stations(maxStation).NCellID;
         end
         

@@ -232,7 +232,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('UE-space metrics recording', 'NFO');
-	ueResults = recordUEResults(Users, Stations, ueResults, iRound);
+	[ueResults, Users] = recordUEResults(Users, Stations, ueResults, iRound);
 
 	% -----------
 	% UE MOVEMENT

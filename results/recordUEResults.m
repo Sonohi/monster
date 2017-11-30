@@ -1,4 +1,4 @@
-function res = recordUEResults(Users, Stations, res, ix)
+function [res, Users] = recordUEResults(Users, Stations, res, ix)
 
 %   RECORD UE RESULTS records UE-space results
 %
@@ -24,8 +24,8 @@ for iUser = 1:length(Users)
 		'rxPosition', Users(iUser).Position, ...
 		'txPosition', Stations(iServingStation).Position,...
 		'symbols', rx.Symbols,...
-    'scheduled', user.Scheduled,...
-    'servingStation',Stations(iServingStation).NCellID);
+        'scheduled', user.Scheduled,...
+        'servingStation',Stations(iServingStation).NCellID);
 
 		% Check if user is scheduled.
     station = Stations(iServingStation);
@@ -35,6 +35,11 @@ for iUser = 1:length(Users)
     else
       res(ix + 1, iUser) = resM;
     end
+    
+    % Add to local history object
+    Users(iUser).Rx = Users(iUser).Rx.addToHistory('SINRdB',Stations(iServingStation).NCellID);
+    Users(iUser).Rx = Users(iUser).Rx.addToHistory('SNRdB',Stations(iServingStation).NCellID);
+    Users(iUser).Rx = Users(iUser).Rx.addToHistory('RxPwdBm',Stations(iServingStation).NCellID);
 end
 
 
