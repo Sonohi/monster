@@ -1,4 +1,4 @@
-classdef BSTransmitterModule
+classdef enbTransmitterModule
 	properties
 		Waveform;
 		WaveformInfo;
@@ -11,8 +11,8 @@ classdef BSTransmitterModule
 	end
 
 	methods
-		% Constructor
-		function obj = BSTransmitterModule(enb, Param)
+		% Constructor`
+		function obj = enbTransmitterModule(enb, Param)
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
 			obj = resetResourceGrid(obj, enb);
@@ -126,6 +126,22 @@ classdef BSTransmitterModule
 		% cast object to struct
 		function txStruct = cast2Struct(obj)
 			txStruct = struct(obj);
+		end
+
+		% Reser transmitter
+		function obj = reset(obj, enbObj, nextSchRound)
+			% every 40 ms the cell has to broadcast its identity with the BCH
+			% check if we need to regenerate that 
+			if mod(nextSchRound, 40) == 0
+				obj = obj.setBCH(enbObj);
+			end
+
+			% Reset the grid and put in the grid RS, PSS and SSS
+			obj = obj.resetResourceGrid(enbObj);
+
+			% Reset the waveform and the grid transmitted
+			obj.Waveform = [];
+			obj.WaveformInfo = [];
 		end
 
 

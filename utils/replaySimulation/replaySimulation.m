@@ -6,7 +6,7 @@ close all
 mode = 'perUser'; %perUser
 
 % Just run me. or select user/station by setting parameter
-sUser = 4;
+sUser = 2;
 sStation = 1;
 
 %% Initialization

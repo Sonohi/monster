@@ -90,15 +90,15 @@ for model = 2:numel(Snames)
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
 		StationID = Channel.getAssociation(StationsCopy_,ueCopy);
     StationsCopy_([StationsCopy_.NCellID] == StationID).resetSchedule();
-		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.UeId;
-    StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.UeId;
-		ueCopy.ENodeB = StationID;
+		StationsCopy_([StationsCopy_.NCellID] == StationID).Users(1) = ueCopy.NCellID;
+    StationsCopy_([StationsCopy_.NCellID] == StationID).Schedule(1).UeId = ueCopy.NCellID;
+		ueCopy.NCellID = StationID;
     
     Channel_ = Channel.setupChannel(StationsCopy_,ueCopy);
     [ueCopy, Channel_] = syncRoutine(StationsCopy_, ueCopy, Channel_, Param);
 
 	
-			[~, ueCopy] = Channel_.traverse(StationsCopy_,ueCopy);
+			[~, ueCopy] = Channel_.traverse(StationsCopy_,ueCopy,'downlink');
 			Clusters(iCluster).snrVals(model) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;

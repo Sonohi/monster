@@ -65,54 +65,38 @@ end
 
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
 for iRound = 0:(Param.schRounds-1)
-	% TODO: Add log print that states which round is being simulated.
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
 	sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
-	
 	
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
 		sonohilog('Refreshing user association', 'NFO');
-		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param);
+		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, simTime);
 	end
-	
 	
 	% Update RLC transmission queues for the users and reset the scheduled flag
 	for iUser = 1:length(Users)
 		queue = updateTrQueue(trSource, simTime, Users(iUser));
 		Users(iUser) = setQueue(Users(iUser), queue);
-		Users(iUser) = setScheduled(Users(iUser), false);
 	end
 	
 	% ---------------------
 	% ENODEB SCHEDULE START
 	% ---------------------
 	for iStation = 1:length(Stations)
-		% First off, set the number of the current subframe withing the frame
-		% this is the scheduling round modulo 10 (the frame is 10ms)
-		Stations(iStation).NSubframe = mod(iRound,10);
-		
-		% every 40 ms the cell has to broadcast its identity with the BCH
-		% check if we need to regenerate that (except for iRound == 0 as it's regenerated
-		% when the object is created)
-		if (iRound ~= 0 && mod(iRound, 40) == 0)
-			Stations(iStation).Tx = setBCH(Stations(iStation).Tx,Stations(iStation));
-		end
-		% Reset the grid and put in the grid RS, PSS and SSS
-		Stations(iStation).Tx = resetResourceGrid(Stations(iStation).Tx, Stations(iStation));
 		
 		% schedule only if at least 1 user is associated
-		if Stations(iStation).Users(1) ~= 0
+		if ~isempty(find([Stations(iStation).Users.UeId] ~= -1))
 			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 		
 		% Check utilisation
-		sch = [Stations(iStation).Schedule.UeId];
+		sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
 		utilPercent = 100*find(sch, 1, 'last' )/length(sch);
 		
-		% check utilPercent and cahnge to 0 if null
+		% check utilPercent and change to 0 if null
 		if isempty(utilPercent)
 			utilPercent = 0;
 		end
@@ -123,7 +107,7 @@ for iRound = 0:(Param.schRounds-1)
 		% store eNodeB-space results
 		resultsStore(iStation).util = utilPercent;
 		resultsStore(iStation).power = pIn;
-		resultsStore(iStation).schedule = Stations(iStation).Schedule;
+		resultsStore(iStation).schedule = Stations(iStation).ScheduleDL;
 		
 		% Check utilisation metrics and change status if needed
 		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
@@ -138,22 +122,21 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	for iUser = 1:length(Users)
 		% get the eNodeB this UE is connected to
-		iServingStation = [Stations.NCellID] == Users(iUser).ENodeB;
+		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
 		
 		% Check if this UE is scheduled otherwise skip
 		if checkUserSchedule(Users(iUser), Stations(iServingStation))
 			% generate transport block for the user
-			[Users(iUser).TransportBlock, Users(iUser).TransportBlockInfo] =...
-				createTransportBlock(Stations(iServingStation), Users(iUser), Param);
+			[Stations(iServingStation), Users(iUser)] = ... 
+				createTransportBlock(Stations(iServingStation), Users(iUser), Param, simTime);
 			
 			% generate codeword (RV defaulted to 0)
-			[Users(iUser).Codeword, Users(iUser).CodewordInfo] = createCodeword(...
-				Users(iUser).TransportBlock,Users(iUser).TransportBlockInfo, Param);
+			Users(iUser) = createCodeword(Users(iUser), Param);
 			
 			% finally, generate the arrays of complex symbols by setting the
 			% correspondent values per each eNodeB-UE pair
 			% setup current subframe for serving eNodeB
-			if Users(iUser).CodewordInfo.cwdSize ~= 0 % is this even necessary?
+			if Users(iUser).CodewordInfo.cwdSize ~= 0
 				[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser),...
 					Users(iUser).Codeword, Users(iUser).CodewordInfo, Param);
 			end
@@ -184,13 +167,13 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB GRID MAPPING AND MODULATION
 	% ----------------------------------
 	sonohilog('eNodeB grid mapping and modulation', 'NFO');
-	Stations = BSTxBulk(Stations, symMatrix, Param);
+	Stations = enbTxBulk(Stations, symMatrix, Param);
 	
 	% ----------------------------------
-	% CHANNEL SYNCHRONIZATION
+	% DL CHANNEL SYNCHRONIZATION
 	% ------------------------------------
 	% Setup the channel based on scheduled users
-	Channel = Channel.setupChannel(Stations,Users);
+	Channel = Channel.setupChannelDL(Stations,Users);
 	sonohilog('Running sync routine', 'NFO');
 	[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
 	
@@ -199,15 +182,46 @@ for iRound = 0:(Param.schRounds-1)
 	% ------------------
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
-	sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode), 'NFO');
-	[Stations, Users] = Channel.traverse(Stations,Users);
+	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.modeDL), 'NFO');
+	[Stations, Users] = Channel.traverse(Stations, Users, 'downlink');
 	
 	% ------------
 	% UE RECEPTION
 	% ------------
 	sonohilog('UE reception block', 'NFO');
-	Users = UERxBulk(Stations, Users, ChannelEstimator);
+	Users = ueRxBulk(Stations, Users, ChannelEstimator.Downlink);
+
+	% ----------------
+	% UE DATA DECODING
+	% ----------------
+	sonohilog('UE data decoding block', 'NFO');
+	[Stations, Users] = ueDataDecoding(Stations, Users, Param, simTime);
 	
+	% --------------------------
+	% UE UPLINK
+	% ---------------------------
+	sonohilog('Uplink transmission', 'NFO');
+	[Stations, compoundWaveforms, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
+
+	% ------------------
+	% CHANNEL TRAVERSE
+	% ------------------
+	sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.modeUL), 'NFO');
+	Channel = Channel.setupChannelUL(Stations,Users,'compoundWaveform',compoundWaveforms);
+	[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
+
+	% --------------------------
+	% ENODEB RECEPTION
+	% ---------------------------
+	sonohilog('eNodeB reception block', 'NFO');
+	Stations = enbRxBulk(Stations, Users, simTime, ChannelEstimator.Uplink);
+
+	% ----------------
+	% ENODEB DATA DECODING
+	% ----------------
+	sonohilog('eNodeB data decoding block', 'NFO');
+	[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
+
 	% --------------------------
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
@@ -219,17 +233,11 @@ for iRound = 0:(Param.schRounds-1)
 	% ---------------------------
 	sonohilog('UE-space metrics recording', 'NFO');
 	ueResults = recordUEResults(Users, Stations, ueResults, iRound);
-	
-	% --------------------------
-	% UE UPLINK
-	% ---------------------------
-	sonohilog('Uplink transmission', 'NFO');
-	stations = UETxBulk(Stations, Users, iRound, mod(iRound,10));
-	
-	
+
 	% -----------
 	% UE MOVEMENT
 	% -----------
+	sonohilog('UE movement', 'NFO');
 	for iUser = 1:length(Users)
 		Users(iUser) = move(Users(iUser), simTime, Param);
 	end
@@ -247,9 +255,12 @@ for iRound = 0:(Param.schRounds-1)
 	% --------------------
 	sonohilog('Resetting objects for next simulation round', 'NFO');
 	for iUser = 1:length(Users)
-		Users(iUser) = Users(iUser).resetUser();
+		Users(iUser) = Users(iUser).reset();
 	end
-	Channel = Channel.resetChannel();
+	for iStation = 1:length(Stations)
+		Stations(iStation) = Stations(iStation).reset(iRound + 1);
+	end
+	Channel = Channel.resetChannelModels();
 	
 end % end round
 

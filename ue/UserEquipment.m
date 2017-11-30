@@ -3,7 +3,15 @@
 classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
-		ENodeB;
+		NCellID;
+		ENodeBID;
+		NULRB;
+		RNTI;
+		DuplexMode;
+    CyclicPrefixUL;
+		NSubframe;
+    NFrame;
+    NTxAnts;
 		Position;
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
@@ -12,7 +20,6 @@ classdef UserEquipment
 		Sinr;
 		TLast; % timestamp of the latest movement done by the UE
 		Trajectory;
-		UeId;
 		Velocity;
 		RxAmpli;
 		Rx;
@@ -23,52 +30,78 @@ classdef UserEquipment
 		CodewordInfo;
 		TransportBlock;
 		TransportBlockInfo;
-		WCQI;
+		Mac;
+		Rlc;
+		SchedulingSlots;
+		Hangover;
+		Pmax;
+    Seed;
 	end
 
 	methods
 		% Constructor
 		function obj = UserEquipment(Param, userId)
-			obj.ENodeB = 0;
-			obj =	setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
+            obj.NCellID = userId;
+            obj.Seed = userId*Param.BaseSeed;
+			obj.ENodeBID = -1;
+			obj.NULRB = Param.numSubFramesUE;
+			obj.RNTI = 1;
+			obj.DuplexMode = 'FDD';
+			obj.CyclicPrefixUL = 'Normal';
+			obj.NSubframe = 0;
+			obj.NFrame = 0;
+			obj.NTxAnts = 1;
+			obj = setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
 			obj.Scheduled = false;
-			obj.UeId = userId;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
 			switch Param.mobilityScenario
-				case 1
+				case 'pedestrian'
 					obj.Velocity = 1; % in m/s
-				case 2
+          obj = setTrajectory(obj, 1, Param);
+				case 'vehicular'
 					obj.Velocity = 10; % in m/s
+          obj = setTrajectory(obj, 2, Param);
+				case 'static'
+					obj.Velocity = 0; % in m/s
+          obj.Trajectory = 0;
+				case 'superman'
+					obj.Velocity = 100; % in m/s
+          obj = setTrajectory(obj, 1, Param);
 				otherwise
 					sonohilog('Unknown mobility scenario selected','ERR');
 					return;
 			end
-			obj = setTrajectory(obj, Param);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Rx = UEReceiverModule(Param);
-			obj.Tx = UETransmitterModule(Param);
+			obj.Rx = ueReceiverModule(Param, obj);
+			obj.Tx = ueTransmitterModule(Param, obj);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
+			if Param.rtxOn
+					obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
+					obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
+			end
+			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
+			obj.Pmax = 10; %10dBm
 		end
 
 		% sets user trajectory
-		function obj = setTrajectory(obj, Param)
-			[x, y] = mobility(Param.mobilityScenario);
+		function obj = setTrajectory(obj, scenarioCode, Param)
+			[x, y] = mobility(scenarioCode, obj.Velocity);
 			obj.Trajectory(1:length(x),1) = x;
 			obj.Trajectory(1:length(y),2) = y;
 			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
 
-			% Plot UE posiiton and trajectory in scenario
+			% Plot UE position and trajectory in scenario
 			if Param.draw
 				plotUEinScenario(obj, Param);
 			end
@@ -156,13 +189,39 @@ classdef UserEquipment
 			obj.SymbolsInfo = info;
 		end
 
+		% set NSubframe
+		function obj = set.NSubframe(obj, num)
+			obj.NSubframe = num;
+		end
+
+		% set NFrame
+		function obj = set.NFrame(obj, num)
+			obj.NFrame = num;
+		end
+
+		% set NULRB
+		function obj = set.NULRB(obj, num)
+			obj.NULRB = num;
+		end
+
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
 		end
 
+		% Find indexes in the serving eNodeB for the UL scheduling
+		function obj = setSchedulingSlots(obj, Station)
+      obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
+			obj.NULRB = length(obj.SchedulingSlots);
+    end
+
+		% Reset the HARQ report
+		function obj = resetHarqReport(obj)
+			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
+		end
+		
 		%Reset properties that change every round
-		function obj = resetUser(obj)
+		function obj = reset(obj)
 			obj.Scheduled = false;
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
@@ -170,7 +229,8 @@ classdef UserEquipment
 			obj.CodewordInfo = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			obj.Rx = obj.Rx.resetReceiver();
+			obj.Tx = obj.Tx.reset();
+			obj.Rx = obj.Rx.reset();
 		end
 
 	end

@@ -5,5 +5,5 @@ function validateEmptyUsers(Users)
 	%   Function fingerprint
 	%   Users		->  test
 
-	validateattributes([Users],{'numeric'},{'<=',0})
+	validateattributes([Users.UeId],{'numeric'},{'<=',-1})
 end

@@ -1,6 +1,6 @@
 function [ h1, h2 ] = plotReGrids(Users)
 h1 = figure('Name','Rx grid');
-set(h1,'Position',[425 425 900 900],'WindowStyle','Docked','Visible','off');
+set(h1,'Position',[425 425 900 900],'WindowStyle','Docked','Visible','on');
 
 for pp = 1:length(Users)
 	hs(pp)=subplot(5,3,pp);
@@ -20,7 +20,7 @@ end
 
 
 h2 = figure('Name','Eq grid');
-set(h2,'Position',[425 425 900 900],'WindowStyle','Docked','Visible','off');
+set(h2,'Position',[425 425 900 900],'WindowStyle','Docked','Visible','on');
 
 for pp = 1:length(Users)
 	hs(pp)=subplot(5,3,pp);

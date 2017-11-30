@@ -32,13 +32,13 @@ for iStation = 1:length(StationsNew)
 end
 
 % Traverse channel
-sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.mode),'NFO')
-[StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users);
+sonohilog(sprintf('Traversing channel (mode: %s)...',Param.channel.modeDL),'NFO')
+[StationsNew, Users, ChannelNew] = Channel.traverse(StationsNew,Users,'downlink');
 
 % Compute offset
 for p = 1:length(Users)
 	% Find serving station
-	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeB));
+	station = StationsNew(find([StationsNew.NCellID] == Users(p).ENodeBID));
 	% Compute offset
 	% TODO add try catch as lteDLFrameOffset could throw a size mismatch error
 	NotAbleToDemod = 1;

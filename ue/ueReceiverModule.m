@@ -1,4 +1,4 @@
-classdef UEReceiverModule
+classdef ueReceiverModule
 	properties
 		NoiseFigure;
 		EstChannelGrid;
@@ -19,7 +19,7 @@ classdef UEReceiverModule
 		Crc;
 		PreEvm;
 		PostEvm;
-		WCQI;
+		CQI;
 		Offset;
 		BLER;
 		Throughput;
@@ -28,13 +28,14 @@ classdef UEReceiverModule
 		Bits;
 		Symbols;
 		PDSCH;
+		PropDelay;
 	end
 
 	methods
 
-		function obj = UEReceiverModule(Param)
+		function obj = ueReceiverModule(Param, ueObj)
 			obj.NoiseFigure = Param.ueNoiseFigure;
-			obj.WCQI = 3;
+			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Symbols = struct('ok', 0, 'err', 0, 'tot', 0);
@@ -64,7 +65,11 @@ classdef UEReceiverModule
 			obj.Offset = offset;
 		end
 
-		function [returnCode, obj] = demod(obj,enbObj)
+		function obj = set.PropDelay(obj,distance)
+			obj.PropDelay = distance/physconst('LightSpeed');
+		end
+
+		function [returnCode, obj] = demodulateWaveform(obj,enbObj)
 			% TODO: validate that a waveform exist.
 			enb = cast2Struct(enbObj);
 			Subframe = lteOFDMDemodulate(enb, obj.Waveform); %#ok
@@ -87,7 +92,7 @@ classdef UEReceiverModule
 		end
 
 		% equalize at the receiver
-		function obj = equalise(obj)
+		function obj = equaliseSubframe(obj)
 			validateRxEqualise(obj);
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
@@ -97,7 +102,7 @@ classdef UEReceiverModule
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
 			
-			obj.SchIndexes = find([enb.Schedule.UeId] == ue.UeId);
+			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.NCellID);
 
 			% Store the full PRB set for extraction
 			fullPrbSet = enb.Tx.PDSCH.PRBSet;
@@ -109,13 +114,13 @@ classdef UEReceiverModule
 			offset = 1;
 			if obj.SchIndexes(1) ~= 1
 				% extract the unique UE IDs from the schedule
-				uniqueIds = removeZeros(unique([enb.Schedule.UeId]));
+				uniqueIds = extractUniqueIds([enb.ScheduleDL.UeId]);
 				for iUser = 1:length(uniqueIds) 
-					if uniqueIds(iUser) ~= ue.UeId
+					if uniqueIds(iUser) ~= ue.NCellID
 						% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
-						prbIndices = find([enb.Schedule.UeId] == uniqueIds(iUser));
+						prbIndices = find([enb.ScheduleDL.UeId] == uniqueIds(iUser));
 						if prbIndices(1) < obj.SchIndexes(1)
-							[~, mod, ~] = lteMCS(enb.Schedule(prbIndices(1)).Mcs);
+							[~, mod, ~] = lteMCS(enb.ScheduleDL(prbIndices(1)).Mcs);
 							enb.Tx.PDSCH.Modulation = mod;
 							enb.Tx.PDSCH.PRBSet = (prbIndices - 1).';
 							uePdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
@@ -126,7 +131,7 @@ classdef UEReceiverModule
 			end
 
 			% Set the parameters of the PDSCH to those of the current UE
-			[~, mod, ~] = lteMCS(enb.Schedule(obj.SchIndexes(1)).Mcs);
+			[~, mod, ~] = lteMCS(enb.ScheduleDL(obj.SchIndexes(1)).Mcs);
 			enb.Tx.PDSCH.Modulation = mod;
 			enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';	
 			
@@ -171,7 +176,7 @@ classdef UEReceiverModule
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
-			[obj.WCQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 		end
 
 		% reference measurements
@@ -295,7 +300,7 @@ classdef UEReceiverModule
 		end
 
 		% Reset receiver
-		function obj = resetReceiver(obj)
+		function obj = reset(obj)
 			obj.NoiseEst = [];
 			obj.RSSIdBm = 0;
 			obj.RSRQdB = 0;
@@ -317,6 +322,7 @@ classdef UEReceiverModule
 			obj.BLER = 0;
 			obj.Throughput = 0;
 			obj.SchIndexes = [];
+			obj.PDSCH = [];
 		end
 
 	end

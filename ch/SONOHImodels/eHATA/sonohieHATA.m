@@ -3,30 +3,54 @@ classdef sonohieHATA
   properties
     Channel;
     Seed;
+    Chtype;
   end
 
   methods
 
-    function obj = sonohieHATA(Channel)
+    function obj = sonohieHATA(Channel, Chtype)
       obj.Channel = Channel;
       obj.Seed = randi(99999);
+      obj.Chtype = Chtype;
+    end
+
+    function [stations,users] = run(obj,Stations,Users,varargin)
+
+        if ~isempty(varargin)
+            vargs = varargin;
+            nVargs = length(vargs);
+            
+            for k = 1:nVargs
+                if strcmp(vargs{k},'channel')
+                    obj.Channel = vargs{k+1};
+                end
+            end
+        end
+
+
+       switch obj.Chtype
+            case 'downlink'
+                users = obj.downlink(Stations,Users);
+                stations = Stations;
+            case 'uplink'
+                stations = obj.uplink(Stations,Users);
+                users = Users;
+        end
 
     end
 
-    function Users = run(obj,Stations,Users)
-                      % Get number of links associated with the station.
-      
-      users = length(Users);
+    function [users] = downlink(obj,Stations,Users)
+      users = Users;
       numLinks = length(Users);
       Pairing = obj.Channel.getPairing(Stations);
       for i = 1:numLinks
         station = Stations([Stations.NCellID] == Pairing(1,i));
         % Local copy for mutation
-        user = Users(find([Users.UeId] == Pairing(2,i))); %#ok
+        user = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
 
         if strcmp(obj.Channel.fieldType,'full')
           RxSig = obj.addFading([...
-            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo);
+            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo, user.Seed);
 
           [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,RxSig);
@@ -39,14 +63,20 @@ classdef sonohieHATA
         user.Rx.SNR = SNRLin;
         user.Rx.RxPwdBm = rxPwdBm;
         user.Rx.Waveform = RxSig;
+        User.Rx.PropDelay = obj.Channel.getDistance(Station.Position,User.Position);
         % Write changes to user object in array.
-        Users(find([Users.UeId] == Pairing(2,i))) = user; %#ok
+        users(find([Users.NCellID] == Pairing(2,i))) = user; %#ok
       end
     end
 
-    function rx = addFading(obj,tx,info)
+    function [stations] = uplink(obj,Stations,Users)
+        % Update the Rx module of stations
+    end
+
+
+    function rx = addFading(obj,tx,info,userseed)
       cfg.SamplingRate = info.SamplingRate;
-      cfg.Seed = obj.Seed;                  % Random channel seed
+      cfg.Seed = userseed;           % Random channel seed
       cfg.NRxAnts = 1;               % 1 receive antenna
       cfg.DelayProfile = 'EPA';      % EVA delay spread
       cfg.DopplerFreq = 5;         % 120Hz Doppler frequency
@@ -101,7 +131,7 @@ classdef sonohieHATA
       SNR = rxPwdBm-rxNoiseFloor;
       SNRLin = 10^(SNR/10);
       str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
-        Station.NCellID,User.UeId,num2str(distance),num2str(SNR),num2str(rxPwdBm));
+        Station.NCellID,User.NCellID,num2str(distance),num2str(SNR),num2str(rxPwdBm));
       sonohilog(str1,'NFO0');
 
       %% Apply SNR

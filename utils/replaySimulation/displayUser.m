@@ -9,7 +9,7 @@ function displayUser(sUser,data,Param)
   
   set(mm, 'Position', [181 595 1.4793e+03 656]);
   
-  subplot(2,4,[1,2])
+  subplot(2,5,[1,2])
   title('Overview')
   
   hold on
@@ -23,7 +23,7 @@ function displayUser(sUser,data,Param)
   
   
   
-  subplot(2,4,3)
+  subplot(2,5,3)
   title(sprintf('User: %i',sUser));
   pos_plot = animatedline('Color','r','Marker','^','MarkerFaceColor','r','MarkerSize',3);
   hold on
@@ -34,7 +34,7 @@ function displayUser(sUser,data,Param)
   xlabel('X (m)')
   ylabel('Y (m)')
   
-  subplot(2,4,4)
+  subplot(2,5,4)
   title('Distance tx to rx')
   distance_plot = animatedline('Color','b');
   ax_distance_plot = gca;
@@ -43,7 +43,7 @@ function displayUser(sUser,data,Param)
   ylabel('Meters')
   
 
-  subplot(2,4,5)
+  subplot(2,5,5)
   evm_plot = animatedline('Color','b');
   ax_evm_plot = gca;
   set(ax_evm_plot,'XLim',[0 Param.no_rounds],'YLim',[Param.EVM(1) Param.EVM(2)]);
@@ -51,14 +51,14 @@ function displayUser(sUser,data,Param)
   ylabel('post EVM (%)')
 
 
-  subplot(2,4,6)
+  subplot(2,5,6)
   cqi_plot = animatedline('Color','b');
   ax_cqi_plot = gca;
   set(ax_cqi_plot,'XLim',[0 Param.no_rounds],'YLim',[Param.CQI(1) Param.CQI(2)]);
   xlabel('Round')
   ylabel('CQI')
 
-  subplot(2,4,7)
+  subplot(2,5,7)
   yyaxis left
   snr_plot = animatedline('Color','b');
   ax_snr_plot = gca;
@@ -77,29 +77,35 @@ function displayUser(sUser,data,Param)
   
   
   
-  subplot(2,4,8)
+  subplot(2,5,8)
   bitrate_plot = animatedline('Color','b');
   ax_bitrate_plot = gca;
   set(ax_bitrate_plot,'XLim',[0 Param.no_rounds],'YLim',[Param.bitrate(1) Param.bitrate(2)],'YScale','log');
   xlabel('Round')
   ylabel('Bitrate (b/s)')
   
-%   subplot(2,4,8)
+%   subplot(2,5,8)
 %   bler_plot = animatedline('Color','b');
 %   ax_bler_plot = gca;
 %   set(ax_bitrate_plot,'XLim',[0 Param.no_rounds]);
 %   xlabel('Round')
 %   ylabel('BER')
 
-
-
+  subplot(2,5,9)
+  association_plot = animatedline('Color','b');
+  ax_association_plot = gca;
+  title('Association')
+  set(ax_association_plot,'XLim',[0 Param.no_rounds],'YLim',[0 Param.NoStations]);
+  xlabel('Round')
+  ylabel('Station')
+  
 
   grid on
   for iRound = 1:Param.no_rounds
     
     
     legend(ax_pos_plot,sprintf('User %i',sUser),sprintf('Station %i',data(sUser).servingStation(iRound)));
-    
+    addpoints(association_plot,iRound,data(sUser).servingStation(iRound));
     addpoints(distance_plot,iRound,data(sUser).distance(iRound));
     addpoints(pos_plot,rxpos(1,iRound),rxpos(2,iRound));
     addpoints(evm_plot,iRound,data(sUser).postEvm(iRound));

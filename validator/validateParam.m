@@ -21,7 +21,6 @@ function validateParam(Param)
 	validateattributes(Param.ueHeight, {'numeric'}, {'>=',0});
 	validateattributes(Param.buildingHeight, {'numeric'}, [{'>=',0}, {'<=',50}]);
 	validateattributes(Param.seed, {'numeric'}, {'>=',0});
-	validateattributes(Param.velocity, {'numeric'}, {'>=',0});
 	validateattributes(Param.numUsers, {'numeric'}, {'>=',0});
 	validateattributes(Param.utilLoThr, {'numeric'}, [{'>=',0}, {'<=',100}]);
 	validateattributes(Param.utilHiThr, {'numeric'}, [{'>=',0}, {'<=',100}]);
@@ -37,13 +36,14 @@ function validateParam(Param)
 	validateattributes(Param.tHyst, {'numeric'}, {'>=',0});
 	validateattributes(Param.tSwitch, {'numeric'}, {'>=',0});
 	validateattributes(Param.rmResults, {'numeric'}, [{'>=',0}, {'<=',1}]);
-	validateattributes(Param.mobilityScenario, {'numeric'}, [{'>=',0}, {'<=',2}]);
+	validateattributes(Param.mobilityScenario, {'char'}, {'nonempty'});
 	validateattributes(Param.saveFrame, {'numeric'}, [{'>=',0}, {'<=',1}]);
 	validateattributes(Param.icScheme, {'char'}, {'nonempty'});
 	validateattributes(Param.generateHeatMap, {'numeric'}, [{'>=',0}, {'<=',1}]);
 	validateattributes(Param.heatMapType, {'char'}, {'nonempty'});
 	validateattributes(Param.heatMapRes, {'numeric'}, {'>=',0});
-	validateattributes(Param.channelMode, {'char'}, {'nonempty'});
+	validateattributes(Param.channelModeDL, {'char'}, {'nonempty'});
+	validateattributes(Param.channelModeUL, {'char'}, {'nonempty'});
 	validateattributes(Param.channelRegion, {'char'}, {'nonempty'});
 	validateattributes(Param.scheduling, {'char'}, {'nonempty'});
 	validateattributes(Param.buildings, {'char'}, {'nonempty'});

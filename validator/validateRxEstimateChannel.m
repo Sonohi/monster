@@ -5,7 +5,7 @@ function validateRxEstimateChannel(rx)
 	%   Function fingerprint
 	%   rx		->  test
 
-	validateattributes(rx,{'UEReceiverModule'},{'size',[1,1]});
+	validateattributes(rx,{'ueReceiverModule'},{'size',[1,1]});
 	if length(rx.Subframe) == 0
 		sonohilog('Receiver has empty parameters for estimating the channel', 'ERR');
 	end

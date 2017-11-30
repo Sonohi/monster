@@ -22,10 +22,12 @@ utility_max = 100;
 power_min = 0;
 power_max = 100;
 
+bit_rate = zeros(Param.no_rounds,length(Users));
+
 for ll = 1:Param.no_rounds
   schedule = [enbOut(1,1,ll,sStation).schedule];
   schedule_ueid = [schedule.UeId];
-  uniques_list{ll} = unique(schedule_ueid(schedule_ueid ~= 0));
+  uniques_list{ll} = unique(schedule_ueid(schedule_ueid ~= 0 & schedule_ueid ~= -1));
   for sUser = 1:length(uniques_list{ll})
     bits = [ueOut(1,1,ll,sUser).bits];
     bit_rate(ll,sUser) = bits.tot/Param.round_duration;

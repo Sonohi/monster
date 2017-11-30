@@ -1,4 +1,4 @@
-function [ x, y ] = mobility ( scenario )
+function [ x, y ] = mobility ( scenario, velocity )
 
 % load buildings and parameters
 buildings = load_buildings('buildings.txt');
@@ -6,10 +6,8 @@ road_width = 9;
 lane_width = road_width / 3;
 wall_distance = 0.5 * scenario;
 pedestrian_distance = 0.5;
-pedestrian_speed = 1.5;
 pedestrian_turn_pause = 200;
 pedestrian_crossing_pause = 5000;
-vehicle_speed = 15;
 
 valid = false;
 
@@ -69,7 +67,7 @@ while (~valid)
             % decision: cross or keep on the same building
             if (t_ms > 1),
                 % cross or keep moving
-                [x_cross, y_cross, crossing_time, crossing, dir] =pedestrian_crossing(x(t_ms), y(t_ms), xf, yf, pedestrian_speed, buildings(:, current_building), road_width, pedestrian_turn_pause, pedestrian_crossing_pause, dir);
+                [x_cross, y_cross, crossing_time, crossing, dir] =pedestrian_crossing(x(t_ms), y(t_ms), xf, yf, velocity, buildings(:, current_building), road_width, pedestrian_turn_pause, pedestrian_crossing_pause, dir);
                 t_ms = t_ms + crossing_time;
                 x = [x x_cross];
                 y = [y y_cross];
@@ -97,7 +95,7 @@ while (~valid)
             
             % move to the corner of the building
             prev_corner = [x(t_ms) y(t_ms)];
-            [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xc, yc, pedestrian_speed);
+            [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xc, yc, velocity);
             t_ms = t_ms + walking_time;
             x = [x xw];
             y = [y yw];
@@ -109,7 +107,7 @@ while (~valid)
             % check if the pedestrian is on the right side
             side_distance = min([abs(x(t_ms) - xf) abs(y(t_ms) - yf)]);
             if (side_distance < 1),
-                [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xf, yf, pedestrian_speed);
+                [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xf, yf, velocity);
                 t_ms = t_ms + walking_time;
                 x = [x xw];
                 y = [y yw];
@@ -127,7 +125,7 @@ while (~valid)
                 
                 dir  = cart2pol(xc - x(t_ms),yc - y(t_ms));
                 % move to the corner of the building
-                [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xc, yc, pedestrian_speed);
+                [xw, yw, walking_time] = straight( x(t_ms), y(t_ms), xc, yc, velocity);
                 t_ms = t_ms + walking_time;
                 x = [x xw];
                 y = [y yw];
@@ -152,7 +150,7 @@ while (~valid)
         % the car is not on the right road yet!
         while (current_road ~= final_road),
             % get through the next intersection
-            [xs, ys, tau, path ] = next_turn (x(t_ms), y(t_ms), xf, yf, vehicle_speed, lane, current_road, roads, lane_width);
+            [xs, ys, tau, path ] = next_turn (x(t_ms), y(t_ms), xf, yf, velocity, lane, current_road, roads, lane_width);
             x = [x xs];
             y = [y ys];
             t_ms = length(x);
@@ -178,7 +176,7 @@ while (~valid)
             % switch lanes to the left
             while (lane > -1),
                 display(lane)
-                [xs, ys, tau] = switch_lane ( x(t_ms), y(t_ms), vehicle_speed, dir, right, lane_width);
+                [xs, ys, tau] = switch_lane ( x(t_ms), y(t_ms), velocity, dir, right, lane_width);
                 lane = lane - 1;
                 t_ms = t_ms + tau;
                 x = [x xs];
@@ -188,7 +186,7 @@ while (~valid)
         else
             % switch lanes to the right
             while (lane < 1),
-                [xs, ys, tau] = switch_lane ( x(t_ms), y(t_ms), vehicle_speed, dir, right, lane_width);
+                [xs, ys, tau] = switch_lane ( x(t_ms), y(t_ms), velocity, dir, right, lane_width);
                 lane = lane + 1;
                 t_ms = t_ms + tau;
                 x = [x xs];
@@ -197,13 +195,13 @@ while (~valid)
             end
         end
         % get to the spot
-        [xs, ys, tau] = straight(x(t_ms), y(t_ms), xf, yf, vehicle_speed);
+        [xs, ys, tau] = straight(x(t_ms), y(t_ms), xf, yf, velocity);
         t_ms = t_ms + tau;
         x = [x xs];
         y = [y ys];
         
         % park
-        [xs, ys, tau] = park(x(t_ms), y(t_ms), vehicle_speed, dir, right, lane_width / 2);
+        [xs, ys, tau] = park(x(t_ms), y(t_ms), velocity, dir, right, lane_width / 2);
         t_ms = t_ms + tau;
         x = [x xs];
         y = [y ys];

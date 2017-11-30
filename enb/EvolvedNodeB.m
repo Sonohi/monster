@@ -16,8 +16,9 @@ classdef EvolvedNodeB
 		TotSubframes;
 		OCNG;
 		Windowing;
-		Users;
-		Schedule;
+		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		ScheduleDL;
+		ScheduleUL;
 		RrNext;
 		Channel;
 		NSubframe;
@@ -34,6 +35,7 @@ classdef EvolvedNodeB
 		Rx;
 		Mac;
 		Rlc;
+        Seed;
 	end
 
 	methods
@@ -55,6 +57,7 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
+            obj.Seed = cellId*Param.BaseSeed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -66,38 +69,41 @@ classdef EvolvedNodeB
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
 			obj.RrNext = struct('UeId',0,'Index',1);
-			obj.Users = zeros(Param.numUsers, 1);
-			obj = resetSchedule(obj);
+			obj = resetScheduleDL(obj);
+			obj.ScheduleUL = [];
 			obj.Status = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
-			obj.Mac = struct('HarqProc', []);
-			obj.Rlc = struct('sqn', 0);
-			obj.Tx = BSTransmitterModule(obj, Param);
-			obj.Rx = BSReceiverModule(Param);
+			if Param.rtxOn
+				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+			end
+			obj.Tx = enbTransmitterModule(obj, Param);
+			obj.Rx = enbReceiverModule(Param);
+			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 
-		% Posiiton base station
+		% Position eNodeB 
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
 		end
 
 		% reset users
 		function obj = resetUsers(obj, Param)
-			obj.Users = zeros(Param.numUsers, 1);
+			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 
 		% reset schedule
-		function obj = resetSchedule(obj)
-			temp(1:obj.NDLRB,1) = struct('UeId', 0, 'Mcs', 0, 'ModOrd', 0);
-			obj.Schedule = temp;
+		function obj = resetScheduleDL(obj)
+			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
+			obj.ScheduleDL = temp;
 		end
 
 		% set subframe number
 		function obj = set.NSubframe(obj, num)
-			obj.NSubframe =  num;
+			obj.NSubframe = num;
 		end
 
     function [indPdsch, info] = getPDSCHindicies(obj)
@@ -208,6 +214,39 @@ classdef EvolvedNodeB
 		% cast object to struct
 		function enbStruct = cast2Struct(obj)
 			enbStruct = struct(obj);
+		end
+
+		% set uplink static scheduling 
+		function obj = setScheduleUL(obj, Param)
+			% Check the number of users associated snd split the BW
+			ueCount = find([obj.Users.UeId] ~= -1);
+			if ~isempty(ueCount)
+				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
+				temp = zeros(length(ueCount)*prbQuota, 1);
+				for iUser = 1:length(ueCount)
+					iStart = (iUser - 1)*prbQuota;
+					iStop = iStart + prbQuota;
+					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser)).UeId;
+				end
+				obj.ScheduleUL = temp;
+			end
+		end
+
+		% Reset an eNodeB at the end of a scheduling round
+		function obj = reset(obj, nextSchRound)
+			% First off, set the number of the next subframe within the frame
+			% this is the scheduling round modulo 10 (the frame is 10ms)
+			obj.NSubframe = mod(nextSchRound,10);
+		
+			% Reset the DL schedule
+			obj = obj.resetScheduleDL();
+
+			% Reset the transmitter
+			obj.Tx = obj.Tx.reset(obj, nextSchRound);
+		
+			% Reset the receiver
+			obj.Rx = obj.Rx.reset();
+			
 		end
 
 	end

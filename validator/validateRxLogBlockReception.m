@@ -5,7 +5,7 @@ function validateRxLogBlockReception(rx)
 	%   Function fingerprint
 	%   rx		->  test
 
-	validateattributes(rx,{'UEReceiverModule'},{'size',[1,1]});
+	validateattributes(rx,{'ueReceiverModule'},{'size',[1,1]});
 	if (length(rx.TransportBlock) == 0 || length(rx.Crc) == 0)
 		sonohiLog('Receiver has empty parameters for BLER calculation', 'ERR');
 	end

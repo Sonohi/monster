@@ -1,6 +1,6 @@
-function Users = RxBulk(Stations,Users, cec)
+function Users = ueRxBulk(Stations, Users, cec)
 
-	%   RX Bulk performs bulk operations on the recivers
+	%   UE RX Bulk performs bulk operations on the recivers
 	%
 	%   Function fingerprint
 	%   Stations	->  EvolvedNodeB array
@@ -14,7 +14,7 @@ function Users = RxBulk(Stations,Users, cec)
     user = Users(iUser);
 
     % Get serving station
-    station = Stations([Stations.NCellID] == user.ENodeB);
+    station = Stations([Stations.NCellID] == user.ENodeBID);
     scheduled = checkUserSchedule(user,station);
     if ~scheduled
       % Pass user iteration the user is not scheduled.
@@ -25,7 +25,7 @@ function Users = RxBulk(Stations,Users, cec)
     user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
 
     % Try demodulation
-    [demodBool, user.Rx] = user.Rx.demod(station);
+    [demodBool, user.Rx] = user.Rx.demodulateWaveform(station);
     % demodulate received waveform, if it returns 1 (true) then demodulated
     if demodBool
 			% Conduct reference measurements
@@ -33,7 +33,7 @@ function Users = RxBulk(Stations,Users, cec)
       % Estimate Channel
 			user.Rx = user.Rx.estimateChannel(station, cec);
       % Equalize signal
-			user.Rx = user.Rx.equalise();
+			user.Rx = user.Rx.equaliseSubframe();
       % Estimate PDSCH (main data channel)
 			user.Rx = user.Rx.estimatePdsch(user, station);
 			% calculate EVM
@@ -47,10 +47,10 @@ function Users = RxBulk(Stations,Users, cec)
 			% Update parent structure
 			Users(iUser) = user;
     else
-      sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.UeId),'WRN');
+      sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
       user.Rx.PostEvm = 100;
       user.Rx.PreEvm = 100;
-      user.Rx.WCQI = 1;
+      user.Rx.CQI = 1;
       Users(iUser) = user;
       continue;
     end

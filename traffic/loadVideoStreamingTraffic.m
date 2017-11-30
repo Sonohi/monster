@@ -1,8 +1,7 @@
-function [trSource] = loadTrafficData (path, sort)
+function [trSource] = loadVideoStreamingTraffic (path, sort)
 
-%   LOAD TRAFFIC DATA is used to get a matrix of frame sizes
-%   currently the module is limited to model video streaming with frame sizes
-%   taken from the big buck bunny video
+%   LOAD VIDEO STREAMING TRAFFIC is used to get data in terms of 
+%   frame sizes for a video streaming taken from the big buck bunny video
 %
 %   Function fingerprint
 %   path      ->  path where the CSV is located
@@ -73,8 +72,6 @@ function [trSource] = loadTrafficData (path, sort)
   end
 
   % Save to MAT file for faster access next round
-  save('traffic/trafficSource.mat', 'trSource');
-
-
+  save('traffic/videoStreaming.mat', 'trSource');
 
 end
