@@ -28,6 +28,7 @@ classdef ueReceiverModule
 		Bits;
 		Symbols;
 		PDSCH;
+		PropDelay;
 	end
 
 	methods
@@ -62,6 +63,10 @@ classdef ueReceiverModule
 
 		function obj = set.Offset(obj,offset)
 			obj.Offset = offset;
+		end
+
+		function obj = set.PropDelay(obj,distance)
+			obj.PropDelay = distance/physconst('LightSpeed');
 		end
 
 		function [returnCode, obj] = demodulateWaveform(obj,enbObj)

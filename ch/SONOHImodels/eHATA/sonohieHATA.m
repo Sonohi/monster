@@ -63,6 +63,7 @@ classdef sonohieHATA
         user.Rx.SNR = SNRLin;
         user.Rx.RxPwdBm = rxPwdBm;
         user.Rx.Waveform = RxSig;
+        User.Rx.PropDelay = obj.Channel.getDistance(Station.Position,User.Position);
         % Write changes to user object in array.
         users(find([Users.NCellID] == Pairing(2,i))) = user; %#ok
       end

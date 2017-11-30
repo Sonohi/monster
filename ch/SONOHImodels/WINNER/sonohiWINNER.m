@@ -122,6 +122,7 @@ classdef sonohiWINNER
                     User.Rx.SNR = SNRLin;
                     User.Rx.RxPwdBm = RxPwdBm;
                     User.Rx.Waveform = rxSigNorm;
+                    User.Rx.PropDelay = obj.Channel.getDistance(Station.Position,User.Position);
 
 
                     users([Users.NCellID] == UserId) = User;
