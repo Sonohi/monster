@@ -26,7 +26,7 @@ switch Param.scheduling
 		iUser = Station.RrNext.Index;
 		while (iUser <= sz && maxRounds > 0)
 			% First off check if we are in an unused position or out
-			iUser = checkIndexPosition(Param, Station, iUser);
+			iUser = checkIndexPosition(Station, iUser, sz);
 			
 			% find user in main list
 			for ixUser = 1:length(Users)
@@ -90,16 +90,11 @@ switch Param.scheduling
 						end
 					end
 					
-					% In case the UE is not receiving all the PRBs needed, the next loop
-					% will start again from it and we stop this round, otherwise
-					% continue
-					if prbsNeed > prbsSch
-						Station.RrNext.UeId = Station.Users(iUser).UeId;
-						Station.RrNext.Index = iUser;
-						iUser = sz + 1;
-					else
-						iUser = iUser + 1;
-					end
+					% Increment the user counter to serve the next one 
+					iUser = iUser + 1;
+					
+					% Check the index of the user to handle a possible reset
+					iUser = checkIndexPosition(Station, iUser, sz);
 					
 				end
 				maxRounds = maxRounds - 1;
@@ -109,7 +104,7 @@ switch Param.scheduling
 				% in the next round.
 				% Check first whether we went too far in the list and we need to restart
 				% from the beginning
-				iUser = checkIndexPosition(Param, Station, iUser);
+				iUser = checkIndexPosition(Station, iUser, sz);
 				Station.RrNext.UeId = Station.Users(iUser).UeId;
 				Station.RrNext.Index = iUser;
 				
@@ -119,8 +114,8 @@ switch Param.scheduling
 		end
 	end
 
-	function validIndex = checkIndexPosition(Param, Station, iUser)
-		if iUser > Param.numUsers || Station.Users(iUser).UeId == -1
+	function validIndex = checkIndexPosition(Station, iUser, sz)
+		if iUser > sz || Station.Users(iUser).UeId == -1
 			% In this case we need to reset to the first active and valid UE
 			validUeIndexes = find([Station.Users.UeId] ~= -1);
 			validIndex = validUeIndexes(1);

@@ -10,7 +10,7 @@ function Clusters = generateHeatMap(Stations, Channel, Param)
 %   heatMap 		->  2D matrix with combined pathloss levels
 
 % Reset channel function
-Channel = Channel.resetChannel;
+Channel = Channel.resetChannelModels();
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);
@@ -57,18 +57,20 @@ for iCluster = 1:numClusters
 	xa = xc;
 end
 
+Channel = Channel.setupChannelDL(Stations,ue);
+
 % now for each station, place the UE at the centre of each cluster and calculate
 for iStation = 1:length(Stations)
 	% Associate user with stations
-	Stations(iStation).Users.UeId = ue.NCellID;
+	Stations(iStation).Users = struct('UeId', ue.NCellID, 'CQI', -1, 'RSSI', -1);
 	ue.ENodeBID = Stations(iStation).NCellID;
 	% Set the TxWaveform etc from the dummy frames info
-	Stations(iStation).Tx.Waveform = StationsCopy(iStation).Frame;
-	Stations(iStation).Tx.WaveformInfo = Stations(iStation).FrameInfo;
-	Stations(iStation).Tx.ReGrid = Stations(iStation).FrameGrid;
+	Stations(iStation).Tx.Waveform = Stations(iStation).Tx.Frame;
+	Stations(iStation).Tx.WaveformInfo = Stations(iStation).Tx.FrameInfo;
+	Stations(iStation).Tx.ReGrid = Stations(iStation).Tx.FrameGrid;
 
-	parfor iCluster = 1:length(Clusters)
-		%sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
+	for iCluster = 1:length(Clusters)
+		sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 		% make local copy
 		ueCopy = ue;
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];

@@ -35,7 +35,7 @@ classdef UserEquipment
 		SchedulingSlots;
 		Hangover;
 		Pmax;
-        Seed;
+    Seed;
 	end
 
 	methods

@@ -14,6 +14,7 @@ function [Stations, Users] = enbDataDecoding(Stations, Users, Param, timeNow)
 	for iStation = 1:length(Stations)
 		enb = Stations(iStation);
 		% First off, find all UEs that are linked to this station in this round
+		% if the enb.Rx.UeData is empty, it means the eNodeB has no user in UL this round
 		ueGroup = find([Users.ENodeBID] == enb.NCellID);
 
 		enbUsers = Users(ueGroup);
