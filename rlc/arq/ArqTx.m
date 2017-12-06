@@ -86,7 +86,7 @@ classdef ArqTx
 			
 			if ~isempty(bufferIndices)
 				for iBuffer = 1: length(bufferIndices)
-					iBuf = bufferIndices(iBuf);
+					iBuf = bufferIndices(iBuffer);
 					if ack
 						% clean
 						obj = obj.pop(iBuf);
