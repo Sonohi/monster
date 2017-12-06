@@ -246,8 +246,9 @@ classdef HarqTx
 				% Stop a process and use that slot for the new TB
 				% Get the process that has been in the buffer the longest and delete that
 				timeStartValues = [obj.processes.timeStart];
-				[~, pid] = min(timeStartValues);
-				obj.processes(pid).state = 1;
+				[~, iProc] = min(timeStartValues);
+				obj.processes(iProc).state = 1;
+				pid = obj.processes(iProc).procId;
 			end
 		end
 

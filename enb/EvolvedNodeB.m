@@ -222,11 +222,24 @@ classdef EvolvedNodeB
 			ueCount = find([obj.Users.UeId] ~= -1);
 			if ~isempty(ueCount)
 				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
+				% Check if the quota is not below 6, in such case we need to rotate the users
+				% TODO add UL roundrobin
+				if prbQuota < 6
+					prbQuota = 6;
+					sonohilog('UL PRB quota is below minimum', 'WRN');
+				end
+				prbAvailable = Param.numSubFramesUE;
 				temp = zeros(length(ueCount)*prbQuota, 1);
 				for iUser = 1:length(ueCount)
-					iStart = (iUser - 1)*prbQuota;
-					iStop = iStart + prbQuota;
-					temp(iStart + 1:iStop) = obj.Users(ueCount(iUser)).UeId;
+					if prbAvailable >= prbQuota
+						iStart = (iUser - 1)*prbQuota;
+						iStop = iStart + prbQuota;
+						temp(iStart + 1:iStop) = obj.Users(ueCount(iUser)).UeId;
+						prbAvailable = prbAvailable - prbQuota;
+					else
+						sonohilog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
+						break;
+					end
 				end
 				obj.ScheduleUL = temp;
 			end
