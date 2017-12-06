@@ -82,20 +82,25 @@ classdef ArqTx
 		% Handle the reception of an ACK
 		function obj = handleAck(obj, ack, sqn)
 			% find buffer index
-			iBuf = find([obj.tbBuffer.sqn] == sqn);
-
-			if ack
-				% clean
-				obj = obj.pop(iBuf);
-			else
-				% check whether the maximum number has been exceeded
-				if obj.tbBuffer(iBuf).rtxCount > Param.arq.rtxMax
-					obj.tbBuffer(iBuf).state = 4;
-				else
-					% log rtx
-					obj.tbBuffer(iBuf).rtxCount = obj.tbBuffer(iBuf).rtxCount + 1;
-					obj.tbBuffer(iBuf).state = 3;
-					obj.tbBuffer(iBuf).timeStart = timeNow;
+			bufferIndices = find([obj.tbBuffer.sqn] == sqn);
+			
+			if ~isempty(bufferIndices)
+				for iBuffer = 1: length(bufferIndices)
+					iBuf = bufferIndices(iBuf);
+					if ack
+						% clean
+						obj = obj.pop(iBuf);
+					else
+						% check whether the maximum number has been exceeded
+						if obj.tbBuffer(iBuf).rtxCount > Param.arq.rtxMax
+							obj.tbBuffer(iBuf).state = 4;
+						else
+							% log rtx
+							obj.tbBuffer(iBuf).rtxCount = obj.tbBuffer(iBuf).rtxCount + 1;
+							obj.tbBuffer(iBuf).state = 3;
+							obj.tbBuffer(iBuf).timeStart = timeNow;
+						end
+					end
 				end
 			end
 			
