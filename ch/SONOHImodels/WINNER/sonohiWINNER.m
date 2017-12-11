@@ -175,7 +175,7 @@ classdef sonohiWINNER
         
 
         function [stations,users] = run(obj,Stations,Users, varargin)
-
+        try
         switch obj.Chtype
             case 'downlink'
                 users = obj.downlink(Stations,Users);
@@ -183,6 +183,12 @@ classdef sonohiWINNER
             case 'uplink'
                 stations = obj.uplink(Stations,Users);
                 users = Users;
+        end
+
+        catch ME
+            sonohilog('Something went wrong in the channel... No metrics saved.','WRN')
+            stations = Stations
+            users = Users
         end
 
         end
