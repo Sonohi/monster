@@ -42,7 +42,7 @@ classdef UserEquipment
 		% Constructor
 		function obj = UserEquipment(Param, userId)
             obj.NCellID = userId;
-            obj.Seed = userId*Param.BaseSeed;
+            obj.Seed = userId*Param.seed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;

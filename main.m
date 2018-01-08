@@ -20,46 +20,13 @@ clearvars;
 clc;
 close all;
 
-%log
+% Load parameters
+initParam; 
+
+% Set Log level
 setpref('sonohiLog','logLevel',4)
 
-% Load simulation parameters from config file
-try
-	Param = loadConfig('simulation.config');
-catch ME
-	disp('Initialising project');
-	sonohi(1);
-	Param = loadConfig('simulation.config');
-end
-
 validateParam(Param);
-
-Param.buildings = load(Param.buildings);
-Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
-	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
-Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-Param.channel.modeDL = Param.channelModeDL;
-Param.channel.modeUL = Param.channelModeUL;
-Param = rmfield(Param, 'channelModeDL');
-Param = rmfield(Param, 'channelModeUL');
-Param.channel.region = Param.channelRegion;
-Param = rmfield(Param, 'channelRegion');
-Param.harq.rtxMax = Param.harqRtx;
-Param = rmfield(Param, 'harqRtx');
-Param.harq.rv = Param.rvSeq;
-Param = rmfield(Param, 'rvSeq');
-Param.harq.proc = Param.harqProc;
-Param = rmfield(Param, 'harqProc');
-Param.harq.tout = Param.harq.proc/2 -1;
-Param.arq.maxBufferSize = Param.arqBufferSize;
-Param = rmfield(Param, 'arqBufferSize');
-Param.arq.bufferFlushTimer = Param.arqBufferFlush;
-Param = rmfield(Param, 'arqBufferFlush');
-Param.arq.rtxMax = Param.arqRtx;
-Param = rmfield(Param, 'arqRtx');
-Param.bsNoiseFigure = 3;
-Param.BaseSeed = 42;
-Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 
 sonohi(Param.reset);
 
