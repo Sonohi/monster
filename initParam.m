@@ -10,7 +10,7 @@ Param.storeTxData = 0;
 
 % Integer used to control the number of scheduling rounds (subframes) to simulate
 Param.schRounds = 100;
-Param.seed = 122;% Integer used for the simulation seed
+Param.seed = 42;% Integer used for the simulation seed
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;
 
@@ -64,7 +64,7 @@ Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 
 %% HARQ
 Param.harq.rtxMax = 3;% Integer to choose the maximum number of HARQ retransmissions
-Param.harq.rvSeq = [1,3,2];% Integer array for the redundacy version values
+Param.harq.rv = [1,3,2];% Integer array for the redundacy version values
 Param.harq.proc = 8;% Integer to choose the number of parallerl HARQ processes
 Param.rtxOn = 1;% Boolean used to enable retransmissions
 Param.arq.bufferFlusTimer = 20;% Timer for flushing out of place TBs in the RLC buffer in seconds
@@ -81,3 +81,19 @@ Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
 
 Param.harq.tout = Param.harq.proc/2 -1;
+
+% Get traffic source data and check if we have already the MAT file with the traffic data
+switch Param.trafficModel
+	case 'videoStreaming'
+		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
+			trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
+		else
+			load('traffic/videoStreaming.mat', 'trSource');
+		end
+	case 'fullBuffer'
+		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
+			trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
+		else
+			load('traffic/fullBuffer.mat', 'trSource');
+		end
+end

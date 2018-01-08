@@ -81,7 +81,7 @@ function [macroPos, microPos, h] = positionBaseStations (maBS, miBS, Param)
 	switch Param.microPos
 	case 'uniform'
 			% place the micro bs in a circle of radius around the centre
-			theta = 4*pi/miBS;
+			theta = 2*pi/miBS;
 			alpha = 0;
 			r = Param.microUniformRadius;
 			xc = (area(3) - area(1))/2;

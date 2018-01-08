@@ -43,22 +43,6 @@ Channel = ChBulk_v2(Param);
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();
 
-% Get traffic source data and check if we have already the MAT file with the traffic data
-switch Param.trafficModel
-	case 'videoStreaming'
-		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
-		else
-			load('traffic/videoStreaming.mat', 'trSource');
-		end
-	case 'fullBuffer'
-		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
-		else
-			load('traffic/fullBuffer.mat', 'trSource');
-		end
-end
-
 % Utilisation ranges
 utilLo = 1:Param.utilLoThr;
 utilHi = Param.utilHiThr:100;
