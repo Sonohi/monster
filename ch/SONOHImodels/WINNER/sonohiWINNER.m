@@ -60,6 +60,11 @@ classdef sonohiWINNER
                 obj.WconfigLayout{model}  = obj.setPropagationScenario(obj.WconfigLayout{model} ,Stations,Users, Channel);
 
                 obj.WconfigParset{model}  = obj.configureModel(obj.WconfigLayout{model},Stations);
+                
+                % Instead of removing the stochastic nature of the winner
+                % model, the seed is used for initializing the seed of the
+                % winner ensuring a somewhat stochastic process but with
+                % reproducable results.
                 rng(obj.Channel.Seed);
                 obj.WconfigParset{model}.RandomSeed = randi(999);
 
