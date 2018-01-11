@@ -22,7 +22,12 @@ function Users = ueRxBulk(Stations, Users, cec)
     end
 
     % Apply Offset
-    user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
+    if user.Rx.Offset > length(user.Rx.Waveform)
+        sonohilog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
+    else
+        user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
+    end
+    
 
     % Try demodulation
     [demodBool, user.Rx] = user.Rx.demodulateWaveform(station);
