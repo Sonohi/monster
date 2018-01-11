@@ -85,6 +85,7 @@ classdef ChBulk_v2 < SonohiChannel
             obj.Buildings = Param.buildings;
             obj.Draw = Param.draw;
             obj.Region = Param.channel.region;
+            obj.Seed = Param.seed;
         end
         
         function [Users,obj] = downlink(obj,Stations,Users)

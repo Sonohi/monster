@@ -60,6 +60,8 @@ classdef sonohiWINNER
                 obj.WconfigLayout{model}  = obj.setPropagationScenario(obj.WconfigLayout{model} ,Stations,Users, Channel);
 
                 obj.WconfigParset{model}  = obj.configureModel(obj.WconfigLayout{model},Stations);
+                rng(obj.Channel.Seed);
+                obj.WconfigParset{model}.RandomSeed = randi(999);
 
             end
 

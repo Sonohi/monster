@@ -9,6 +9,9 @@ function h1 = plotSpectrums(Users,Stations)
         if checkUserSchedule(Users(pp),station)
           Fs = Stations([Stations.NCellID] == Users(pp).ENodeBID).Tx.WaveformInfo.SamplingRate;
           sig = setPower(Users(pp).Rx.Waveform,Users(pp).Rx.RxPwdBm);
+          if isempty(sig)              
+             sonohilog("This should not happen","ERR") 
+          end
           if(~isempty(sig))
               F = fft(sig)./length(sig);
               Fpsd = 10*log10(fftshift(abs(F).^2))+30;

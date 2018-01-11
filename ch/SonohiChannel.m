@@ -1,5 +1,4 @@
 classdef SonohiChannel
-    %
     
     properties
         Area;
@@ -11,6 +10,7 @@ classdef SonohiChannel
         DownlinkModel;
         UplinkModel;
         fieldType;
+        Seed;
     end
     
     methods(Static)
