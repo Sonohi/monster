@@ -61,6 +61,9 @@ Param.heatMapRes = 10;% Heatmap resoultion in metres
 Param.scheduling = 'roundRobin';% String for the scheduling policy to use (currently only 'roundRobin')
 Param.refreshAssociationTimer = 0.001;% Double to choose the interval in s to run refreshUsersAssociation
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
+Param.icScheme = 'none';
+Param.absMask = [1,0,1,0,0,0,0,0,0,0];
+
 
 %% HARQ
 Param.harq.rtxMax = 3;% Integer to choose the maximum number of HARQ retransmissions
