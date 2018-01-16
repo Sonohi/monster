@@ -42,7 +42,7 @@ classdef UserEquipment
 		% Constructor
 		function obj = UserEquipment(Param, userId)
             obj.NCellID = userId;
-            obj.Seed = userId*Param.BaseSeed;
+            obj.Seed = userId*Param.seed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
@@ -96,7 +96,7 @@ classdef UserEquipment
 
 		% sets user trajectory
 		function obj = setTrajectory(obj, scenarioCode, Param)
-			[x, y] = mobility(scenarioCode, obj.Velocity);
+			[x, y] = mobility(scenarioCode, obj.Velocity, obj.Seed);
 			obj.Trajectory(1:length(x),1) = x;
 			obj.Trajectory(1:length(y),2) = y;
 			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];

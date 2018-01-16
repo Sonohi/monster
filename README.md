@@ -9,11 +9,26 @@ Matlab (tested version is R2016B) and included LTE system toolbox.
 
 WINNER II toolbox is required if `winner` is used as channel mode.
 
-# Features
+# Features 
 
 SONOHI is intended modular, however built around a main simulation loop which has a granularity of 2 LTE resource blocks, e.g. one scheduling round.
 
-The loop is split into three major parts, a transmitter, a channel and a receiver. Requirements and features are listed below:
+The loop is split into three major parts, a transmitter, a channel and a receiver. Major features are listed below:
+
+* Subframe granularity
+* HARQ
+* Non-full buffers
+* Power models of network elements
+
+# Getting started
+
+See `initParam.m` for configuration details. This is used by the main file for configuring the simulation. The structure of the framework is roughly is follows:
+
+* Set configurations in `initParam.m`
+* Run simulation by running `main.m`
+* This executes the simulation script which contains the main loop.
+* After the simulation is done, results are saved in the results folder
+* Simulations can be replayed by running  `utils/replaySimulation/replaySimulation.m`
 
 ## Assumptions
 
@@ -25,7 +40,11 @@ The loop is split into three major parts, a transmitter, a channel and a receive
 * Number of `Users` and their positions (currently initialized as random)
 * Number of `Stations` and their types.
 
-## Transmitter
+### Downlink
+
+See `enbTransmitterModule.m` and `ueReceiverModule.m`
+
+#### Transmitter
 
 * (Initial) User association based on basic path loss
 * CellID broadcast BCH
@@ -34,7 +53,7 @@ The loop is split into three major parts, a transmitter, a channel and a receive
 * Power tracking of eNBs
 * OFDM modulation based on number of RBs
 
-## Channel
+#### Channel
 
 Currently two modes:
 
@@ -49,9 +68,16 @@ WINNER II is implemented as a toolbox in MATLAB [[2]](https://se.mathworks.com/m
 
 Please note, no MIMO is supported yet.
 
-## Receiver
+#### Receiver
 
 * Channel estimation
 * Channel equalization
 * EVM computation
 * CQI selection
+
+
+## Uplink
+
+TODO
+
+

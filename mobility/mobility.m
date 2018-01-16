@@ -1,4 +1,6 @@
-function [ x, y ] = mobility ( scenario, velocity )
+function [ x, y ] = mobility ( scenario, velocity, seed )
+% Set base seed
+rng(seed);
 
 % load buildings and parameters
 buildings = load_buildings('buildings.txt');

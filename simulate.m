@@ -244,6 +244,7 @@ for iRound = 0:(Param.schRounds-1)
 	
 	% Plot resource grids for all users
 	if Param.draw
+        delete_figs; % Redraws the plots
 		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		[hGrids(1), hGrids(2)] = plotReGrids(Users);
 		[hSpectrums(1)] = plotSpectrums(Users,Stations);

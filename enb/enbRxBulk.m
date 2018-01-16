@@ -16,7 +16,7 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
 		% First off, check whether this station has received anything in UL.
 		% If not, it simply means that there are no UEs connected to it
 		if isempty(enb.Rx.Waveform)
-			sonohilog(sprintf('eNodeB %i has an empty received waveform',enb.NCellID), 'NFO');
+			sonohilog(sprintf('eNodeB %i has an empty received waveform',enb.NCellID), 'WRN');
 			continue;
 		end
 		% In the other cases find all UEs that are linked to this station in this round
@@ -25,10 +25,10 @@ function Stations = enbRxBulk(Stations, Users, timeNow, cec)
 		enbUsers = Users(ueGroup);
 
 		% Parse received waveform
-    enb.Rx = enb.Rx.parseWaveform(enb);
+        enb.Rx = enb.Rx.parseWaveform(enb);
 
 		% Demodulate received waveforms
-    enb.Rx = enb.Rx.demodulateWaveforms(enbUsers);
+        enb.Rx = enb.Rx.demodulateWaveforms(enbUsers);
 		
 		% Estimate Channel 
 		enb.Rx = enb.Rx.estimateChannels(enbUsers, cec);

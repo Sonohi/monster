@@ -1,4 +1,8 @@
 function [ h1, h2 ] = plotConstDiagram_rx(Stations,Users)
+    if exist('hScatter','var')
+       delete(hScatter(1))
+       delete(hScatter(2)) 
+    end
 
     h1 = figure('Name', 'Rx constellation');
     set(h1,'Position',[425 425 900 900],'WindowStyle','Docked');

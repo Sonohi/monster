@@ -58,7 +58,7 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
-            obj.Seed = cellId*Param.BaseSeed;
+            obj.Seed = cellId*Param.seed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
