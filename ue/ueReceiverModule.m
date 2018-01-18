@@ -29,11 +29,11 @@ classdef ueReceiverModule
 		Symbols;
 		PDSCH;
 		PropDelay;
-        HistoryStats;
+		HistoryStats;
 	end
-
+	
 	methods
-
+		
 		function obj = ueReceiverModule(Param, ueObj)
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.CQI = 3;
@@ -41,71 +41,79 @@ classdef ueReceiverModule
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Symbols = struct('ok', 0, 'err', 0, 'tot', 0);
 			for iStation = 1:(Param.numMacro + Param.numMicro)
-                cellstring = char(strcat("NCellID",int2str(iStation)));
+				cellstring = char(strcat("NCellID",int2str(iStation)));
 				obj.HistoryStats.(cellstring) = struct('SINRdB',[],'SNRdB',[],'RxPwdBm',[]);
 			end
-        end
-        
+		end
+		
 		function old_values = getFromHistory(obj, field, stationID)
 			stationfield = strcat('NCellID',int2str(stationID));
-            path = {'HistoryStats', stationfield, field};
+			path = {'HistoryStats', stationfield, field};
 			old_values = getfield(obj, path{:});
 		end
-
-        function obj = addToHistory(obj, field, stationID)
-            
-            old_values = obj.getFromHistory(field, stationID);
-            stationfield = strcat('NCellID',int2str(stationID));
-            path = {'HistoryStats', stationfield, field};
+		
+		function obj = addToHistory(obj, field, stationID)
+			
+			old_values = obj.getFromHistory(field, stationID);
+			stationfield = strcat('NCellID',int2str(stationID));
+			path = {'HistoryStats', stationfield, field};
 			new_value = getfield(obj, field);
 			new_array = [old_values, new_value];
-            obj = setfield(obj, path{:}, new_array);
-            
-        end
-
+			obj = setfield(obj, path{:}, new_array);
+			
+		end
+		
 		function obj = set.Waveform(obj,Sig)
 			obj.Waveform = Sig;
 		end
-
+		
 		function obj = set.SINR(obj,SINR,stationID)
 			% SINR given linear
 			obj.SINR = SINR;
 			obj.SINRdB = 10*log10(SINR);
-            
+			
 		end
-
+		
 		function obj = set.SNR(obj,SNR)
 			% SNR given linear
 			obj.SNR = SNR;
 			obj.SNRdB = 10*log10(SNR);
 		end
-
+		
 		function obj = set.RxPwdBm(obj,RxPwdBm)
 			obj.RxPwdBm = RxPwdBm;
 		end
-
+		
 		function obj = set.Offset(obj,offset)
 			obj.Offset = offset;
 		end
-
+		
 		function obj = set.PropDelay(obj,distance)
 			obj.PropDelay = distance/physconst('LightSpeed');
 		end
 
+		function obj = set.Blocks(obj, blocks)
+			obj.Blocks = blocks;
+		end
+
+		function obj = set.Bits(obj, bits)
+			obj.Bits = bits;
+		end
+		
 		function [returnCode, obj] = demodulateWaveform(obj,enbObj)
 			% TODO: validate that a waveform exist.
 			enb = cast2Struct(enbObj);
 			Subframe = lteOFDMDemodulate(enb, obj.Waveform); %#ok
-
+			
 			if all(Subframe(:) == 0) %#ok
 				returnCode = 0;
 			else
 				obj.Subframe = Subframe; %#ok
 				returnCode = 1;
 			end
-
+			
 		end
-
+		
 		% estimate channel at the receiver
 		function obj = estimateChannel(obj, enbObj, cec)
 			validateRxEstimateChannel(obj);
@@ -113,24 +121,24 @@ classdef ueReceiverModule
 			enb = cast2Struct(enbObj);
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, rx.Subframe);
 		end
-
+		
 		% equalize at the receiver
 		function obj = equaliseSubframe(obj)
 			validateRxEqualise(obj);
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
-
+		
 		function obj = estimatePdsch(obj, ue, enbObj)
 			validateRxEstimatePdsch(obj);
 			% first get the PRBs that where used for the UE with this receiver
 			enb = cast2Struct(enbObj);
 			
 			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.NCellID);
-
+			
 			% Store the full PRB set for extraction
 			fullPrbSet = enb.Tx.PDSCH.PRBSet;
-
-			% To find which received PDSCH symbols belong to this UE, we need to 
+			
+			% To find which received PDSCH symbols belong to this UE, we need to
 			% compute indexes for all other UEs allocated in this eNodeB, except
 			% when the UE we are dealing with is the first one in the order that
 			% does not have offset
@@ -138,7 +146,7 @@ classdef ueReceiverModule
 			if obj.SchIndexes(1) ~= 1
 				% extract the unique UE IDs from the schedule
 				uniqueIds = extractUniqueIds([enb.ScheduleDL.UeId]);
-				for iUser = 1:length(uniqueIds) 
+				for iUser = 1:length(uniqueIds)
 					if uniqueIds(iUser) ~= ue.NCellID
 						% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
 						prbIndices = find([enb.ScheduleDL.UeId] == uniqueIds(iUser));
@@ -152,27 +160,27 @@ classdef ueReceiverModule
 					end
 				end
 			end
-
+			
 			% Set the parameters of the PDSCH to those of the current UE
 			[~, mod, ~] = lteMCS(enb.ScheduleDL(obj.SchIndexes(1)).Mcs);
 			enb.Tx.PDSCH.Modulation = mod;
-			enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';	
+			enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';
 			
 			% Now get all the PDSCH indexes and symbols out of the received grid
-			% TODO for some reasons the built-in functions only work properly with the whole PDSCH    
-      fullPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, fullPrbSet);
+			% TODO for some reasons the built-in functions only work properly with the whole PDSCH
+			fullPdschIndices = ltePDSCHIndices(enb, enb.Tx.PDSCH, fullPrbSet);
 			[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, obj.EqSubframe);
-
+			
 			% Filter out the PDSCH symbols and bits that are meant for this receiver.
 			% The indices obtained with the function refer to positions in the main grid
 			uePdschIndices = ue.SymbolsInfo.pdschIxs;
 			uePdschRx = fullPdschRx(offset:offset + length(uePdschIndices) - 1);
-
+			
 			% Decode PDSCH
 			[ueDlsch, uePdsch] = ltePDSCHDecode(enb, enb.Tx.PDSCH, uePdschRx);
 			uePdsch = uePdsch{1};
 			ueDlsch = ueDlsch{1};
-      
+			
 			% The decoded DL-SCH bits are always returned as a cell array, so for 1 CW
 			% cases convert it
 			obj.PDSCH = uePdsch;
@@ -180,7 +188,7 @@ classdef ueReceiverModule
 			[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ...
 				ueDlsch);
 		end
-
+		
 		% calculate the EVM
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
@@ -188,29 +196,29 @@ classdef ueReceiverModule
 			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
 			sonohilog(s,'NFO0')
-
+			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
 			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
 			sonohilog(s,'NFO0')
 		end
-
+		
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
 			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 		end
-
+		
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
 			enb = cast2Struct(enbObj);
-
+			
 			%       rxSig = setPower(obj.Waveform,obj.RxPwdBm);
 			%rxSig = obj.Waveform*sqrt(10^((obj.RxPwdBm-30)/10));
 			%    Subframe = lteOFDMDemodulate(enb, rxSig); %#ok
 			%  rsmeas = hRSMeasurements(enb, Subframe);
-
+			
 			%       RSSI is the average power of OFDM symbols containing the reference
 			%       signals
 			%       RxPw is the wideband power, e.g. the received power for the whole
@@ -221,7 +229,7 @@ classdef ueReceiverModule
 			RSSI = 0.92*10^((obj.RxPwdBm-30)/10); %mWatts
 			obj.RSSIdBm = 10*log10(RSSI)+30;
 		end
-
+		
 		% Block reception
 		function obj  = logBlockReception(obj,ueObj)
 			validateRxLogBlockReception(obj);
@@ -232,13 +240,13 @@ classdef ueReceiverModule
 				obj.Blocks.err = 1;
 			end
 			obj.Blocks.tot = 1;
-
+			
 			%TB comparison and bit stats logging
 			% extract the original TB and cast it to uint
 			tbTx(1:ueObj.TransportBlockInfo.tbSize, 1) = ...
 				ueObj.TransportBlock(1:ueObj.TransportBlockInfo.tbSize, 1);
 			tbRx = obj.TransportBlock;
-
+			
 			% Check sizes and log a warning if they don't match
 			sizeCheck = length(tbTx) - length(tbRx);
 			if sizeCheck == 0
@@ -270,17 +278,17 @@ classdef ueReceiverModule
 					tot = sizeTest;
 				end
 			end
-
+			
 			obj.Bits.tot = tot;
 			obj.Bits.err = diff + errEx;
 			obj.Bits.ok = tot - diff;
 		end
-
+		
 		% Symbols reception stats
 		function obj = logSymbolsReception(obj, ue)
 			symsTx(1:ue.SymbolsInfo.symSize, 1) = ue.Symbols(1:ue.SymbolsInfo.symSize,1);
 			symsRx = obj.PDSCH;
-
+			
 			% Check sizes and log a warning if they don't match
 			sizeCheck = length(symsTx) - length(symsRx);
 			if sizeCheck == 0
@@ -311,17 +319,17 @@ classdef ueReceiverModule
 					tot = sizeTest;
 				end
 			end
-
+			
 			obj.Symbols.tot = tot;
 			obj.Symbols.err = diff + errEx;
 			obj.Symbols.ok = tot - diff;
 		end
-
+		
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
 		end
-
+		
 		% Reset receiver
 		function obj = reset(obj)
 			obj.NoiseEst = [];
@@ -347,9 +355,9 @@ classdef ueReceiverModule
 			obj.SchIndexes = [];
 			obj.PDSCH = [];
 		end
-
+		
 	end
-
-
-
+	
+	
+	
 end

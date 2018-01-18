@@ -7,7 +7,9 @@ classdef MetricRecorder
 		arqRtx;
 		ber;
 		snr;
+		snrdB;
 		sinr;
+		sinrdB
 		bler;
 		cqi;
 		preEvm;
@@ -37,6 +39,8 @@ classdef MetricRecorder
 			
 		end
 
+
+		% eNodeB metrics
 		function obj = recordUtil(obj, Stations, schRound)
 			for iStation = 1:length(Stations)
 				sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
@@ -50,5 +54,49 @@ classdef MetricRecorder
 				obj.util(schRound, iStation) = utilPercent;
 			end
 		end
+
+		function obj = recordPower(obj, Stations, schRound)
+			for iStation = 1:length(Stations)
+				if ~isempty(obj.util(schRound, iStation))
+					pIn = getPowerIn(Stations(iStation), obj.util(schRound, iStation)/100);
+					obj.power(schRound, iStation) = pIn;
+				else	
+					sonohilog('Power consumed cannot be recorded. Please call recordUtil first.','ERR')
+				end
+			end
+		end
+
+		function obj = recordSchedule(obj, Stations, schRound)
+			for iStation = 1:length(Stations)
+				obj.schedule(schRound, iStation) = Stations(iStation).ScheduleDL;
+			end
+		end
+
+
+		% UE metrics
+		function obj = recordBer(obj, Users, schRound)
+			for iUser = 1:length(Users)
+				if Users(iUser).Rx.Bits.tot ~= 0
+					obj.ber(schRound, iUser) = Users(iUser).Rx.Bits.err/Users(iUser).Rx.Bits.tot;
+				end
+			end
+		end
+
+		function obj = recordBler(obj, Users, schRound)
+			for iUser = 1:length(Users)
+				if Users(iUser).Rx.Blocks.tot ~= 0
+					obj.ber(schRound, iUser) = Users(iUser).Rx.Blocks.err/Users(iUser).Rx.Blocks.tot;
+				end
+			end
+		end
+
+		function obj = recordSnr(obj, Users, schRound)
+			for iUser = 1:length(Users)
+				if Users(iUser).Rx.Blocks.tot ~= 0
+					obj.ber(schRound, iUser) = Users(iUser).Rx.Blocks.err/Users(iUser).Rx.Blocks.tot;
+				end
+			end
+		end
+
 	end
 end
