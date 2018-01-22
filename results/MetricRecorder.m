@@ -147,10 +147,10 @@ classdef MetricRecorder
 
 		function obj = recordEvm(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.PreEvm) && 
+				if ~isempty(Users(iUser).Rx.PreEvm)
 					obj.preEvm(schRound, iUser) = Users(iUser).Rx.PreEvm;
 				end
-				if ~isempty(Users(iUser).Rx.PostEvm) && 
+				if ~isempty(Users(iUser).Rx.PostEvm)
 					obj.postEvm(schRound, iUser) = Users(iUser).Rx.PostEvm;
 				end
 			end
@@ -158,8 +158,8 @@ classdef MetricRecorder
 
 		function obj = recordThroughput(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.Bits) && Users(iUser).Rx.Bits.tot ~= 0
-					obj.ber(schRound, iUser) = Users(iUser).Rx.Bits.ok/Users(iUser).Rx.Bits.tot;
+				if ~isempty(Users(iUser).Rx.Bits)
+					obj.throughput(schRound, iUser) = Users(iUser).Rx.Bits.ok*10e3;
 				end
 			end
 		end
