@@ -91,11 +91,11 @@ classdef ueReceiverModule
 		function obj = set.PropDelay(obj,distance)
 			obj.PropDelay = distance/physconst('LightSpeed');
 		end
-
+		
 		function obj = set.Blocks(obj, blocks)
 			obj.Blocks = blocks;
 		end
-
+		
 		function obj = set.Bits(obj, bits)
 			obj.Bits = bits;
 		end
