@@ -13,6 +13,7 @@ Stations = DataIn.Stations;
 Users = DataIn.Users;
 Channel = DataIn.Channel;
 ChannelEstimator = DataIn.ChannelEstimator;
+SimulationMetrics = MetricRecorder(Param, utilLo, utilHi);
 
 % Create structures to hold transmission data
 if (Param.storeTxData)
@@ -23,28 +24,6 @@ end
 
 % create a string to mark the output of this simulation
 outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
-
-% Prepare results data structures
-enbResults(1:Param.schRounds, 1:Param.numMacro + Param.numMicro) = struct(...
-	'power', 0,...
-	'util', 0,...
-	'schedule', []);
-
-ueResults(1:Param.schRounds, 1:Param.numUsers) = struct(...
-	'blocks', [],...
-	'cqi', NaN,...
-	'preEvm', NaN,...
-	'postEvm', NaN,....
-	'bits', [],...
-	'sinr', NaN,...
-	'snr',NaN,...
-	'rxPosition', [],...
-	'txPosition', [], ...
-	'symbols', [], ...
-	'scheduled',NaN,...
-	'servingStation',NaN);
-
-infoResults = struct('utilLo', utilLo, 'utilHi', utilHi);
 
 if Param.generateHeatMap
 	switch Param.heatMapType
@@ -226,13 +205,13 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('eNodeB-space metrics recording', 'NFO');
-	[enbResults, resultsStore] = recordEnBResults(Stations, resultsStore, enbResults, iRound);
+	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('UE-space metrics recording', 'NFO');
-	[ueResults, Users] = recordUEResults(Users, Stations, ueResults, iRound);
+	SimulationMetrics = SimulationMetrics.recordUeMetrics(Users, iRound);
 
 	% -----------
 	% UE MOVEMENT
@@ -244,7 +223,7 @@ for iRound = 0:(Param.schRounds-1)
 	
 	% Plot resource grids for all users
 	if Param.draw
-        delete_figs; % Redraws the plots
+    delete_figs; % Redraws the plots
 		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
 		[hGrids(1), hGrids(2)] = plotReGrids(Users);
 		[hSpectrums(1)] = plotSpectrums(Users,Stations);
@@ -266,5 +245,5 @@ for iRound = 0:(Param.schRounds-1)
 end % end round
 
 % Once this simulation set is done, save the output
-save(strcat('results/', outPrexif, '.mat'), 'enbResults', 'ueResults', 'infoResults');
+save(strcat('results/', outPrexif, '.mat'), 'SimulationMetrics');
 end

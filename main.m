@@ -72,6 +72,3 @@ for iUtilLo = 1: length(utilLo)
 		simulate(Param, simData, utilLo(iUtilLo), utilHi(iUtilHi));
 	end
 end
-
-% compile all results files
-compileResults(Param, utilLo, utilHi, Stations, Users);

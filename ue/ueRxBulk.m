@@ -56,6 +56,8 @@ function Users = ueRxBulk(Stations, Users, cec)
       user.Rx.PostEvm = 100;
       user.Rx.PreEvm = 100;
       user.Rx.CQI = 1;
+      user.Rx.Blocks = struct('tot',1,'err',1,'ok',0);
+      user.Rx.Bits = struct('tot',1,'err',1,'ok',0);
       Users(iUser) = user;
       continue;
     end
