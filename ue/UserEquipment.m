@@ -67,7 +67,7 @@ classdef UserEquipment
           obj = setTrajectory(obj, 2, Param);
 				case 'static'
 					obj.Velocity = 0; % in m/s
-          obj.Trajectory = 0;
+          obj = setTrajectory(obj, 1, Param);
 				case 'superman'
 					obj.Velocity = 100; % in m/s
           obj = setTrajectory(obj, 1, Param);

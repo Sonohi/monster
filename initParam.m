@@ -27,7 +27,7 @@ Param.microHeight = 25;% Double used to specify the height in metres of the micr
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings
 Param.numUsers = 4;% Integer used for the number of UEs
-Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman)
+Param.mobilityScenario = 'static';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.utilLoThr = 1;% Integer for the threshold for the low utilisation range (>= 1)
 Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range (<= 100)
