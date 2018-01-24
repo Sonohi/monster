@@ -19,7 +19,7 @@ Param.numSubFramesMacro = 50;% Integer used to set the number of RBs for a macro
 Param.numSubFramesMicro = 25;% Integer used to set the number of RBs for a micro eNodeB
 Param.numSubFramesUE = 25;% Integer used to set the number of RBs for the uplink
 Param.numMacro = 1;% Integer used to specify the number of macro eNodeBs in the scenario (currently only 1)
-Param.numMicro = 2;% Integer used to specify the number of micro eNodeBs in the scenario
+Param.numMicro = 4;% Integer used to specify the number of micro eNodeBs in the scenario
 Param.microPos = 'uniform';% Array of char to deicde the positioning of the micro BS
 Param.microUniformRadius = 100;% Double radius of distance from centre for microBS in metres
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
@@ -31,7 +31,7 @@ Param.mobilityScenario = 'superman';% Integer to choose the mobility scenario (p
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.utilLoThr = 1;% Integer for the threshold for the low utilisation range (>= 1)
 Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range (<= 100)
-Param.trafficModel = 'fullBuffer';% Traffic model
+Param.trafficModel = 'videoStreaming';% Traffic model %videoStreaming or %fullbuffer
 %% Physical layer
 Param.ulFreq = 1747.5;% Double used for the uplink carrier frequency in MHz
 Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
@@ -76,7 +76,6 @@ Param.arq.rtxMax = 1;% Integer to choose the maximum number of ARQ retransmissio
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
 
-
 %%%%% SETUP STUFF - DON'T TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING
 Param.buildings = load(Param.buildings);
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
@@ -89,14 +88,18 @@ Param.harq.tout = Param.harq.proc/2 -1;
 switch Param.trafficModel
 	case 'videoStreaming'
 		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
+			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 		else
-			load('traffic/videoStreaming.mat', 'trSource');
+			traffic = load('traffic/videoStreaming.mat');
+            Param.trSource = traffic.trSource;
+            clear traffic
 		end
 	case 'fullBuffer'
 		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
+			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 		else
-			load('traffic/fullBuffer.mat', 'trSource');
+			traffic = load('traffic/fullBuffer.mat');
+            Param.trSource = traffic.trSource;
+            clear traffic
 		end
 end
