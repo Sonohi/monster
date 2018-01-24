@@ -43,7 +43,7 @@ Param.ueNoiseFigure = 7;% Double used for the UE noise figure in dB
 Param.bsNoiseFigure = 3;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 %% Channel configuration
-Param.channel.modeDL = 'winner';% String to control the channel mode in DL 
+Param.channel.modeDL = 'winner';% String to control the channel mode in DL
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'DenseUrban';% String to control the channel region
 %% SON parameters
@@ -100,3 +100,5 @@ switch Param.trafficModel
 			load('traffic/fullBuffer.mat', 'trSource');
 		end
 end
+
+save(strcat('SimulationParameters.mat'), 'Param', 'trSource');
