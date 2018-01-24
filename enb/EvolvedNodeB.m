@@ -35,10 +35,10 @@ classdef EvolvedNodeB
 		Rx;
 		Mac;
 		Rlc;
-        Seed;
-        AbsMask;
+		Seed;
+		AbsMask;
 	end
-
+	
 	methods
 		% Constructor
 		function obj = EvolvedNodeB(Param, BsClass, cellId)
@@ -58,7 +58,7 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
-            obj.Seed = cellId*Param.seed;
+			obj.Seed = cellId*Param.seed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -84,43 +84,43 @@ classdef EvolvedNodeB
 			obj.Tx = enbTransmitterModule(obj, Param);
 			obj.Rx = enbReceiverModule(Param);
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
-            obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
+			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 		end
-
-		% Position eNodeB 
+		
+		% Position eNodeB
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
 		end
-
+		
 		% reset users
 		function obj = resetUsers(obj, Param)
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
-
+		
 		% reset schedule
 		function obj = resetScheduleDL(obj)
 			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
 			obj.ScheduleDL = temp;
 		end
-
+		
 		% set subframe number
 		function obj = set.NSubframe(obj, num)
 			obj.NSubframe = num;
 		end
-
-    function [indPdsch, info] = getPDSCHindicies(obj)
-      enb = cast2Struct(obj);
-      % get PDSCH indexes
-      [indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
-    end
-
+		
+		function [indPdsch, info] = getPDSCHindicies(obj)
+			enb = cast2Struct(obj);
+			% get PDSCH indexes
+			[indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+		end
+		
 		% create list of neighbours
 		function obj = setNeighbours(obj, Stations, Param)
 			% the macro eNodeB has neighbours all the micro
 			if obj.BsClass == 'macro'
 				obj.Neighbours(1:Param.numMicro) = find([Stations.NCellID] ~= obj.NCellID);
-			% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
-			% in a circle of radius Param.nboRadius
+				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
+				% in a circle of radius Param.nboRadius
 			else
 				for iStation = 1:length(Stations)
 					if Stations(iStation).BsClass == 'macro'
@@ -139,7 +139,7 @@ classdef EvolvedNodeB
 				end
 			end
 		end
-
+		
 		% check utilisation wrapper
 		function obj = checkUtilisation(obj, util, Param, loThr, hiThr, Stations)
 			% overload
@@ -150,13 +150,13 @@ classdef EvolvedNodeB
 					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
 					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
-
+					
 					% Loop the neighbours to find an inactive one
 					for iNbo = 1:length(nboMicroIxs)
 						if nboMicroIxs(iNbo) ~= 0
 							% find this neighbour in the stations
 							nboIx = find([Stations.NCellID] == obj.Neighbours(nboMicroIxs(iNbo)));
-
+							
 							% Check if it can be activated
 							if (~isempty(nboIx) && Stations(nboIx).Status == 5)
 								% in this case change the status of the target neighbour to "boot"
@@ -169,8 +169,8 @@ classdef EvolvedNodeB
 						end
 					end
 				end
-
-			% underload, shutdown, inactive or boot
+				
+				% underload, shutdown, inactive or boot
 			elseif util <= loThr
 				switch obj.Status
 					case 1
@@ -202,23 +202,23 @@ classdef EvolvedNodeB
 							obj.HystCount = 0;
 						end
 				end
-
-			% normal operative range
+				
+				% normal operative range
 			else
 				obj.Status = 1;
 				obj.HystCount = 0;
 				obj.SwitchCount = 0;
-
+				
 			end
-
+			
 		end
-
+		
 		% cast object to struct
 		function enbStruct = cast2Struct(obj)
 			enbStruct = struct(obj);
 		end
-
-		% set uplink static scheduling 
+		
+		% set uplink static scheduling
 		function obj = setScheduleUL(obj, Param)
 			% Check the number of users associated snd split the BW
 			ueCount = find([obj.Users.UeId] ~= -1);
@@ -246,24 +246,24 @@ classdef EvolvedNodeB
 				obj.ScheduleUL = temp;
 			end
 		end
-
+		
 		% Reset an eNodeB at the end of a scheduling round
 		function obj = reset(obj, nextSchRound)
 			% First off, set the number of the next subframe within the frame
 			% this is the scheduling round modulo 10 (the frame is 10ms)
 			obj.NSubframe = mod(nextSchRound,10);
-		
+			
 			% Reset the DL schedule
 			obj = obj.resetScheduleDL();
-
+			
 			% Reset the transmitter
 			obj.Tx = obj.Tx.reset(obj, nextSchRound);
-		
+			
 			% Reset the receiver
 			obj.Rx = obj.Rx.reset();
 			
 		end
-
+		
 	end
-
+	
 end
