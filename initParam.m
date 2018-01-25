@@ -37,13 +37,11 @@ Param.trafficModel = 'fullBuffer';% Traffic model
 %% Physical layer
 Param.ulFreq = 1747.5;% Double used for the uplink carrier frequency in MHz
 Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
-Param.maxTbSize = 97896;% Double used for the maximum size of a TB for storing in bits
-Param.maxCwdSize = 10e5;% Double used for the maximum size of a codeword for storing in bits
-Param.maxSymSize = 10e5;% Double used for the maximum size of a list of OFDM symbols for storing
 Param.prbSym = 160;% Integer used for the number of OFMD symbols in a RB
 Param.ueNoiseFigure = 7;% Double used for the UE noise figure in dB
 Param.bsNoiseFigure = 3;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
+Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
 Param.channel.modeDL = 'winner';% String to control the channel mode in DL
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
@@ -58,7 +56,6 @@ Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range
 %% Scheduling
 Param.scheduling = 'roundRobin';% String for the scheduling policy to use (currently only 'roundRobin')
 Param.refreshAssociationTimer = 0.001;% Double to choose the interval in s to run refreshUsersAssociation
-Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 Param.icScheme = 'none';
 Param.absMask = [1,0,1,0,0,0,0,0,0,0];
 
@@ -74,6 +71,9 @@ Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
 
 %%%%% SETUP STUFF - DON'T TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING
+Param.maxTbSize = 97896;% Double used for the maximum size of a TB for storing in bits
+Param.maxCwdSize = 10e5;% Double used for the maximum size of a codeword for storing in bits
+Param.maxSymSize = 10e5;% Double used for the maximum size of a list of OFDM symbols for storing
 Param.buildings = load(Param.buildings);
 Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
