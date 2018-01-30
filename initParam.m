@@ -24,8 +24,8 @@ Param.numSubFramesMacro = 50;% Integer used to set the number of RBs for a macro
 Param.numSubFramesMicro = 25;% Integer used to set the number of RBs for a micro eNodeB
 Param.numSubFramesUE = 25;% Integer used to set the number of RBs for the uplink
 Param.numMacro = 1;% Integer used to specify the number of macro eNodeBs in the scenario (currently only 1)
-Param.numMicro = 2;% Integer used to specify the number of micro eNodeBs in the scenario
-Param.microPos = 'uniform';% Array of char to decide the positioning of the micro BS
+Param.numMicro = 4;% Integer used to specify the number of micro eNodeBs in the scenario
+Param.microPos = 'uniform';% Array of char to deicde the positioning of the micro BS
 Param.microUniformRadius = 100;% Double radius of distance from centre for microBS in metres
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
@@ -86,15 +86,19 @@ Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,
 switch Param.trafficModel
 	case 'videoStreaming'
 		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
+			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 		else
-			load('traffic/videoStreaming.mat', 'trSource');
+			traffic = load('traffic/videoStreaming.mat');
+            Param.trSource = traffic.trSource;
+            clear traffic
 		end
 	case 'fullBuffer'
 		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
-			trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
+			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 		else
-			load('traffic/fullBuffer.mat', 'trSource');
+			traffic = load('traffic/fullBuffer.mat');
+            Param.trSource = traffic.trSource;
+            clear traffic
 		end
 end
 

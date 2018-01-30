@@ -48,7 +48,7 @@ utilLo = 1:Param.utilLoThr;
 utilHi = Param.utilHiThr:100;
 
 % Create struct to pass data to the simulation function
-simData = struct('trSource', trSource, 'Stations', Stations, 'Users', Users,...
+simData = struct('trSource', Param.trSource, 'Stations', Stations, 'Users', Users,...
 	'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
 
 % if set, clean the results folder
