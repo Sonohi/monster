@@ -21,7 +21,7 @@ clc;
 close all;
 
 % Load parameters
-initParam; 
+load('SimulationParameters.mat');
 
 % Set Log level
 setpref('sonohiLog','logLevel',4)

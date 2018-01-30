@@ -1,0 +1,3 @@
+function setChannelParam(app, event)
+            app.SimParam.channel.(event.Source.Tag) = event.Value;      
+        end

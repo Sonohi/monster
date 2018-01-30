@@ -1,0 +1,35 @@
+function saveParamAndRun(app, event)
+            app.SimParam.buildings = load('mobility/buildings.txt');
+%             app.SimParam.buildingHeight = [20,50];
+%             app.SimParam.area = [min(app.SimParam.buildings(:, 1)), min(app.SimParam.buildings(:, 2)), ...
+%             	max(app.SimParam.buildings(:, 3)), max(app.SimParam.buildings(:, 4))];
+%             app.SimParam.buildings(:,5) = randi([app.SimParam.buildingHeight],[1 length(app.SimParam.buildings(:,1))]);
+%             
+%             app.SimParam.harq.tout = app.SimParam.harq.proc/2 -1;
+%             
+%             % Get traffic source data and check if we have already the MAT file with the traffic data
+%             switch app.SimParam.trafficModel
+%             	case 'videoStreaming'
+%             	   if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || app.SimParam.reset)
+%             	       app.SimTraffic = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
+%             	   else
+%             	       load 'traffic/videoStreaming.mat' 'trSource';
+%                        app.SimTraffic = trSource;
+%             	   end
+%             	case 'fullBuffer'
+%             	   if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || app.SimParam.reset)
+%             	       app.SimTraffic = loadFullBufferTraffic('traffic/fullBuffer.csv');
+%             	   else
+%             	       load 'traffic/fullBuffer.mat' 'trSource';
+%                        app.SimTraffic = trSource;
+%             	   end
+%             end
+%             Param = app.SimParam;
+%             trSource = app.SimTraffic;
+%             save(strcat('SimulationParameters.mat'), 'Param', 'trSource');
+%             
+%             % RUN!!!!
+%             main;
+            app.Button.Enable = 'off';
+            app.Button_2.Enable = 'on';
+        end
