@@ -102,4 +102,4 @@ switch Param.trafficModel
 		end
 end
 
-save(strcat('SimulationParameters.mat'), 'Param', 'trSource');
+save('SimulationParameters.mat', 'Param');
