@@ -1,0 +1,3 @@
+function setParamValue(app, event)
+		app.SimParam.(event.Source.Tag) = event.Value;
+end

@@ -19,7 +19,7 @@ Param.generateHeatMap = 0;% Boolean to control the generation of a heatmap of th
 Param.heatMapType = 'perStation';% String to control the type of heatmap
 Param.heatMapRes = 10;% Heatmap resoultion in metresse
 
-%% Network layout
+%% Network
 Param.numSubFramesMacro = 50;% Integer used to set the number of RBs for a macro eNodeB
 Param.numSubFramesMicro = 25;% Integer used to set the number of RBs for a micro eNodeB
 Param.numSubFramesUE = 25;% Integer used to set the number of RBs for the uplink
@@ -34,6 +34,8 @@ Param.numUsers = 4;% Integer used for the number of UEs
 Param.mobilityScenario = 'static';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.trafficModel = 'fullBuffer';% Traffic model
+Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
+Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
 %% Physical layer
 Param.ulFreq = 1747.5;% Double used for the uplink carrier frequency in MHz
 Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
@@ -59,28 +61,26 @@ Param.refreshAssociationTimer = 0.001;% Double to choose the interval in s to ru
 Param.icScheme = 'none';
 Param.absMask = [1,0,1,0,0,0,0,0,0,0];
 
-%% HARQ
+%%%%% SETUP STUFF - DON'T TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING
+%% HARQ & ARQ
 Param.harq.rtxMax = 3;% Integer to choose the maximum number of HARQ retransmissions
 Param.harq.rv = [1,3,2];% Integer array for the redundacy version values
 Param.harq.proc = 8;% Integer to choose the number of parallerl HARQ processes
+Param.harq.tout = Param.harq.proc/2 -1;
 Param.rtxOn = 1;% Boolean used to enable retransmissions
 Param.arq.bufferFlusTimer = 20;% Timer for flushing out of place TBs in the RLC buffer in seconds
 Param.arq.maxBufferSize = 1024;% Maximum number of TBs that the RLC can store at the same time as integer
 Param.arq.rtxMax = 1;% Integer to choose the maximum number of ARQ retransmissions
-Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
-Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
-
-%%%%% SETUP STUFF - DON'T TOUCH UNLESS YOU KNOW WHAT YOU'RE DOING
+%% PHY
 Param.maxTbSize = 97896;% Double used for the maximum size of a TB for storing in bits
 Param.maxCwdSize = 10e5;% Double used for the maximum size of a codeword for storing in bits
 Param.maxSymSize = 10e5;% Double used for the maximum size of a list of OFDM symbols for storing
+%% Buildings
 Param.buildings = load(Param.buildings);
 Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-
-Param.harq.tout = Param.harq.proc/2 -1;
 
 % Get traffic source data and check if we have already the MAT file with the traffic data
 switch Param.trafficModel
