@@ -212,22 +212,19 @@ classdef ueReceiverModule
 		
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
+            
 			enb = cast2Struct(enbObj);
-			
-			%       rxSig = setPower(obj.Waveform,obj.RxPwdBm);
-			%rxSig = obj.Waveform*sqrt(10^((obj.RxPwdBm-30)/10));
-			%    Subframe = lteOFDMDemodulate(enb, rxSig); %#ok
-			%  rsmeas = hRSMeasurements(enb, Subframe);
-			
-			%       RSSI is the average power of OFDM symbols containing the reference
+            
+            %       RSSI is the average power of OFDM symbols containing the reference
 			%       signals
 			%       RxPw is the wideband power, e.g. the received power for the whole
 			%       subframe, the RSSI must be the ratio of OFDM symbols occupying the
 			%       subframe scaled with the wideband received power.
-			%       TODO: Replace this approximation with correct calculation on
-			%       demodulated grid.
-			RSSI = 0.92*10^((obj.RxPwdBm-30)/10); %mWatts
-			obj.RSSIdBm = 10*log10(RSSI)+30;
+            Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm)); %Apply recieved power to waveform.
+            rssiIndicies = lteCellRSIndices(enb,0);
+            AntennaRSSI = sum(abs(obj.Subframe(rssiIndicies).^2))/(length(rssiIndicies));   
+            obj.RSSIdBm = 10*log10(AntennaRSSI);
+
 		end
 		
 		% Block reception
