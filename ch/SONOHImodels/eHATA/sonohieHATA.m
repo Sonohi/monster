@@ -121,9 +121,8 @@ classdef sonohieHATA
         [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
           distance, hbPos(3), hmPos(3), obj.Channel.Region);
       end
-
-
-      txPw = 10*log10(Station.Pmax)+30; %dBm.
+      % Get transmission power per symbol
+      txPw = 10*log10(Station.getTransmissionPower)+30; %dBm.
 
       rxPwdBm = txPw-lossdB; %dBm
       % SNR = P_rx_db - P_noise_db
