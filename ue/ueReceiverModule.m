@@ -220,10 +220,12 @@ classdef ueReceiverModule
 			%       RxPw is the wideband power, e.g. the received power for the whole
 			%       subframe, the RSSI must be the ratio of OFDM symbols occupying the
 			%       subframe scaled with the wideband received power.
-            Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm)); %Apply recieved power to waveform.
-            rssiIndicies = lteCellRSIndices(enb,0);
-            AntennaRSSI = sum(abs(obj.Subframe(rssiIndicies).^2))/(length(rssiIndicies));   
-            obj.RSSIdBm = 10*log10(AntennaRSSI);
+            Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
+            meas = hRSMeasurements(enb,Subframe);
+            obj.RSRPdBm = meas.RSRPdBm;
+            obj.RSSIdBm = meas.RSSIdBm;
+            obj.RSRQdB = meas.RSRQdB;
+           
 
 		end
 		

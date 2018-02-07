@@ -16,6 +16,9 @@ classdef MetricRecorder
 		postEvm;
 		throughput;
 		receivedPowerdBm;
+        rsrqdB;
+        rsrpdBm;
+        rssidBm;
 	end
 	
 	methods
@@ -42,6 +45,9 @@ classdef MetricRecorder
 			obj.postEvm = zeros(Param.schRounds,Param.numUsers);
 			obj.throughput = zeros(Param.schRounds,Param.numUsers);
 			obj.receivedPowerdBm = zeros(Param.schRounds,Param.numUsers);
+            obj.rsrpdBm = zeros(Param.schRounds,Param.numUsers);
+            obj.rssidBm = zeros(Param.schRounds,Param.numUsers);
+            obj.rsrqdB = zeros(Param.schRounds,Param.numUsers);
 		end
 		
 		% eNodeB metrics
@@ -113,6 +119,7 @@ classdef MetricRecorder
 			obj = obj.recordEvm(Users, schRound);
 			obj = obj.recordThroughput(Users, schRound);
 			obj = obj.recordReceivedPowerdBm(Users, schRound);
+            obj = obj.recordRSMeasurements(Users,schRound);
 		end
 		
 		function obj = recordBer(obj, Users, schRound)
@@ -127,6 +134,20 @@ classdef MetricRecorder
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.Blocks) && Users(iUser).Rx.Blocks.tot ~= 0
 					obj.bler(schRound, iUser) = Users(iUser).Rx.Blocks.err/Users(iUser).Rx.Blocks.tot;
+				end
+			end
+        end
+        
+        function obj = recordRSMeasurements(obj, Users, schRound)
+			for iUser = 1:length(Users)
+				if ~isempty(Users(iUser).Rx.RSSIdBm)
+					obj.rssidBm(schRound, iUser) = Users(iUser).Rx.RSSIdBm;
+                end
+				if ~isempty(Users(iUser).Rx.RSRPdBm)
+					obj.rsrpdBm(schRound, iUser) = Users(iUser).Rx.RSRPdBm;
+                end
+				if ~isempty(Users(iUser).Rx.RSRQdB)
+					obj.rsrqdB(schRound, iUser) = Users(iUser).Rx.RSRQdB;
 				end
 			end
 		end
