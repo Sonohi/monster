@@ -96,7 +96,7 @@ classdef UserEquipment
 
 		% sets user trajectory
 		function obj = setTrajectory(obj, scenarioCode, Param)
-			[x, y] = mobility(scenarioCode, obj.Velocity, obj.Seed);
+			[x, y] = mobility(scenarioCode, obj.Velocity, obj.Seed, Param.mobilityStep);
 			obj.Trajectory(1:length(x),1) = x;
 			obj.Trajectory(1:length(y),2) = y;
 			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
@@ -120,7 +120,8 @@ classdef UserEquipment
 		% move User
 		function obj = move(obj, ts, Param)
 			% if we are at the beginning, don't move
-			if ts ~= 0
+			if ts > 0 && mod(ts * 1000, Param.mobilityStep * 1000) == 0
+                sonohilog('UE moving', 'NFO');
 
 				% delta of time since last step
 				tDelta = ts - obj.TLast;

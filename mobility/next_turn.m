@@ -1,4 +1,4 @@
-function [ x, y, t, path ] = next_turn (x0, y0, xf, yf, speed, lane, road, roads, lane_width)
+function [ x, y, t, path ] = next_turn (x0, y0, xf, yf, speed, lane, road, roads, lane_width, timestep)
 % NEXT_TURN = pass the next intersection
 %
 %  x0 = starting point x coordinate
@@ -58,7 +58,7 @@ path = [];
 
 if(dir == current_dir)
     % get past the crossing
-    [xs, ys, tau] = straight(x0, y0, xc + lane_width * lane * sin(dir), yc - lane_width * lane * cos(dir), speed);
+    [xs, ys, tau] = straight(x0, y0, xc + lane_width * lane * sin(dir), yc - lane_width * lane * cos(dir), speed, timestep);
     t = t + tau;
     x = [x xs];
     y = [y ys];
@@ -69,7 +69,7 @@ right = false;
 if (abs(dir - mod(current_dir, 2 * pi) - pi / 2) < 1),
     % switch lanes if necessary
     while (lane > -1),
-        [xs, ys, tau] = switch_lane ( x(t), y(t), speed, current_dir, right, lane_width);
+        [xs, ys, tau] = switch_lane ( x(t), y(t), speed, current_dir, right, lane_width, timestep);
         lane = lane - 1;
         t = t + tau;
         x = [x xs];
@@ -80,7 +80,7 @@ else if (dir ~= current_dir),
         % switch lanes if necessary
         right = true;
         while (lane < 1),
-            [xs, ys, tau] = switch_lane ( x(t), y(t), speed, current_dir, right, lane_width);
+            [xs, ys, tau] = switch_lane ( x(t), y(t), speed, current_dir, right, lane_width, timestep);
             lane = lane + 1;
             t = t + tau;
             x = [x xs];
@@ -97,7 +97,7 @@ yi = yc - (5 + 1.5 * lane_width) * sin(current_dir) - lane * lane_width * cos(cu
 t = t + tau;
 x = [x xs];
 y = [y ys];
-[xs, ys, tau] = turn(xi, yi, speed, current_dir, right, lane_width / 2);
+[xs, ys, tau] = turn(xi, yi, speed, current_dir, right, lane_width / 2, timestep);
 t = t + tau;
 x = [x xs];
 y = [y ys];
