@@ -210,9 +210,9 @@ classdef sonohiWINNER
             % Get distance of Tx - Rx
             distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3;
 
-            % Compute transmission power
-            txPw = 10*log10(TxNode.Pmax)+30; %dBm.
-
+            % Get transmission power
+            txPw = 10*log10(TxNode.getTransmissionPower)+30; %dBm.
+            
             % Setup link budget
             rxPwdBm = txPw-lossdB; %dBm
             % SNR = P_rx_db - P_noise_db
