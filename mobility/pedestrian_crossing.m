@@ -1,4 +1,4 @@
-function [ x, y, t, crossing, dir ] = pedestrian_crossing ( x0, y0, xf, yf, speed, building, road_width, turn_pause, crossing_pause, prev_dir )
+function [ x, y, t, crossing, dir ] = pedestrian_crossing ( x0, y0, xf, yf, speed, building, road_width, turn_pause, crossing_pause, prev_dir, timestep )
 % PEDESTRIAN_CROSSING = choose the best direction and cross the road if necessary
 %
 %  x0 = starting point x coordinate
@@ -8,9 +8,10 @@ function [ x, y, t, crossing, dir ] = pedestrian_crossing ( x0, y0, xf, yf, spee
 %  speed = speed (in m/s)
 %  building = coordinates of the current building
 %  road_width = the width of the road
-%  turn_pause = pause when changing direction (in ms)
-%  crossing_pause = maximum pause before crossing (in ms)
+%  turn_pause = pause when changing direction (in timesteps)
+%  crossing_pause = maximum pause before crossing (in timesteps)
 %  prev_dir = the direction the pedestrian came from
+%  timestep = time step in seconds
 %
 %  x = trajectory (x coord.)
 %  y = trajectory (y coord.)
@@ -52,7 +53,7 @@ y(1) = y0;
 % cross or stay
 
 if ((dir == pi / 2 && corner(2) > 0) || (dir == 2 * pi && corner(1) > 0) || (dir == 3 * pi / 2 && corner(2) < 0) || (dir == pi && corner(1) < 0)),
-    [x, y, t] =  cross_road ( x0, y0, speed, dir, road_width );
+    [x, y, t] =  cross_road ( x0, y0, speed, dir, road_width, timestep );
     t = t + crossing_pause;
     x = [ones(1, crossing_pause) * x0 x];
     y = [ones(1, crossing_pause) * y0 y];

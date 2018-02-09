@@ -1,4 +1,4 @@
-function [ x, y, t ] = switch_lane ( x0, y0, speed, direction, right, lane_width )
+function [ x, y, t ] = switch_lane ( x0, y0, speed, direction, right, lane_width, timestep )
 
 % find the new direction
 dir = direction + pi / 4;
@@ -7,7 +7,7 @@ if (right),
 end
 
 % first step
-[x(1) y(1)] = move(x0, y0, dir, speed, 0.001);
+[x(1) y(1)] = move(x0, y0, dir, speed, timestep);
 t = 1;
 
 % go on until you are in the next lane
