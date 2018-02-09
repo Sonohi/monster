@@ -1,0 +1,102 @@
+sonohi(1);
+            initParam;
+            load 'SimulationParameters' 'Param';
+            app.SimParam = Param;
+            switchMap = {'Off', 'On'};
+            % Simulation
+            app.ResetthefolderstructureandreloadeverythingSwitch.Tag = 'reset';
+            app.ResetthefolderstructureandreloadeverythingSwitch.Value = switchMap{Param.reset + 1};
+            app.CleantheresultsfolderSwitch.Tag = 'rmResults';
+            app.CleantheresultsfolderSwitch.Value = switchMap{Param.rmResults + 1};
+            app.EnabledrawingofplotsnetworkdiagramsetcSwitch.Tag = 'draw';
+            app.EnabledrawingofplotsnetworkdiagramsetcSwitch.Value = switchMap{Param.draw + 1};
+            app.StorethetransmissiondatathatiseachTBcodewordwaveformSwitch.Tag = 'storeTxData';
+            app.StorethetransmissiondatathatiseachTBcodewordwaveformSwitch.Value = switchMap{Param.storeTxData + 1};
+            app.NumberofschedulingroundtosimulateineachsimulationEditField.Tag = 'schRounds';
+            app.NumberofschedulingroundtosimulateineachsimulationEditField.Value = Param.schRounds;
+            app.SimulationseedEditField.Tag = 'seed';
+            app.SimulationseedEditField.Value = Param.seed;
+            app.SaveawholeLTEframeforthemacroeNodeBprimarilyfordebugSwitch.Tag = 'saveFrame';
+            app.SaveawholeLTEframeforthemacroeNodeBprimarilyfordebugSwitch.Value = switchMap{Param.saveFrame + 1};
+            app.GenerateaheatmapforthenetworkscenarioSwitch.Tag = 'generateHeatMap';
+            app.GenerateaheatmapforthenetworkscenarioSwitch.Value = switchMap{Param.generateHeatMap + 1};
+            app.TypeofheatmapDropDown.Tag = 'heatMapType';
+            app.TypeofheatmapDropDown.Value = Param.heatMapType;
+            app.HeatmapresolutioninmetresEditField.Tag = 'heatMapRes';
+            app.HeatmapresolutioninmetresEditField.Value = Param.heatMapRes;            
+            
+            % Network
+            app.NumberofResourceBlocksforamacroeNodeBEditField.Tag = 'numSubFramesMacro';
+            app.NumberofResourceBlocksforamacroeNodeBEditField.Value = Param.numSubFramesMacro;
+            app.NumberofResourceBlocksforamicroeNodeBEditField.Tag = 'numSubFramesMicro';
+            app.NumberofResourceBlocksforamicroeNodeBEditField.Value = Param.numSubFramesMicro;
+            app.NumberofResourceBlocksforUEsEditField.Tag = 'numSubFramesUE';
+            app.NumberofResourceBlocksforUEsEditField.Value = Param.numSubFramesUE;
+            app.NumberofMacroeNodeBsEditField.Tag = 'numMacro';
+            app.NumberofMacroeNodeBsEditField.Value = Param.numMacro;
+            app.NumberofMicroeNodeBsEditField.Tag = 'numMicro';
+            app.NumberofMicroeNodeBsEditField.Value = Param.numMicro;
+            app.NumberofUEsEditField.Tag = 'numUsers';
+            app.NumberofUEsEditField.Value = Param.numUsers;
+            app.HeightofMacroeNodeBsinmetresEditField.Tag = 'macroHeight';
+            app.HeightofMacroeNodeBsinmetresEditField.Value = Param.macroHeight;
+            app.HeightofMicroeNodeBsinmetresEditField.Tag = 'microHeight';
+            app.HeightofMicroeNodeBsinmetresEditField.Value = Param.microHeight;
+            app.HeightofUEsinmetresEditField.Tag = 'ueHeight';
+            app.HeightofUEsinmetresEditField.Value = Param.ueHeight;
+            app.PositioningmethodforMicroeNodeBsDropDown.Tag = 'microPos';
+            app.PositioningmethodforMicroeNodeBsDropDown.Value = Param.microPos;
+            app.HeightofUEsinmetresEditField_2.Tag = 'microUniformRadius';
+            app.HeightofUEsinmetresEditField_2.Value = Param.microUniformRadius;
+            app.MobilityscenariofortheUEsinthenetworkDropDown.Tag = 'mobilityScenario';
+            app.MobilityscenariofortheUEsinthenetworkDropDown.Value = Param.mobilityScenario;
+            app.ApplicationtrafficmodelDropDown.Tag = 'trafficModel';
+            app.ApplicationtrafficmodelDropDown.Value = Param.trafficModel;
+            
+            % Physical layer
+            app.UplinkCarrierFrequencyinMHzEditField.Tag = 'ulFreq';
+            app.UplinkCarrierFrequencyinMHzEditField.Value = Param.ulFreq;
+            app.DownlinkCarrierFrequencyinMHzEditField.Tag = 'dlFreq';
+            app.DownlinkCarrierFrequencyinMHzEditField.Value = Param.dlFreq;
+            app.NumberofOFDMSymbolsinaRBEditField.Tag = 'prbSym';
+            app.NumberofOFDMSymbolsinaRBEditField.Value = Param.prbSym;
+            app.UENoiseFigureindBEditField.Tag = 'ueNoiseFigure';
+            app.UENoiseFigureindBEditField.Value = Param.ueNoiseFigure;
+            app.eNodeBNoiseFigureindBEditField.Tag = 'bsNoiseFigure';
+            app.eNodeBNoiseFigureindBEditField.Value = Param.bsNoiseFigure;
+            app.NumberofREinaRBEditField.Tag = 'prbRe';
+            app.NumberofREinaRBEditField.Value = Param.prbRe;
+            app.PRACHIntervalasnumberofsubframesEditField.Tag = 'PRACHInterval';
+            app.PRACHIntervalasnumberofsubframesEditField.Value = Param.PRACHInterval;
+            app.PUCCHformat.Tag = 'pucchFormat';
+            app.PUCCHformat.Value = Param.pucchFormat;
+            app.HandoverTimer.Tag = 'handoverTimer';
+            app.HandoverTimer.Value = Param.handoverTimer;
+            
+            % Scheduler
+            app.SchedulingAlgorithm.Tag = 'scheduling';
+            app.SchedulingAlgorithm.Value = Param.scheduling;
+            app.RefreshAssociationTimer.Tag = 'refreshAssociationTimer';
+            app.RefreshAssociationTimer.Value = Param.refreshAssociationTimer;
+            app.InterferenceCoordinationScheme.Tag = 'icScheme';
+            app.InterferenceCoordinationScheme.Value = Param.icScheme;
+            
+            % Channel
+            app.DownlinkChannelModel.Tag = 'modeDL';
+            app.DownlinkChannelModel.Value = Param.channel.modeDL;
+            app.UplinkChannelModel.Tag = 'modeUL';
+            app.UplinkChannelModel.Value = Param.channel.modeUL;
+            app.ChannelRegion.Tag = 'DenseUrban';
+            app.ChannelRegion.Value = Param.channel.region;
+            
+            % SON
+            app.HighUtilThr.Tag = 'utilHiThr';
+            app.HighUtilThr.Value = Param.utilHiThr;
+            app.LowUtilThr.Tag = 'utilLoThr';
+            app.LowUtilThr.Value = Param.utilLoThr;
+            app.NboRadius.tag = 'nboRadius';
+            app.NboRadius.Value = Param.nboRadius;
+            app.HystTimer.Tag = 'tHyst';
+            app.HystTimer.Value = Param.tHyst;
+            app.SwitchTimer.Tag = 'tSwitch';
+            app.SwitchTimer.Value = Param.tSwitch;

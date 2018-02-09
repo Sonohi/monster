@@ -85,8 +85,17 @@ classdef EvolvedNodeB
 			obj.Rx = enbReceiverModule(Param);
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
-		end
+    end
 		
+    function TxPw = getTransmissionPower(obj)
+      % TODO: Move this to TransmitterModule?
+      % Function computes transmission power based on NDLRB
+      % Return power per subcarrier. (OFDM symbol)
+      total_power = obj.Pmax;
+      TxPw = total_power/(12*obj.NDLRB);
+      
+    end
+    
 		% Position eNodeB
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;

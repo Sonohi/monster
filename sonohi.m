@@ -25,7 +25,7 @@ if ~OHI || resetFlag % Check if previous initialization was successful
 	addpath(root);
 	
 	dirs = {'utils', 'ch', 'enb', 'mac', 'mobility', 'phy', 'power', ...
-		'results', 'rlc', 'setup', 'traffic', 'ue', 'validator'};
+		'results', 'rlc', 'setup', 'traffic', 'ue', 'validator', 'app'};
 	
 	for i=1:numel(dirs)
 		add = [root filesep dirs{i}];

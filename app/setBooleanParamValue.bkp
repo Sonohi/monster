@@ -1,0 +1,7 @@
+function setParamBooleanValue(app, event)
+            value = 0;
+            if event.Value == 'On'
+                value = 1;
+            end
+            app.SimParam.(event.Source.Tag) = value;
+        end

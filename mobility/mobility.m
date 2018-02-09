@@ -45,6 +45,14 @@ while (~valid)
     y = y0;
     valid = false;
     
+    % static scenario
+    if (velocity <= 0),
+        duration = 60 * 1000 * 10; % 10 minutes
+        x = ones(1, duration) * x0;
+        y = ones(1, duration) * y0;
+        return;
+    end
+    
     % pedestrian scenario simulation
     if (scenario == 1),
         % add wall distance to the buildings
