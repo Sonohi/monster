@@ -20,7 +20,7 @@ if (Param.storeTxData)
 	[tbMatrix, tbMatrixInfo] = initTbMatrix(Param);
 	[cwdMatrix, cwdMatrixInfo] = initCwdMatrix(Param);
 end
-[symMatrix, symMatrixInfo] = initSymMatrix(Param);
+%[symMatrix, symMatrixInfo] = initSymMatrix(Param);
 
 % create a string to mark the output of this simulation
 outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
@@ -97,56 +97,10 @@ for iRound = 0:(Param.schRounds-1)
 	% -------------------
 	
 	% ----------------------------------------------
-	% ENODEB CREATE DL-SCH TB TO PDSCH SYMBOLS START
+	% ENODEB DL-SCH & PDSCH CREATION AND MAPPING
 	% ----------------------------------------------
-	for iUser = 1:length(Users)
-		% get the eNodeB this UE is connected to
-		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);
-		
-		% Check if this UE is scheduled otherwise skip
-		if checkUserSchedule(Users(iUser), Stations(iServingStation))
-			% generate transport block for the user
-			[Stations(iServingStation), Users(iUser)] = ... 
-				createTransportBlock(Stations(iServingStation), Users(iUser), Param, simTime);
-			
-			% generate codeword (RV defaulted to 0)
-			Users(iUser) = createCodeword(Users(iUser), Param);
-			
-			% finally, generate the arrays of complex symbols by setting the
-			% correspondent values per each eNodeB-UE pair
-			% setup current subframe for serving eNodeB
-			if Users(iUser).CodewordInfo.cwdSize ~= 0
-				[sym, SymInfo] = createSymbols(Stations(iServingStation), Users(iUser),...
-					Users(iUser).Codeword, Users(iUser).CodewordInfo, Param);
-			end
-			
-			if SymInfo.symSize > 0
-				symMatrix(iServingStation, iUser, :) = sym;
-				symMatrixInfo(iServingStation, iUser) = SymInfo;
-				% Store the pre-OFDM modulated symbols in the UE structure to calculate SER
-				Users(iUser).Symbols = sym;
-				Users(iUser).SymbolsInfo = SymInfo;
-			end
-			
-			% Save to data structures
-			if Param.storeTxData
-				tbMatrix(iServingStation, iUser, :) = Users(iUser).TransportBlock;
-				tbMatrixInfo(iServingStation, iUser) = Users(iUser).TransportBlockInfo;
-				cwdMatrix(iServingStation, iUser, :) = Users(iUser).Codeword;
-				cwdMatrixInfo(iServingStation, iUser) = Users(iUser).CodewordInfo;
-			end
-			
-		end
-	end
-	% --------------------------------------------
-	% ENODEB CREATE DL-SCH TB TO PDSCH SYMBOLS END
-	% --------------------------------------------
-	
-	% ----------------------------------
-	% ENODEB GRID MAPPING AND MODULATION
-	% ----------------------------------
-	sonohilog('eNodeB grid mapping and modulation', 'NFO');
-	Stations = enbTxBulk(Stations, symMatrix, Param);
+	sonohilog('eNodeB DL-SCH & PDSCH creation and mapping', 'NFO');
+	[Stations, Users] = enbTxBulk(Stations, Users, Param, simTime);
 	
 	% ----------------------------------
 	% DL CHANNEL SYNCHRONIZATION
