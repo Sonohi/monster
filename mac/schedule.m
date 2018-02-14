@@ -48,7 +48,7 @@ switch Param.scheduling
     case 'roundRobin'
         
         maxRounds = sz;
-        iUser = Station.RrNext.Index;
+        iUser = Station.RoundRobinDLNext.Index;
         while (iUser <= sz && maxRounds > 0)
             % First off check if we are in an unused position or out
             iUser = checkIndexPosition(Station, iUser, sz);
@@ -130,8 +130,8 @@ switch Param.scheduling
                 % Check first whether we went too far in the list and we need to restart
                 % from the beginning
                 iUser = checkIndexPosition(Station, iUser, sz);
-                Station.RrNext.UeId = Station.Users(iUser).UeId;
-                Station.RrNext.Index = iUser;
+                Station.RoundRobinDLNext.UeId = Station.Users(iUser).UeId;
+                Station.RoundRobinDLNext.Index = iUser;
                 
                 % in both cases, stop the loop
                 iUser = sz + 1;
