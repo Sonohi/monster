@@ -28,7 +28,6 @@ function validateParam(Param)
 	validateattributes(Param.dlFreq, {'numeric'}, {'>=',0});
 	validateattributes(Param.maxTbSize, {'numeric'}, {'>=',0});
 	validateattributes(Param.maxCwdSize, {'numeric'}, {'>=',0});
-	validateattributes(Param.maxSymSize, {'numeric'}, {'>=',0});
 	validateattributes(Param.prbSym, {'numeric'}, {'>=',0});
 	validateattributes(Param.ueNoiseFigure, {'numeric'}, {'>=',0});
 	validateattributes(Param.prbRe, {'numeric'}, {'>=',0});

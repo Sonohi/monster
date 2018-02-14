@@ -1,26 +1,26 @@
-function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
+function [Station, User] = createSymbols(Station, User)
 
 % 	CREATE SYMBOLS is used to generate the arrays of complex symbols
 %
 %   Function fingerprint
 %   Station							-> 	the eNodeB processing the codeword
 %   User								->	the UE for this codeword
-%   cwd    							->	codeword to be processed
-%   CwdInfo							->	codeword info for processing
-%   Param.maxSymSize		->  max size of a list of symbols for padding
 %
-% 	sym									-> symbols padded
-% 	SymInfo							-> symbols info for padding info
+%   Station							-> 	updated eNodeB
+%   User								->	the UE for this codeword
 
 	% cast eNodeB object to struct for the processing
 	enb = struct(Station);
 	% find all the PRBs assigned to this UE to find the most conservative MCS (min)
-	sch = enb.ScheduleDL;
+	sch = Station.ScheduleDL;
 	ixPRBs = find([sch.UeId] == User.NCellID);
 	listMCS = [sch(ixPRBs).Mcs];
 
 	% get the correct Parameters for this UE
 	[~, mod, ~] = lteMCS(min(listMCS));
+
+	% get the codeword
+	cwd = User.Codeword;
 
 	% setup the PDSCH for this UE
 	enb.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
@@ -32,7 +32,7 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
 	if length(cwd) ~= SymInfo.G
 		% In this case seomthing went wrong with the rate maching and in the
 		% creation of the codeword, so we need to flag it
-		sonohilog('Something went wrong in the codeword creation and rate matching. Size mismatch','ERR');
+		sonohilog('Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
 	end
 
 	% error handling for symbol creation
@@ -44,11 +44,14 @@ function [sym, SymInfo] = createSymbols(Station, User, cwd, CwdInfo, Param)
     sonohilog(s,'WRN')
 		sym = [];
 	end
-
-	% padding
+	
 	SymInfo.symSize = length(sym);
 	SymInfo.pdschIxs = pdschIxs;
 	SymInfo.indexes = ixPRBs;
-	padding(1:Param.maxSymSize - SymInfo.symSize,1) = -1;
-	sym = cat(1, sym, padding);
+	User.SymbolsInfo = SymInfo;
+
+	% Set the symbols into the grid of the eNodeB
+	enb.Tx = enb.Tx.setPDSCHGrid(enb, sym);
+	% Write back into station
+	Station.Tx.ReGrid = enb.Tx.ReGrid;
 end
