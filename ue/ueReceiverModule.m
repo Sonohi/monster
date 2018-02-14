@@ -216,6 +216,10 @@ classdef ueReceiverModule
 			%       RxPw is the wideband power, e.g. the received power for the whole
 			%       subframe, the RSSI must be the ratio of OFDM symbols occupying the
 			%       subframe scaled with the wideband received power.
+			%
+			%		Note:
+			% 		Since the OFDM demodulator/reference is assuming power is in dBm, 
+			%       the factor of 30 dB which is used when converting to dBm needs to be removed, thus the -30
 			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
 			meas = hRSMeasurements(enb,Subframe);
 			obj.RSRPdBm = meas.RSRPdBm;
