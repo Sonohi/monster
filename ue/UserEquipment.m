@@ -58,23 +58,7 @@ classdef UserEquipment
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			switch Param.mobilityScenario
-				case 'pedestrian'
-					obj.Velocity = 1; % in m/s
-					obj = setTrajectory(obj, 1, Param);
-				case 'vehicular'
-					obj.Velocity = 10; % in m/s
-					obj = setTrajectory(obj, 2, Param);
-				case 'static'
-					obj.Velocity = 0; % in m/s
-					obj = setTrajectory(obj, 1, Param);
-				case 'superman'
-					obj.Velocity = 100; % in m/s
-					obj = setTrajectory(obj, 1, Param);
-				otherwise
-					sonohilog('Unknown mobility scenario selected','ERR');
-					return;
-			end
+			obj = mobility(obj, Param);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
@@ -90,20 +74,7 @@ classdef UserEquipment
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
-		end
-		
-		% sets user trajectory
-		function obj = setTrajectory(obj, scenarioCode, Param)
-			[x, y] = mobility(scenarioCode, obj.Velocity, obj.Seed, Param.mobilityStep);
-			obj.Trajectory(1:length(x),1) = x;
-			obj.Trajectory(1:length(y),2) = y;
-			obj.Position = [obj.Trajectory(1, 1) obj.Trajectory(1, 2) Param.ueHeight];
-			
-			% Plot UE position and trajectory in scenario
-			if Param.draw
-				plotUEinScenario(obj, Param);
-			end
-		end
+        end
 		
 		% Change queue
 		function obj = setQueue(obj, queue)
