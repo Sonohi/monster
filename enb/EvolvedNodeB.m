@@ -233,7 +233,7 @@ classdef EvolvedNodeB
 			% Check the number of users associated with the eNodeB and initialise to all
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
-			if ~isempty(scheduledUEs)
+			if ~isempty(associatedUEs)
 				prbQuota = floor(Param.numSubFramesUE/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
@@ -241,19 +241,19 @@ classdef EvolvedNodeB
 					prbQuota = 6;
 					ueMax = floor(Param.numSubFramesUE/prbQuota);
 					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
-					iMax = obj.RoundRobinULNext.index + ueMax - 1;
+					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
 					iDiff = 0;
 					% Check that the upper bound does not exceed the length, if that's the case just restart
 					if iMax > length(associatedUEs)
-						iDiff = iMax - length(associatedUEs)
-						iMax = length(associatedUEs)
+						iDiff = iMax - length(associatedUEs);
+						iMax = length(associatedUEs);
 					end
 					% Now extract 2 arrays from the associatedUEs and concatenate them
-					firstSlice = associatedUEs(obj.RoundRobinULNext.index : iMax);
+					firstSlice = associatedUEs(obj.RoundRobinULNext.Index : iMax);
 					if iDiff ~= 0
 						secondSlice = associatedUEs(1:iDiff);
 					else
-						secondSlice = []
+						secondSlice = [];
 					end
 					finalSlice = cat(2, firstSlice, secondSlice);
 					% Finally, store the ID and the index of the first UE that has not been scheduled this round
@@ -262,8 +262,8 @@ classdef EvolvedNodeB
 						iNext = 1;
 					end
 					% Now get the ID an the index relative to the overall Users array
-					obj.RoundRobinULNext.index = find([obj.Users.UeId] == associatedUEs(iNext));
-					obj.RoundRobinULNext.UeId = associatedUEs(iNext);
+					obj.RoundRobinULNext.UeId = obj.Users(associatedUEs(iNext)).UeId;
+					obj.RoundRobinULNext.Index = find([obj.Users.UeId] == obj.RoundRobinULNext.UeId);
 					% ensure uniqueness
 					associatedUEs = extractUniqueIds(finalSlice);
 				else

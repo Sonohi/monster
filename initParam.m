@@ -3,7 +3,7 @@ Param.reset = 0;% Boolean used to reset the folder structure and reload everythi
 Param.rmResults = 1;% Boolean to clean the results folder
 
 % Boolean used to enable the drawing of plots and other cool stuff
-Param.draw = 1;
+Param.draw = 0;
 
 % Booelan used to store the transmission data, that is each TB, codeword, waveform
 Param.storeTxData = 0;
@@ -51,7 +51,7 @@ Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'DenseUrban';% String to control the channel region
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres
-Param.tHyst = 0.002;% Double to set the hysteresis timer threshold in s
+Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s
 Param.tSwitch = 0.001;% Double to set the eNodeB switching on/off timer in s
 Param.utilLoThr = 1;% Integer for the threshold for the low utilisation range (>= 1)
 Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range (<= 100)

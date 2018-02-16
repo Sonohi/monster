@@ -20,9 +20,11 @@ for iStation = 1:length(Stations)
 		continue;
 	end
 	% In the other cases find all UEs that are linked to this station in this round
-	ueGroup = find([Users.ENodeBID] == enb.NCellID);
-	
-	enbUsers = Users(ueGroup);
+	scheduledUEsIndexes = find([enb.ScheduleUL] ~= -1);
+  scheduledUEsIds = unique(enb.ScheduleUL(scheduledUEsIndexes));
+  % IDs of users and their position in the Users struct correspond
+
+	enbUsers = Users(scheduledUEsIds);
 	
 	% Parse received waveform
 	enb.Rx = enb.Rx.parseWaveform(enb);
