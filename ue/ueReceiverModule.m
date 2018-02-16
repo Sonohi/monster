@@ -26,7 +26,6 @@ classdef ueReceiverModule
 		SchIndexes;
 		Blocks;
 		Bits;
-		Symbols;
 		PDSCH;
 		PropDelay;
 		HistoryStats;
@@ -39,7 +38,6 @@ classdef ueReceiverModule
 			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
-			obj.Symbols = struct('ok', 0, 'err', 0, 'tot', 0);
 			for iStation = 1:(Param.numMacro + Param.numMicro)
 				cellstring = char(strcat("NCellID",int2str(iStation)));
 				obj.HistoryStats.(cellstring) = struct('SINRdB',[],'SNRdB',[],'RxPwdBm',[]);
@@ -111,7 +109,6 @@ classdef ueReceiverModule
 				obj.Subframe = Subframe; %#ok
 				returnCode = 1;
 			end
-			
 		end
 		
 		% estimate channel at the receiver
@@ -214,19 +211,20 @@ classdef ueReceiverModule
 		function obj  = referenceMeasurements(obj,enbObj)
             
 			enb = cast2Struct(enbObj);
-            
-            %       RSSI is the average power of OFDM symbols containing the reference
+			%       RSSI is the average power of OFDM symbols containing the reference
 			%       signals
 			%       RxPw is the wideband power, e.g. the received power for the whole
 			%       subframe, the RSSI must be the ratio of OFDM symbols occupying the
 			%       subframe scaled with the wideband received power.
-            Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
-            meas = hRSMeasurements(enb,Subframe);
-            obj.RSRPdBm = meas.RSRPdBm;
-            obj.RSSIdBm = meas.RSSIdBm;
-            obj.RSRQdB = meas.RSRQdB;
-           
-
+			%
+			%		Note:
+			% 		Since the OFDM demodulator/reference is assuming power is in dBm, 
+			%       the factor of 30 dB which is used when converting to dBm needs to be removed, thus the -30
+			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
+			meas = hRSMeasurements(enb,Subframe);
+			obj.RSRPdBm = meas.RSRPdBm;
+			obj.RSSIdBm = meas.RSSIdBm;
+			obj.RSRQdB = meas.RSRQdB;
 		end
 		
 		% Block reception
@@ -282,48 +280,7 @@ classdef ueReceiverModule
 			obj.Bits.err = diff + errEx;
 			obj.Bits.ok = tot - diff;
 		end
-		
-		% Symbols reception stats
-		function obj = logSymbolsReception(obj, ue)
-			symsTx(1:ue.SymbolsInfo.symSize, 1) = ue.Symbols(1:ue.SymbolsInfo.symSize,1);
-			symsRx = obj.PDSCH;
 			
-			% Check sizes and log a warning if they don't match
-			sizeCheck = length(symsTx) - length(symsRx);
-			if sizeCheck == 0
-				% Normal case
-				[diff, ratio] = symerr(symsRx, symsTx);
-				errEx = 0;
-				tot = length(symsTx);
-			else
-				sonohilog('(ReceiverModule logSymbolsReception) Symbols sizes mismatch', 'WRN');
-				% In this case, we do the xor between the minimum common set of bits
-				if sizeCheck > 0
-					% the original sym was bigger than the received one, so test on the
-					% usable portion and log the rest as errors
-					sizeTest = length(symsTx) - sizeCheck;
-					symsTest(1:sizeTest,1) = symsTx(1:sizeTest,1);
-					[diff, ratio] = symerr(symsTest, symsRx);
-					errEx = sizeCheck;
-					tot = sizeTest;
-				else
-					% the original sym was smaller than the received one, so test on the
-					% usable portion and discard the rest
-					% convert the difference to absolute value
-					sizeCheck = abs(sizeCheck);
-					sizeTest = length(symsRx) - sizeCheck;
-					symsTest(1:sizeTest,1) = symsRx(1:sizeTest,1);
-					[diff, ratio] = symerr(symsTx, symsTest);
-					errEx = 0;
-					tot = sizeTest;
-				end
-			end
-			
-			obj.Symbols.tot = tot;
-			obj.Symbols.err = diff + errEx;
-			obj.Symbols.ok = tot - diff;
-		end
-		
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);

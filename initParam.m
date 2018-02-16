@@ -9,7 +9,7 @@ Param.draw = 0;
 Param.storeTxData = 0;
 
 % Integer used to control the number of scheduling rounds (subframes) to simulate
-Param.schRounds = 12;
+Param.schRounds = 5;
 Param.seed = 42;% Integer used for the simulation seed
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;
@@ -24,19 +24,28 @@ Param.numSubFramesMacro = 50;% Integer used to set the number of RBs for a macro
 Param.numSubFramesMicro = 25;% Integer used to set the number of RBs for a micro eNodeB
 Param.numSubFramesUE = 25;% Integer used to set the number of RBs for the uplink
 Param.numMacro = 1;% Integer used to specify the number of macro eNodeBs in the scenario (currently only 1)
-Param.numMicro = 4;% Integer used to specify the number of micro eNodeBs in the scenario
-Param.microPos = 'uniform';% Array of char to deicde the positioning of the micro BS
+Param.numMicro = 1;% Integer used to specify the number of micro eNodeBs in the scenario
+Param.microPos = 'clusterized'; % Array of char to deicde the positioning of the micro BS (uniform, random, clusterized)
 Param.microUniformRadius = 100;% Double radius of distance from centre for microBS in metres
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.numUsers = 15;% Integer used for the number of UEs
-Param.mobilityScenario = 'static';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman)
+Param.mobilityScenario = 'straight';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.trafficModel = 'fullBuffer';% Traffic model
 Param.mobilityStep = 0.01;
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
+%% Positioning (TR 36.872) - Only for "clusterized" microPos setting
+Param.macroRadius = 250; % radius of the macro cell
+Param.minUeDist = 20; % minimum distance between UEs and macro
+Param.numClusters = 1; % number of clusters
+Param.ueClusterRadius = 70; % radius of a cluster for UE placement
+Param.microClusterRadius = 50; % radius of a cluster for micro placement
+Param.minClusterDist = 105; % minimum distance between cluster center and macro
+Param.interClusterDist = 100; % minimum distance between cluster centers
+Param.microDist = 20; % minimum distance between micro cells
 %% Physical layer
 Param.ulFreq = 1747.5;% Double used for the uplink carrier frequency in MHz
 Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
@@ -75,7 +84,6 @@ Param.arq.rtxMax = 1;% Integer to choose the maximum number of ARQ retransmissio
 %% PHY
 Param.maxTbSize = 97896;% Double used for the maximum size of a TB for storing in bits
 Param.maxCwdSize = 10e5;% Double used for the maximum size of a codeword for storing in bits
-Param.maxSymSize = 10e5;% Double used for the maximum size of a list of OFDM symbols for storing
 %% Buildings
 Param.buildings = load(Param.buildings);
 Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings

@@ -11,7 +11,7 @@ classdef enbTransmitterModule
 	end
 
 	methods
-		% Constructor`
+		% Constructor
 		function obj = enbTransmitterModule(enb, Param)
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
@@ -108,27 +108,12 @@ classdef enbTransmitterModule
 			obj.ReGrid = regrid;
     end
 
-		% map elements to grid and modulate waveform to transmit
-		function obj = mapGridAndModulate(obj, enbObj, iStation, sym, Param)
-			% the last step in the DL transmission chain is to map the symbols to the
-			% resource grid and modulate the grid to get the TX waveform
-
-			% extract all the symbols this eNodeB has to transmit
-			symExtr = extractStationSyms(enbObj, iStation, sym, Param);
-
-			% insert the symbols of the PDSCH into the grid
-			obj = setPDSCHGrid(obj, enbObj, symExtr);
-
-			% with the grid ready, generate the TX waveform
-			obj = modulateTxWaveform(obj, enbObj);
-		end
-
 		% cast object to struct
 		function txStruct = cast2Struct(obj)
 			txStruct = struct(obj);
 		end
 
-		% Reser transmitter
+		% Reset transmitter
 		function obj = reset(obj, enbObj, nextSchRound)
 			% every 40 ms the cell has to broadcast its identity with the BCH
 			% check if we need to regenerate that 
@@ -144,17 +129,55 @@ classdef enbTransmitterModule
 			obj.WaveformInfo = [];
 		end
 
+		% modulate TX waveform
+		function obj = modulateTxWaveform(obj, enbObj)
+			enb = cast2Struct(enbObj);
+			tx = cast2Struct(obj);
+			% Add PDCCH and generate a random codeword to emulate the control info carried
+			pdcchParam = ltePDCCHInfo(enb);
+			ctrl = randi([0,1],pdcchParam.MTot,1);
+			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
+			indPdcch = ltePDCCHIndices(enb);
+			tx.ReGrid(indPdcch) = pdcchSym;
+      % Assume lossless transmitter
+			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, tx.ReGrid);
+			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
+			% for power scaling
+			used = length(find(abs(tx.ReGrid) ~= 0));
+			obj.WaveformInfo.OfdmEnergyScale = used/numel(tx.ReGrid);
+		end
 
+		% insert PDSCH symbols in grid at correct indexes
+		function obj = setPDSCHGrid(obj, enb, syms)
+			regrid = obj.ReGrid;
+			
+			% get PDSCH indexes
+			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, obj.PDSCH, obj.PDSCH.PRBSet);
+
+			% pad for unused subcarriers
+			padding(1:length(indPdsch) - length(syms), 1) = 0;
+			syms = cat(1, syms, padding);
+
+			% insert symbols into grid
+			regrid(indPdsch) = syms;
+
+			% Set back in object
+			obj.ReGrid = regrid;
+
+		end
 	end
 
 	methods (Access = private)
 		% initialise PDSCH
+		%
+		% TM1 is used (1 antenna) thus Rho is 0 dB, if MIMO change to 3 dB
+		% See 36.213 5.2 
 		function obj = initPDSCH(obj, NDLRB)
 			ch = struct(...
 				'TxScheme', 'Port0',...
 				'Modulation', {'QPSK'},...
 				'NLayers', 1, ...
-				'Rho', -3,...
+				'Rho', 0,...
 				'RNTI', 1,...
 				'RVSeq', [0 1 2 3],...
 				'RV', 0,...
@@ -167,47 +190,6 @@ classdef enbTransmitterModule
 				'PMIMode', 'Wideband',...
 				'CSI', 'On');
 			obj.PDSCH = ch;
-		end
-
-		% modulate TX waveform
-		function obj = modulateTxWaveform(obj, enbObj)
-			enb = cast2Struct(enbObj);
-			tx = cast2Struct(obj);
-      % Assume lossless transmitter
-			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, tx.ReGrid);
-      obj.WaveformInfo.SNR = 40;
-			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
-			% for power scaling
-			used = length(find(abs(tx.ReGrid) ~= 0));
-			obj.WaveformInfo.OfdmEnergyScale = used/numel(tx.ReGrid);
-		end
-
-		% insert PDSCH symbols in grid at correct indexes
-		function obj = setPDSCHGrid(obj, enbObj, syms)
-			enb = cast2Struct(enbObj);
-			regrid = obj.ReGrid;
-			% get PDSCH indexes
-			[indPdsch, pdschInfo] = ltePDSCHIndices(enb, obj.PDSCH, obj.PDSCH.PRBSet);
-
-			% pad for unused subcarriers
-			padding(1:length(indPdsch) - length(syms), 1) = 0;
-			syms = cat(1, syms, padding);
-
-			% insert symbols into grid
-			regrid(indPdsch) = syms;
-
-			% once the PDSCH is inserted, add also the PDDCH
-			% generate a random codeword to emulate the control info carried
-			pdcchParam = ltePDCCHInfo(enb);
-			ctrl = randi([0,1],pdcchParam.MTot,1);
-			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
-			indPdcch = ltePDCCHIndices(enb);
-			regrid(indPdcch) = pdcchSym;
-
-			% Set back in object
-			obj.ReGrid = regrid;
-
-		end
+		end		
 	end
-
 end

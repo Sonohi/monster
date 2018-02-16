@@ -47,8 +47,6 @@ function Users = ueRxBulk(Stations, Users, cec)
 			user.Rx = user.Rx.selectCqi(station);
 			% Log block reception stats
 			user.Rx = user.Rx.logBlockReception(user);
-			% Log symbols reception stats
-			user.Rx = user.Rx.logSymbolsReception(user);
 			% Update parent structure
 			Users(iUser) = user;
     else
