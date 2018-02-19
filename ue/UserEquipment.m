@@ -90,8 +90,8 @@ classdef UserEquipment
 		function obj = move(obj, ts, Param)
 			% if we are at the beginning, don't move
 			if ts > 0 && mod(ts * 1000, Param.mobilityStep * 1000) == 0
-				sonohilog('UE moving', 'NFO');
-				
+        sonohilog('UE moving', 'NFO');
+
 				% delta of time since last step
 				tDelta = ts - obj.TLast;
 				

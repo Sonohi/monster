@@ -73,7 +73,7 @@ for iRound = 0:(Param.schRounds-1)
 		
 		% Check utilisation
 		sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
-		utilPercent = 100*find(sch, 1, 'last' )/length(sch);
+		utilPercent = 100*find(sch, 1, 'last' )/length([Stations(iStation).ScheduleDL]);
 		
 		% check utilPercent and change to 0 if null
 		if isempty(utilPercent)

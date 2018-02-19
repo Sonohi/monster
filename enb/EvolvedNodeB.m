@@ -19,7 +19,8 @@ classdef EvolvedNodeB
 		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		ScheduleDL;
 		ScheduleUL;
-		RrNext;
+		RoundRobinDLNext;
+		RoundRobinULNext;
 		Channel;
 		NSubframe;
 		BsClass;
@@ -69,7 +70,8 @@ classdef EvolvedNodeB
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
-			obj.RrNext = struct('UeId',0,'Index',1);
+			obj.RoundRobinDLNext = struct('UeId',0,'Index',1);
+			obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.Status = 1;
@@ -93,7 +95,6 @@ classdef EvolvedNodeB
       % Return power per subcarrier. (OFDM symbol)
       total_power = obj.Pmax;
       TxPw = total_power/(12*obj.NDLRB);
-      
     end
     
 		% Position eNodeB
@@ -229,30 +230,60 @@ classdef EvolvedNodeB
 		
 		% set uplink static scheduling
 		function obj = setScheduleUL(obj, Param)
-			% Check the number of users associated snd split the BW
-			ueCount = find([obj.Users.UeId] ~= -1);
-			if ~isempty(ueCount)
-				prbQuota = floor(Param.numSubFramesUE/length(ueCount));
+			% Check the number of users associated with the eNodeB and initialise to all
+			associatedUEs = find([obj.Users.UeId] ~= -1);
+			% If the quota of PRBs is enough for all, then all are scheduled
+			if ~isempty(associatedUEs)
+				prbQuota = floor(Param.numSubFramesUE/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
-				% TODO add UL roundrobin
 				if prbQuota < 6
+					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
 					prbQuota = 6;
-					sonohilog('UL PRB quota is below minimum', 'WRN');
+					ueMax = floor(Param.numSubFramesUE/prbQuota);
+					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
+					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
+					iDiff = 0;
+					% Check that the upper bound does not exceed the length, if that's the case just restart
+					if iMax > length(associatedUEs)
+						iDiff = iMax - length(associatedUEs);
+						iMax = length(associatedUEs);
+					end
+					% Now extract 2 arrays from the associatedUEs and concatenate them
+					firstSlice = associatedUEs(obj.RoundRobinULNext.Index : iMax);
+					if iDiff ~= 0
+						secondSlice = associatedUEs(1:iDiff);
+					else
+						secondSlice = [];
+					end
+					finalSlice = cat(2, firstSlice, secondSlice);
+					% Finally, store the ID and the index of the first UE that has not been scheduled this round
+					iNext = iMax + 1;
+					if iNext > length(associatedUEs)
+						iNext = 1;
+					end
+					% Now get the ID an the index relative to the overall Users array
+					obj.RoundRobinULNext.UeId = obj.Users(associatedUEs(iNext)).UeId;
+					obj.RoundRobinULNext.Index = find([obj.Users.UeId] == obj.RoundRobinULNext.UeId);
+					% ensure uniqueness
+					associatedUEs = extractUniqueIds(finalSlice);
+				else
+					% In this case, all connected UEs can be scheduled, so RR can be reset
+					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 				end
 				prbAvailable = Param.numSubFramesUE;
-				temp = zeros(length(ueCount)*prbQuota, 1);
-				for iUser = 1:length(ueCount)
+				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
+				for iUser = 1:length(associatedUEs)
 					if prbAvailable >= prbQuota
 						iStart = (iUser - 1)*prbQuota;
 						iStop = iStart + prbQuota;
-						temp(iStart + 1:iStop) = obj.Users(ueCount(iUser)).UeId;
+						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						sonohilog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
+						sonohilog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'INFO');
 						break;
 					end
 				end
-				obj.ScheduleUL = temp;
+				obj.ScheduleUL = scheduledUEs;
 			end
 		end
 		
