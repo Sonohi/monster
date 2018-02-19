@@ -80,7 +80,7 @@ classdef ArqTx
 		end
 
 		% Handle the reception of an ACK
-		function obj = handleAck(obj, ack, sqn)
+		function obj = handleAck(obj, ack, sqn, timeNow, Param)
 			% find buffer index
 			bufferIndices = find([obj.tbBuffer.sqn] == sqn);
 			

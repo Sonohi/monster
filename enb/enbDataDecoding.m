@@ -42,10 +42,10 @@ function [Stations, Users] = enbDataDecoding(Stations, Users, Param, timeNow)
 
 							if state == 0
 								% The process has been acknowledged 
-								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn);
+								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Param);
 							elseif state == 4
 								% The process has failed 
-								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn);
+								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Param);
 							else
 								% Nothing to do yet, HARQ will continue trying
 							end
