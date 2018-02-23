@@ -185,7 +185,6 @@ while (~valid)
         if (~right),
             % switch lanes to the left
             while (lane > -1),
-                display(lane)
                 [xs, ys, tau] = switch_lane ( x(t_ms), y(t_ms), velocity, dir, right, lane_width, timestep);
                 lane = lane - 1;
                 t_ms = t_ms + tau;
