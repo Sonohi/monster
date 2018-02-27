@@ -7,6 +7,7 @@ classdef MetricRecorder
 		schedule;
 		harqRtx;
 		arqRtx;
+		powerState;
 		ber;
 		snrdB;
 		sinrdB
@@ -16,9 +17,9 @@ classdef MetricRecorder
 		postEvm;
 		throughput;
 		receivedPowerdBm;
-        rsrqdB;
-        rsrpdBm;
-        rssidBm;
+		rsrqdB;
+		rsrpdBm;
+		rssidBm;
 	end
 	
 	methods
@@ -32,8 +33,11 @@ classdef MetricRecorder
 			obj.powerConsumed = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
 			temp(1:Param.schRounds, Param.numMacro + Param.numMicro, 1:Param.numSubFramesMacro) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
 			obj.schedule = temp;
-			obj.harqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
-			obj.arqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
+			if Param.rtxOn
+				obj.harqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
+				obj.arqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
+			end
+			obj.powerState = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
 			
 			% Initialise for UE
 			obj.ber = zeros(Param.schRounds,Param.numUsers);
@@ -45,20 +49,23 @@ classdef MetricRecorder
 			obj.postEvm = zeros(Param.schRounds,Param.numUsers);
 			obj.throughput = zeros(Param.schRounds,Param.numUsers);
 			obj.receivedPowerdBm = zeros(Param.schRounds,Param.numUsers);
-            obj.rsrpdBm = zeros(Param.schRounds,Param.numUsers);
-            obj.rssidBm = zeros(Param.schRounds,Param.numUsers);
-            obj.rsrqdB = zeros(Param.schRounds,Param.numUsers);
+			obj.rsrpdBm = zeros(Param.schRounds,Param.numUsers);
+			obj.rssidBm = zeros(Param.schRounds,Param.numUsers);
+			obj.rsrqdB = zeros(Param.schRounds,Param.numUsers);
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, schRound)
+		function obj = recordEnbMetrics(obj, Stations, schRound, Param)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = schRound + 1;
 			obj = obj.recordUtil(Stations, schRound);
 			obj = obj.recordPower(Stations, schRound);
 			obj = obj.recordSchedule(Stations, schRound);
-			obj = obj.recordHarqRtx(Stations, schRound);
-			obj = obj.recordArqRtx(Stations, schRound);
+			obj = obj.recordPowerState(Stations, schRound);
+			if Param.rtxOn
+				obj = obj.recordHarqRtx(Stations, schRound);
+				obj = obj.recordArqRtx(Stations, schRound);
+			end
 		end
 		
 		function obj = recordUtil(obj, Stations, schRound)
@@ -104,6 +111,12 @@ classdef MetricRecorder
 			for iStation = 1:length(Stations)
 				arqProcs = [Stations(iStation).Rlc.ArqTxBuffers.tbBuffer];
 				obj.arqRtx(schRound, iStation) = sum([arqProcs.rtxCount]);
+			end
+		end
+
+		function obj = recordPowerState(obj, Stations, schRound)
+			for iStation = 1:length(Stations)
+				obj.powerState(schRound, iStation) = Stations(iStation).PowerState;
 			end
 		end
 		

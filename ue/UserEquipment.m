@@ -51,7 +51,7 @@ classdef UserEquipment
 			obj.NSubframe = 0;
 			obj.NFrame = 0;
 			obj.NTxAnts = 1;
-			obj = setQueue(obj, struct('Size', 0, 'Time', 0, 'Pkt', 0));
+			obj.Queue = struct('Size', 0, 'Time', 0, 'Pkt', 1);
 			obj.Scheduled = false;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
@@ -77,7 +77,7 @@ classdef UserEquipment
     end
 		
 		% Change queue
-		function obj = setQueue(obj, queue)
+		function obj = set.Queue(obj, queue)
 			obj.Queue = queue;
 		end
 		

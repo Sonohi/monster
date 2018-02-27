@@ -14,7 +14,7 @@ function [Stations, Users] = ueDataDecoding(Stations, Users, Param, timeNow)
 	% Loop users to check if they received something and then assign that to the 
 	% respective receiver process
 	for iUser = 1:length(Users)
-		if ~isempty(Users(iUser).Rx.TransportBlock)
+		if ~isempty(Users(iUser).Rx.TransportBlock) && Param.rtxOn
 			[harqPid, iProc] = Users(iUser).Mac.HarqRxProcesses.decodeHarqPid(...
 				Users(iUser).Rx.TransportBlock);
 			harqPidBits = de2bi(harqPid, 3, 'left-msb')';

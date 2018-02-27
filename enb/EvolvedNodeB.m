@@ -24,7 +24,7 @@ classdef EvolvedNodeB
 		Channel;
 		NSubframe;
 		BsClass;
-		Status;
+		PowerState;
 		Neighbours;
 		HystCount;
 		SwitchCount;
@@ -74,7 +74,7 @@ classdef EvolvedNodeB
 			obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
-			obj.Status = 1;
+			obj.PowerState = 1;
 			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
@@ -154,7 +154,7 @@ classdef EvolvedNodeB
 		function obj = checkUtilisation(obj, util, Param, loThr, hiThr, Stations)
 			% overload
 			if util >= hiThr
-				obj.Status = 2;
+				obj.PowerState = 2;
 				obj.HystCount = obj.HystCount + 1;
 				if obj.HystCount >= Param.tHyst/10^-3
 					% The overload has exceeded the hysteresis timer, so find an inactive
@@ -168,10 +168,10 @@ classdef EvolvedNodeB
 							nboIx = find([Stations.NCellID] == obj.Neighbours(nboMicroIxs(iNbo)));
 							
 							% Check if it can be activated
-							if (~isempty(nboIx) && Stations(nboIx).Status == 5)
-								% in this case change the status of the target neighbour to "boot"
+							if (~isempty(nboIx) && Stations(nboIx).PowerState == 5)
+								% in this case change the PowerState of the target neighbour to "boot"
 								% and reset the hysteresis and the switching on/off counters
-								Stations(nboIx).Status = 6;
+								Stations(nboIx).PowerState = 6;
 								Stations(nboIx).HystCount = 0;
 								Stations(nboIx).SwitchCount = 0;
 								break;
@@ -182,24 +182,24 @@ classdef EvolvedNodeB
 				
 				% underload, shutdown, inactive or boot
 			elseif util <= loThr
-				switch obj.Status
+				switch obj.PowerState
 					case 1
 						% eNodeB active and going in underload for the first time
-						obj.Status = 3;
+						obj.PowerState = 3;
 						obj.HystCount = 1;
 					case 3
 						% eNodeB already in underload
 						obj.HystCount = obj.HystCount + 1;
 						if obj.HystCount >= Param.tHyst/10^-3
 							% the underload has exceeded the hysteresis timer, so start switching
-							obj.Status = 4;
+							obj.PowerState = 4;
 							obj.SwitchCount = 1;
 						end
 					case 4
 						obj.SwitchCount = obj.SwitchCount + 1;
 						if obj.SwitchCount >= Param.tSwitch/10^-3
 							% the shutdown is completed
-							obj.Status = 5;
+							obj.PowerState = 5;
 							obj.SwitchCount = 0;
 							obj.HystCount = 0;
 						end
@@ -207,7 +207,7 @@ classdef EvolvedNodeB
 						obj.SwitchCount = obj.SwitchCount + 1;
 						if obj.SwitchCount >= Param.tSwitch/10^-3
 							% the boot is completed
-							obj.Status = 1;
+							obj.PowerState = 1;
 							obj.SwitchCount = 0;
 							obj.HystCount = 0;
 						end
@@ -215,7 +215,7 @@ classdef EvolvedNodeB
 				
 				% normal operative range
 			else
-				obj.Status = 1;
+				obj.PowerState = 1;
 				obj.HystCount = 0;
 				obj.SwitchCount = 0;
 				
