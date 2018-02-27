@@ -6,7 +6,7 @@ switch Param.mobilityScenario
         obj.Velocity = 1; % in m/s
         [x, y] = traffic_mobility(1, obj.Velocity, obj.Seed, Param.mobilityStep);
     case 'vehicular'
-        obj.Velocity = 10; % in m/s
+        obj.Velocity = 20; % in m/s
         [x, y] = traffic_mobility(2, obj.Velocity, obj.Seed, Param.mobilityStep);
     case 'static'
         obj.Velocity = 0; % in m/s

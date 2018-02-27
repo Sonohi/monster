@@ -93,7 +93,7 @@ end
 % turn
 xi = xc - (5 + 1.5 * lane_width) * cos(current_dir) + lane * lane_width * sin(current_dir);
 yi = yc - (5 + 1.5 * lane_width) * sin(current_dir) - lane * lane_width * cos(current_dir);
-[xs, ys, tau] = straight(x(t), y(t), xi, yi, speed);
+[xs, ys, tau] = straight(x(t), y(t), xi, yi, speed, timestep);
 t = t + tau;
 x = [x xs];
 y = [y ys];
