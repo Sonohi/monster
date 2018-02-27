@@ -32,7 +32,7 @@ classdef ueTransmitterModule
 			obj.Waveform = ltePRACH(ueObj, obj.PRACH);
 		end
 		
-		function [obj, reportHarqBit] = mapGridAndModulate(obj, ueObj)
+		function [obj, reportHarqBit] = mapGridAndModulate(obj, ueObj, Param)
 			% Check if upllink needs to consist of PRACH
 			% TODO: changes to sequence and preambleidx given unique user ids
 			%       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
@@ -50,10 +50,10 @@ classdef ueTransmitterModule
 			% We need to check whether HARQ feedback has to be sent or not
 			cqiBits = de2bi(ueObj.Rx.CQI, 4, 'left-msb')';
 			zeroPad = zeros(11,1);
-			if isempty(ueObj.Rx.TransportBlock)
+			if Param.rtxOn && isempty(ueObj.Rx.TransportBlock) || ~Param.rtxOn
 				reportHarqBit = 0;
 				harqBits = int8(zeros(4,1));
-			else
+			elseif Param.rtxOn
 				reportHarqBit = 1;
 				harqAck = ueObj.Mac.HarqReport.ack;
 				harqPid = ueObj.Mac.HarqReport.pid;

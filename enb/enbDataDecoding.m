@@ -28,30 +28,32 @@ function [Stations, Users] = enbDataDecoding(Stations, Users, Param, timeNow)
 				end
 
 				% Find the transmitting HARQ process for this UE
-				harqIndex = find([enb.Mac.HarqTxProcesses.rxId] == enb.Rx.UeData(iUser).UeId);
-				if ~isempty(harqIndex)
-					[harqPid, harqAck] = enb.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(...
-						enb.Rx.UeData(iUser).PUCCH);
-					if ~isempty(harqPid)
-						[enb.Mac.HarqTxProcesses(harqIndex), state, sqn] = enb.Mac.HarqTxProcesses(harqIndex).handleReply(...
-							harqPid, harqAck, timeNow, Param);
+                if Param.rtxOn
+                    harqIndex = find([enb.Mac.HarqTxProcesses.rxId] == enb.Rx.UeData(iUser).UeId);
+                    if ~isempty(harqIndex)
+                        [harqPid, harqAck] = enb.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(...
+                            enb.Rx.UeData(iUser).PUCCH);
+                        if ~isempty(harqPid)
+                            [enb.Mac.HarqTxProcesses(harqIndex), state, sqn] = enb.Mac.HarqTxProcesses(harqIndex).handleReply(...
+                                harqPid, harqAck, timeNow, Param);
 
-						% Depending on the state, contact ARQ
-						if ~isempty(sqn)
-							arqIndex = find([enb.Rlc.ArqTxBuffers.rxId] == enb.Rx.UeData(iUser).UeId);
+                            % Depending on the state, contact ARQ
+                            if ~isempty(sqn)
+                                arqIndex = find([enb.Rlc.ArqTxBuffers.rxId] == enb.Rx.UeData(iUser).UeId);
 
-							if state == 0
-								% The process has been acknowledged 
-								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Param);
-							elseif state == 4
-								% The process has failed 
-								enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Param);
-							else
-								% Nothing to do yet, HARQ will continue trying
-							end
-						end
-					end
-				end
+                                if state == 0
+                                    % The process has been acknowledged 
+                                    enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Param);
+                                elseif state == 4
+                                    % The process has failed 
+                                    enb.Rlc.ArqTxBuffers(arqIndex) = enb.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Param);
+                                else
+                                    % Nothing to do yet, HARQ will continue trying
+                                end
+                            end
+                        end
+                    end
+                end
 			end
 		end
 		Stations(iStation) = enb;

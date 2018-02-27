@@ -40,7 +40,7 @@ function [Station, User] = createSymbols(Station, User)
 		sym = ltePDSCH(enb, enb.Tx.PDSCH, cwd);
 	catch ME
 		fSpec = 'symbols generation failed for codeword with length %i\n';
-		s=sprintf(fSpec, length(cwdEx));
+		s=sprintf(fSpec, length(cwd));
     sonohilog(s,'WRN')
 		sym = [];
 	end

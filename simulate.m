@@ -56,10 +56,7 @@ for iRound = 0:(Param.schRounds-1)
 	end
 	
 	% Update RLC transmission queues for the users and reset the scheduled flag
-	for iUser = 1:length(Users)
-		queue = updateTrQueue(trSource, simTime, Users(iUser));
-		Users(iUser) = setQueue(Users(iUser), queue);
-	end
+	Users = updateTrQueue(Users, trSource, simTime);
 	
 	% ---------------------
 	% ENODEB SCHEDULE START
@@ -88,8 +85,8 @@ for iRound = 0:(Param.schRounds-1)
 		resultsStore(iStation).power = pIn;
 		resultsStore(iStation).schedule = Stations(iStation).ScheduleDL;
 		
-		% Check utilisation metrics and change status if needed
-		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
+		% Check utilisation metrics and change PowerState if needed
+		Stations(iStation) = evaluatePowerState(Stations(iStation), utilPercent,...
 			Param, utilLo, utilHi, Stations);
 	end
 	% -------------------
@@ -134,7 +131,7 @@ for iRound = 0:(Param.schRounds-1)
 	% UE UPLINK
 	% ---------------------------
 	sonohilog('Uplink transmission', 'NFO');
-	[Stations, compoundWaveforms, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10));
+	[Stations, compoundWaveforms, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10), Param);
 
 	% ------------------
 	% CHANNEL TRAVERSE
@@ -159,7 +156,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('eNodeB-space metrics recording', 'NFO');
-	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound);
+	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING

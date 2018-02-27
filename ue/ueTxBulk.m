@@ -1,4 +1,4 @@
-function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubframe, NFrame)
+function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubframe, NFrame, Param)
 
 	%   TX Bulk performs bulk operations on the transmitters for uplink
 	%
@@ -38,7 +38,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
         ue.NFrame = NFrame;
         
         % Create local resource grid and modulate
-        [ue.Tx, harqReportReset] = ue.Tx.mapGridAndModulate(ue);
+        [ue.Tx, harqReportReset] = ue.Tx.mapGridAndModulate(ue, Param);
 
         if harqReportReset
           ue = ue.resetHarqReport();

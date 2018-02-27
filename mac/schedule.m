@@ -78,7 +78,7 @@ switch Param.scheduling
                 if schedulingFlag && (noRtxSchedulingFlag || rtxSchedulingFlag)
                     modOrd = cqi2modOrd(Users(iCurrUe).Rx.CQI);
                     if noRtxSchedulingFlag
-                        prbsNeed = ceil(Users(iCurrUe).Queue.Size/(modOrd * Param.prbSym));
+                        prbsNeed = ceil(double(Users(iCurrUe).Queue.Size)/(modOrd * Param.prbSym));
                     else
                         % In this case load the TB picked for retransmission
                         tb = [];

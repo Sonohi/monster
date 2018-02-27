@@ -56,8 +56,8 @@ if Param.rmResults
 	removeResults();
 end
 
-% create status mapping
-status = [
+% create powerState mapping
+powerState = [
 	"active", ...
 	"overload", ...
 	"underload", ...
