@@ -74,7 +74,7 @@ classdef UserEquipment
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
-        end
+    end
 		
 		% Change queue
 		function obj = setQueue(obj, queue)
