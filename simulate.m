@@ -86,7 +86,7 @@ for iRound = 0:(Param.schRounds-1)
 		resultsStore(iStation).schedule = Stations(iStation).ScheduleDL;
 		
 		% Check utilisation metrics and change PowerState if needed
-		Stations(iStation) = checkUtilisation(Stations(iStation), utilPercent,...
+		Stations(iStation) = evaluatePowerState(Stations(iStation), utilPercent,...
 			Param, utilLo, utilHi, Stations);
 	end
 	% -------------------
