@@ -63,8 +63,8 @@ for iRound = 0:(Param.schRounds-1)
 	% ---------------------
 	for iStation = 1:length(Stations)
 		
-		% schedule only if at least 1 user is associated
-		if ~isempty(find([Stations(iStation).Users.UeId] ~= -1))
+		% schedule only if at least 1 user is associated and the power state allows it
+		if ~isempty(find([1, 2, 3] == Stations(iStation).PowerState)) && ~isempty(find([Stations(iStation).Users.UeId] ~= -1)) 
 			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 		
@@ -76,14 +76,6 @@ for iRound = 0:(Param.schRounds-1)
 		if isempty(utilPercent)
 			utilPercent = 0;
 		end
-		
-		% calculate the power that will be used in this round by this eNodeB
-		pIn = getPowerIn(Stations(iStation), utilPercent/100);
-		
-		% store eNodeB-space results
-		resultsStore(iStation).util = utilPercent;
-		resultsStore(iStation).power = pIn;
-		resultsStore(iStation).schedule = Stations(iStation).ScheduleDL;
 		
 		% Check utilisation metrics and change PowerState if needed
 		Stations(iStation) = evaluatePowerState(Stations(iStation), utilPercent,...
@@ -156,7 +148,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('eNodeB-space metrics recording', 'NFO');
-	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param);
+	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo, utilHi);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING
