@@ -153,7 +153,7 @@ classdef EvolvedNodeB
 		% check utilisation wrapper
 		function obj = evaluatePowerState(obj, util, Param, loThr, hiThr, Stations)
 			% overload
-			if util >= hiThr
+			if util > hiThr && hiThr ~= 100
 				obj.PowerState = 2;
 				obj.HystCount = obj.HystCount + 1;
 				if obj.HystCount >= Param.tHyst/10^-3
@@ -181,7 +181,7 @@ classdef EvolvedNodeB
 				end
 				
 				% underload, shutdown, inactive or boot
-			elseif util <= loThr
+			elseif util < loThr && loThr ~= 1
 				switch obj.PowerState
 					case 1
 						% eNodeB active and going in underload for the first time

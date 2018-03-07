@@ -55,11 +55,11 @@ classdef MetricRecorder
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, schRound, Param)
+		function obj = recordEnbMetrics(obj, Stations, schRound, Param, utilLo, utilHi)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = schRound + 1;
 			obj = obj.recordUtil(Stations, schRound);
-			obj = obj.recordPower(Stations, schRound);
+			obj = obj.recordPower(Stations, schRound, Param.otaPowerScale, utilLo, utilHi);
 			obj = obj.recordSchedule(Stations, schRound);
 			obj = obj.recordPowerState(Stations, schRound);
 			if Param.rtxOn
@@ -71,7 +71,7 @@ classdef MetricRecorder
 		function obj = recordUtil(obj, Stations, schRound)
 			for iStation = 1:length(Stations)
 				sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
-				utilPercent = 100*find(sch, 1, 'last' )/length(sch);
+				utilPercent = 100*find(sch, 1, 'last' )/length(Stations(iStation).ScheduleDL);
 				
 				% check utilPercent and change to 0 if null
 				if isempty(utilPercent)
@@ -82,10 +82,10 @@ classdef MetricRecorder
 			end
 		end
 		
-		function obj = recordPower(obj, Stations, schRound)
+		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo, utilHi)
 			for iStation = 1:length(Stations)
 				if ~isempty(obj.util(schRound, iStation))
-					pIn = getPowerIn(Stations(iStation), obj.util(schRound, iStation)/100);
+					pIn = getPowerIn(Stations(iStation), obj.util(schRound, iStation)/100, otaPowerScale, utilLo, utilHi);
 					obj.powerConsumed(schRound, iStation) = pIn;
 				else
 					sonohilog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
@@ -132,7 +132,7 @@ classdef MetricRecorder
 			obj = obj.recordEvm(Users, schRound);
 			obj = obj.recordThroughput(Users, schRound);
 			obj = obj.recordReceivedPowerdBm(Users, schRound);
-            obj = obj.recordRSMeasurements(Users,schRound);
+      obj = obj.recordRSMeasurements(Users,schRound);
 		end
 		
 		function obj = recordBer(obj, Users, schRound)
