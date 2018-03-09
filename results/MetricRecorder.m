@@ -85,8 +85,8 @@ classdef MetricRecorder
 		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo, utilHi)
 			for iStation = 1:length(Stations)
 				if ~isempty(obj.util(schRound, iStation))
-					pIn = getPowerIn(Stations(iStation), obj.util(schRound, iStation)/100, otaPowerScale, utilLo, utilHi);
-					obj.powerConsumed(schRound, iStation) = pIn;
+					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo, utilHi);
+					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
 				else
 					sonohilog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
 				end
