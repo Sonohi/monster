@@ -1,6 +1,6 @@
 %% SIMULATION PARAMETERS
 Param.reset = 0;% Boolean used to reset the folder structure and reload everything
-Param.rmResults = 1;% Boolean to clean the results folder
+Param.rmResults = 0;% Boolean to clean the results folder
 
 % Boolean used to enable the drawing of plots and other cool stuff
 Param.draw = 0;
@@ -9,7 +9,7 @@ Param.draw = 0;
 Param.storeTxData = 0;
 
 % Integer used to control the number of scheduling rounds (subframes) to simulate
-Param.schRounds = 10;
+Param.schRounds = 2;
 Param.seed = 42;% Integer used for the simulation seed
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;

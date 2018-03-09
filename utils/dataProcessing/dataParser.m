@@ -12,6 +12,8 @@ ber = cell([length(util_low),length(util_high)]);
 rsrq = cell([length(util_low),length(util_high)]);
 bler = cell([length(util_low),length(util_high)]);
 sinr = cell([length(util_low),length(util_high)]);
+harq = cell([length(util_low),length(util_high)]);
+powerState = cell([length(util_low),length(util_high)]);
 
 for j = 1:numel(util_low)
 	for k = 1:numel(util_high)

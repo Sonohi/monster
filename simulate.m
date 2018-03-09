@@ -23,7 +23,7 @@ end
 %[symMatrix, symMatrixInfo] = initSymMatrix(Param);
 
 % create a string to mark the output of this simulation
-outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
+outPrexif = strcat('seed_', num2str(Param.seed),'-utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
 
 if Param.generateHeatMap
 	switch Param.heatMapType
