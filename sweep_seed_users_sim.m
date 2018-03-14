@@ -1,17 +1,18 @@
-function sweep_seed_util_lo_sim(seed_index, utilLo_index)
+function sweep_seed_users_sim(seed_index, users_index)
 
-%   sweep_seed_util_lo_sim
+%   sweep_seed_users_sim
 %
 %   Simulation Parameters
-%		seed 						-> 	simulaiton seed
-%		util_lo 				->	low utility threshold
+%		seed_index 				-> 	simulation seed
+%		users_index				->	users index
 
 seeds = [5 8 42 79 153];
-utilLowValues = [1 20 40 60];
+numUsers = [10 20 30 40];
 sonohi(1);
 initParam;
 Param.seed = seeds(seed_index);
-Param.utilLoThr = utilLowValues(utilLo_index);
+Param.numUsers = numUsers(users_index);
+Param.utilLoThr = 40;
 
 % Set Log level
 setpref('sonohiLog','logLevel',4)
@@ -55,6 +56,6 @@ powerState = [
 	"boot"];
 
 % Main loop
-simulate(Param, simData, utilLowValues(utilLo_index), 100);
+simulate(Param, simData, utilLo, utilHi);
 
 end
