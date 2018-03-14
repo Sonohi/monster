@@ -51,6 +51,9 @@ for p = 1:length(Users)
 				NotAbleToDemod = 0;
 			else
 				UsersNew(p).Rx.Offset = lteDLFrameOffset(struct(station), Users(p).Rx.Waveform);
+				if UsersNew(p).Rx.Offset < 0
+					NotAbleToDemod = 1;
+				end
 				NotAbleToDemod = 0;
 			end
 

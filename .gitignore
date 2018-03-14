@@ -7,3 +7,4 @@
 /results/*.mat
 /dbg/*.mat
 /.vscode
+/logs/*.txt
