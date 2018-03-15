@@ -1,6 +1,6 @@
-function sweep_util_users_sim(util_index, users_index)
+function batch_util_users_sim(util_index, users_index)
 
-%   sweep_seed_users_sim
+%   batch_seed_users_sim
 %
 %   Simulation Parameters
 %		util_index 				-> 	utilisation low thr
@@ -47,15 +47,6 @@ simData = struct('trSource', Param.trSource, 'Stations', Stations, 'Users', User
 if Param.rmResults
 	removeResults();
 end
-
-% create powerState mapping
-powerState = [
-	"active", ...
-	"overload", ...
-	"underload", ...
-	"shutdown", ...
-	"inactive", ...
-	"boot"];
 
 % Main loop
 simulate(Param, simData, utilLo, utilHi);

@@ -1,7 +1,7 @@
 %% DATA PARSER is use to generate charts of the results
 % feel free to comment out the blocks not needed and modify this script in whichever way suits your needs
 
-util_low = [20 40 60];
+util_low = 60;
 util_high = 100 ;
 
 metrics_arr = cell([length(util_low),length(util_high)]);
