@@ -296,7 +296,7 @@ classdef EvolvedNodeB
 		end
 
 		% used to calculate the power in based on the BS class
-		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr, utilHiThr)
+		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
 			% The output power over the air depends on the utilisation, if energy saving is enabled
 			if utilLoThr > 1
 				Pout = obj.Pmax*enbCurrentUtil*otaPowerScale;

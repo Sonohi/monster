@@ -26,9 +26,10 @@ load('SimulationParameters.mat');
 % Set Log level
 setpref('sonohiLog','logLevel',4)
 
+sonohi(Param.reset);
+
 validateParam(Param);
 
-sonohi(Param.reset);
 
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');

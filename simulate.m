@@ -150,7 +150,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('eNodeB-space metrics recording', 'NFO');
-	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo, utilHi);
+	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING

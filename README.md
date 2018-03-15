@@ -28,15 +28,14 @@ The loop is split into three major parts, a transmitter, a channel and a receive
 
 # Getting started
 
-See `initParam.m` for configuration details. 
-This is used by the main file for configuring the simulation. 
-The structure of the framework is roughly is follows:
+* Set all paths needed for matlab to operate by running `sonohi`
 
+The framework can be run as a CLI:
 * Set configurations in `initParam.m`
-* Run simulation by running `main.m`
+* Save configurations by running `initParam.m`
+* Run simulations by running `main.m`
 * This executes the simulation script which contains the main loop.
 * After the simulation is done, results are saved in the results folder
-* Simulations can be replayed by running  `utils/replaySimulation/replaySimulation.m`
 
 Alternatively, a Matlab app is provided where the majority of the parameters in the `initParam` file are available.
 The file is called **monster.mlapp** at the root of the repo and runs the default folder loading at startup.
