@@ -1,3 +1,5 @@
+![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/ee_sims/docs/graphics/monster.png)
+
 # Introduction #
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in Matlab.
 It uses functions from the toolbox to perform complete DL and UL processing of the main data channel.
@@ -89,9 +91,13 @@ Please note, no MIMO is supported yet.
 
 
 ## Uplink
+The uplink is currently in development and it is simply configured in back-to-back mode.
 
-TODO
-
+## Simulation batches
+The project includes also some utilities to run batches of simulations in parallel for a set of parameters.
+There are some sample cases in the folder `batches/`, while the main script that initiate the batches is called `batch_main.m` at the root of the project.
+Each simulation is wrapped in a `try-catch` statement to limit the error propagation in case of failure.
+All logs in batched simulations are re-directed to file by default and they are located in `logs/`. This can be changed within the specific batch file.
 # Licence
-**MONSTer** is release under **MIT** licence available in copy at the root of the repo.
+**MONSTer** is release under **MIT** licence available in copy at the root of the repository.
 

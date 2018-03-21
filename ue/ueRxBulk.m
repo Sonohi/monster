@@ -24,8 +24,8 @@ function Users = ueRxBulk(Stations, Users, cec)
     % Apply Offset
     if user.Rx.Offset > length(user.Rx.Waveform)
         sonohilog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
-    else
-        user.Rx.Waveform = user.Rx.Waveform(1+user.Rx.Offset:end,:);
+		else
+        user.Rx.Waveform = user.Rx.Waveform(1+abs(user.Rx.Offset):end,:);
     end
     
 
