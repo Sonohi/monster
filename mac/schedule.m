@@ -22,8 +22,7 @@ prbsAv = floor(res/Param.prbRe);
 % get ABS info
 % current subframe
 currentSubframe = Station.NSubframe;
-absValue = Station.AbsMask(currentSubframe + 1); % get a 0 or 1 that corresponds
-% to the mask of this subframe
+absValue = Station.AbsMask(currentSubframe + 1); % get a 0 or 1 that corresponds to the mask of this subframe
 
 % if the policy is simpleABS, we use the fixed ABS mask from the Station
 % properties

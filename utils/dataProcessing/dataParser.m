@@ -1,5 +1,8 @@
-util_low = 30:30;
-util_high = 90:90;
+%% DATA PARSER is use to generate charts of the results
+% feel free to comment out the blocks not needed and modify this script in whichever way suits your needs
+
+util_low = 60;
+util_high = 100 ;
 
 metrics_arr = cell([length(util_low),length(util_high)]);
 powerConsumed = cell([length(util_low),length(util_high)]);
@@ -9,12 +12,14 @@ ber = cell([length(util_low),length(util_high)]);
 rsrq = cell([length(util_low),length(util_high)]);
 bler = cell([length(util_low),length(util_high)]);
 sinr = cell([length(util_low),length(util_high)]);
+harq = cell([length(util_low),length(util_high)]);
+powerState = cell([length(util_low),length(util_high)]);
 
 for j = 1:numel(util_low)
 	for k = 1:numel(util_high)
 		filename = sprintf('utilLo_%s-utilHi_%s.mat',int2str(util_low(j)),int2str(util_high(k)));
 		metrics  = load(strcat('results\',filename));
-		
+
 		powerConsumed{j,k} = metrics(1).SimulationMetrics.powerConsumed;
 		util{j,k} = metrics(1).SimulationMetrics.util;
 		thr{j,k} = metrics(1).SimulationMetrics.throughput;
@@ -22,11 +27,80 @@ for j = 1:numel(util_low)
 		bler{j,k} = metrics(1).SimulationMetrics.bler;
 		rsrq{j,k} = metrics(1).SimulationMetrics.rsrqdB;
 		sinr{j,k} = metrics(1).SimulationMetrics.sinrdB;
+		harq{j,k} = metrics(1).SimulationMetrics.harqRtx;
+		powerState{j,k} = metrics(1).SimulationMetrics.powerState;
 	
 	end
 end
 
-%%
+%% Prepare the baseline (basically when we have no energy saving)
+metricsBase  = load('results\utilLo_1-utilHi_100.mat');
+powerConsumedBase = metricsBase(1).SimulationMetrics.powerConsumed;
+utilBase = metricsBase(1).SimulationMetrics.util;
+harqBase = metricsBase(1).SimulationMetrics.harqRtx;
+thrBase = metricsBase(1).SimulationMetrics.throughput;
+
+powerConsumedBaseTot = sum(mean(powerConsumedBase, 1));
+utilTot = sum(mean(utilBase, 1));
+thrBaseTot = sum(mean(thrBase, 1));
+harqBaseTot = sum(harqBase(length(harqBase), :));
+
+% Power saved 
+figure;
+title('Power saved (%)');
+hold on;
+savePercent = zeros(numel(util_low) + numel(util_high), 1);
+for j = 1:numel(util_low)
+	for k = 1:numel(util_high)
+		powerAllStations = cell2mat(powerConsumed(j,k));
+		averageAllStations = mean(powerAllStations, 1);
+		totalNetwork = sum(averageAllStations);
+		savePercent(numel(util_high)*(j-1) + k) = 100*(1 - totalNetwork/powerConsumedBaseTot);
+		legendStr = strcat(num2str(util_low(j)), '/', num2str(util_high(k)));
+		utilLegend{numel(util_high)*(j-1) + k} = legendStr;
+	end
+end
+bar(savePercent);
+legend(utilLegend);
+
+% HARQ 
+figure;
+title('Reduction of HARQ retransmissions (%)');
+hold on;
+harqPercent = zeros(numel(util_low) + numel(util_high), 1);
+for j = 1:numel(util_low)
+	for k = 1:numel(util_high)
+		harqAllStations = cell2mat(harq(j,k));
+		harqTot = sum(harqAllStations(length(harqAllStations), :));
+		harqPercent(numel(util_high)*(j-1) + k) = 100*(1 - harqTot/harqBaseTot);
+		legendStr = strcat(num2str(util_low(j)), '/', num2str(util_high(k)));
+		utilLegend{numel(util_high)*(j-1) + k} = legendStr;
+	end
+end
+bar(harqPercent);
+legend(utilLegend);
+
+% Throughput 
+figure;
+title('Throughput');
+hold on;
+thrTotal = zeros(numel(util_low) + numel(util_high), 1);
+for j = 1:numel(util_low)
+	for k = 1:numel(util_high)
+		thrAllUsers = cell2mat(thr(j,k));
+		averageAllUsers = mean(thrAllUsers, 1);
+		totalNetwork = sum(averageAllUsers);
+		thrTotal(numel(util_high)*(j-1) + k) = totalNetwork;
+		legendStr = strcat(num2str(util_low(j)), '/', num2str(util_high(k)));
+		utilLegend{numel(util_high)*(j-1) + k} = legendStr;
+	end
+end
+
+bar([thrBaseTot,thrTotal'] );
+legend(utilLegend)
+
+
+%% Raw plots
 % Plot raw power consumption for all stations
 num_rounds = length(cell2mat(powerConsumed(1,1)));
 figure;
@@ -93,7 +167,7 @@ end
 legend(usersLegend);
 
 %%
-% Plot raw rsrq for all users
+% Plot raw rsrq for all users 
 num_rounds = length(cell2mat(rsrq(1,1)));
 figure;
 title('Per UE RSRQ');
@@ -148,21 +222,5 @@ for j = 1:numel(util_low)
 		avRsrq = mean(rsrq_all_users, 2);
 		semilogx(avRsrq, log10(avBler));
 		semilogx(avSinr, log10(avBler));
-	end
-end
-
-%%
-% Plot correlations for stations
-num_rounds = length(cell2mat(util(1,1)));
-figure;
-title('Correlation between power consumed and utilisation');
-hold on;
-for j = 1:numel(util_low)
-  for k = 1:numel(util_high)
-    pwr_all_stations = cell2mat(powerConsumed(j,k));
-		util_all_stations = cell2mat(util(j,k));
-		avPwr = mean(pwr_all_stations, 2);
-		avUtil = mean(util_all_stations, 2);
-		plot(avUtil, avPwr);
 	end
 end

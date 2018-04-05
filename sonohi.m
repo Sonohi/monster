@@ -22,10 +22,15 @@ if ~OHI || resetFlag % Check if previous initialization was successful
 	
 	fprintf(1,'Initializing Sonohi. Adding directories to path:\n');
 	fprintf('-> %s\n',root);
+
+	if isunix
+	 	addpath(genpath('./'))
+	end
+
 	addpath(root);
 	
 	dirs = {'utils', 'ch', 'enb', 'mac', 'mobility', 'phy', 'power', ...
-		'results', 'rlc', 'setup', 'traffic', 'ue', 'validator', 'app'};
+		'results', 'rlc', 'setup', 'traffic', 'ue', 'validator', 'app', 'logs', 'batches'};
 	
 	for i=1:numel(dirs)
 		add = [root filesep dirs{i}];

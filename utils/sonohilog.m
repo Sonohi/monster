@@ -33,38 +33,6 @@
 %>   * setpref('roboLog', 'logInBlack', LEVEL) [Default: 1]
 %>     - 0: Don't use colors in log output (faster)
 %>     - 1: Use colors in log output
-%>
-%> __Example__
-%> @code
-%>   % Delete any previous log related settings
-%>   if ispref('roboLog')
-%>     rmpref('roboLog');
-%>   end
-%>   robolog('Info 1');
-%>   robolog('Info 2', 'NFO');
-%>   robolog('Warning 1', 'WRN');
-%>   robolog('Formatted %s %d', 'WRN', 'warning', 2);
-%>
-%>   % Enable logging to file only
-%>   setpref('roboLog', 'logToFile', 1);
-%>   robolog('Warning 3 to robolog.txt', 'WRN');
-%>
-%>   % Set log file
-%>   setpref('roboLog', 'logFile', 'myfile.txt');
-%>   robolog('Info 3 to myfile.txt', 'NFO');
-%>
-%>   robolog('ciao', 'ERR');
-%> @endcode
-%>
-%> @author Simone Gaiarin
-%>
-%> @version 1
-
-%> @brief This function allows the user to print log messages in a standard way.
-%>
-%> @param msg The message to be logged. Can be a printf-like format string.
-%> @param varargin{1} Log type. Possible values: {'ERR', 'WRN', 'NFO'}. Default: 'NFO'.
-%> @param varargin{2:end} Printf arguments.
 function sonohilog(msg, varargin)
 %Constants
 validLogTypeValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};

@@ -55,11 +55,11 @@ classdef MetricRecorder
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, schRound, Param, utilLo, utilHi)
+		function obj = recordEnbMetrics(obj, Stations, schRound, Param, utilLo)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = schRound + 1;
 			obj = obj.recordUtil(Stations, schRound);
-			obj = obj.recordPower(Stations, schRound, Param.otaPowerScale, utilLo, utilHi);
+			obj = obj.recordPower(Stations, schRound, Param.otaPowerScale, utilLo);
 			obj = obj.recordSchedule(Stations, schRound);
 			obj = obj.recordPowerState(Stations, schRound);
 			if Param.rtxOn
@@ -82,11 +82,11 @@ classdef MetricRecorder
 			end
 		end
 		
-		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo, utilHi)
+		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo)
 			for iStation = 1:length(Stations)
 				if ~isempty(obj.util(schRound, iStation))
-					pIn = getPowerIn(Stations(iStation), obj.util(schRound, iStation)/100, otaPowerScale, utilLo, utilHi);
-					obj.powerConsumed(schRound, iStation) = pIn;
+					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo);
+					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
 				else
 					sonohilog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
 				end

@@ -1,3 +1,5 @@
+![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/ee_sims/docs/graphics/monster.png)
+
 # Introduction #
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in Matlab.
 It uses functions from the toolbox to perform complete DL and UL processing of the main data channel.
@@ -28,15 +30,14 @@ The loop is split into three major parts, a transmitter, a channel and a receive
 
 # Getting started
 
-See `initParam.m` for configuration details. 
-This is used by the main file for configuring the simulation. 
-The structure of the framework is roughly is follows:
+* Set all paths needed for matlab to operate by running `sonohi`
 
+The framework can be run as a CLI:
 * Set configurations in `initParam.m`
-* Run simulation by running `main.m`
+* Save configurations by running `initParam.m`
+* Run simulations by running `main.m`
 * This executes the simulation script which contains the main loop.
 * After the simulation is done, results are saved in the results folder
-* Simulations can be replayed by running  `utils/replaySimulation/replaySimulation.m`
 
 Alternatively, a Matlab app is provided where the majority of the parameters in the `initParam` file are available.
 The file is called **monster.mlapp** at the root of the repo and runs the default folder loading at startup.
@@ -90,9 +91,13 @@ Please note, no MIMO is supported yet.
 
 
 ## Uplink
+The uplink is currently in development and it is simply configured in back-to-back mode.
 
-TODO
-
+## Simulation batches
+The project includes also some utilities to run batches of simulations in parallel for a set of parameters.
+There are some sample cases in the folder `batches/`, while the main script that initiate the batches is called `batch_main.m` at the root of the project.
+Each simulation is wrapped in a `try-catch` statement to limit the error propagation in case of failure.
+All logs in batched simulations are re-directed to file by default and they are located in `logs/`. This can be changed within the specific batch file.
 # Licence
-**MONSTer** is release under **MIT** licence available in copy at the root of the repo.
+**MONSTer** is release under **MIT** licence available in copy at the root of the repository.
 

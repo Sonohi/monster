@@ -23,7 +23,8 @@ end
 %[symMatrix, symMatrixInfo] = initSymMatrix(Param);
 
 % create a string to mark the output of this simulation
-outPrexif = strcat('utilLo_', num2str(utilLo), '-utilHi_', num2str(utilHi));
+outPrexif = strcat('seed_', num2str(Param.seed),'-utilLo_', num2str(utilLo),...
+	'-utilHi_', num2str(utilHi), '-numUsers_', num2str(Param.numUsers));
 
 if Param.generateHeatMap
 	switch Param.heatMapType
@@ -63,8 +64,9 @@ for iRound = 0:(Param.schRounds-1)
 	% ---------------------
 	for iStation = 1:length(Stations)
 		
-		% schedule only if at least 1 user is associated and the power state allows it
-		if ~isempty(find([1, 2, 3] == Stations(iStation).PowerState)) && ~isempty(find([Stations(iStation).Users.UeId] ~= -1)) 
+		% check whether this eNodeB should schedule
+		[schFlag, Stations(iStation)] = shouldSchedule(Stations(iStation), Users);
+		if schFlag
 			[Stations(iStation), Users] = schedule(Stations(iStation), Users, Param);
 		end
 		
@@ -148,7 +150,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
 	sonohilog('eNodeB-space metrics recording', 'NFO');
-	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo, utilHi);
+	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING

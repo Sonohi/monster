@@ -38,6 +38,7 @@ classdef EvolvedNodeB
 		Rlc;
 		Seed;
 		AbsMask;
+		PowerIn;
 	end
 	
 	methods
@@ -87,6 +88,7 @@ classdef EvolvedNodeB
 			obj.Rx = enbReceiverModule(Param);
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
+			obj.PowerIn = 0;
     end
 		
     function TxPw = getTransmissionPower(obj)
@@ -284,6 +286,31 @@ classdef EvolvedNodeB
 					end
 				end
 				obj.ScheduleUL = scheduledUEs;
+			end
+		end
+
+		% Used to initiate the reboot of an eNodeB by traffic demand
+		function obj = initiateBoot(obj)
+			obj.PowerState = 6;
+			obj.SwitchCount = 0;
+		end
+
+		% used to calculate the power in based on the BS class
+		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
+			% The output power over the air depends on the utilisation, if energy saving is enabled
+			if utilLoThr > 1
+				Pout = obj.Pmax*enbCurrentUtil*otaPowerScale;
+			else
+				Pout = obj.Pmax;
+			end
+
+			% Now check power state of the eNodeB
+			if obj.PowerState == 1 || obj.PowerState == 2 || obj.PowerState == 3
+				% active, overload and underload state
+				obj.PowerIn = obj.CellRefP*obj.P0 + obj.DeltaP*Pout;
+			else 
+				% shutodwn, inactive and boot
+				obj.PowerIn = obj.Psleep;
 			end
 		end
 		
