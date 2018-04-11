@@ -17,7 +17,8 @@ function Users = ueRxBulk(Stations, Users, cec)
     station = Stations([Stations.NCellID] == user.ENodeBID);
     scheduled = checkUserSchedule(user,station);
     if ~scheduled
-      % Pass user iteration the user is not scheduled.
+      % user not scheduled, reset the metrics recorded for this round
+      user.Rx = user.Rx.logNotScheduled();
       continue;
     end
 
@@ -47,17 +48,12 @@ function Users = ueRxBulk(Stations, Users, cec)
 			user.Rx = user.Rx.selectCqi(station);
 			% Log block reception stats
 			user.Rx = user.Rx.logBlockReception(user);
-			% Update parent structure
-			Users(iUser) = user;
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
-      user.Rx.PostEvm = 100;
-      user.Rx.PreEvm = 100;
-      user.Rx.CQI = 1;
-      user.Rx.Blocks = struct('tot',1,'err',1,'ok',0);
-      user.Rx.Bits = struct('tot',1,'err',1,'ok',0);
-      Users(iUser) = user;
+      user.Rx = user.Rx.logNotDemodulated();
       continue;
     end
+    % Update parent structure
+		Users(iUser) = user;
   end
 end

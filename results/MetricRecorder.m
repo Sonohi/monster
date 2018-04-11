@@ -113,7 +113,7 @@ classdef MetricRecorder
 				obj.arqRtx(schRound, iStation) = sum([arqProcs.rtxCount]);
 			end
 		end
-
+		
 		function obj = recordPowerState(obj, Stations, schRound)
 			for iStation = 1:length(Stations)
 				obj.powerState(schRound, iStation) = Stations(iStation).PowerState;
@@ -132,13 +132,15 @@ classdef MetricRecorder
 			obj = obj.recordEvm(Users, schRound);
 			obj = obj.recordThroughput(Users, schRound);
 			obj = obj.recordReceivedPowerdBm(Users, schRound);
-      obj = obj.recordRSMeasurements(Users,schRound);
+			obj = obj.recordRSMeasurements(Users,schRound);
 		end
 		
 		function obj = recordBer(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.Bits) && Users(iUser).Rx.Bits.tot ~= 0
 					obj.ber(schRound, iUser) = Users(iUser).Rx.Bits.err/Users(iUser).Rx.Bits.tot;
+				else
+					obj.ber(schRound, iUser) = NaN;
 				end
 			end
 		end
@@ -147,18 +149,20 @@ classdef MetricRecorder
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.Blocks) && Users(iUser).Rx.Blocks.tot ~= 0
 					obj.bler(schRound, iUser) = Users(iUser).Rx.Blocks.err/Users(iUser).Rx.Blocks.tot;
+				else
+					obj.bler(schRound, iUser) = NaN;
 				end
 			end
-        end
-        
-        function obj = recordRSMeasurements(obj, Users, schRound)
+		end
+		
+		function obj = recordRSMeasurements(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.RSSIdBm)
 					obj.rssidBm(schRound, iUser) = Users(iUser).Rx.RSSIdBm;
-                end
+				end
 				if ~isempty(Users(iUser).Rx.RSRPdBm)
 					obj.rsrpdBm(schRound, iUser) = Users(iUser).Rx.RSRPdBm;
-                end
+				end
 				if ~isempty(Users(iUser).Rx.RSRQdB)
 					obj.rsrqdB(schRound, iUser) = Users(iUser).Rx.RSRQdB;
 				end
@@ -202,8 +206,10 @@ classdef MetricRecorder
 		
 		function obj = recordThroughput(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.Bits)
+				if ~isempty(Users(iUser).Rx.Bits) && Users(iUser).Rx.Bits.tot ~= 0
 					obj.throughput(schRound, iUser) = Users(iUser).Rx.Bits.ok*10e3;
+				else
+					obj.throughput(schRound, iUser) = NaN;
 				end
 			end
 		end

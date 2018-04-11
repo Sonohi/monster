@@ -281,6 +281,21 @@ classdef ueReceiverModule
 			obj.Bits.ok = tot - diff;
 		end
 			
+		% This is used when a UE has not been scheduled in a specific round for the metrics recorded
+		function obj = logNotScheduled(obj)
+			obj.Blocks = struct('tot',0,'err',0,'ok',0);
+      obj.Bits = struct('tot',0,'err',0,'ok',0);
+		end
+
+		% This is used when a UE received waveform cannot be demodulated
+		function obj = logNotDemodulated(obj)
+			obj.PostEvm = 100;
+      obj.PreEvm = 100;
+      obj.CQI = 1;
+      obj.Blocks = struct('tot',1,'err',1,'ok',0);
+      obj.Bits = struct('tot',1,'err',1,'ok',0);
+		end
+		
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
