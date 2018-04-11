@@ -11,6 +11,7 @@ classdef SonohiChannel
         UplinkModel;
         fieldType;
         Seed;
+        SimTime
     end
     
     methods(Static)
@@ -43,58 +44,7 @@ classdef SonohiChannel
             thermalNoise = k*T*BW;
         end
         
-        %% Decrepicated code, TODO: remove when time is right.
-        
-        function [stations, users]  = getScheduled(Stations,Users,schedule)
-            
-            % Find stations that have scheduled users.
-            schedules = schedule;
-            usersS = cellfun(@(x) unique([x.UeId]), schedules, 'UniformOutput', false);
-            stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
-            stationsS = ~cellfun('isempty',stationsS);
-            stations = Stations(stationsS);
-            
-            % Find users that are scheduled.
-            lens = sum(cellfun('length',usersS),1);
-            usersC = zeros(max(lens),numel(lens));
-            usersC(bsxfun(@le,[1:max(lens)]',lens)) = horzcat(usersS{:});
-            usersC = reshape( usersC ,1,numel(usersC));
-            usersC = usersC(usersC ~= 0);
-            users = Users(ismember([Users.NCellID],usersC));
-            
-        end
-        
-        function [stations, users] = getScheduledDL(Stations,Users)
-            
-            [stations, users] = SonohiChannel.getScheduled(Stations,Users,{Stations.ScheduleDL});
-            
-        end
-        
-        function [stations, users] = getScheduledUL(Stations,Users)
-            
-            %Should you same piece of code as DL, but there's a type
-            %mismatch.
-            %[stations, users] = SonohiChannel.getScheduled(Stations,Users,{Stations.ScheduleUL});
-            
-            % Find stations that have scheduled users.
-            schedules = {Stations.ScheduleUL};
-            usersS = cellfun(@(x) unique(x), schedules, 'UniformOutput', false);
-            stationsS = cellfun(@(x) x(x~= 0), usersS, 'UniformOutput', false);
-            stationsS = ~cellfun('isempty',stationsS);
-            stations = Stations(stationsS);
-            
-            % Find users that are scheduled.
-            lens = sum(cellfun('length',usersS),1);
-            usersC = zeros(max(lens),numel(lens));
-            usersC(bsxfun(@le,[1:max(lens)]',lens)) = horzcat(usersS{:});
-            usersC = reshape( usersC ,1,numel(usersC));
-            usersC = usersC(usersC ~= 0);
-            users = Users(ismember([Users.NCellID],usersC));
-            
-            
-        end
-        
-        %%
+
         
         function [stations, users] = getAssociated(Stations,Users)
             % Returns stations and users that are associated

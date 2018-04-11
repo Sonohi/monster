@@ -30,7 +30,7 @@ Param.microUniformRadius = 100;% Double radius of distance from centre for micro
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
-Param.numUsers = 15;% Integer used for the number of UEs
+Param.numUsers = 60;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.trafficModel = 'videoStreaming';% Traffic model
@@ -55,7 +55,7 @@ Param.bsNoiseFigure = 3;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'winner';% String to control the channel mode in DL
+Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'DenseUrban';% String to control the channel region
 %% SON parameters
@@ -64,11 +64,11 @@ Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s
 Param.tSwitch = 0.001;% Double to set the eNodeB switching on/off timer in s
 Param.utilLoThr = 1;% Integer for the threshold for the low utilisation range (>= 1)
 Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range (<= 100)
-Param.otaPowerScale = 1; % Value to scale the OTA power. 
+Param.otaPowerScale = 1; % Value to scale the OTA power.
 
 %% Scheduling
 Param.scheduling = 'roundRobin';% String for the scheduling policy to use (currently only 'roundRobin')
-Param.refreshAssociationTimer = 0.001;% Double to choose the interval in s to run refreshUsersAssociation
+Param.refreshAssociationTimer = 0.010;% Double to choose the interval in s to run refreshUsersAssociation
 Param.icScheme = 'none';
 Param.absMask = [1,0,1,0,0,0,0,0,0,0];
 
@@ -99,16 +99,16 @@ switch Param.trafficModel
 			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 		else
 			traffic = load('traffic/videoStreaming.mat');
-            Param.trSource = traffic.trSource;
-            clear traffic
+			Param.trSource = traffic.trSource;
+			clear traffic
 		end
 	case 'fullBuffer'
 		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
 			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 		else
 			traffic = load('traffic/fullBuffer.mat');
-            Param.trSource = traffic.trSource;
-            clear traffic
+			Param.trSource = traffic.trSource;
+			clear traffic
 		end
 end
 
