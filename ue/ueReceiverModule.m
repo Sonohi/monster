@@ -290,9 +290,9 @@ classdef ueReceiverModule
 
 		% This is used when a UE received waveform cannot be demodulated
 		function obj = logNotDemodulated(obj)
-			obj.PostEvm = 100;
-      obj.PreEvm = 100;
-      obj.CQI = 1;
+			obj.PostEvm = NaN;
+      obj.PreEvm = NaN;
+      obj.CQI = NaN;
       obj.Blocks = struct('tot',1,'err',1,'ok',0);
       obj.Bits = struct('tot',1,'err',1,'ok',0);
 		end
