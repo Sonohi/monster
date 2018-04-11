@@ -9,7 +9,7 @@ Param.draw = 0;
 Param.storeTxData = 0;
 
 % Integer used to control the number of scheduling rounds (subframes) to simulate
-Param.schRounds = 20;
+Param.schRounds = 10;
 Param.seed = 42;% Integer used for the simulation seed
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;
@@ -64,7 +64,7 @@ Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s
 Param.tSwitch = 0.001;% Double to set the eNodeB switching on/off timer in s
 Param.utilLoThr = 1;% Integer for the threshold for the low utilisation range (>= 1)
 Param.utilHiThr = 100;% Integer for the threshold for the high utilisation range (<= 100)
-Param.otaPowerScale = 1; % Value to scale the OTA power. 
+Param.otaPowerScale = 1; % Value to scale the OTA power.
 
 %% Scheduling
 Param.scheduling = 'roundRobin';% String for the scheduling policy to use (currently only 'roundRobin')
@@ -99,16 +99,16 @@ switch Param.trafficModel
 			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 		else
 			traffic = load('traffic/videoStreaming.mat');
-            Param.trSource = traffic.trSource;
-            clear traffic
+			Param.trSource = traffic.trSource;
+			clear traffic
 		end
 	case 'fullBuffer'
 		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
 			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 		else
 			traffic = load('traffic/fullBuffer.mat');
-            Param.trSource = traffic.trSource;
-            clear traffic
+			Param.trSource = traffic.trSource;
+			clear traffic
 		end
 end
 
