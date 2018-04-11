@@ -81,7 +81,7 @@ classdef sonohieHATA
       cfg.DelayProfile = 'EPA';      % EVA delay spread
       cfg.DopplerFreq = 5;         % 120Hz Doppler frequency
       cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
-      cfg.InitTime = 0;              % Initialize at time zero
+      cfg.InitTime = obj.Channel.SimTime;  % Initialization relative to sim time
       cfg.NTerms = 16;               % Oscillators used in fading model
       cfg.ModelType = 'GMEDS';       % Rayleigh fading model type
       cfg.InitPhase = 'Random';      % Random initial phases
@@ -96,31 +96,23 @@ classdef sonohieHATA
       hbPos = Station.Position;
       hmPos = User.Position;
       distance = obj.Channel.getDistance(hbPos,hmPos)/1e3;
+      % USEFUL CODE FOR RAY TRACING 
+      % The elev calculated consist on the point to point ray, meaning, in NLoS the worst case, or in LoS the best case
+      % The single ray proploss is replaced with the median basic proploss, since this gives a more average value of pathloss.
+      %         [numPoints,distVec,elev_profile] = obj.getElevation(hbPos,hmPos);
+      % 
+      %         if numPoints == 0
+      %           numPoints_scale = 1;
+      %         else
+      %           numPoints_scale = numPoints;
+      %         end
+      % 
+      %         elev = [numPoints_scale; distVec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
+      % lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
+      %   hmPos(3), obj.Channel.Region, elev);
 
-      try
-
-        [numPoints,distVec,elev_profile] = obj.getElevation(hbPos,hmPos);
-
-        if numPoints == 0
-          numPoints_scale = 1;
-        else
-          numPoints_scale = numPoints;
-        end
-
-        elev = [numPoints_scale; distVec(end)/(numPoints_scale); hbPos(3); elev_profile'; hmPos(3)];
-
-        lossdB = ExtendedHata_PropLoss(Station.DlFreq, hbPos(3), ...
-          hmPos(3), obj.Channel.Region, elev);
-      catch
-        % If the basic proploss fails it's most likely due to
-        % missing elevation profile data (e.g. if the position of
-        % Tx and Rx are just ontop of each other, or complete LoS
-        % transmission).
-        % MedianBasicPropLoss provides an average loss in those
-        % positions.
-        [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
-          distance, hbPos(3), hmPos(3), obj.Channel.Region);
-      end
+      [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(Station.DlFreq, ...
+        distance, hbPos(3), hmPos(3), obj.Channel.Region);
       % Get transmission power per symbol
       txPw = 10*log10(Station.getTransmissionPower)+30; %dBm.
 

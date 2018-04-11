@@ -34,6 +34,7 @@ classdef ueReceiverModule
 	methods
 		
 		function obj = ueReceiverModule(Param, ueObj)
+      obj.Offset = 0;
 			obj.NoiseFigure = Param.ueNoiseFigure;
 			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
