@@ -1,4 +1,4 @@
-classdef sonohiTemplate
+classdef sonohiITU
 
     properties
         Channel;
@@ -7,7 +7,7 @@ classdef sonohiTemplate
 
     methods
 
-        function obj = sonohiTemplate(Stations, Users, Channel, Chtype)
+        function obj = sonohiITU(Channel, Chtype)
             sonohilog('Initializing channel model...','NFO0')
             obj.Channel = Channel;
             obj.Chtype = Chtype;
@@ -75,7 +75,7 @@ classdef sonohiTemplate
         end
 
         function [RxNode] = addNoise(obj, TxNode, RxNode)
-            rxNoiseFloor = 10*log10(obj.Channel.ThermalNoise(Station.NDLRB));
+            rxNoiseFloor = 10*log10(obj.Channel.ThermalNoise(TxNode.NDLRB));
             SNR = rxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
             str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
@@ -109,7 +109,7 @@ classdef sonohiTemplate
         end
 
         function [lossdB] = computePathLoss(obj, TxNode, RxNode)
-            f = TxNode.Frequency; % Frequency in MHz
+            f = TxNode.DlFreq; % Frequency in MHz
             percentage_time = 50; % Percentage time 
             tx_heff = TxNode.Position(3); % Effective height of transmitter
             rx_heff = RxNode.Position(3); % Height of receiver
@@ -130,7 +130,7 @@ classdef sonohiTemplate
                 R2 = 30;
             end
         
-            distance = obj.Channel.getDistance(hbPos,hmPos)/1e3; % in Km.
+            distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3; % in Km.
 
             % Cell of strings defining the path        'Land', 'Sea',
             % zone for each given path length in d_v   'Warm', 'Cold'

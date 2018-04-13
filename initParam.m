@@ -30,7 +30,7 @@ Param.microUniformRadius = 100;% Double radius of distance from centre for micro
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
-Param.numUsers = 60;% Integer used for the number of UEs
+Param.numUsers = 5;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.trafficModel = 'videoStreaming';% Traffic model
@@ -55,7 +55,7 @@ Param.bsNoiseFigure = 3;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA']
+Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'DenseUrban';% String to control the channel region
 %% SON parameters
