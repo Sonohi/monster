@@ -117,6 +117,8 @@ classdef SonohiChannel
                 chModel = WINNER.setup();
             elseif strcmp(mode,'eHATA')
                 chModel = sonohieHATA(obj, chtype);
+            elseif strcmp(mode,'ITU1546')
+                chModel = sonohiITU(obj, chtype);
             elseif strcmp(mode, 'B2B')
                 chModel = sonohiB2B(obj, chtype);
             end
