@@ -21,6 +21,18 @@ classdef sonohiITU
 
         function [stations,users] = run(obj,Stations,Users, varargin)
 
+         
+        if ~isempty(varargin)
+            vargs = varargin;
+            nVargs = length(vargs);
+            
+            for k = 1:nVargs
+                if strcmp(vargs{k},'channel')
+                    obj.Channel = vargs{k+1};
+                end
+            end
+        end
+
         switch obj.Chtype
             case 'downlink'
                 users = obj.downlink(Stations,Users);
@@ -51,7 +63,9 @@ classdef sonohiITU
                 % compute link budget (do pathloss computation)
                 user = obj.computeLinkBudget(station, user);
                 if strcmp(obj.Channel.fieldType,'full')
-                    user = obj.addFading(station, user);
+                    if obj.Channel.enableFading
+                      user = obj.addFading(station, user);
+                    end
                     user = obj.addNoise(station, user);
                 else
                     user = obj.addNoise(station, user);
@@ -76,22 +90,22 @@ classdef sonohiITU
 
         function [RxNode] = addNoise(obj, TxNode, RxNode)
             rxNoiseFloor = 10*log10(obj.Channel.ThermalNoise(TxNode.NDLRB));
-            SNR = rxPwdBm-rxNoiseFloor;
+            SNR = RxNode.Rx.RxPwdBm-rxNoiseFloor;
             SNRLin = 10^(SNR/10);
-            str1 = sprintf('Station(%i) to User(%i)\n Distance: %s\n SNR:  %s\n RxPw:  %s\n',...
-                Station.NCellID,User.NCellID,num2str(distance),num2str(SNR),num2str(rxPwdBm));
+            str1 = sprintf('Station(%i) to User(%i)\n SNR:  %s\n RxPw:  %s\n',...
+                TxNode.NCellID,RxNode.NCellID,num2str(SNR),num2str(RxNode.Rx.RxPwdBm));
             sonohilog(str1,'NFO0');
             Es = sqrt(2.0*TxNode.CellRefP*double(TxNode.Tx.WaveformInfo.Nfft) * ...
-				TxNode.Tx.WaveformInfo.OfdmEnergyScale);
+                      TxNode.Tx.WaveformInfo.OfdmEnergyScale);
 
             % Compute spectral noise density NO
             N0 = 1/(Es*SNRLin);
 
             % Add AWGN
-            noise = N0*complex(randn(size(txSig)), ...
-                randn(size(txSig)));
+            noise = N0*complex(randn(size(TxNode.Tx.Waveform)), ...
+                randn(size(TxNode.Tx.Waveform)));
 
-            rxSig = txSig + noise;
+            rxSig = TxNode.Tx.Waveform + noise;
 
             RxNode.Rx.SNR = SNRLin;
             RxNode.Rx.Waveform = rxSig;
@@ -102,8 +116,8 @@ classdef sonohiITU
             % Compute link budget for tx->rx
             % returns updated RxPwdBm of RxNode.Rx
             lossdB = obj.computePathLoss(TxNode, RxNode);
-            txPw = 10*log10(TxNode.getTransmissionPower)+30;
-            rxPwdBm = txPw-lossdB-RxNode.Rx.NoiseFigure; %dBm
+            EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
+            rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
             RxNode.Rx.RxPwdBm = rxPwdBm;
 
         end
@@ -142,13 +156,12 @@ classdef sonohiITU
             % 1 - terrain information available
             pathinfo = 0; 
 
-
-            [~,lossdB] = P1546FieldStrMixed(f,percentage_time,tx_heff,rx_heff,R2,areatype,distance,path_c, pathinfo);
+            [T,~,lossdB] = evalc('P1546FieldStrMixed(f,percentage_time,tx_heff,rx_heff,R2,areatype,distance,path_c, pathinfo)');
         end
 
 
         function RxNode = addFading(obj, TxNode, RxNode)
-            cfg.SamplingRate = TxNode.WaveformInfo.SamplingRate;
+            cfg.SamplingRate = TxNode.Tx.WaveformInfo.SamplingRate;
             cfg.Seed = RxNode.Seed;        % Rx specific seed
             cfg.NRxAnts = 1;               % 1 receive antenna
             cfg.DelayProfile = 'EPA';      % EVA delay spread

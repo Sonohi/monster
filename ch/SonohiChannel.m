@@ -11,7 +11,9 @@ classdef SonohiChannel
         UplinkModel;
         fieldType;
         Seed;
-        SimTime
+        SimTime;
+        enableFading;
+        enableInterference;
     end
     
     methods(Static)

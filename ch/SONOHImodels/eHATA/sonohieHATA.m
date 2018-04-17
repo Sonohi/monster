@@ -47,11 +47,15 @@ classdef sonohieHATA
         station = Stations([Stations.NCellID] == Pairing(1,i));
         % Local copy for mutation
         user = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
-
+        
+        % TODO: Refactorize this, use sonohiITU as template
         if strcmp(obj.Channel.fieldType,'full')
-          RxSig = obj.addFading([...
-            station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo, user.Seed);
-
+          if obj.Channel.enableFading
+            RxSig = obj.addFading([...
+              station.Tx.Waveform;zeros(25,1)],station.Tx.WaveformInfo, user.Seed);
+          else
+            RxSig = station.Tx.Waveform;
+          end
           [RxSig, SNRLin, rxPwdBm] = obj.addPathlossAwgn(...
             station,user,RxSig);
 

@@ -34,6 +34,9 @@ classdef ChBulk_v2 < SonohiChannel
 						WINNER = sonohiWINNER(StationC,user, obj,'downlink');
 						WINNER = WINNER.setup();
 						[~, Users] = WINNER.run(StationC,user);
+          elseif strcmp(obj.DLMode, 'ITU1546')
+            ITUR1546 = sonohiITU(obj,'downlink');
+            [~, Users] = ITUR1546.run(StationC,user);
 					end
 					RxPw(iStation) = Users.Rx.RxPwdBm;
 					rxSignorm = Users.Rx.Waveform;
@@ -86,6 +89,8 @@ classdef ChBulk_v2 < SonohiChannel
 			obj.Draw = Param.draw;
 			obj.Region = Param.channel.region;
 			obj.Seed = Param.seed;
+      obj.enableFading = Param.channel.enableFading;
+      obj.enableInterference = Param.channel.enableInterference;
 		end
 		
 		function [Users,obj] = downlink(obj,Stations,Users)
@@ -96,18 +101,11 @@ classdef ChBulk_v2 < SonohiChannel
 			users = Users;
 			
 			[stations,users] = obj.getAssociated(Stations,Users);
-			
-			%[stations, users] = obj.getScheduledDL(Stations, Users);
-			%try
-			
 			[~, users] = obj.DownlinkModel.run(stations,users,'channel',obj);
-			
-			%catch ME
-			%  sonohilog('Something went wrong....','WRN')
-			%end
-			%Apply interference on all users if 'full' is enabled
 			if strcmp(obj.fieldType,'full')
-				users = obj.applyInterference(stations,users,'downlink');
+        if obj.enableInterference
+          users = obj.applyInterference(stations,users,'downlink');
+        end
 			end
 			
 			% Overwrite in input struct

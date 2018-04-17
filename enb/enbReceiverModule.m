@@ -9,7 +9,7 @@ classdef enbReceiverModule
 	methods
 		
 		function obj = enbReceiverModule(Param)
-			obj.NoiseFigure = Param.bsNoiseFigure;
+			obj.NoiseFigure = Param.eNBNoiseFigure;
 		end
 		
 		function obj = set.Waveform(obj,Sig)

@@ -8,17 +8,33 @@ classdef enbTransmitterModule
 		Frame;
 		FrameInfo;
 		FrameGrid;
+    TxPwdBm;
+    NoiseFigure;
+    NDLRB;
 	end
 
 	methods
 		% Constructor
 		function obj = enbTransmitterModule(enb, Param)
+      obj.TxPwdBm = 10*log10(enb.Pmax)+30;
+      obj.NoiseFigure = Param.eNBNoiseFigure;
+      obj.NDLRB = enb.NDLRB;
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
 			obj = setBCH(obj, enb);
 			obj = resetResourceGrid(obj, enb);
 			obj = initPDSCH(obj, enb.NDLRB);
 			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
-		end
+    end
+    
+    function EIRPSymbol = getEIRPSymbol(obj)
+      % Returns EIRP per symbol in Watts
+      EIRPSymbol = obj.getEIRP()/(12*obj.NDLRB);
+    end
+    
+    function EIRP = getEIRP(obj)
+      % Returns EIRP in Watts
+      EIRP = 10^((obj.TxPwdBm - obj.NoiseFigure)/10)/1000;
+    end
 
 		% Setters
 		% set Frame
