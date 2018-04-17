@@ -100,7 +100,8 @@ switch Param.scheduling
 					if rtxSchedulingFlag
 						Station = initRetransmission(Station, rtxInfo);
 					end
-					% write to schedule struct
+
+					% write to schedule struct and indicate also in the struct whether this is new data or RTX
 					for iPrb = 1:Station.NDLRB
 						if Station.ScheduleDL(iPrb).UeId == -1
 							mcs = cqi2mcs(Users(iCurrUe).Rx.CQI);
@@ -108,7 +109,8 @@ switch Param.scheduling
 								Station.ScheduleDL(iPrb + iSch) = struct(...
 									'UeId', Users(iCurrUe).NCellID,...
 									'Mcs', mcs,...
-									'ModOrd', modOrd);
+									'ModOrd', modOrd,...
+									'NDI', noRtxSchedulingFlag);
 							end
 							break;
 						end

@@ -31,7 +31,7 @@ classdef MetricRecorder
 			% Initialise for eNodeB
 			obj.util = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
 			obj.powerConsumed = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
-			temp(1:Param.schRounds, Param.numMacro + Param.numMicro, 1:Param.numSubFramesMacro) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
+			temp(1:Param.schRounds, Param.numMacro + Param.numMicro, 1:Param.numSubFramesMacro) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Param.rtxOn
 				obj.harqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);

@@ -111,7 +111,7 @@ classdef EvolvedNodeB
 		
 		% reset schedule
 		function obj = resetScheduleDL(obj)
-			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1);
+			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1, 'NDI', 1);
 			obj.ScheduleDL = temp;
 		end
 		
