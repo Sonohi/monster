@@ -33,7 +33,7 @@ Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.numUsers = 10;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
-Param.trafficModel = 'fullbuffer';% Traffic model ['fullbuffer', 'videoStreaming']
+Param.trafficModel = 'fullBuffer';% Traffic model ['fullBuffer', 'videoStreaming']
 Param.mobilityStep = 0.01;
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
@@ -51,15 +51,15 @@ Param.ulFreq = 1747.5;% Double used for the uplink carrier frequency in MHz
 Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
 Param.prbSym = 160;% Integer used for the number of OFMD symbols in a RB
 Param.ueNoiseFigure = 7;% Double used for the UE noise figure in dB
-Param.eNBNoiseFigure = 3;% Double used for the BS noise figure in dB
+Param.eNBNoiseFigure = 7;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
+Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
 Param.channel.enableFading = true;
-Param.channel.enableInterference = false;
+Param.channel.enableInterference = true;
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres
 Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s

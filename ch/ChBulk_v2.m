@@ -41,9 +41,15 @@ classdef ChBulk_v2 < SonohiChannel
 					RxPw(iStation) = Users.Rx.RxPwdBm;
 					rxSignorm = Users.Rx.Waveform;
 					
+          % Add timeshift to cause decorrelation between interfering
+          % waveforms and actual waveform
+          timeshift = randi([1 100]);
+          rxSignorm = circshift(rxSignorm, timeshift);
+          
 					% Set correct power of all signals, rxSigNorm is the signal
 					% normalized. rxPw contains the estimated rx power based
 					% on tx power and the link budget
+          
 					rxSig(:,iStation) = setPower(rxSignorm,RxPw(iStation));
 					
 					rxPwP = 10*log10(bandpower(rxSig(:,iStation)))+30;

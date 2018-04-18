@@ -1,21 +1,17 @@
-classdef sonohiWINNER
+classdef sonohiWINNERv2 < sonohiBase
 
     properties
         WconfigLayout; % Layout of winner model
         WconfigParset; % Model parameters
         numRx; % Number of receivers, per model
         h; % Stored impulse response
-        Channel;
         AA;
-        Chtype; %Downlink or Uplink
     end
 
     methods
 
         function obj = sonohiWINNER(Stations, Users, Channel, Chtype)
-            sonohilog('Initializing WINNER II channel model...','NFO0')
-            obj.Channel = Channel;
-            obj.Chtype = Chtype;
+            obj = obj@sonohiBase(Channel, Chtype)
             classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};
@@ -204,6 +200,10 @@ classdef sonohiWINNER
             stations = Stations
             users = Users
         end
+
+        end
+
+        function [RxNode] = computePathLoss(obj, TxNode, RxNode)
 
         end
 
