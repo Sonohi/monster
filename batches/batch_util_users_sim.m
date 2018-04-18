@@ -15,7 +15,8 @@ Param.utilLoThr = utilValues(util_index);
 
 % Set Log level
 setpref('sonohiLog','logLevel',4);
-logName = strcat('logs/simulation-utilLoThr_',num2str(Param.utilLoThr), '-numUsers_',num2str(Param.numUsers),'.txt'); 
+dateStr = datestr(datetime, 'yyyy-mm-dd_HH.MM.SS');
+logName = strcat('logs/', dateStr, '-utilLoThr_',num2str(Param.utilLoThr), '-numUsers_',num2str(Param.numUsers),'.txt'); 
 setpref('sonohiLog', 'logToFile', 1);
 setpref('sonohiLog', 'logFile', logName);
 

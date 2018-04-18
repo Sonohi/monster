@@ -16,7 +16,7 @@ switch Param.mobilityScenario
         [x, y] = traffic_mobility(1, obj.Velocity, obj.Seed, Param.mobilityStep);
     case 'straight'
         obj.Velocity = 10 / 12; % in m/s
-        [x, y] = straight_mobility( obj.Velocity, obj.Seed, Param );
+        [x, y] = straightMobility( obj.Velocity, obj.Seed, Param );
     otherwise
         sonohilog('Unknown mobility scenario selected','ERR');
         return;

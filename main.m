@@ -23,8 +23,11 @@ close all;
 % Load parameters
 load('SimulationParameters.mat');
 
-% Set Log level
-setpref('sonohiLog','logLevel',4)
+% Set log preferences
+dateStr = datestr(datetime, 'yyyy-mm-dd_HH.MM.SS');
+logName = strcat('logs/', dateStr, '-utilLoThr_',num2str(Param.utilLoThr), '-numUsers_',num2str(Param.numUsers),'.txt'); 
+setpref('sonohiLog', 'logToFile', Param.logToFile);
+setpref('sonohiLog', 'logFile', logName);
 
 sonohi(Param.reset);
 
