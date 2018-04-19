@@ -1,45 +1,23 @@
-classdef sonohiB2B
+classdef sonohiB2B < sonohiBase
 
     properties
-        Channel;
-        Chtype; %Downlink or Uplink
         CompoundWaveform
     end
 
     methods
 
         function obj = sonohiB2B(Channel, Chtype)
+            obj = obj@sonohiBase(Channel, Chtype)
             sonohilog('Running B2B','WRN')
-            obj.Channel = Channel;
-            obj.Chtype = Chtype;
 
         end
-
-        function obj = setup(obj)
-
-        end
-        
-
-        function [stations,users] = run(obj,Stations,Users, varargin)
-            
-
-        switch obj.Chtype
-            case 'downlink'
-                users = obj.downlink(Stations,Users);
-                stations = Stations;
-            case 'uplink'
-                stations = obj.uplink(Stations,Users);
-                users = Users;
-        end
-
-        end
-
     
     end
     
 
-    methods (Access=private) 
+    methods 
 
+        % Overwrite of downlink logic
         function [users] = downlink(obj,Stations,Users)
             % Update the Rx module of users
             users = Users;
@@ -50,6 +28,7 @@ classdef sonohiB2B
             end
         end
 
+        % Overwrite of uplink logic
         function [stations] = uplink(obj,Stations,Users)
             % Update the Rx module of stations
 
@@ -61,14 +40,6 @@ classdef sonohiB2B
                 stations(iStation).Rx.Waveform = obj.CompoundWaveform(iCfw).txWaveform;
                 stations(iStation).Rx.RxPwdBm = obj.CompoundWaveform(iCfw).Pmax;
             end
-
-        end
-        
-        function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, TxNode, RxNode, txSig, lossdB)
-
-        end
-
-        function rx = addFading(tx)
 
         end
 

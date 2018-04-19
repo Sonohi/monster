@@ -1,9 +1,13 @@
 classdef sonohiBase
 
+    % sonohiBase This is the parent class for all channel modelling. 
+    % Wrappers for channel models should be written using this structure. 
+    % For examples on how to do so see the other implementations.
+
     properties
-        Channel;
-        Seed;
-        Chtype; %Downlink or Uplink
+        Channel; % Channel object in which the model is addded
+        Seed; % Seed for adjusting randomness of the channel, such as fading
+        Chtype; %Downlink or Uplink, controls the logic that executed, if "downlink" the function downlink will be executed.
     end
 
     methods
@@ -17,7 +21,7 @@ classdef sonohiBase
         end
 
         function [stations,users] = run(obj,Stations,Users,varargin)
-
+            % Main switching method for exectuting downlink or uplink logic
             if ~isempty(varargin)
                 vargs = varargin;
                 nVargs = length(vargs);
@@ -42,13 +46,10 @@ classdef sonohiBase
         end
 
 
-    
-    end
-    
 
-    methods (Access=private) 
         % TODO this can quite easily be generalized to uplink
         function [users] = downlink(obj,Stations,Users)
+            % Ouput is written into the Rx module of users
             users = Users;
             numLinks = length(Users);
             Pairing = obj.Channel.getPairing(Stations);
@@ -64,12 +65,12 @@ classdef sonohiBase
                 user = obj.computeLinkBudget(station, user);
 
                 if strcmp(obj.Channel.fieldType,'full')
-                if obj.Channel.enableFading
-                    user = obj.addFading(user);
-                end
-                user = obj.addAWGN(station, user);
+                    if obj.Channel.enableFading
+                        user = obj.addFading(user);
+                    end
+                    user = obj.addAWGN(station, user);
                 else
-                user = obj.addAWGN(station, user);
+                    user = obj.addAWGN(station, user);
                 end
 
                 user = obj.addPropDelay(station, user);
@@ -80,23 +81,24 @@ classdef sonohiBase
         end
 
         function [stations] = uplink(obj,Stations,Users)
-            % Update the Rx module of stations
+            % MISSING IMPLEMENTATION
         end
 
     
     function RxNode = addPropDelay(obj,  TxNode, RxNode)
+        % Adds propagation delay based on distance and frequency
         RxNode.Rx.PropDelay = obj.Channel.getDistance(TxNode.Position, RxNode.Position);
     end
 
 
     function RxNode = setWaveform(~, TxNode, RxNode)
-        % Enables transmission, all impairments are added on Rx.Waveform
+        % Copies waveform to Rx module, enables transmission.
         RxNode.Rx.Waveform = TxNode.Tx.Waveform;
         RxNode.Rx.WaveformInfo =  TxNode.Tx.WaveformInfo;
     end
 
     function [RxNode] = computeLinkBudget(obj, TxNode, RxNode)
-        % Compute link budget for tx->rx
+        % Compute link budget for Tx -> Rx
         % returns updated RxPwdBm of RxNode.Rx
         lossdB = obj.computePathLoss(TxNode, RxNode);
         EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
@@ -106,6 +108,7 @@ classdef sonohiBase
     end
 
     function RxNode = addFading(obj, RxNode)
+        % Adds fading using lteFadingChannel
         cfg.SamplingRate = RxNode.Rx.WaveformInfo.SamplingRate;
         cfg.Seed = RxNode.Seed;        % Rx specific seed
         cfg.NRxAnts = 1;               % 1 receive antenna
@@ -125,8 +128,7 @@ classdef sonohiBase
     end
 
     function [RxNode] = addAWGN(obj, TxNode, RxNode)
-      % Function adds combined noise using the calculated link budget
-  
+      % Adds gaussian noise based on thermal noise and calculated recieved power.
         rxNoiseFloor = 10*log10(obj.Channel.ThermalNoise(TxNode.NDLRB));
         SNR = RxNode.Rx.RxPwdBm-rxNoiseFloor;
         SNRLin = 10^(SNR/10);

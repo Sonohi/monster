@@ -115,7 +115,7 @@ classdef SonohiChannel
             end
             
             if strcmp(mode,'winner')
-                WINNER = sonohiWINNER(Stations,Users, obj,chtype);
+                WINNER = sonohiWINNERv2(Stations,Users, obj,chtype);
                 chModel = WINNER.setup();
             elseif strcmp(mode,'eHATA')
                 chModel = sonohieHATA(obj, chtype);

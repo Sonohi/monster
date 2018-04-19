@@ -5,18 +5,18 @@ classdef sonohiWINNERv2 < sonohiBase
         WconfigParset; % Model parameters
         numRx; % Number of receivers, per model
         h; % Stored impulse response
-        AA;
+        AA; % Antenna arrays
     end
 
     methods
 
-        function obj = sonohiWINNER(Stations, Users, Channel, Chtype)
+        function obj = sonohiWINNERv2(Stations, Users, Channel, Chtype)
             obj = obj@sonohiBase(Channel, Chtype)
+            %% Manipulation of WINNER API below:
             classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};
                 types.(varname) = find(strcmp({Stations.BsClass},varname));
-
             end
 
             Snames = fieldnames(types);
@@ -38,7 +38,7 @@ classdef sonohiWINNERv2 < sonohiBase
                     % If no users are associated, skip the model
                     continue
                 end
-                [AA, eNBIdx, userIdx] = sonohiWINNER.configureAA(type,stations,users);
+                [AA, eNBIdx, userIdx] = obj.configureAA(type,stations,users);
 
                 range = max(Channel.Area);
 
@@ -89,8 +89,10 @@ classdef sonohiWINNERv2 < sonohiBase
 
 
         end
-
+        
+        % Overwrite of base downlink method
         function [users] = downlink(obj,Stations,Users)
+            
             users = Users;
             for model = 1:length(obj.WconfigLayout)
 
@@ -104,159 +106,30 @@ classdef sonohiWINNERv2 < sonohiBase
                     UserId = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
                     Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(StationId)));
                     User = users([users.NCellID] == UserId);
+                    h = obj.h{model}{link};
+                    
+                    % Setup tranmission
+                    User = obj.setWaveform(Station, User);
+
                     % Get corresponding TxSig
-                    txSig = [Station.Tx.Waveform;zeros(25,1)];
-                    txPw = 10*log10(bandpower(txSig));
-                    rxSig = obj.addFading(txSig,obj.h{model}{link});
-                    
-                    rxPw_ = 10*log10(bandpower(rxSig));
-                    
-     
-                    if obj.Channel.enableFading
-                      rxSig = rxSig;
-                    else
-                      rxSig = Station.Tx.Waveform;
-                    end
-                    
-                    lossdB = txPw-rxPw_;
+                    [lossdB, User] = obj.applyWINNER(User, h, obj.Channel.enableFading);
+                    User = obj.calculateRecievedPower(Station, User, lossdB);
+
                     %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
                     %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
 
                     % Normalize signal and add loss as AWGN based on
                     % noise floor
-                    rxSigNorm = rxSig.*10^(lossdB/20);
-                    [rxSigNorm, SNRLin, RxPwdBm] = obj.addPathlossAwgn(Station, User, rxSigNorm, lossdB);
+                    User = obj.addAWGN(Station, User);
 
-                    %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
-
-                    User.Rx.SNR = SNRLin;
-                    User.Rx.RxPwdBm = RxPwdBm;
-                    User.Rx.Waveform = rxSigNorm;
-                    User.Rx.PropDelay = obj.Channel.getDistance(Station.Position,User.Position);
-
+                    User = obj.addPropDelay(Station, User);
 
                     users([Users.NCellID] == UserId) = User;
                 end
             end
         end
 
-        function [stations] = uplink(obj,Stations,Users)
-            stations = Stations;
-            for model = 1:length(obj.WconfigLayout)
-
-                if isempty(obj.WconfigLayout{model})
-                    sonohilog(sprintf('Nothing assigned to %i model',model),'NFO0')
-                    continue
-                end
-                for link = 1:obj.numRx{model}
-
-                    StationId = obj.WconfigLayout{model}.Pairing(1,link);
-                    UserId = obj.WconfigLayout{model}.UserIdx(obj.WconfigLayout{model}.Pairing(2,link)-max(obj.WconfigLayout{model}.Pairing(1,:)));
-                    Station = Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx(StationId)));
-                    User = users([users.NCellID] == UserId);
-                    % Get corresponding TxSig
-                    txSig = [User.Tx.Waveform;zeros(25,1)];
-                    txPw = 10*log10(bandpower(txSig));
-
-                    rxSig = obj.addFading(txSig,obj.h{model}{link});
-
-                    rxPw_ = 10*log10(bandpower(rxSig));
-                    lossdB = txPw-rxPw_;
-                    %plot(10*log10(abs(fftshift(fft(rxSig)).^2)));
-                    %plot(10*log10(abs(fftshift(fft(rxSig2{1}))).^2));
-
-                    % Normalize signal and add loss as AWGN based on
-                    % noise floor
-                    rxSigNorm = rxSig.*10^(lossdB/20);
-                    [rxSigNorm, SNRLin, RxPwdBm] = obj.addPathlossAwgn(User, Station, rxSigNorm, lossdB);
-
-                    %plot(10*log10(abs(fftshift(fft(rxSigNorm)).^2)),'Color',[0.5,0.5,0.5,0.2]);
-
-                    Station.Rx.SNR = SNRLin;
-                    Station.Rx.RxPwdBm = RxPwdBm;
-                    Station.Rx.Waveform = rxSigNorm;
-
-
-                    stations([Stations.NCellID] == StationId) = Station;
-                end
-            end
-
-        end
-        
-
-        function [stations,users] = run(obj,Stations,Users, varargin)
-        try
-        switch obj.Chtype
-            case 'downlink'
-                users = obj.downlink(Stations,Users);
-                stations = Stations;
-            case 'uplink'
-                stations = obj.uplink(Stations,Users);
-                users = Users;
-        end
-
-        catch ME
-            sonohilog('Something went wrong in the channel... No metrics saved.','WRN')
-            stations = Stations
-            users = Users
-        end
-
-        end
-
-        function [RxNode] = computePathLoss(obj, TxNode, RxNode)
-
-        end
-
-        function [rxSig, SNRLin, rxPwdBm] = addPathlossAwgn(obj, TxNode, RxNode, txSig, lossdB)
-            % Compute thermalnoise based on bandwidth
-            if isprop(TxNode,'NDLRB') % Station is TxNode
-                thermalNoise = obj.Channel.ThermalNoise(TxNode.NDLRB);
-            elseif isprop(TxNode,'NULRB')
-                thermalNoise = obj.Channel.ThermalNoise(TxNode.NULRB);
-            end
-            % Get distance of Tx - Rx
-            distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3;
-
-            % Get transmission power
-            txPw = 10*log10(TxNode.getTransmissionPower)+30; %dBm.
-            
-            % Setup link budget
-            rxPwdBm = txPw-lossdB; %dBm
-            % SNR = P_rx_db - P_noise_db
-            rxNoiseFloor = 10*log10(thermalNoise)+RxNode.Rx.NoiseFigure;
-            SNR = rxPwdBm-rxNoiseFloor;
-            SNRLin = 10^(SNR/10);
-            str1 = sprintf('Node(%i) to Node(%i)\n Distance: %s\n SNR:  %s\n',...
-                TxNode.NCellID,RxNode.NCellID,num2str(distance),num2str(SNR));
-            sonohilog(str1,'NFO0');
-
-            %% Apply SNR
-
-            % Compute average symbol energy
-            % This is based on the number of useed subcarriers.
-            % Scale it by the number of used RE since the power is
-            % equally distributed
-            Es = sqrt(2.0*TxNode.CellRefP*double(TxNode.Tx.WaveformInfo.Nfft) * ...
-							TxNode.Tx.WaveformInfo.OfdmEnergyScale);
-
-            % Compute spectral noise density NO
-            N0 = 1/(Es*SNRLin);
-
-            % Add AWGN
-
-            noise = N0*complex(randn(size(txSig)), ...
-                randn(size(txSig)));
-
-            rxSig = txSig + noise;
-
-
-        end
-    
-    end
-    
-    methods(Static)
-
-        function rx = addFading(tx,h)
+        function rx = applyWINNERimpluse(~, tx,h)
             H = fft(h,length(tx));
             % Apply transfer function to signal
             X = fft(tx)./length(tx);
@@ -264,10 +137,42 @@ classdef sonohiWINNERv2 < sonohiBase
             rx = ifft(Y)*length(tx);
         end
 
+   
+        function [RxNode] = calculateRecievedPower(obj, TxNode, RxNode, lossdB)
+            % Compute link budget for tx->rx
+            % returns updated RxPwdBm of RxNode.Rx
+            EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
+            rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
+            RxNode.Rx.RxPwdBm = rxPwdBm;
+    
+        end
+
+        function [lossdB, RxNode] = applyWINNER(obj, RxNode, h, enableFading)
+            % Compute loss provided by WINNER
+            
+            rxSig_ = [RxNode.Rx.Waveform;zeros(25,1)];
+            % Local variable used for computing difference in power
+            rxSigPw_ = 10*log10(bandpower(rxSig_));  
+
+            % apply WINNER impulse response
+            rxSig_ = obj.applyWINNERimpluse(rxSig_, h);
+            rxPw_ = 10*log10(bandpower(rxSig_));
+            lossdB = rxSigPw_-rxPw_;
+            
+            if enableFading
+                % Normalize the signal
+                rxSigNorm = rxSig_.*10^(lossdB/20); 
+                RxNode.Rx.Waveform = rxSigNorm;
+            end
+            
+        end
+    end
+    
+    methods(Static)
+
         function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
 
             % Select antenna array based on station class.
-            % TODO: load antenna arrays from MAT file. computational hack.
             if strcmp(type,'macro')
                 if ~exist('macroAA.mat')
                   Az = -180:179;

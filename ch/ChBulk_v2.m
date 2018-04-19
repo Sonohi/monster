@@ -13,6 +13,7 @@ classdef ChBulk_v2 < SonohiChannel
 			
 			% v1 Uses eHATA based pathloss computation for both cases
 			% v2 Switch based on channel mode
+			% v2 switch replaced with setup and traverse functions as regularly used
 			
 			
 			
@@ -27,24 +28,20 @@ classdef ChBulk_v2 < SonohiChannel
 					StationC.Users(1).UeId = user.NCellID;
 					StationC.ScheduleDL(1).UeId = user.NCellID;
 					user.Rx.Waveform = [];
-					if strcmp(obj.DLMode,'eHATA')
-						eHATA = sonohieHATA(obj,'downlink');
-						[~, Users] = eHATA.run(StationC,user);
-					elseif strcmp(obj.DLMode, 'winner')
-						WINNER = sonohiWINNER(StationC,user, obj,'downlink');
-						WINNER = WINNER.setup();
-						[~, Users] = WINNER.run(StationC,user);
-          elseif strcmp(obj.DLMode, 'ITU1546')
-            ITUR1546 = sonohiITU(obj,'downlink');
-            [~, Users] = ITUR1546.run(StationC,user);
-					end
-					RxPw(iStation) = Users.Rx.RxPwdBm;
-					rxSignorm = Users.Rx.Waveform;
-					
-          % Add timeshift to cause decorrelation between interfering
-          % waveforms and actual waveform
-          timeshift = randi([1 100]);
-          rxSignorm = circshift(rxSignorm, timeshift);
+          
+          % Select channel model using switcher
+					obj = obj.setupChannelDL(StationC, user);
+          
+          [~, user] = obj.DownlinkModel.run(StationC, user);
+
+					% Extract power and waveform
+					RxPw(iStation) = user.Rx.RxPwdBm;
+					rxSignorm = user.Rx.Waveform;
+								
+					% Add timeshift to cause decorrelation between interfering
+					% waveforms and actual waveform
+					timeshift = randi([1 100]);
+					rxSignorm = circshift(rxSignorm, timeshift);
           
 					% Set correct power of all signals, rxSigNorm is the signal
 					% normalized. rxPw contains the estimated rx power based
