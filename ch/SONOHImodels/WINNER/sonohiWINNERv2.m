@@ -161,7 +161,7 @@ classdef sonohiWINNERv2 < sonohiBase
             
             if enableFading
                 % Normalize the signal
-                rxSigNorm = rxSig_.*10^(lossdB/20); 
+                rxSigNorm = rxSig_.*10^(lossdB/10); 
                 RxNode.Rx.Waveform = rxSigNorm;
             end
             
