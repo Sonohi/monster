@@ -13,7 +13,7 @@ classdef ChBulk_v2 < SonohiChannel
 			
 			% v1 Uses eHATA based pathloss computation for both cases
 			% v2 Switch based on channel mode
-			% v2 switch replaced with setup and traverse functions as regularly used
+			% v3 switch replaced with setup and traverse functions as regularly used
 			
 			
 			
