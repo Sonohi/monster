@@ -1,5 +1,3 @@
-%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
-
 classdef EvolvedNodeB
 	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties

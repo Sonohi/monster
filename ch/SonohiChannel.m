@@ -1,5 +1,5 @@
 classdef SonohiChannel
-    
+
     properties
         Area;
         ULMode;
