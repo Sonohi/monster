@@ -1,4 +1,4 @@
-![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/ee_sims/docs/graphics/monster.png)
+![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/master/docs/graphics/monster.png)
 
 # Introduction #
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in Matlab.
@@ -98,6 +98,18 @@ The project includes also some utilities to run batches of simulations in parall
 There are some sample cases in the folder `batches/`, while the main script that initiate the batches is called `batch_main.m` at the root of the project.
 Each simulation is wrapped in a `try-catch` statement to limit the error propagation in case of failure.
 All logs in batched simulations are re-directed to file by default and they are located in `logs/`. This can be changed within the specific batch file.
+
+## Performance metrics
+The framework uses a class for taking care of recording performance metrics from the simulations.
+The details of this class can be found in `/results/MetricRecorder.m`.
+The key concepts are that one defines a class property for each of the metrics that are deemed interesting to record throughout the simulations (e.g. *powerConsumed* for the power consumed by an eNodeB).
+In additions to this, one has also to define a method with which such metric is recorded.
+See for example the method *recordPower* that takes care of recording the power consumed by the eNodeB.
+Finally, a metric is typically a UE-side metric or an eNodeB-side metric. 
+To ease the code and make it more scalable, there are 2 wrapper methods that are the only ones called from the main simulation loop. 
+These are `recordEnbMetrics` and `recordUeMetrics`. When a new metric is added, the metric-recording method should be called from inside one of these 2 directly.
+As regards the structure of the data produced, they are normally recorded once per scheduling round, thus rows represent the time evolution of the metric in the simulation. Columns on the other hand. represent either the number of UEs, or those of the eNodeBs, depending on the metric.
+
 # Licence
 **MONSTer** is release under **MIT** licence available in copy at the root of the repository.
 

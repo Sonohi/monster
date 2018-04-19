@@ -255,7 +255,7 @@ classdef ueReceiverModule
 				errEx = 0;
 				tot = length(tbTx);
 			else
-				sonohilog('(ReceiverModule logBlockReception) TBs sizes mismatch', 'WRN');
+				sonohilog('(ueReceiverModule - logBlockReception) TBs sizes mismatch', 'WRN');
 				% In this case, we do the xor between the minimum common set of bits
 				if sizeCheck > 0
 					% the original TB was bigger than the received one, so test on the
@@ -327,6 +327,8 @@ classdef ueReceiverModule
 			obj.Throughput = 0;
 			obj.SchIndexes = [];
 			obj.PDSCH = [];
+			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
+			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 		end
 		
 	end

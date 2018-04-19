@@ -1,5 +1,5 @@
-function [ x, y ] = straight_mobility ( velocity, seed, Param )
-%STRAIGHT_MOBILITY Summary of this function goes here
+function [ x, y ] = straightMobility ( velocity, seed, Param )
+%straightMobility Summary of this function goes here
 %   Detailed explanation goes here
 
 rng(seed);

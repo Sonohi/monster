@@ -1,6 +1,7 @@
 %% SIMULATION PARAMETERS
 Param.reset = 0;% Boolean used to reset the folder structure and reload everything
 Param.rmResults = 0;% Boolean to clean the results folder
+Param.logToFile = 0; % Boolean, if true all logs are re-directed to a file in /logs
 
 % Boolean used to enable the drawing of plots and other cool stuff
 Param.draw = 1;
@@ -30,7 +31,7 @@ Param.microUniformRadius = 100;% Double radius of distance from centre for micro
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
-Param.numUsers = 5;% Integer used for the number of UEs
+Param.numUsers = 15;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.trafficModel = 'fullBuffer';% Traffic model ['fullBuffer', 'videoStreaming']
