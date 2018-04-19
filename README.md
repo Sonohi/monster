@@ -1,4 +1,4 @@
-![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/ee_sims/docs/graphics/monster.png)
+![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/master/docs/graphics/monster.png)
 
 # Introduction #
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in Matlab.
