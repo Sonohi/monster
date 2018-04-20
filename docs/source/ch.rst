@@ -1,4 +1,8 @@
 Channel
 ==============
-.. module:: ch
-.. class:: SonohiChannel
+.. automodule:: ch
+.. autoclass:: ChBulk_v2
+    :members:
+.. autoclass:: SonohiChannel
+
+
