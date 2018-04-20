@@ -176,13 +176,10 @@ classdef sonohiWINNERv2 < sonohiBase
                 if ~exist('macroAA.mat')
                   Az = -180:179;
                   pattern(1,:,1,:) = winner2.dipole(Az,10);
-                  AA(1) = winner2.AntennaArray( ...
-                     'ULA', 12, 0.15, ...
-                     'FP-ECS', pattern, ...
-                     'Azimuth', Az);
+                  AA(1) = winner2.AntennaArray('ULA', 12, 0.15,'FP-ECS', pattern, 'Azimuth', Az);
                   save('macroAA.mat','AA')
                 else
-                  sonohilog('Loading pregenerated antenna AA...','NFO0')
+                  sonohilog('Loading pregenerated antenna AA.','NFO0')
                   load('macroAA.mat');
                 end
                 %AA(1) = winner2.AntennaArray('UCA', 8,  0.2);
@@ -190,19 +187,16 @@ classdef sonohiWINNERv2 < sonohiBase
               if ~exist('microAA.mat')
                 Az = -180:179;
                 pattern(1,:,1,:) = winner2.dipole(Az,10);
-                AA(1) = winner2.AntennaArray( ...
-                   'ULA', 6, 0.15, ...
-                   'FP-ECS', pattern, ...
-                   'Azimuth', Az);
+                AA(1) = winner2.AntennaArray('ULA', 6, 0.15,'FP-ECS', pattern,'Azimuth', Az);
                 save('microAA.mat','AA')
               else
-                sonohilog('Loading pregenerated antenna AA...','NFO0')
+                sonohilog('Loading pregenerated antenna AA.','NFO0')
                 load('microAA.mat');
               end
                 %AA(1) = winner2.AntennaArray('UCA', 4,  0.15);
             else
 
-                sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting...',type),'WRN')
+                sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting.',type),'WRN')
                 AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
             end
 
@@ -213,7 +207,7 @@ classdef sonohiWINNERv2 < sonohiBase
               save('UEAA.mat','ueAA')
               AA(2) = ueAA;
             else
-              sonohilog('Loading pregenerated antenna AA...','NFO0')
+              sonohilog('Loading pregenerated antenna AA.','NFO0')
               load('UEAA.mat')
               AA(2) = ueAA;
             end
@@ -289,21 +283,19 @@ classdef sonohiWINNERv2 < sonohiBase
                 cMs = Users([Users.NCellID] == userIdx);
                 % Apparently WINNERchan doesn't compute distance based
                 % on height, only on x,y distance. Also they can't be
-                % doubles...
+                % doubles.
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
                 if cBs.BsClass == 'micro'
 
                     if distance <= 20
-                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS',...
-                            stationNCellId,userIdx,num2str(distance));
+                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
                         cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
 
                     elseif distance <= 50
-                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS',...
-                            stationNCellId,userIdx,num2str(distance));
+                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
@@ -314,8 +306,7 @@ classdef sonohiWINNERv2 < sonohiBase
                     end
                 elseif cBs.BsClass == 'macro'
                     if distance < 50
-                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS',...
-                            stationNCellId,userIdx,num2str(distance));
+                        msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
                         cfgLayout.ScenarioVector(i) = 11; %
                         cfgLayout.PropagConditionVector(i) = 1; %
@@ -344,8 +335,7 @@ classdef sonohiWINNERv2 < sonohiBase
 
             % Configure model parameters
             % TODO: Determine maxMS velocity
-            maxMSVelocity = max(cell2mat(cellfun(@(x) norm(x, 'fro'), ...
-                {cfgLayout.Stations.Velocity}, 'UniformOutput', false)));
+            maxMSVelocity = max(cell2mat(cellfun(@(x) norm(x, 'fro'), {cfgLayout.Stations.Velocity}, 'UniformOutput', false)));
 
 
             cfgModel = winner2.wimparset;
@@ -355,8 +345,7 @@ classdef sonohiWINNERv2 < sonohiBase
             cfgModel.SampleDensity      = max(swSamplingRate)/50;    % To match sampling rate of signal
             cfgModel.PathLossModelUsed  = 'yes';  % Turn on path loss
             cfgModel.ShadowingModelUsed = 'yes';  % Turn on shadowing
-            cfgModel.SampleDensity = round(physconst('LightSpeed')/ ...
-                cfgModel.CenterFrequency/2/(maxMSVelocity/max(swSamplingRate)));
+            cfgModel.SampleDensity = round(physconst('LightSpeed')/cfgModel.CenterFrequency/2/(maxMSVelocity/max(swSamplingRate)));
 
         end
         

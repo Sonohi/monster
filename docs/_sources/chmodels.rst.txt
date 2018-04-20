@@ -1,0 +1,5 @@
+eHATA
+===========
+.. automodule:: ch
+.. autoclass:: sonohieHATA
+    :members:

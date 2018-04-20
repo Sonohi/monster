@@ -85,7 +85,15 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="enb.html">EvolvedNodeB</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Channel</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Channel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#models">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ehata">eHATA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#winner-ii">WINNER II</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#itu">ITU</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -169,21 +177,39 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="ch.ChBulk_v2.setupChannel">
-<code class="descname">setupChannel</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.setupChannel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setup association to traverse</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="ch.ChBulk_v2.setupChannelDL">
 <code class="descname">setupChannelDL</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.setupChannelDL" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup channel given the DL schedule, e.g. the association to simulate when traversed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – </li>
+<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="ch.ChBulk_v2.setupChannelUL">
 <code class="descname">setupChannelUL</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.setupChannelUL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setup channel given the DL schedule, e.g. the association to simulate when traversed.</p>
+<dd><p>Setup channel given the UL schedule, e.g. the association to simulate when traversed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – </li>
+<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -198,10 +224,34 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chtype</strong> (<em>str</em>) – the receptive Rx module is configured using ‘downlink’ or ‘uplink’, if ‘downlink’ Users.Rx modules are used to store the final waveforms and physical parameters.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – Station objects with a transmitter and receiver module.</li>
+<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – UE objects with a transmitter and receiver module</li>
+<li><strong>chtype</strong> (<em>str</em>) – the receptive Rx module is configured using ‘downlink’ or ‘uplink’, if ‘downlink’ Users.Rx modules are used to store the final waveforms and physical parameters.</li>
+<li><strong>varargin</strong> – (‘fieldType’,’field’) can be given to bypass fading and interference, ‘full is default’</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
+<dl class="docutils">
+<dt><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations</span></code> needs the following fields:</dt>
+<dd><ul class="first last simple">
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Users</span></code>: needed for getting link association between stations and users</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.NCellID</span></code>: Identifier to link association</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Tx</span></code>: Transmitter module</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Rx</span></code>: Receiver module</li>
+</ul>
+</dd>
+<dt><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users</span></code> needs the following fields:</dt>
+<dd><ol class="first last arabic simple">
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.NCellID</span></code>: Identifier to link association</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.ENodeBID</span></code>: Identifier to link association</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.Tx</span></code>: Transmitter module</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.Rx</span></code>: Receiver module</li>
+</ol>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -235,6 +285,62 @@
 </table>
 </dd></dl>
 
+<div class="section" id="models">
+<h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ch.SONOHImodels.sonohiBase">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.</code><code class="descname">sonohiBase</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="ch.SONOHImodels.sonohiBase.Channel">
+<code class="descname">Channel</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.Channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.sonohiBase.Chtype">
+<code class="descname">Chtype</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.Chtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.sonohiBase.Seed">
+<code class="descname">Seed</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.Seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="ehata">
+<h3>eHATA<a class="headerlink" href="#ehata" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ch.ch.SONOHImodels.eHATA.sonohieHATA">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.eHATA.</code><code class="descname">sonohieHATA</code><a class="headerlink" href="#ch.ch.SONOHImodels.eHATA.sonohieHATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="winner-ii">
+<h3>WINNER II<a class="headerlink" href="#winner-ii" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ch.ch.SONOHImodels.WINNER.sonohiWINNERv2">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.WINNER.</code><code class="descname">sonohiWINNERv2</code><a class="headerlink" href="#ch.ch.SONOHImodels.WINNER.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="itu">
+<h3>ITU<a class="headerlink" href="#itu" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="ch.SONOHImodels.ITUR1546.sonohiITU">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.ITUR1546.</code><code class="descname">sonohiITU</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.ITUR1546.sonohiITU" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ch.SONOHImodels.ITUR1546.sonohiITU.computePathLoss">
+<code class="descname">computePathLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.ITUR1546.sonohiITU.computePathLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes ITU pathloss</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
 </div>
 
 

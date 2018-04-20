@@ -1,5 +1,5 @@
 classdef sonohieHATA < sonohiBase
-
+  % Docstring test
   methods
 
     function obj = sonohieHATA(Channel, Chtype)
@@ -14,8 +14,7 @@ classdef sonohieHATA < sonohiBase
       hmPos = RxNode.Position;
       distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3; % in Km.
       areatype = obj.Channel.Region; % 'Rural', 'Urban', 'Dense Urban', 'Sea'
-      [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(f, ...
-              distance, hbPos(3), hmPos(3), areatype);
+      [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(f, distance, hbPos(3), hmPos(3), areatype);
     end
 
   end

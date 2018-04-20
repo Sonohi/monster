@@ -92,6 +92,33 @@ classdef SonohiChannel
   end
   
   methods
+                        
+  function chModel = setupChannel(obj,Stations,Users,chtype)
+    % Setup association to traverse
+    switch chtype
+        case 'downlink'
+            mode = obj.DLMode;
+        case 'uplink'
+            mode = obj.ULMode;
+    end
+    
+    if strcmp(mode,'winner')
+        WINNER = sonohiWINNERv2(Stations,Users, obj,chtype);
+        chModel = WINNER.setup();
+    elseif strcmp(mode,'eHATA')
+        chModel = sonohieHATA(obj, chtype);
+    elseif strcmp(mode,'ITU1546')
+        chModel = sonohiITU(obj, chtype);
+    elseif strcmp(mode, 'B2B')
+        chModel = sonohiB2B(obj, chtype);
+    else
+        sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
+    end
+    
+    
+    
+end
+
     function [Users,obj] = runModel(obj,Stations,Users, chtype)
       validateChannel(obj);
       validateStations(Stations);
@@ -99,7 +126,6 @@ classdef SonohiChannel
       stations = Stations;
       users = Users;
       
-      [stations,users] = obj.getAssociated(Stations,Users);
       switch chtype
         case 'downlink'
           [~, users] = obj.DownlinkModel.run(stations,users,'channel',obj);
