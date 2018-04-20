@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to MONSTER’s documentation! &mdash; MONSTER 1.0 documentation</title>
+  <title>UserEquipment &mdash; MONSTER 1.0 documentation</title>
   
 
   
@@ -29,7 +29,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="EvolvedNodeB" href="enb.html" /> 
+    <link rel="next" title="Channel" href="ch.html" />
+    <link rel="prev" title="EvolvedNodeB" href="enb.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -48,7 +49,7 @@
           
 
           
-            <a href="#">
+            <a href="index.html">
           
 
           
@@ -82,9 +83,13 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="enb.html">EvolvedNodeB</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">UserEquipment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#receiver-module">Receiver Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transmitter-module">Transmitter Module</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ch.html">Channel</a></li>
 </ul>
 
@@ -100,7 +105,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">MONSTER</a>
+          <a href="index.html">MONSTER</a>
         
       </nav>
 
@@ -129,15 +134,15 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Welcome to MONSTER’s documentation!</li>
+      <li>UserEquipment</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/ue.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -150,32 +155,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-monster-s-documentation">
-<h1>Welcome to MONSTER’s documentation!<a class="headerlink" href="#welcome-to-monster-s-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="enb.html">EvolvedNodeB</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="enb.html#receiver-module">Receiver Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="enb.html#transmitter-module">Transmitter Module</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ue.html#receiver-module">Receiver Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ue.html#transmitter-module">Transmitter Module</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="ch.html">Channel</a></li>
-</ul>
+  <div class="section" id="module-ue">
+<span id="userequipment"></span><h1>UserEquipment<a class="headerlink" href="#module-ue" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="ue.UserEquipment">
+<em class="property">class </em><code class="descclassname">ue.</code><code class="descname">UserEquipment</code><span class="sig-paren">(</span><em>Param</em>, <em>userId</em><span class="sig-paren">)</span><a class="headerlink" href="#ue.UserEquipment" title="Permalink to this definition">¶</a></dt>
+<dd><p>USER EQUIPMENT defines a value class for creating and working with UEs</p>
+</dd></dl>
+
+<div class="section" id="receiver-module">
+<h2>Receiver Module<a class="headerlink" href="#receiver-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ue.ueReceiverModule">
+<em class="property">class </em><code class="descclassname">ue.</code><code class="descname">ueReceiverModule</code><span class="sig-paren">(</span><em>Param</em>, <em>ueObj</em><span class="sig-paren">)</span><a class="headerlink" href="#ue.ueReceiverModule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
+<div class="section" id="transmitter-module">
+<h2>Transmitter Module<a class="headerlink" href="#transmitter-module" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ue.ueTransmitterModule">
+<em class="property">class </em><code class="descclassname">ue.</code><code class="descname">ueTransmitterModule</code><span class="sig-paren">(</span><em>Param</em>, <em>ueObj</em><span class="sig-paren">)</span><a class="headerlink" href="#ue.ueTransmitterModule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
-</ul>
 </div>
 
 
@@ -186,8 +189,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="enb.html" class="btn btn-neutral float-right" title="EvolvedNodeB" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ch.html" class="btn btn-neutral float-right" title="Channel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
+      
+        <a href="enb.html" class="btn btn-neutral" title="EvolvedNodeB" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
