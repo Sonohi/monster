@@ -40,9 +40,8 @@ classdef sonohiWINNERv2 < sonohiBase
                 end
                 [AA, eNBIdx, userIdx] = obj.configureAA(type,stations,users);
 
-                range = max(Channel.Area);
 
-                obj.WconfigLayout{model} = obj.initializeLayout(userIdx, eNBIdx, numLinks, AA, range);
+                obj.WconfigLayout{model} = obj.initializeLayout(userIdx, eNBIdx, numLinks, AA);
 
                 obj.WconfigLayout{model} = obj.addAssociated(obj.WconfigLayout{model} ,stations,users);
 
@@ -231,10 +230,10 @@ classdef sonohiWINNERv2 < sonohiBase
 
         end
 
-        function cfgLayout =initializeLayout(useridx, eNBidx, numLinks, AA, range)
+        function cfgLayout =initializeLayout(useridx, eNBidx, numLinks, AA)
             % Initialize layout struct by antenna array and number of
             % links.
-            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA, range);
+            cfgLayout = winner2.layoutparset(useridx, eNBidx, numLinks, AA);
 
         end
 
