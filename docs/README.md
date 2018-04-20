@@ -4,6 +4,6 @@ Install sphinx for compiling docs
 
 For compiling the docs run
 
-`sphinx-build -b html source/ build/`
+`make html` or `make.bat html`
 
 See https://pypi.org/project/sphinxcontrib-matlabdomain/ for syntax

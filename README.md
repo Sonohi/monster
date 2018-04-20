@@ -1,4 +1,6 @@
-![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/master/docs/graphics/monster.png)
+![MONSTeR](https://raw.githubusercontent.com/Sonohi/monster/master/docs/resources/graphics/monster.png)
+
+Checkout the documentation [here](https://sonohi.github.io/monster/)
 
 # Introduction #
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in Matlab.
@@ -81,6 +83,11 @@ Currently two modes:
 WINNER II is implemented as a toolbox in MATLAB [[2]](https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox) which enables highly customizable propagation scenarios.
 
 Please note, no MIMO is supported yet.
+
+`ITU1546`
+
+* For path loss: ITU implementation [[3]](https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx)
+* For fading: MATLAB lteFading channel based on 3GPP fading requirements.
 
 #### Receiver
 
