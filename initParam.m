@@ -12,6 +12,7 @@ Param.storeTxData = 0;
 % Integer used to control the number of scheduling rounds (subframes) to simulate
 Param.schRounds = 10;
 Param.seed = 42;% Integer used for the simulation seed
+Param.mobilitySeed = 19; % Integer for randomizing user positioning and trajectories
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;
 

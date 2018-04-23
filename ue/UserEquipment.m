@@ -36,6 +36,7 @@ classdef UserEquipment
 		Hangover;
 		Pmax;
 		Seed;
+    	MobilitySeed;
 	end
 	
 	methods
@@ -43,6 +44,7 @@ classdef UserEquipment
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = userId;
 			obj.Seed = userId*Param.seed;
+			obj.MobilitySeed = userId*Param.mobilitySeed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
