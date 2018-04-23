@@ -4,10 +4,8 @@ classdef sonohieHATA < sonohiBase
 %
 % This model uses frequency, distance and a region determined by a string. The regions are given as:
 % 
-% * 'Rural'
 % * 'Urban'
-% * 'Dense Urban'
-% * 'Sea'
+% * 'Suburban'
 methods
 
     function obj = sonohieHATA(Channel, Chtype)

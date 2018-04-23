@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>eHATA &mdash; MONSTER 1.0 documentation</title>
+  <title>Models &mdash; MONSTER 1.0 documentation</title>
   
 
   
@@ -28,7 +28,8 @@
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Channel" href="ch.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -81,11 +82,19 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="enb.html">EvolvedNodeB</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ch.html">Channel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ch.html#models">Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="ch.html">Channel</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.eHATA">eHATA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.WINNER">WINNER II</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.ITUR1546">ITUR1546</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ch.html#examples">Examples</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -131,7 +140,9 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>eHATA</li>
+          <li><a href="ch.html">Channel</a> &raquo;</li>
+        
+      <li>Models</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -150,13 +161,300 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-ch">
-<span id="ehata"></span><h1>eHATA<a class="headerlink" href="#module-ch" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-ch.SONOHImodels">
+<span id="models"></span><h1>Models<a class="headerlink" href="#module-ch.SONOHImodels" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="ch.SONOHImodels.sonohiBase">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.</code><code class="descname">sonohiBase</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the parent class for all channel modelling. Wrappers for channel models should be written using this structure. For examples on how to do so see the other implementations.</p>
 <dl class="attribute">
-<dt id="ch.sonohieHATA">
-<code class="descclassname">ch.</code><code class="descname">sonohieHATA</code><a class="headerlink" href="#ch.sonohieHATA" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="ch.SONOHImodels.sonohiBase.Channel">
+<code class="descname">Channel</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.Channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>For accessing variables in the channel coordinator <a class="reference internal" href="ch.html#ch.SonohiChannel" title="ch.SonohiChannel"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SonohiChannel</span></code></a></p>
+</dd></dl>
 
+<dl class="attribute">
+<dt id="ch.SONOHImodels.sonohiBase.Chtype">
+<code class="descname">Chtype</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.Chtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chtype: <cite>‘Downlink’</cite> or <cite>‘Uplink’</cite> switcher that executes <a class="reference internal" href="#ch.SONOHImodels.sonohiBase.downlink" title="ch.SONOHImodels.sonohiBase.downlink"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">downlink()</span></code></a> or <code class="xref mat mat-meth docutils literal notranslate"><span class="pre">uplink()</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.addAWGN">
+<code class="descname">addAWGN</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.addAWGN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds gaussian noise based on thermal noise and calculated recieved power.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.addFading">
+<code class="descname">addFading</code><span class="sig-paren">(</span><em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.addFading" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds fading using lteFadingChannel</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.addPropDelay">
+<code class="descname">addPropDelay</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.addPropDelay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds propagation delay based on distance and frequency</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.computeLinkBudget">
+<code class="descname">computeLinkBudget</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.computeLinkBudget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute link budget for Tx -&gt; Rx</p>
+<p>This requires a <code class="xref mat mat-meth docutils literal notranslate"><span class="pre">computePathLoss()</span></code> method, which is supplied by child classes.
+returns updated RxPwdBm of RxNode.Rx</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.downlink">
+<code class="descname">downlink</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.downlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard downlink logic. Output of this function is written into the <a class="reference internal" href="ue.html#ue.ueReceiverModule" title="ue.ueReceiverModule"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.ueReceiverModule</span></code></a> of the users. If the users are scheduled for transmission
+The downlink logic follows the follow flow</p>
+<ol class="arabic simple">
+<li>Find links and eNB - UE pairing.</li>
+<li>Setup transmission by copying <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Tx.Waveform</span></code> into <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.Rx.Waveform</span></code>.</li>
+<li>Compute link budget and thus calucated receiver power.</li>
+<li>If <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Channel.enableFading</span></code>, add fading to waveform.</li>
+<li>Add AWGN based on thermal noise and receiver power. Compute SNR.</li>
+<li>Add propagation delay.</li>
+</ol>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – Primarily need <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Tx</span></code> Transmitter module</li>
+<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – Primarily need <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Users.Tx</span></code> Receiver module</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main execution method, switches between uplink and downlink logic.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>varargin</strong> – If the channel property needs to be updated before execution it can be added as ‘channel, <a class="reference internal" href="ch.html#ch.SonohiChannel" title="ch.SonohiChannel"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SonohiChannel</span></code></a>’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.setWaveform">
+<code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies waveform to Rx module, enables transmission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="module-ch.SONOHImodels.eHATA">
+<span id="ehata"></span><h2>eHATA<a class="headerlink" href="#module-ch.SONOHImodels.eHATA" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ch.SONOHImodels.eHATA.sonohieHATA">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.eHATA.</code><code class="descname">sonohieHATA</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.eHATA.sonohieHATA" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is using an existing implementation of the Extended HATA model as seen here: <a class="reference external" href="https://github.com/usnistgov/eHATA">https://github.com/usnistgov/eHATA</a>
+The Extended Hata (eHATA) propagation model code was implemented by employees of the National Institute of Standards and Technology (NIST), Communications Technology Laboratory (CTL).</p>
+<p>This model uses frequency, distance and a region determined by a string. The regions are given as:</p>
+<ul class="simple">
+<li>‘Urban’</li>
+<li>‘Suburban’</li>
+</ul>
+<dl class="method">
+<dt id="ch.SONOHImodels.eHATA.sonohieHATA.computePathLoss">
+<code class="descname">computePathLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.eHATA.sonohieHATA.computePathLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes path loss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.eHATA.sonohieHATA.sonohieHATA">
+<code class="descname">sonohieHATA</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.eHATA.sonohieHATA.sonohieHATA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ch.SONOHImodels.WINNER">
+<span id="winner-ii"></span><h2>WINNER II<a class="headerlink" href="#module-ch.SONOHImodels.WINNER" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.WINNER.</code><code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main objective of this class is to manipulate variables and structures with that of the WINNER II model which is available standalone, in MATLAB. <a class="reference external" href="https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox">https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox</a></p>
+<p>Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.</p>
+<dl class="attribute">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.AA">
+<code class="descname">AA</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.AA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Antenna arrays</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.WconfigLayout">
+<code class="descname">WconfigLayout</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.WconfigLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Layout of winner model</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.WconfigParset">
+<code class="descname">WconfigParset</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.WconfigParset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated">
+<code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the index of the stations and users associated, e.g.
+how they link with the station and user objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.applyWINNER">
+<code class="descname">applyWINNER</code><span class="sig-paren">(</span><em>RxNode</em>, <em>h</em>, <em>enableFading</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.applyWINNER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies WINNER model, e.g. applies the computed impulse response. If fading is enabled the resulting waveform is normalized and the power difference is equal to the combined loss of the channel.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.applyWINNERimpluse">
+<code class="descname">applyWINNERimpluse</code><span class="sig-paren">(</span><em>tx</em>, <em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.applyWINNERimpluse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies the impulse response by the use of fft</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.calculateRecievedPower">
+<code class="descname">calculateRecievedPower</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em>, <em>lossdB</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.calculateRecievedPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA">
+<code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures the antenna arrays and their radiation patterns
+For macro stations a ULA Antenna array with 12 elements are considered.
+For micro stations a ULA Antenna array with 6 elements are considered.
+For UEs, a ULA antenna array with 1 element is considered.
+Number of sectors are per default defined to be zero, thus the antenna is omnidirectional.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel">
+<code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use maximum fft size
+However since the same BsClass is used these are most
+likely to be identical</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.downlink">
+<code class="descname">downlink</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.downlink" title="Permalink to this definition">¶</a></dt>
+<dd><p>This overwrites the method of the baseclass <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a>.
+The logic is similar to that of the baseclass, however the loss is computed from the wavefrom on which the impulse response is applied.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.h">
+<code class="descname">h</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stored impulse response</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout">
+<code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize layout struct by antenna array and number of
+links.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.numRx">
+<code class="descname">numRx</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.numRx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of receivers, per model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions">
+<code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the position of the base station and the users in the WINNER layout struct.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario">
+<code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting of propagation scenario based on the station type and region selected.
+A list of</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes impulse response of initalized winner model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.sonohiWINNERv2">
+<code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The constructor inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a> and does the needed manipulation of data structures to use the WINNER library. This primarily includes a mapping between the WINNER layout/config and the mapping done in MONSTER.
+For this it needs the following inputs:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – Station objects with a transmitter and receiver module.</li>
+<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – UE objects with a transmitter and receiver module</li>
+<li><strong>Channel</strong> (<a class="reference internal" href="ch.html#ch.SonohiChannel" title="ch.SonohiChannel"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SonohiChannel</span></code></a>) – Channel object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing">
+<code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change useridx of pairing to reflect WINNER structure
+cfgLayout.Stations, e.g. If only one station, user one is
+at cfgLayout.Stations(2)
+This is to accomondate the mapping needed by winner which is
+dependent on the cfgLayout.Stations struct.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ch.SONOHImodels.ITUR1546">
+<span id="itur1546"></span><h2>ITUR1546<a class="headerlink" href="#module-ch.SONOHImodels.ITUR1546" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ch.SONOHImodels.ITUR1546.sonohiITU">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.ITUR1546.</code><code class="descname">sonohiITU</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.ITUR1546.sonohiITU" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is using an existing implementation of the ITU-R 1546 model as seen here: <a class="reference external" href="https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx">https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx</a></p>
+<p>The model is based on frequency, percentage time (defaults to 50%), distance and a propagation region. Currently only land is considered. The regions supported are:</p>
+<ul class="simple">
+<li>‘Rural’</li>
+<li>‘Suburban’</li>
+<li>‘Urban’</li>
+<li>‘Dense Urban’</li>
+</ul>
+<dl class="method">
+<dt id="ch.SONOHImodels.ITUR1546.sonohiITU.computePathLoss">
+<code class="descname">computePathLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.ITUR1546.sonohiITU.computePathLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes ITU pathloss</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.ITUR1546.sonohiITU.sonohiITU">
+<code class="descname">sonohiITU</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.ITUR1546.sonohiITU.sonohiITU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
@@ -164,6 +462,13 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="ch.html" class="btn btn-neutral" title="Channel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

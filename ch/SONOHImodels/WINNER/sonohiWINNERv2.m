@@ -1,18 +1,29 @@
 classdef sonohiWINNERv2 < sonohiBase
-
+    % The main objective of this class is to manipulate variables and structures with that of the WINNER II model which is available standalone, in MATLAB. https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox
+    % 
+    % Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
+    
     properties
-        WconfigLayout; % Layout of winner model
-        WconfigParset; % Model parameters
-        numRx; % Number of receivers, per model
-        h; % Stored impulse response
-        AA; % Antenna arrays
+        WconfigLayout % Layout of winner model
+        WconfigParset % Model parameters
+        numRx % Number of receivers, per model
+        h % Stored impulse response
+        AA % Antenna arrays
     end
 
     methods
 
         function obj = sonohiWINNERv2(Stations, Users, Channel, Chtype)
+            % The constructor inherits :class:`ch.SONOHImodels.sonohiBase` and does the needed manipulation of data structures to use the WINNER library. This primarily includes a mapping between the WINNER layout/config and the mapping done in MONSTER.
+            % For this it needs the following inputs:
+            %
+            % :param Stations: Station objects with a transmitter and receiver module.
+            % :type Stations: :class:`enb.EvolvedNodeB`
+            % :param Users: UE objects with a transmitter and receiver module
+            % :type Users: :class:`ue.UserEquipment`
+            % :param Channel: Channel object
+            % :type Channel: :class:`ch.SonohiChannel`
             obj = obj@sonohiBase(Channel, Chtype)
-            %% Manipulation of WINNER API below:
             classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};
@@ -89,9 +100,9 @@ classdef sonohiWINNERv2 < sonohiBase
 
         end
         
-        % Overwrite of base downlink method
         function [users] = downlink(obj,Stations,Users)
-            
+            % This overwrites the method of the baseclass :class:`ch.SONOHImodels.sonohiBase`.
+            % The logic is similar to that of the baseclass, however the loss is computed from the wavefrom on which the impulse response is applied. 
             users = Users;
             for model = 1:length(obj.WconfigLayout)
 
@@ -128,7 +139,8 @@ classdef sonohiWINNERv2 < sonohiBase
             end
         end
 
-        function rx = applyWINNERimpluse(~, tx,h)
+        function rx = applyWINNERimpluse(obj, tx,h)
+            % Applies the impulse response by the use of fft
             H = fft(h,length(tx));
             % Apply transfer function to signal
             X = fft(tx)./length(tx);
@@ -138,8 +150,7 @@ classdef sonohiWINNERv2 < sonohiBase
 
    
         function [RxNode] = calculateRecievedPower(obj, TxNode, RxNode, lossdB)
-            % Compute link budget for tx->rx
-            % returns updated RxPwdBm of RxNode.Rx
+            % Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.
             EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
             rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
             RxNode.Rx.RxPwdBm = rxPwdBm;
@@ -147,7 +158,7 @@ classdef sonohiWINNERv2 < sonohiBase
         end
 
         function [lossdB, RxNode] = applyWINNER(obj, RxNode, h, enableFading)
-            % Compute loss provided by WINNER
+            % Applies WINNER model, e.g. applies the computed impulse response. If fading is enabled the resulting waveform is normalized and the power difference is equal to the combined loss of the channel.
             
             rxSig_ = [RxNode.Rx.Waveform;zeros(25,1)];
             % Local variable used for computing difference in power
@@ -170,8 +181,11 @@ classdef sonohiWINNERv2 < sonohiBase
     methods(Static)
 
         function [AA, eNBIdx, userIdx] = configureAA(type,stations,users)
-
-            % Select antenna array based on station class.
+            % Configures the antenna arrays and their radiation patterns
+            % For macro stations a ULA Antenna array with 12 elements are considered.
+            % For micro stations a ULA Antenna array with 6 elements are considered.
+            % For UEs, a ULA antenna array with 1 element is considered.
+            % Number of sectors are per default defined to be zero, thus the antenna is omnidirectional.
             if strcmp(type,'macro')
                 if ~exist('macroAA.mat')
                   Az = -180:179;
@@ -241,7 +255,7 @@ classdef sonohiWINNERv2 < sonohiBase
 
 
         function cfgLayout = setPositions(cfgLayout, Stations, Users)
-            % Set the position of the base station
+            % Set the position of the base station and the users in the WINNER layout struct.
             for iStation = 1:length(cfgLayout.StationIdx)
                 cfgLayout.Stations(iStation).Pos(1:3) = int64(floor(Stations([Stations.NCellID] == cfgLayout.StationIdx(iStation)).Position(1:3)));
             end
@@ -255,7 +269,7 @@ classdef sonohiWINNERv2 < sonohiBase
         end
 
         function cfgLayout =updateIndexing(cfgLayout,Stations)
-            % Change useridx of pairing to reflect
+            % Change useridx of pairing to reflect WINNER structure
             % cfgLayout.Stations, e.g. If only one station, user one is
             % at cfgLayout.Stations(2)
             % This is to accomondate the mapping needed by winner which is
@@ -274,6 +288,8 @@ classdef sonohiWINNERv2 < sonohiBase
         end
 
         function cfgLayout = setPropagationScenario(cfgLayout, Stations, Users, Ch)
+            % Setting of propagation scenario based on the station type and region selected.
+            % A list of 
             numLinks = length(cfgLayout.Pairing(1,:));
 
             for i = 1:numLinks
