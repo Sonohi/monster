@@ -1,15 +1,19 @@
 classdef SonohiChannel
   % This is the base coordinator class for the physical channels.
   %
+  % Currently supported models: [:attr:`winner`, :attr:`eHATA`, :attr:`ITU1546`, :attr:`B2B`]
+  %
+  % .. warning:: 'uplink' is currently only available in B2B mode.
+  %
   % The constructor requires the following options:
   %
   % :input Param: Parameter struct containing the following:
-  % :Param.modeDL: (str) Mode of downlink
-  % :Param.modeUL: (str) Mode of uplink
-  % :Param.region: (str) Region of channel
+  % :Param.channel.modeDL: (str) Channel model used in downlink. e.g. `'winner'`
+  % :Param.channel.modeUL: (str) Channel model used in uplink. e.g. `'B2B'`
+  % :Param.channel.region: (str) Region of channel. This changes based on the channel model as the mapping and definition is considered different. See each model for the configuration of this, e.g. :mod:`ch.SONOHImodels`
   % :Param.Seed: (int) Base seed for the channel
-  % :Param.enableFading: (bool) Enable/disable fading
-  % :Param.enableInterference: (bool) Enable/disable interference
+  % :Param.channel.enableFading: (bool) Enable/disable fading
+  % :Param.channel.enableInterference: (bool) Enable/disable interference
   
   %% Properties
   properties

@@ -7,21 +7,31 @@ Channel
 
 Models
 ---------
-.. autoclass:: ch.SONOHImodels.sonohiBase
-    :members:
+.. automodule:: ch.SONOHImodels
+.. autoclass:: sonohiBase
+   :members:
 
 eHATA
 ^^^^^^^^^^
-.. class:: ch.SONOHImodels.eHATA.sonohieHATA
+.. module:: ch.SONOHImodels.eHATA
+.. autoclass:: sonohieHATA
+    :members:
 
 WINNER II
 ^^^^^^^^^^
-.. class:: ch.SONOHImodels.WINNER.sonohiWINNERv2
+.. module:: ch.SONOHImodels.WINNER
+.. class:: sonohiWINNERv2
 
-ITU
+
+ITUR1546
 ^^^^^^^^^^
-.. autoclass:: ch.SONOHImodels.ITUR1546.sonohiITU
+.. automodule:: ch.SONOHImodels.ITUR1546
+.. autoclass:: sonohiITU
     :members:
+
+
+Examples
+-----------
 
 
 

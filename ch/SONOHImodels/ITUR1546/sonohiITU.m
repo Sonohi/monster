@@ -1,9 +1,17 @@
 classdef sonohiITU < sonohiBase
-
+% This is using an existing implementation of the ITU-R 1546 model as seen here: https://www.itu.int/en/ITU-R/study-groups/rsg3/Pages/iono-tropo-spheric.aspx
+%
+% The model is based on frequency, percentage time (defaults to 50%), distance and a propagation region. Currently only land is considered. The regions supported are:
+%
+% * 'Rural'
+% * 'Suburban'
+% * 'Urban' 
+% * 'Dense Urban'
 
     methods
 
         function obj = sonohiITU(Channel, Chtype)
+            % Inherits :class:`ch.SONOHImodels.sonohiBase`
             obj = obj@sonohiBase(Channel, Chtype)
         end
 

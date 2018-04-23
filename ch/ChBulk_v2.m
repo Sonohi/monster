@@ -11,7 +11,6 @@ classdef ChBulk_v2 < SonohiChannel
 		function [Stations,Users,obj] = traverse(obj,Stations,Users,chtype,varargin)
 			% This method applies the channel properties to the receiver modules. The recieved waveform and meaningful physical parameters are written to the receiver module depending on the channel type selected. Two options exist. 
 			% 
-            % .. warning:: 'uplink' is currently only available in B2B mode.
             % :param Stations: Station objects with a transmitter and receiver module.
             % :type Stations: :class:`enb.EvolvedNodeB`
             % :param Users: UE objects with a transmitter and receiver module
