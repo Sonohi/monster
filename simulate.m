@@ -87,6 +87,14 @@ for iRound = 0:(Param.schRounds-1)
 	% -------------------
 	% ENODEB SCHEDULE END
 	% -------------------
+  
+  % ------------------------
+  % Draw scheduled links
+  % ------------------------
+  if Param.draw
+    plotlinks(Users, Stations,'downlink')
+  end
+  
 	
 	% ----------------------------------------------
 	% ENODEB DL-SCH & PDSCH CREATION AND MAPPING
