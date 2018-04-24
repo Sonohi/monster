@@ -43,6 +43,6 @@ function validateParam(Param)
 	validateattributes(Param.heatMapRes, {'numeric'}, {'>=',0});
 	validateattributes(Param.channel.modeDL, {'char'}, {'nonempty'});
 	validateattributes(Param.channel.modeUL, {'char'}, {'nonempty'});
-	validateattributes(Param.channel.region, {'char'}, {'nonempty'});
+	validateattributes(Param.channel.region, {'char', 'struct'}, {'nonempty'});
 	validateattributes(Param.scheduling, {'char'}, {'nonempty'});
 end
