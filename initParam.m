@@ -59,12 +59,12 @@ Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
-Param.channel.enableFading = false;
+Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
 % WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
 if strcmp(Param.channel.modeDL,'winner')
   Param.channel.region = struct();
-	Param.channel.region.macroScenario = '10';
+	Param.channel.region.macroScenario = '11';
 	Param.channel.region.microScenario = '3';
 end
 %% SON parameters
