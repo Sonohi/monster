@@ -338,25 +338,25 @@ classdef sonohiWINNERv2 < sonohiBase
                 % on height, only on x,y distance. Also they can't be
                 % doubles.
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
+                LOS = Ch.isLinkLOS(cBs.Position, cMs.Position, cBs.DlFreq, false);
                 if cBs.BsClass == 'micro'
                     scenario = str2num(Ch.Region.microScenario);
-                    % TODO: determine if LOS or NLOS, use code from eHATA
                     if distance <= 20
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
-                        cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+                        cfgLayout.PropagConditionVector(i) = LOS; %1 for LOS
 
                     elseif distance <= 50
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = scenario; % B1 Typical urban micro-cell
-                        cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
+                        cfgLayout.PropagConditionVector(i) = LOS; %1 for LOS
                     else
                         cfgLayout.ScenarioVector(i) = scenario; % B1 Typical urban micro-cell
-                        cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                        cfgLayout.PropagConditionVector(i) = LOS; %0 for NLOS
                     end
                 elseif cBs.BsClass == 'macro'
                     scenario = str2num(Ch.Region.macroScenario);
@@ -364,10 +364,10 @@ classdef sonohiWINNERv2 < sonohiBase
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
                         cfgLayout.ScenarioVector(i) = scenario; %
-                        cfgLayout.PropagConditionVector(i) = 1; %
+                        cfgLayout.PropagConditionVector(i) = LOS; %
                     else
                         cfgLayout.ScenarioVector(i) = scenario; % C2 Typical urban macro-cell
-                        cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                        cfgLayout.PropagConditionVector(i) = LOS; %0 for NLOS
                     end
                 end
 
