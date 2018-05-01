@@ -416,46 +416,51 @@ end
       
     end
 
-    function LOS = isLinkLOS(obj, txPos, rxPos, freq, draw)
+    function LOS = isLinkLOS(obj, Station, User, draw)
       % Check if link between `txPos` and `rxPos` is LOS using the 1st Fresnel zone and the building footprint. 
       % 
-      % :param txPos: Position consisting of x, y, z coordinates
-      % :param rxPos: Position consisting of x, y, z coordinates
-      % :param freq: Frequency of transmission. (in MHz)
+      % :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
+      % :type Station: :class:`enb.EvolvedNodeB`
+      % :param User: Need :attr:`User.Position`
+      % :type User: :class:`enb.UserEquipment`
       % :param bool draw: Draws fresnel zone and elevation profile.
       % :returns: LOS (bool) indicating LOS
-      [numPoints,distVec,elev_profile] = obj.getElevation(txPos,rxPos);
+      txPos = Station.Position;
+      txFreq = Station.DlFreq;
+      rxPos = User.Position;
+
+      [numPoints,distVec,elevProfile] = obj.getElevation(txPos,rxPos);
 
       distVec = distVec(2:end); % First is zero
-      total_distance = distVec(end); % Meters
-      nth_fresnel = 1;
-      f_radius = zeros(length(distVec),nth_fresnel);
-      LOS_path = linspace(txPos(3), rxPos(3),  length(distVec))';
+      totalDistance = distVec(end); % Meters
+      nthFresnel = 1;
+      fRadius = zeros(length(distVec),nthFresnel);
+      LOSPath = linspace(txPos(3), rxPos(3),  length(distVec))';
 
       for dist = 1:length(distVec)
         % Compute zones
-        for zone = 1:nth_fresnel
-        f_radius(dist, zone) = fresnel_zone(zone,  distVec(dist),  total_distance-distVec(dist), freq*10e6);
+        for zone = 1:nthFresnel
+        fRadius(dist, zone) = fresnelZone(zone,  distVec(dist),  totalDistance-distVec(dist), txFreq*10e6);
         end     
       end
       
-      lower_los = LOS_path-f_radius;
-      upper_los = LOS_path+f_radius;
-      los_boundary = lower_los+(f_radius.*2)*0.6; % 60% which is needed to define LOS/NLOS
+      upperLos = LOSPath+fRadius;
+      lowerLos = LOSPath-fRadius;
+      losBoundary = lowerLos+(fRadius.*2)*0.6; % 60% which is needed to define LOS/NLOS
       LOS = true;
       
       % Check if any obstacles occupy 60% of the fresnel zone
-      if sum(elev_profile' >= los_boundary)
+      if sum(elevProfile' >= losBoundary)
         LOS = false;
       end
       
       if draw
         figure
-        plot(distVec, elev_profile)
+        plot(distVec, elevProfile)
         hold on
-        plot(distVec, LOS_path,'r--')
-        plot(distVec, lower_los, 'k--')
-        plot(distVec, upper_los, 'k--')
+        plot(distVec, LOSPath,'r--')
+        plot(distVec, lowerLos, 'k--')
+        plot(distVec, upperLos, 'k--')
         xlabel('Distance (m)')
         ylabel('Height (m)')
         legend('Building footprints', 'LOS path', '1st Fresnel zone')

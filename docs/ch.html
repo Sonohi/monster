@@ -299,16 +299,15 @@
 </table>
 <dl class="method">
 <dt id="ch.SonohiChannel.isLinkLOS">
-<code class="descname">isLinkLOS</code><span class="sig-paren">(</span><em>txPos</em>, <em>rxPos</em>, <em>freq</em>, <em>draw</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SonohiChannel.isLinkLOS" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isLinkLOS</code><span class="sig-paren">(</span><em>Station</em>, <em>User</em>, <em>draw</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SonohiChannel.isLinkLOS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if link between <cite>txPos</cite> and <cite>rxPos</cite> is LOS using the 1st Fresnel zone and the building footprint.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>txPos</strong> – Position consisting of x, y, z coordinates</li>
-<li><strong>rxPos</strong> – Position consisting of x, y, z coordinates</li>
-<li><strong>freq</strong> – Frequency of transmission. (in MHz)</li>
+<li><strong>Station</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – Need <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.Position</span></code> and <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Stations.DlFreq</span></code>.</li>
+<li><strong>User</strong> (<code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.UserEquipment</span></code>) – Need <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">User.Position</span></code></li>
 <li><strong>draw</strong> (<em>bool</em>) – Draws fresnel zone and elevation profile.</li>
 </ul>
 </td>

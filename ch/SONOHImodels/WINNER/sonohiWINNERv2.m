@@ -338,7 +338,7 @@ classdef sonohiWINNERv2 < sonohiBase
                 % on height, only on x,y distance. Also they can't be
                 % doubles.
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
-                LOS = Ch.isLinkLOS(cBs.Position, cMs.Position, cBs.DlFreq, false);
+                LOS = Ch.isLinkLOS(cBs, cMs, false);
                 if cBs.BsClass == 'micro'
                     scenario = str2num(Ch.Region.microScenario);
                     if distance <= 20 && scenario == 3

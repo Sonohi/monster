@@ -9,3 +9,4 @@
 /.vscode
 /logs/*.txt
 /html
+/doctrees
