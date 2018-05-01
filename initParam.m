@@ -57,11 +57,17 @@ Param.eNBNoiseFigure = 7;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
+Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
-Param.channel.enableFading = false;
+Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
+% WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
+if strcmp(Param.channel.modeDL,'winner')
+  Param.channel.region = struct();
+	Param.channel.region.macroScenario = '11';
+	Param.channel.region.microScenario = '3';
+end
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres
 Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s
