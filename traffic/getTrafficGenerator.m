@@ -3,7 +3,7 @@ function TrafficGenerator = getTrafficGenerator(UeId, TrafficGenerators)
 %
 % Syntax: TrafficGenerator = getTrafficGenerator(UeId, TrafficGenerators)
 
-	if length(TrafficGenerators == 1)
+	if length(TrafficGenerators) == 1
 		TrafficGenerator = TrafficGenerators(1);
 	else
 		primaryUes = TrafficGenerators(1).associatedUeIds;

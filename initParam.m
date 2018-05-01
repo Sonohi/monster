@@ -40,13 +40,14 @@ Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
 
 %% Traffic
-Param.primaryTrafficModel = 'fullBuffer'; % Primary traffic model ['fullBuffer', 'videoStreaming']
-Param.secondaryTrafficModel = 'videoStreaming'; % Secondary traffic model ['fullBuffer', 'videoStreaming']
-Param.trafficMix = 0.5; % Mix in the UEs between primary and secondary traffic models in %
-Param.ueArrivalDistribution = 'Poisson'; % Arrival distribution for the UEs ['Poisson', 'Uniform']
+Param.primaryTrafficModel = 'videoStreaming'; % Primary traffic model ['fullBuffer', 'videoStreaming']
+Param.secondaryTrafficModel = 'fullBuffer'; % Secondary traffic model ['fullBuffer', 'videoStreaming']
+Param.trafficMix = 1; % Mix in the UEs between primary and secondary traffic models in %
+Param.ueArrivalDistribution = 'Static'; % Arrival distribution for the UEs ['Poisson', 'Uniform', 'Static']
 Param.poissonLambda = 5; % Mean of the Poisson process in ms
 Param.uniformLower = 6; % Lower limit of the Uniform process in ms
 Param.uniformUpper = 10; % Upper limit of the Uniform process in ms
+Param.staticStart = 0; % Static start time in ms
 
 %% Positioning (TR 36.872) - Only for "clusterized" microPos setting
 Param.macroRadius = 250; % radius of the macro cell
@@ -104,25 +105,5 @@ Param.buildingHeight = [20,50];% Double interval used to specify the height inte
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-
-% Get traffic source data and check if we have already the MAT file with the traffic data
-switch Param.trafficModel
-	case 'videoStreaming'
-		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
-			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
-		else
-			traffic = load('traffic/videoStreaming.mat');
-			Param.trSource = traffic.trSource;
-			clear traffic
-		end
-	case 'fullBuffer'
-		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
-			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
-		else
-			traffic = load('traffic/fullBuffer.mat');
-			Param.trSource = traffic.trSource;
-			clear traffic
-		end
-end
 
 save('SimulationParameters.mat', 'Param');
