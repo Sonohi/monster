@@ -35,10 +35,19 @@ Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.numUsers = 15;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
-Param.trafficModel = 'fullBuffer';% Traffic model ['fullBuffer', 'videoStreaming']
 Param.mobilityStep = 0.01;
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
+
+%% Traffic
+Param.primaryTrafficModel = 'fullBuffer'; % Primary traffic model ['fullBuffer', 'videoStreaming']
+Param.secondaryTrafficModel = 'videoStreaming'; % Secondary traffic model ['fullBuffer', 'videoStreaming']
+Param.trafficMix = 0.5; % Mix in the UEs between primary and secondary traffic models in %
+Param.ueArrivalDistribution = 'Poisson'; % Arrival distribution for the UEs ['Poisson', 'Uniform']
+Param.poissonLambda = 5; % Mean of the Poisson process in ms
+Param.uniformLower = 6; % Lower limit of the Uniform process in ms
+Param.uniformUpper = 10; % Upper limit of the Uniform process in ms
+
 %% Positioning (TR 36.872) - Only for "clusterized" microPos setting
 Param.macroRadius = 250; % radius of the macro cell
 Param.minUeDist = 20; % minimum distance between UEs and macro

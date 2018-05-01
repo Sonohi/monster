@@ -37,9 +37,10 @@ validateParam(Param);
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');
 
-% Create Stations and Users
+% Create Stations, Users and Traffic generators
 [Stations, Param.AreaPlot, Param] = createBaseStations(Param);
 Users = createUsers(Param);
+[Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param);
 
 % Create Channel scenario
 Channel = ChBulk_v2(Param);
@@ -52,8 +53,12 @@ utilLo = 1:Param.utilLoThr;
 utilHi = Param.utilHiThr:100;
 
 % Create struct to pass data to the simulation function
-simData = struct('trSource', Param.trSource, 'Stations', Stations, 'Users', Users,...
-	'Channel', Channel, 'ChannelEstimator', ChannelEstimator);
+simData = struct(...
+	'TrafficGenerators', TrafficGenerators,... 
+	'Stations', Stations,...
+	'Users', Users,...
+	'Channel', Channel,... 
+	'ChannelEstimator', ChannelEstimator);
 
 % if set, clean the results folder
 if Param.rmResults
