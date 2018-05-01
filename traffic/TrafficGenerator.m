@@ -2,16 +2,19 @@ classdef TrafficGenerator
 	% This class is used to handle the generation of the traffic in the network
 	% A TrafficGenerator object is created for each type of traffic profile used in the simulation
 	% A traffic profile is made of:
-	% : a traffic type (e.g. video streaming or full buffer)
-	% : a process for the arrival mode (e.g. Poisson)
-	% : a traffic source with the data used to create packets
-	% : an array of UE IDs that are associated with this traffic generator
+	%
+	% :trafficType: a traffic type (e.g. video streaming or full buffer)
+	% :arrivalMode: a process for the arrival mode (e.g. Poisson)
+	% :trafficSource: a traffic source with the data used to create packets
+	% :associatedUeIds: an array of UE IDs that are associated with this traffic generator
+	
+	
 	properties
 		trafficType;
-		arrivalMode;
-		arrival
-		trafficSource;
-		associatedUeIds;
+		arrivalMode; 
+		arrival;
+		trafficSource; 
+		associatedUeIds; 
 	end
 	
 	methods
@@ -44,11 +47,10 @@ classdef TrafficGenerator
 		function tStart = getStartingTime(obj, Param)
 			% Get starting time is used to get the initial starting time for a UE
 			%
-			% : UeId is the ID of the UE
-			% : Param.poissonLambda mean of the Poisson process, used if the arrival process is Poisson
-			% : Param.uniformLower lower limit of the Uniform process, used if the arrival process is Uniform
-			% : Param.uniformUpper upper limit of the Uniform process, used if the arrival process is Uniform
-			% : Param.staticStart static start time if the arrival process is static
+			% :Param.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
+			% :Param.uniformLower: lower limit of the Uniform process, used if the arrival process is Uniform
+			% :Param.uniformUpper: upper limit of the Uniform process, used if the arrival process is Uniform
+			% :Param.staticStart: static start time if the arrival process is static
 			
 			switch obj.arrivalMode
 				case 'Poisson'
@@ -67,8 +69,9 @@ classdef TrafficGenerator
 		function newQueue = updateTransmissionQueue(obj, User, simTime)
 			% Update transmission queue is used to update the data in the queue for a specific user
 			%
-			% : User is the UE
-			% : simTime is the current simulation time
+			% :param User: User is the UE
+			% :type User: :class:`ue.UserEquipment`
+			% :param simTime: is the current simulation time
 			
 			% By default the queue is not updated
 			newQueue = User.Queue;

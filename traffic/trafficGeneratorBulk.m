@@ -1,7 +1,7 @@
 function [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
 % trafficGeneratorBulk - This is used to create traffic generators in bulk, assign UEs to traffic generators and starting time to UEs
-% 
-% Syntax: [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
+% ::
+% 	[Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
 
 	% Check the traffic mix value and split the UEs
 	if (Param.trafficMix >= 0)
