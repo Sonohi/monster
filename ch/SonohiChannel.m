@@ -422,7 +422,7 @@ end
       % :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
       % :type Station: :class:`enb.EvolvedNodeB`
       % :param User: Need :attr:`User.Position`
-      % :type User: :class:`enb.UserEquipment`
+      % :type User: :class:`ue.UserEquipment`
       % :param bool draw: Draws fresnel zone and elevation profile.
       % :returns: LOS (bool) indicating LOS
       txPos = Station.Position;
