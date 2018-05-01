@@ -2,7 +2,44 @@ classdef sonohiWINNERv2 < sonohiBase
     % The main objective of this class is to manipulate variables and structures with that of the WINNER II model which is available standalone, in MATLAB. https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox
     % 
     % Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
-    
+    % Propagations cenarios are as follows: [1=A1, 2=A2, 3=B1, 4=B2, 5=B3, 6=B4, 7=B5a, 8=B5c, 9=B5f, 10=C1, 11=C2, 12=C3, 13=C4, 14=D1, 15=D2a].
+    % 
+    % The table of mapping is as follows
+    %
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | Index | Scenario             | Definition                           | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 1     | A1                   | Indoor small office / residential    | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 2     | A2                   | Indoor to outdoor                    | NLOS          |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 3     | B1 Hotspot           | Typical urban micro-cell             | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 4     | B2                   | Bad Urban micro-cell                 | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 5     | B3 Hotspot           | Large indoor hall                    | LOS           |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 6     | B4                   | Outdoor to indoor                    | NLOS          |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 7     | B5a Hotspot Metropol | LOS stat. feeder,                    | LOS           |
+    % |       |                      | rooftop to rooftop                   |               |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 8     | B5c Hotspot Metropol | LOS stat. feeder, street-            | LOS           |
+    % |       |                      | level to street-leve                 |               |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 9     | B5f                  | Feeder link BS -> FRS.               | LOS/OLOS/NLOS |
+    % |       |                      | Approximately RT to RT               |               |
+    % |       |                      | leve                                 |               |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 10    | C1 Metropol          | Suburban                             | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 11    | C2 Metropol          | Typical urban macro-cell             | NLOS          |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 12    | C3                   | Bad Urban macro-cell                 | LOS/NLOS      |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % | 13    | C4                   | Outdoor to indoor (urban) macro-cell | NLOS          |
+    % +-------+----------------------+--------------------------------------+---------------+
+    % 
     properties
         WconfigLayout % Layout of winner model
         WconfigParset % Model parameters
@@ -301,34 +338,36 @@ classdef sonohiWINNERv2 < sonohiBase
                 % on height, only on x,y distance. Also they can't be
                 % doubles.
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
+                LOS = Ch.isLinkLOS(cBs, cMs, false);
                 if cBs.BsClass == 'micro'
-
-                    if distance <= 20
+                    scenario = str2num(Ch.Region.microScenario);
+                    if distance <= 20 && scenario == 3
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
-                        cfgLayout.ScenarioVector(i) = 6; % B1 Typical urban micro-cell
+                        cfgLayout.ScenarioVector(i) = 6; % 
                         cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
 
-                    elseif distance <= 50
+                    elseif distance <= 50 && scenario == 3 && ~LOS
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
 
-                        cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
+                        cfgLayout.ScenarioVector(i) = 3; % 
                         cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
                     else
-                        cfgLayout.ScenarioVector(i) = 3; % B1 Typical urban micro-cell
-                        cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                        cfgLayout.ScenarioVector(i) = scenario; % 
+                        cfgLayout.PropagConditionVector(i) = LOS; %
                     end
                 elseif cBs.BsClass == 'macro'
-                    if distance < 50
+                    scenario = str2num(Ch.Region.macroScenario);
+                    if distance < 50 && scenario == 11 && ~LOS
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS', stationNCellId,userIdx,num2str(distance));
                         sonohilog(msg,'NFO0');
                         cfgLayout.ScenarioVector(i) = 11; %
                         cfgLayout.PropagConditionVector(i) = 1; %
                     else
-                        cfgLayout.ScenarioVector(i) = 11; % C2 Typical urban macro-cell
-                        cfgLayout.PropagConditionVector(i) = 0; %0 for NLOS
+                        cfgLayout.ScenarioVector(i) = scenario; % C2 Typical urban macro-cell
+                        cfgLayout.PropagConditionVector(i) = LOS; %0 for NLOS
                     end
                 end
 
