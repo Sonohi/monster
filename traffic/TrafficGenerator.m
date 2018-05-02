@@ -29,7 +29,7 @@ classdef TrafficGenerator
 					end
 				case 'webBrowsing'
 					if (exist('traffic/webBrowsing.mat', 'file') ~= 2 || Param.reset)
-						obj.trafficSource = loadWebBrowsingTraffic('traffic/webBrowsing.csv', true);
+						obj.trafficSource = loadWebBrowsingTraffic('traffic/webBrowsing.csv');
 					else
 						traffic = load('traffic/webBrowsing.mat');
 						obj.trafficSource = traffic.trSource;
