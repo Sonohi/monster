@@ -87,7 +87,12 @@
 <li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ch.html">Channel</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Traffic</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#traffic-generator">Traffic Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#video-streaming">Video streaming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#web-browsing">Web browsing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#full-buffer">Full buffer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#traffic-generator">Traffic Generator</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -154,9 +159,51 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-traffic">
-<span id="traffic"></span><h1>Traffic<a class="headerlink" href="#module-traffic" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+  <div class="section" id="traffic">
+<h1>Traffic<a class="headerlink" href="#traffic" title="Permalink to this headline">¶</a></h1>
+<p>MONSTeR currently supports 3 traffic models:</p>
+<ol class="arabic simple">
+<li>Video streaming</li>
+<li>Web browsing</li>
+<li>Full buffer</li>
+</ol>
+<p>The first 2 models are generated from realistic traffic sources, while the full buffer model is primarily included for testing and benchmarking.
+All the traces used in MONSTeR consist of timestamps in seconds and a corresponding packet size in bits.
+The traces are generated for approximately 600 seconds.
+If the simulation is longer than that, then the <strong>TrafficGenerator</strong> will just restart at the beginning of the source.</p>
+<div class="section" id="video-streaming">
+<h2>Video streaming<a class="headerlink" href="#video-streaming" title="Permalink to this headline">¶</a></h2>
+<p>The video streaming trace is based on the sampling of the popular <em>Big buck bunny</em> video*.
+The version used is the MP4-encoded 1920x1080 availble <a class="reference external" href="https://peach.blender.org/download/">here</a> .
+The sampling is done using <a class="reference external" href="https://ffmpeg.org/">FFmpeg</a> .</p>
+</div>
+<div class="section" id="web-browsing">
+<h2>Web browsing<a class="headerlink" href="#web-browsing" title="Permalink to this headline">¶</a></h2>
+<p>The web browsing model is based on a browsing session of <a class="reference external" href="https://edition.cnn.com/">CNN</a>.
+The trace has been captured with the following setup:</p>
+<ol class="arabic simple">
+<li>Date and time: 2018.05.02 at 09.30 CET</li>
+<li>Device: <em>Samsung SM-G950F</em></li>
+<li>Browser: <em>FireFox v.59.0.2</em></li>
+<li>Monitoring app: <em>tPacketCapture 2.0.1, Taosoftware co.,LTD</em></li>
+<li>Network: LTE-A</li>
+</ol>
+<p>The trace has been generated for 102 seconds of browsing and then replicated 6 times.
+During the 102 seconds the following actions were performed:</p>
+<ol class="arabic simple">
+<li>At <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">0</span></code> the website was intiially requested</li>
+<li>At <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">39</span> <span class="pre">s</span></code> the first <a class="reference external" href="https://edition.cnn.com/2018/05/01/politics/trump-lawyers-showdown-special-counsel/index.html">article</a> on the main page was requested.</li>
+<li>At <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">56</span> <span class="pre">s</span></code> the second <a class="reference external" href="https://edition.cnn.com/2018/05/01/politics/harold-bornstein-trump-letter/index.html">article</a> was requested.</li>
+<li>At <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">84</span> <span class="pre">s</span></code> the third <a class="reference external" href="https://edition.cnn.com/2018/05/01/entertainment/kanye-west-slavery-choice-trnd/index.html">article</a> was requested.</li>
+<li>At <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">=</span> <span class="pre">102</span> <span class="pre">s</span></code> the capture ended with the third article fully rendered.</li>
+</ol>
+<p>In all cases, the following step had not been taken until the page was fully rendered in the browser.</p>
+</div>
+<div class="section" id="full-buffer">
+<h2>Full buffer<a class="headerlink" href="#full-buffer" title="Permalink to this headline">¶</a></h2>
+<p>The full buffer traffic model differs from the previous 2 ones as it is a non-realistic model.
+This traffic model simply ensures constant 10000000 bits every traffic timeslot of 0.1 seconds.</p>
+<span class="target" id="module-traffic"></span><dl class="class">
 <dt id="traffic.trafficGeneratorBulk">
 <em class="property">class </em><code class="descclassname">traffic.</code><code class="descname">trafficGeneratorBulk</code><a class="headerlink" href="#traffic.trafficGeneratorBulk" title="Permalink to this definition">¶</a></dt>
 <dd><p>trafficGeneratorBulk - This is used to create traffic generators in bulk, assign UEs to traffic generators and starting time to UEs</p>
@@ -166,7 +213,7 @@
 </dd></dl>
 
 <div class="section" id="traffic-generator">
-<h2>Traffic Generator<a class="headerlink" href="#traffic-generator" title="Permalink to this headline">¶</a></h2>
+<h3>Traffic Generator<a class="headerlink" href="#traffic-generator" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
 <dt id="traffic.TrafficGenerator">
 <em class="property">class </em><code class="descclassname">traffic.</code><code class="descname">TrafficGenerator</code><span class="sig-paren">(</span><em>trafficModel</em>, <em>associatedUeIds</em>, <em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#traffic.TrafficGenerator" title="Permalink to this definition">¶</a></dt>
@@ -232,6 +279,7 @@ A traffic profile is made of:</p>
 
 </dd></dl>
 
+</div>
 </div>
 </div>
 
