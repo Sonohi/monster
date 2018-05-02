@@ -36,7 +36,8 @@ classdef UserEquipment
 		Hangover;
 		Pmax;
 		Seed;
-    	MobilitySeed;
+		MobilitySeed;
+		TrafficStartTime;
 	end
 	
 	methods
@@ -86,6 +87,11 @@ classdef UserEquipment
 		% toggle scheduled
 		function obj = setScheduled(obj, status)
 			obj.Scheduled = status;
+		end
+
+		function obj = set.TrafficStartTime(obj, tStart)
+			% Used to set the starting time for requesting traffic
+			obj.TrafficStartTime = tStart;
 		end
 		
 		% move User

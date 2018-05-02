@@ -1,4 +1,5 @@
 classdef MetricRecorder
+	% This is class is used for defining and recording statistics in the network
 	properties
 		infoUtilLo;
 		infoUtilHi;

@@ -8,7 +8,7 @@ function simulate(Param, DataIn, utilLo, utilHi)
 %   utilLo		-> 	value of low utilisation for this simulation
 %		utilHi		->	value for high utilisation for this simulation
 
-trSource = DataIn.trSource;
+TrafficGenerators = DataIn.TrafficGenerators;
 Stations = DataIn.Stations;
 Users = DataIn.Users;
 Channel = DataIn.Channel;
@@ -58,7 +58,7 @@ for iRound = 0:(Param.schRounds-1)
 	end
 	
 	% Update RLC transmission queues for the users and reset the scheduled flag
-	Users = updateTrQueue(Users, trSource, simTime);
+	Users = updateQueuesBulk(Users, TrafficGenerators, simTime);
 	
 	% ---------------------
 	% ENODEB SCHEDULE START
