@@ -11,8 +11,7 @@ classdef TrafficGenerator
 	
 	properties
 		trafficType;
-		arrivalMode; 
-		arrival;
+		arrivalMode;
 		trafficSource; 
 		associatedUeIds; 
 	end
