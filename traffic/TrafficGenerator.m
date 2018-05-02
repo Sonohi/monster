@@ -8,7 +8,6 @@ classdef TrafficGenerator
 	% :trafficSource: a traffic source with the data used to create packets
 	% :associatedUeIds: an array of UE IDs that are associated with this traffic generator
 	
-	
 	properties
 		trafficType;
 		arrivalMode;
@@ -25,6 +24,14 @@ classdef TrafficGenerator
 						obj.trafficSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 					else
 						traffic = load('traffic/videoStreaming.mat');
+						obj.trafficSource = traffic.trSource;
+						clear traffic
+					end
+				case 'webBrowsing'
+					if (exist('traffic/webBrowsing.mat', 'file') ~= 2 || Param.reset)
+						obj.trafficSource = loadWebBrowsingTraffic('traffic/webBrowsing.csv');
+					else
+						traffic = load('traffic/webBrowsing.mat');
 						obj.trafficSource = traffic.trSource;
 						clear traffic
 					end

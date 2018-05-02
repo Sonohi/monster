@@ -40,9 +40,9 @@ Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
 
 %% Traffic
-Param.primaryTrafficModel = 'videoStreaming'; % Primary traffic model ['fullBuffer', 'videoStreaming']
-Param.secondaryTrafficModel = 'fullBuffer'; % Secondary traffic model ['fullBuffer', 'videoStreaming']
-Param.trafficMix = 1; % Mix in the UEs between primary and secondary traffic models in %
+Param.primaryTrafficModel = 'webBrowsing'; % Primary traffic model ['fullBuffer', 'videoStreaming', 'webBrowsing']
+Param.secondaryTrafficModel = 'videoStreaming'; % Secondary traffic model ['fullBuffer', 'videoStreaming', 'webBrowsing']
+Param.trafficMix = 0.5; % Mix in the UEs between primary and secondary traffic models in %
 Param.ueArrivalDistribution = 'Static'; % Arrival distribution for the UEs ['Poisson', 'Uniform', 'Static']
 Param.poissonLambda = 5; % Mean of the Poisson process in ms
 Param.uniformLower = 6; % Lower limit of the Uniform process in ms
