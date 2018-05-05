@@ -12,6 +12,7 @@ Param.storeTxData = 0;
 % Integer used to control the number of scheduling rounds (subframes) to simulate
 Param.schRounds = 10;
 Param.seed = 42;% Integer used for the simulation seed
+Param.mobilitySeed = 19; % Integer for randomizing user positioning and trajectories
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
 Param.saveFrame = 1;
 
@@ -34,10 +35,20 @@ Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.numUsers = 15;% Integer used for the number of UEs
 Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
-Param.trafficModel = 'fullBuffer';% Traffic model ['fullBuffer', 'videoStreaming']
 Param.mobilityStep = 0.01;
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
 Param.handoverTimer = 0.01;% X2 Handover timer in s (time needed from starting and handover to its completion)
+
+%% Traffic
+Param.primaryTrafficModel = 'webBrowsing'; % Primary traffic model ['fullBuffer', 'videoStreaming', 'webBrowsing']
+Param.secondaryTrafficModel = 'videoStreaming'; % Secondary traffic model ['fullBuffer', 'videoStreaming', 'webBrowsing']
+Param.trafficMix = 0.5; % Mix in the UEs between primary and secondary traffic models in %
+Param.ueArrivalDistribution = 'Static'; % Arrival distribution for the UEs ['Poisson', 'Uniform', 'Static']
+Param.poissonLambda = 5; % Mean of the Poisson process in ms
+Param.uniformLower = 6; % Lower limit of the Uniform process in ms
+Param.uniformUpper = 10; % Upper limit of the Uniform process in ms
+Param.staticStart = 0; % Static start time in ms
+
 %% Positioning (TR 36.872) - Only for "clusterized" microPos setting
 Param.macroRadius = 250; % radius of the macro cell
 Param.minUeDist = 20; % minimum distance between UEs and macro
@@ -56,11 +67,17 @@ Param.eNBNoiseFigure = 7;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
+Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
-Param.channel.enableFading = false;
+Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
+% WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
+if strcmp(Param.channel.modeDL,'winner')
+  Param.channel.region = struct();
+	Param.channel.region.macroScenario = '11';
+	Param.channel.region.microScenario = '3';
+end
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres
 Param.tHyst = 0.001;% Double to set the hysteresis timer threshold in s
@@ -94,25 +111,5 @@ Param.buildingHeight = [20,50];% Double interval used to specify the height inte
 Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
 Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
-
-% Get traffic source data and check if we have already the MAT file with the traffic data
-switch Param.trafficModel
-	case 'videoStreaming'
-		if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
-			Param.trSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
-		else
-			traffic = load('traffic/videoStreaming.mat');
-			Param.trSource = traffic.trSource;
-			clear traffic
-		end
-	case 'fullBuffer'
-		if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
-			Param.trSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
-		else
-			traffic = load('traffic/fullBuffer.mat');
-			Param.trSource = traffic.trSource;
-			clear traffic
-		end
-end
 
 save('SimulationParameters.mat', 'Param');

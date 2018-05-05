@@ -36,6 +36,8 @@ classdef UserEquipment
 		Hangover;
 		Pmax;
 		Seed;
+		MobilitySeed;
+		TrafficStartTime;
 	end
 	
 	methods
@@ -43,6 +45,7 @@ classdef UserEquipment
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = userId;
 			obj.Seed = userId*Param.seed;
+			obj.MobilitySeed = userId*Param.mobilitySeed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
@@ -84,6 +87,11 @@ classdef UserEquipment
 		% toggle scheduled
 		function obj = setScheduled(obj, status)
 			obj.Scheduled = status;
+		end
+
+		function obj = set.TrafficStartTime(obj, tStart)
+			% Used to set the starting time for requesting traffic
+			obj.TrafficStartTime = tStart;
 		end
 		
 		% move User

@@ -10,6 +10,7 @@ Channel
 .. autoclass:: ChBulk_v2
     :members:
 .. autoclass:: SonohiChannel
+    :members: isLinkLOS 
 
 
 

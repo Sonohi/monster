@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Traffic" href="traffic.html" />
     <link rel="prev" title="Channel" href="ch.html" /> 
 
   
@@ -95,6 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="ch.html#examples">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="traffic.html">Traffic</a></li>
 </ul>
 
             
@@ -246,9 +248,9 @@ The downlink logic follows the follow flow</p>
 </table>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.sonohiBase.setWaveform">
-<code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copies waveform to Rx module, enables transmission.</p>
 </dd></dl>
 
@@ -287,7 +289,93 @@ The Extended Hata (eHATA) propagation model code was implemented by employees of
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2">
 <em class="property">class </em><code class="descclassname">ch.SONOHImodels.WINNER.</code><code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main objective of this class is to manipulate variables and structures with that of the WINNER II model which is available standalone, in MATLAB. <a class="reference external" href="https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox">https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox</a></p>
-<p>Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.</p>
+<p>Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
+Propagations cenarios are as follows: [1=A1, 2=A2, 3=B1, 4=B2, 5=B3, 6=B4, 7=B5a, 8=B5c, 9=B5f, 10=C1, 11=C2, 12=C3, 13=C4, 14=D1, 15=D2a].</p>
+<p>The table of mapping is as follows</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="27%" />
+<col width="46%" />
+<col width="18%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Index</td>
+<td>Scenario</td>
+<td>Definition</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-even"><td>1</td>
+<td>A1</td>
+<td>Indoor small office / residential</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-odd"><td>2</td>
+<td>A2</td>
+<td>Indoor to outdoor</td>
+<td>NLOS</td>
+</tr>
+<tr class="row-even"><td>3</td>
+<td>B1 Hotspot</td>
+<td>Typical urban micro-cell</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-odd"><td>4</td>
+<td>B2</td>
+<td>Bad Urban micro-cell</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-even"><td>5</td>
+<td>B3 Hotspot</td>
+<td>Large indoor hall</td>
+<td>LOS</td>
+</tr>
+<tr class="row-odd"><td>6</td>
+<td>B4</td>
+<td>Outdoor to indoor</td>
+<td>NLOS</td>
+</tr>
+<tr class="row-even"><td>7</td>
+<td>B5a Hotspot Metropol</td>
+<td>LOS stat. feeder,
+rooftop to rooftop</td>
+<td>LOS</td>
+</tr>
+<tr class="row-odd"><td>8</td>
+<td>B5c Hotspot Metropol</td>
+<td>LOS stat. feeder, street-
+level to street-leve</td>
+<td>LOS</td>
+</tr>
+<tr class="row-even"><td>9</td>
+<td>B5f</td>
+<td>Feeder link BS -&gt; FRS.
+Approximately RT to RT
+leve</td>
+<td>LOS/OLOS/NLOS</td>
+</tr>
+<tr class="row-odd"><td>10</td>
+<td>C1 Metropol</td>
+<td>Suburban</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-even"><td>11</td>
+<td>C2 Metropol</td>
+<td>Typical urban macro-cell</td>
+<td>NLOS</td>
+</tr>
+<tr class="row-odd"><td>12</td>
+<td>C3</td>
+<td>Bad Urban macro-cell</td>
+<td>LOS/NLOS</td>
+</tr>
+<tr class="row-even"><td>13</td>
+<td>C4</td>
+<td>Outdoor to indoor (urban) macro-cell</td>
+<td>NLOS</td>
+</tr>
+</tbody>
+</table>
 <dl class="attribute">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.AA">
 <code class="descname">AA</code><em class="property"> = None</em><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.AA" title="Permalink to this definition">¶</a></dt>
@@ -306,9 +394,9 @@ The Extended Hata (eHATA) propagation model code was implemented by employees of
 <dd><p>Model parameters</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated">
-<code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds the index of the stations and users associated, e.g.
 how they link with the station and user objects.</p>
 </dd></dl>
@@ -331,9 +419,9 @@ how they link with the station and user objects.</p>
 <dd><p>Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA">
-<code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configures the antenna arrays and their radiation patterns
 For macro stations a ULA Antenna array with 12 elements are considered.
 For micro stations a ULA Antenna array with 6 elements are considered.
@@ -341,9 +429,9 @@ For UEs, a ULA antenna array with 1 element is considered.
 Number of sectors are per default defined to be zero, thus the antenna is omnidirectional.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel">
-<code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use maximum fft size
 However since the same BsClass is used these are most
 likely to be identical</p>
@@ -362,9 +450,9 @@ The logic is similar to that of the baseclass, however the loss is computed from
 <dd><p>Stored impulse response</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout">
-<code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize layout struct by antenna array and number of
 links.</p>
 </dd></dl>
@@ -375,15 +463,15 @@ links.</p>
 <dd><p>Number of receivers, per model</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions">
-<code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the position of the base station and the users in the WINNER layout struct.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario">
-<code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setting of propagation scenario based on the station type and region selected.
 A list of</p>
 </dd></dl>
@@ -414,9 +502,9 @@ For this it needs the following inputs:</p>
 </table>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing">
-<code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change useridx of pairing to reflect WINNER structure
 cfgLayout.Stations, e.g. If only one station, user one is
 at cfgLayout.Stations(2)
@@ -464,6 +552,8 @@ dependent on the cfgLayout.Stations struct.</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic.html" class="btn btn-neutral float-right" title="Traffic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ch.html" class="btn btn-neutral" title="Channel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

@@ -13,6 +13,7 @@ Welcome to MONSTER's documentation!
    enb
    ue
    ch
+   traffic
 
 Indices and tables
 ==================
