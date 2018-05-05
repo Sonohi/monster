@@ -4,6 +4,7 @@ function plotcoverage(stations,channel, param)
 % and no block errors
 for stationIdx = 1:length(stations)
     station = stations(stationIdx);
+    sonohilog(sprintf('Station %i, EIRP/symbol: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSymbol)+30), num2str(station.Tx.getEIRPdBm)));
     coverage = computeCoverage(station,channel, param);
     r = coverage.distance(end);
     %th = 0:pi/50:2*pi;

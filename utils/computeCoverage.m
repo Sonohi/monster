@@ -15,8 +15,8 @@ station.Tx.ReGrid = station.Tx.FrameGrid;
 channel.enableFading = 0;
 channel.enableInterference = 0;
 
-% Use steps of 20 meters to compute approximated coverage distance
-stepMeters = 50;
+% Use steps of 10 meters to compute approximated coverage distance
+stepMeters = 10;
 avgCoverageDistance = 0;
 coverage = struct('distance',[],'SNRdB',[],'ChannelModel',channel.DLMode,'ChannelRegion',channel.Region);
 idx = 1;

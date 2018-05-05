@@ -22,7 +22,7 @@ for station_idx = 1:length(Stations)
   associatedusers = [station.Users.UeId];
   associatedusers = associatedusers(associatedusers ~= -1);
   if ~isempty(associatedusers)
-    associatedusers = associatedusers(associatedusers ~= scheduledusers);
+    associatedusers = associatedusers(~ismember(associatedusers,scheduledusers));
     for user = 1:length(associatedusers)
       rx_obj = Users(find([Users.NCellID] == associatedusers(user)));
       rx_pos = rx_obj.Position;

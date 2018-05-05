@@ -35,6 +35,10 @@ classdef enbTransmitterModule
       % Returns EIRP in Watts
       EIRP = 10^((obj.TxPwdBm - obj.NoiseFigure)/10)/1000;
     end
+    
+    function EIRPdBm = getEIRPdBm(obj)
+       EIRPdBm = obj.TxPwdBm - obj.NoiseFigure;
+    end
 
 		% Setters
 		% set Frame
