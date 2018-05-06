@@ -1,4 +1,4 @@
-function [Stations, h, Param] = createBaseStations (Param)
+function [Stations, Param] = createBaseStations (Param)
 
 %   CREATE BASE Stations is used to generate a struct with the base Stations
 %
@@ -11,8 +11,8 @@ function [Stations, h, Param] = createBaseStations (Param)
 %
 %   Stations  							-> struct with all Stations details and PDSCH
 
-	% Create position vectors for the macro and micro BSs
-	[macroPos, microPos, h, Param] = positionBaseStations(Param.numMacro, Param.numMicro, ...
+	% Create position veold onctors for the macro and micro BSs
+	[macroPos, microPos, Param] = positionBaseStations(Param.numMacro, Param.numMicro, ...
 		Param);
 
 	for iStation = 1: (Param.numMacro + Param.numMicro)

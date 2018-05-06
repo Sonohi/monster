@@ -1,4 +1,4 @@
-function [macroPos, microPos, h, Param] = positionBaseStations (maBS, miBS, Param)
+function [macroPos, microPos, Param] = positionBaseStations (maBS, miBS, Param)
 
 %   POSITION BASE STATIONS is used to set up the physical location of BSs
 %
@@ -21,17 +21,16 @@ area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
 
 % Draw grid
 if Param.draw
-    h = figure;
+    %h = figure;
     %rectangle('Position',area)
-    set(gca, 'XTick', []);
-    set(gca, 'YTick', []);
-    hold on
+    %set(gca, 'XTick', []);
+    %set(gca, 'YTick', []);
     for i = 1:length(buildings(:,1))
         x0 = buildings(i,1);
         y0 = buildings(i,2);
         x = buildings(i,3)-x0;
         y = buildings(i,4)-y0;
-        rectangle('Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9])
+        rectangle(Param.LayoutAxes,'Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
     end
     
     % Plot 3d manhattan grid.
@@ -62,7 +61,7 @@ if (maBS == 1)
     yc = (area(4) - area(2))/2;
     macroPos(maBS, :) = [xc yc];
     if Param.draw
-        text(xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
+        text(Param.LayoutAxes,xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
         [im, map, alpha] = imread('utils/images/basestation.png');
         % For some magical reason the image is rotated 180 degrees.
         im = imrotate(im,180);
@@ -72,7 +71,7 @@ if (maBS == 1)
         ylength = length(im(:,1,1))/scale;
         xlength = length(im(1,:,1))/scale;
         % Position and set alpha from png image
-        f = imagesc([xc-xlength xc+xlength],[yc yc+ylength*2],im);
+        f = imagesc(Param.LayoutAxes,[xc-xlength xc+xlength],[yc yc+ylength*2],im);
         set(f, 'AlphaData', alpha);
     end
 end
@@ -94,7 +93,7 @@ switch Param.microPos
                 text(xr,yr-6,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
                     num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
                 
-                rectangle('Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
+                rectangle(Param.LayoutAxes,'Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
                     [0 .5 .5],'FaceColor',[0 .5 .5]);
             end
         end
@@ -128,7 +127,7 @@ switch Param.microPos
                 text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
                     num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
                 
-                rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+                rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
             end
         end
         
@@ -181,7 +180,7 @@ switch Param.microPos
                 text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
                     num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
                 
-                rectangle('Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+                rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
             end
         end
         Param.clusters = clusters;
@@ -190,5 +189,7 @@ switch Param.microPos
         sonohiLog('Unknown choice for micro BS positioning strategy', 'ERR');
         
 end
+
+refresh(Param.LayoutFigure)
 
 end

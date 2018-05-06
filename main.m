@@ -37,12 +37,20 @@ validateParam(Param);
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');
 
-% Create Stations, Users and Traffic generators
-[Stations, AreaPlot, Param] = createBaseStations(Param);
-Param.AreaPlot = AreaPlot;
-ax = findall(Param.AreaPlot,'type','axes');
-set(ax,'XLim',[0, 300],'YLim',[0, 300])
+fig = figure('Name','Layout','Position',[400, 400, 600, 600]);
+layout_axes = axes('parent', fig);
+set(layout_axes,'XLim',[0, 600],'YLim',[0, 600])
+set(layout_axes,'XTick',[])
+set(layout_axes,'XTickLabel',[])
+set(layout_axes,'YTick',[])
+set(layout_axes,'YTickLabel',[])
+set(layout_axes,'Box','on')
+hold(layout_axes,'on')
+Param.LayoutFigure = fig;
+Param.LayoutAxes = findall(fig,'type','axes');
 
+% Create Stations, Users and Traffic generators
+[Stations, Param] = createBaseStations(Param);
 
 Users = createUsers(Param);
 [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param);
