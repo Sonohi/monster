@@ -93,7 +93,7 @@ for iRound = 0:(Param.schRounds-1)
   % Draw scheduled links
   % ------------------------
   if Param.draw
-    plotlinks(Users, Stations,'downlink')
+    plotlinks(Users, Stations, Param.AreaPlot, 'downlink')
   end
   
 	

@@ -1,5 +1,5 @@
 function plotcoverage(stations,channel, param)
-
+ax = findall(param.AreaPlot,'type','axes');
 % For each station calculate the coverage based on the OFDM demodulation
 % and no block errors
 for stationIdx = 1:length(stations)
@@ -14,7 +14,15 @@ for stationIdx = 1:length(stations)
     d = r*2;
     px = station.Position(1) - r;
     py = station.Position(2) - r;
-    rectangle('Position', [px py d d], 'Curvature', [1,1]);
+    if strcmp(station.BsClass,'macro')
+        color = [0, 0.6, 0.2, 0.05];
+    elseif strcmp(station.BsClass,'micro')
+        color = [0.6, 0.2, 0, 0.05];
+    else 
+        color = [0.2, 0.6, 0, 0.05];
+    end
+    h_coverage = rectangle(ax,'Position', [px py d d], 'Curvature', [1,1],'FaceColor',color,'EdgeColor','none','Tag',strcat('coverage',num2str(stationIdx)));
+    uistack(h_coverage,'bottom')
 end
 % For each station plot the range
 

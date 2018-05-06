@@ -38,7 +38,12 @@ validateParam(Param);
 w = warning('off', 'all');
 
 % Create Stations, Users and Traffic generators
-[Stations, Param.AreaPlot, Param] = createBaseStations(Param);
+[Stations, AreaPlot, Param] = createBaseStations(Param);
+Param.AreaPlot = AreaPlot;
+ax = findall(Param.AreaPlot,'type','axes');
+set(ax,'XLim',[0, 300],'YLim',[0, 300])
+
+
 Users = createUsers(Param);
 [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param);
 
