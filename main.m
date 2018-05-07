@@ -37,23 +37,17 @@ validateParam(Param);
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');
 
-fig = figure('Name','Layout','Position',[400, 400, 600, 600]);
-layout_axes = axes('parent', fig);
-set(layout_axes,'XLim',[0, 600],'YLim',[0, 600])
-set(layout_axes,'XTick',[])
-set(layout_axes,'XTickLabel',[])
-set(layout_axes,'YTick',[])
-set(layout_axes,'YTickLabel',[])
-set(layout_axes,'Box','on')
-hold(layout_axes,'on')
-Param.LayoutFigure = fig;
-Param.LayoutAxes = findall(fig,'type','axes');
+if Param.draw
+Param = createLayoutPlot(Param);
+Param = createPHYplot(Param);
+end
 
 % Create Stations, Users and Traffic generators
 [Stations, Param] = createBaseStations(Param);
 
 Users = createUsers(Param);
 [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param);
+
 
 % Create Channel scenario
 Channel = ChBulk_v2(Param);

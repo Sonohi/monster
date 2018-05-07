@@ -1,15 +1,15 @@
 function plotlinks(Users, Stations, LayoutPlot, chtype)
 
 % If the links have been added before, delete them
-h_scheduled = findobj(LayoutPlot,'Tag','ScheduledLinks');
-if ~isempty(h_scheduled)
-    delete(h_scheduled)
+hScheduled = findobj(LayoutPlot,'Tag','ScheduledLinks');
+if ~isempty(hScheduled)
+    delete(hScheduled)
 end
 
-h_associated = findobj(LayoutPlot,'Tag','AssociatedLinks');
+hAssociated = findobj(LayoutPlot,'Tag','AssociatedLinks');
 
-if ~isempty(h_associated)
-    delete(h_associated)
+if ~isempty(hAssociated)
+    delete(hAssociated)
 end
 
 for station_idx = 1:length(Stations)
@@ -25,9 +25,9 @@ for station_idx = 1:length(Stations)
       scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
   end
   for user = 1:length(scheduledusers)
-    rx_obj = Users(find([Users.NCellID] == scheduledusers(user)));
-    rx_pos = rx_obj.Position;
-    h_scheduled = plot(LayoutPlot, [tx_pos(1), rx_pos(1)], [tx_pos(2), rx_pos(2)],'k:', 'linewidth',3, 'DisplayName', strcat('BS ', num2str(station.NCellID),'-> UE ', num2str(rx_obj.NCellID),' (scheduled)'), 'Tag','ScheduledLinks');
+    rxObj = Users(find([Users.NCellID] == scheduledusers(user)));
+    rxPos = rxObj.Position;
+    hScheduled = plot(LayoutPlot, [tx_pos(1), rxPos(1)], [tx_pos(2), rxPos(2)],'k:', 'linewidth',3, 'DisplayName', strcat('BS ', num2str(station.NCellID),'-> UE ', num2str(rxObj.NCellID),' (scheduled)'), 'Tag','ScheduledLinks');
   end
   
   % Plot all associated users (available in Users)
@@ -36,9 +36,9 @@ for station_idx = 1:length(Stations)
   if ~isempty(associatedusers)
     associatedusers = associatedusers(~ismember(associatedusers,scheduledusers));
     for user = 1:length(associatedusers)
-      rx_obj = Users(find([Users.NCellID] == associatedusers(user)));
-      rx_pos = rx_obj.Position;
-      h_associated = plot(LayoutPlot, [tx_pos(1), rx_pos(1)], [tx_pos(2), rx_pos(2)],'k--',  'DisplayName', strcat('BS ', num2str(station.NCellID),'-> UE ', num2str(rx_obj.NCellID)),'Tag', 'AssociatedLinks');
+      rxObj = Users(find([Users.NCellID] == associatedusers(user)));
+      rxPos = rxObj.Position;
+      hAssociated = plot(LayoutPlot, [tx_pos(1), rxPos(1)], [tx_pos(2), rxPos(2)],'k--',  'DisplayName', strcat('BS ', num2str(station.NCellID),'-> UE ', num2str(rxObj.NCellID)),'Tag', 'AssociatedLinks');
     end
   end
   

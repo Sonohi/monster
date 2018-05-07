@@ -9,6 +9,8 @@ for stationIdx = 1:length(stations)
     end
     filename = sprintf('utils/coverage/coverage_%s_%s_%s.mat',channel.DLMode, region, num2str(station.Pmax));
 
+    % Results are saved in mat files to speed up the simulation. It can be
+    % forced by setting a flag in the config.
     if exist(filename, 'file') && ~param.channel.computeCoverage
         sonohilog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','NFO');
         load(filename)
@@ -18,11 +20,8 @@ for stationIdx = 1:length(stations)
         save(filename,'coverage')
     end
     sonohilog(sprintf('Coverage of Station: %i, approx. %i (m)/NLOS',station.NCellID,coverage.distance(end)));
+    % Plot circles of coverage.
     r = coverage.distance(end);
-    %th = 0:pi/50:2*pi;
-    %x = coverage.distance(end)*cos(th) + station.Position(1);
-    %y = coverage.distance(end)*sin(th) + station.Position(2);
-    %plot(x,y)
     d = r*2;
     px = station.Position(1) - r;
     py = station.Position(2) - r;
@@ -33,8 +32,8 @@ for stationIdx = 1:length(stations)
     else 
         color = [0.2, 0.6, 0, 0.05];
     end
-    h_coverage = rectangle(param.LayoutAxes,'Position', [px py d d], 'Curvature', [1,1],'FaceColor',color,'EdgeColor','none','Tag',strcat('coverage',num2str(stationIdx)));
-    uistack(h_coverage,'bottom')
+    hCoverage = rectangle(param.LayoutAxes,'Position', [px py d d], 'Curvature', [1,1],'FaceColor',color,'EdgeColor','none','Tag',strcat('coverage',num2str(stationIdx)));
+    uistack(hCoverage,'bottom')
 end
 drawnow
 end 
