@@ -11,7 +11,7 @@ function [Stations, Param] = createBaseStations (Param)
 %
 %   Stations  							-> struct with all Stations details and PDSCH
 
-	% Create position veold onctors for the macro and micro BSs
+	% Create position vectors for the macro and micro BSs
 	[macroPos, microPos, Param] = positionBaseStations(Param.numMacro, Param.numMicro, ...
 		Param);
 
