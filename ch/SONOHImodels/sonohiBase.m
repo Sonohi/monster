@@ -97,7 +97,7 @@ classdef sonohiBase
       % This requires a :meth:`computePathLoss` method, which is supplied by child classes.
       % returns updated RxPwdBm of RxNode.Rx
       lossdB = obj.computePathLoss(TxNode, RxNode);
-      EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
+      EIRPdBm = 10*log10(TxNode.Tx.getEIRP)+30; % Convert EIRP per symbol in watts to dBm
       rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
       RxNode.Rx.RxPwdBm = rxPwdBm;
       
@@ -122,15 +122,43 @@ classdef sonohiBase
       rxsig = lteFadingChannel(cfg,sig);
       RxNode.Rx.Waveform = rxsig;
     end
+    
+    function lossdB = atmosphericLoss(obj, TxNode, RxNode)
+      % Compute atmospheric loss based on 
+      %
+      % * dry air preassure of 101300 Pa
+      % * water vapour density 7.5 g/m^3
+      % * Tempature 23 degrees calsius
+      P = 101300; % dry air pressure in Pa
+      ROU = 7.5;  % water vapour density in g/m^3
+      freq = TxNode.DlFreq*10e6; % To Hz
+      T = 23;
+      R0 = obj.Channel.getDistance(TxNode.Position, RxNode.Position)/1000;
+      lossdB = 10*log10(gaspl(R0,freq,T,P,ROU));  
+    end
+    
+    function lossdBm = thermalLoss(obj, RxNode)
+        % Compute thermal loss based on bandwidth, at T = 290 K
+        % Worst case given by the number of resource blocks 
+        bw = obw(RxNode.Rx.Waveform, RxNode.Rx.WaveformInfo.SamplingRate);
+        T = 290;
+        k = physconst('Boltzmann');
+        thermalNoise = k*T*bw;
+        lossdBm = 10*log10(thermalNoise*1000);
+    end
 
     function [RxNode] = addAWGN(obj, TxNode, RxNode)
+       
+      %gasLossdB = obj.atmosphericLoss(TxNode, RxNode);
+      thermalLossdBm = obj.thermalLoss(RxNode);
       % Adds gaussian noise based on thermal noise and calculated recieved power.
-      rxNoiseFloor = 10*log10(obj.Channel.ThermalNoise(TxNode.NDLRB));
+      %rxNoiseFloor = thermalLossdB-gasLossdB;
+      rxNoiseFloor = thermalLossdBm;
       SNR = RxNode.Rx.RxPwdBm-rxNoiseFloor;
       SNRLin = 10^(SNR/10);
       str1 = sprintf('Station(%i) to User(%i)\n SNR:  %s\n RxPw:  %s\n', TxNode.NCellID,RxNode.NCellID,num2str(SNR),num2str(RxNode.Rx.RxPwdBm));
       sonohilog(str1,'NFO0');
-      Es = sqrt(2.0*TxNode.CellRefP*double(RxNode.Rx.WaveformInfo.Nfft) * RxNode.Rx.WaveformInfo.OfdmEnergyScale);
+      Es = sqrt(2.0*TxNode.CellRefP*double(RxNode.Rx.WaveformInfo.Nfft));
       
       % Compute spectral noise density NO
       N0 = 1/(Es*SNRLin);
