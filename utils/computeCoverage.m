@@ -24,12 +24,21 @@ idx = 1;
 while true
     % Set distance of user
     avgCoverageDistance = avgCoverageDistance + stepMeters;
-    sampleUser.Position = [avgCoverageDistance+station.Position(1), station.Position(2), sampleUser.Position(3)];
+    
+    % This is considered the base case (LOS) for the macro, if positioned
+    % in the middle.
+    % We want worst case coverage, thus we move in a x and y direction
+    %sampleUser.Position = [avgCoverageDistance+station.Position(1), station.Position(2), sampleUser.Position(3)];
+    sampleUser.Position = [avgCoverageDistance+station.Position(1), avgCoverageDistance+station.Position(2), sampleUser.Position(3)];
     
     % Compute impairments
-    channel = channel.setupChannelDL(station,sampleUser);
-    [~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
-    
+    try
+        channel = channel.setupChannelDL(station,sampleUser);
+        [~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
+    catch ME
+        sonohilog(sprintf('Channel error, %s',ME.message),'WRN')
+        break
+    end
     % Get offset
     sampleUser.Rx.Offset = lteDLFrameOffset(station, sampleUser.Rx.Waveform);
 
@@ -44,13 +53,14 @@ while true
     
     coverage.distance(idx) = avgCoverageDistance;
     coverage.SNRdB(idx) = sampleUser.Rx.SNRdB;
+    %sonohilog(sprintf('Distance %s', num2str(avgCoverageDistance)));
     % Check if SNR is below 0, likely means no transmission possible.
     % TODO: count errors on subframe
     if sampleUser.Rx.SNRdB < 3
         break 
     end
     idx = idx +1;
-
+    drawnow
     
 end
 

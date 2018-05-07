@@ -93,7 +93,7 @@ for iRound = 0:(Param.schRounds-1)
   % Draw scheduled links
   % ------------------------
   if Param.draw
-    plotlinks(Users, Stations, Param.AreaPlot, 'downlink')
+    plotlinks(Users, Stations, Param.LayoutAxes, 'downlink')
   end
   
 	
@@ -178,10 +178,10 @@ for iRound = 0:(Param.schRounds-1)
 	
 	% Plot resource grids for all users
 	if Param.draw
-    delete_figs; % Redraws the plots
-		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
-		[hGrids(1), hGrids(2)] = plotReGrids(Users);
-		[hSpectrums(1)] = plotSpectrums(Users,Stations);
+    %delete_figs; % Redraws the plots
+		%[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
+		%[hGrids(1), hGrids(2)] = plotReGrids(Users);
+		%[hSpectrums(1)] = plotSpectrums(Users,Stations);
 	end
 	
 	

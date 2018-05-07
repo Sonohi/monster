@@ -338,6 +338,10 @@ classdef sonohiWINNERv2 < sonohiBase
                 % on height, only on x,y distance. Also they can't be
                 % doubles.
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
+                if distance >= 5000
+                    % Winner only supports < 5km
+                    sonohilog('Distance is above 5km, not supported for the WINNER channel model','ERR')
+                end
                 LOS = Ch.isLinkLOS(cBs, cMs, false);
                 if cBs.BsClass == 'micro'
                     scenario = str2num(Ch.Region.microScenario);

@@ -25,5 +25,5 @@ function plotUEinScenario(ue, Param)
 			'LineStyle', '--', ...
 			'LineWidth', ue.PlotStyle.lineWidth,...
 			'DisplayName', strcat('UE ', num2str(ue.NCellID), ' trajectory'));
-    refresh(Param.LayoutFigure)
+    drawnow()
 end

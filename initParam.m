@@ -1,4 +1,5 @@
 %% SIMULATION PARAMETERS
+clear all
 Param.reset = 0;% Boolean used to reset the folder structure and reload everything
 Param.rmResults = 0;% Boolean to clean the results folder
 Param.logToFile = 0; % Boolean, if true all logs are re-directed to a file in /logs
@@ -67,11 +68,12 @@ Param.eNBNoiseFigure = 7;% Double used for the BS noise figure in dB
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'winner';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
+Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
 Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
+Param.channel.computeCoverage = false; %Only a visualization feature. Force the recomputation of the coverage, otherwise loaded from file if stored.
 % WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
 if strcmp(Param.channel.modeDL,'winner')
   Param.channel.region = struct();

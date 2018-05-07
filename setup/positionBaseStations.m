@@ -19,41 +19,6 @@ buildings = Param.buildings;
 area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
     max(buildings(:, 4))];
 
-% Draw grid
-if Param.draw
-    %h = figure;
-    %rectangle('Position',area)
-    %set(gca, 'XTick', []);
-    %set(gca, 'YTick', []);
-    for i = 1:length(buildings(:,1))
-        x0 = buildings(i,1);
-        y0 = buildings(i,2);
-        x = buildings(i,3)-x0;
-        y = buildings(i,4)-y0;
-        rectangle(Param.LayoutAxes,'Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
-    end
-    
-    % Plot 3d manhattan grid.
-    %h2 = figure;
-    %set(gca, 'XTick', []);
-    %set(gca, 'YTick', []);
-    %set(gca,'Visible','off')
-    %hold on
-    %for i = 1:length(buildings(:,1))
-    %   x0 = buildings(i,1);
-    %   y0 = buildings(i,2);
-    %   x = buildings(i,3);
-    %   y = buildings(i,4);
-    %   z = buildings(i,5);
-    %   verts = [x0 y0 0; x y0 0; x y 0; x0 y 0;
-    %             x0 y0 z; x y0 z; x y z; x0 y z];
-    %   fac = [1 2 3 4; 2 3 7 6; 1 2 6 5; 4 3 7 8;
-    %             5 8 7 6; 1 4 8 5];
-    %   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])
-    %end
-else
-    h = [];
-end
 
 % Macro BS positioned at centre with single BS
 if (maBS == 1)
@@ -61,7 +26,7 @@ if (maBS == 1)
     yc = (area(4) - area(2))/2;
     macroPos(maBS, :) = [xc yc];
     if Param.draw
-        text(Param.LayoutAxes,xc,yc-6,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
+        text(Param.LayoutAxes,xc,yc-20,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center')
         [im, map, alpha] = imread('utils/images/basestation.png');
         % For some magical reason the image is rotated 180 degrees.
         im = imrotate(im,180);
@@ -90,11 +55,12 @@ switch Param.microPos
             yr = yc + r*sin(alpha+iMicro*theta);
             microPos(iMicro, :) = [xr yr];
             if Param.draw
-                text(xr,yr-6,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
+                text(xr,yr+20,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
                     num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
                 
                 rectangle(Param.LayoutAxes,'Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
                     [0 .5 .5],'FaceColor',[0 .5 .5]);
+                drawnow
             end
         end
     case 'random'
@@ -124,10 +90,11 @@ switch Param.microPos
             end
             microPos(i, :) = [x y];
             if Param.draw
-                text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+                text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
                     num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
                 
                 rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+                drawnow
             end
         end
         
@@ -177,7 +144,7 @@ switch Param.microPos
             x = microPos(i, 1);
             y = microPos(i, 2);
             if Param.draw
-                text(x,y-6,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+                text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
                     num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
                 
                 rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
@@ -190,6 +157,38 @@ switch Param.microPos
         
 end
 
-refresh(Param.LayoutFigure)
+% Draw grid
+if Param.draw
+
+    for i = 1:length(buildings(:,1))
+        x0 = buildings(i,1);
+        y0 = buildings(i,2);
+        x = buildings(i,3)-x0;
+        y = buildings(i,4)-y0;
+        rectangle(Param.LayoutAxes,'Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
+    end
+    
+    % Plot 3d manhattan grid.
+    %h2 = figure;
+    %set(gca, 'XTick', []);
+    %set(gca, 'YTick', []);
+    %set(gca,'Visible','off')
+    %hold on
+    %for i = 1:length(buildings(:,1))
+    %   x0 = buildings(i,1);
+    %   y0 = buildings(i,2);
+    %   x = buildings(i,3);
+    %   y = buildings(i,4);
+    %   z = buildings(i,5);
+    %   verts = [x0 y0 0; x y0 0; x y 0; x0 y 0;
+    %             x0 y0 z; x y0 z; x y z; x0 y z];
+    %   fac = [1 2 3 4; 2 3 7 6; 1 2 6 5; 4 3 7 8;
+    %             5 8 7 6; 1 4 8 5];
+    %   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])
+    %end
+    drawnow
+end
+
+    
 
 end
