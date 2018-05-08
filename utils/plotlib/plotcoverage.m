@@ -19,7 +19,7 @@ for stationIdx = 1:length(stations)
         coverage = computeCoverage(station,channel, param);
         save(filename,'coverage')
     end
-    sonohilog(sprintf('Coverage of Station: %i, approx. %i (m)/NLOS',station.NCellID,coverage.distance(end)));
+    sonohilog(sprintf('Coverage of Station: %i, approx. %0.2f (m)/NLOS',station.NCellID,coverage.distance(end)));
     % Plot circles of coverage.
     r = coverage.distance(end);
     d = r*2;
