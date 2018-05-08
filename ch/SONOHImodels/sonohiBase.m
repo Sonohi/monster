@@ -138,8 +138,9 @@ classdef sonohiBase
     end
     
     function lossdBm = thermalLoss(obj, RxNode)
-        % Compute thermal loss based on bandwidth, at T = 290 K
-        % Worst case given by the number of resource blocks 
+        % Compute thermal loss based on bandwidth, at T = 290 K.
+        % Worst case given by the number of resource blocks. Bandwidth is
+        % given based on the waveform. Computed using matlabs :obj:`obw`
         bw = obw(RxNode.Rx.Waveform, RxNode.Rx.WaveformInfo.SamplingRate);
         T = 290;
         k = physconst('Boltzmann');
@@ -148,10 +149,12 @@ classdef sonohiBase
     end
 
     function [RxNode] = addAWGN(obj, TxNode, RxNode)
-       
+      % Adds gaussian noise based on thermal noise and calculated recieved power.
+      
+      % TODO: Gass Loss relevant to compute when moving into mmWave range
       %gasLossdB = obj.atmosphericLoss(TxNode, RxNode);
       thermalLossdBm = obj.thermalLoss(RxNode);
-      % Adds gaussian noise based on thermal noise and calculated recieved power.
+      
       %rxNoiseFloor = thermalLossdB-gasLossdB;
       rxNoiseFloor = thermalLossdBm;
       SNR = RxNode.Rx.RxPwdBm-rxNoiseFloor;
@@ -180,7 +183,7 @@ classdef sonohiBase
   methods(Static)
 
   function RxNode = setWaveform(TxNode, RxNode)
-    % Copies waveform to Rx module, enables transmission.
+    % Copies waveform and waveform info to Rx module, enables transmission.
     RxNode.Rx.Waveform = TxNode.Tx.Waveform;
     RxNode.Rx.WaveformInfo =  TxNode.Tx.WaveformInfo;
   end

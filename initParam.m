@@ -65,6 +65,7 @@ Param.dlFreq = 1842.5;% Double used for the downlink carrier frequency in MHz
 Param.prbSym = 160;% Integer used for the number of OFMD symbols in a RB
 Param.ueNoiseFigure = 7;% Double used for the UE noise figure in dB
 Param.eNBNoiseFigure = 7;% Double used for the BS noise figure in dB
+Param.eNBGain = 0; %Antenna gain of the eNB.
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
