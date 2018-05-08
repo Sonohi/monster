@@ -10,13 +10,15 @@ classdef enbTransmitterModule
 		FrameGrid;
     TxPwdBm;
     NoiseFigure;
-    NDLRB;
+	NDLRB;
+	Gain;
 	end
 
 	methods
 		% Constructor
 		function obj = enbTransmitterModule(enb, Param)
-      obj.TxPwdBm = 10*log10(enb.Pmax)+30;
+	  obj.TxPwdBm = 10*log10(enb.Pmax)+30;
+	  obj.Gain = Param.eNBGain;
       obj.NoiseFigure = Param.eNBNoiseFigure;
       obj.NDLRB = enb.NDLRB;
 			obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
@@ -33,11 +35,11 @@ classdef enbTransmitterModule
     
     function EIRP = getEIRP(obj)
       % Returns EIRP in Watts
-      EIRP = 10^((obj.TxPwdBm - obj.NoiseFigure)/10)/1000;
+      EIRP = 10^((obj.getEIRPdBm())/10)/1000;
     end
     
     function EIRPdBm = getEIRPdBm(obj)
-       EIRPdBm = obj.TxPwdBm - obj.NoiseFigure;
+       EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure;
     end
 
 		% Setters

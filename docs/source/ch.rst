@@ -1,6 +1,9 @@
 Channel
 ==============
 
+.. image:: resources/graphics/linkBudgetE2E.png
+   :scale: 80%
+   :align: center
 
 .. toctree::
 

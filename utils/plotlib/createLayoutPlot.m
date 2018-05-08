@@ -1,5 +1,5 @@
 function Param = createLayoutPlot(Param)
-fig = figure('Name','Layout','Position',[400, 400, 1000, 1000]);
+fig = figure('Name','Layout','Position',[100, 100, 1000, 1000]);
 layout_axes = axes('parent', fig);
 set(layout_axes,'XLim',[0, 600],'YLim',[0, 600]);
 set(layout_axes,'XTick',[]);

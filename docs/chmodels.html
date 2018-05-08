@@ -200,6 +200,17 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.atmosphericLoss">
+<code class="descname">atmosphericLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.atmosphericLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute atmospheric loss based on</p>
+<ul class="simple">
+<li>dry air preassure of 101300 Pa</li>
+<li>water vapour density 7.5 g/m^3</li>
+<li>Tempature 23 degrees calsius</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
 <dt id="ch.SONOHImodels.sonohiBase.computeLinkBudget">
 <code class="descname">computeLinkBudget</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.computeLinkBudget" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute link budget for Tx -&gt; Rx</p>
@@ -248,10 +259,18 @@ The downlink logic follows the follow flow</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.sonohiBase.setWaveform">
-<em class="property">static </em><code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies waveform to Rx module, enables transmission.</p>
+<code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies waveform and waveform info to Rx module, enables transmission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.thermalLoss">
+<code class="descname">thermalLoss</code><span class="sig-paren">(</span><em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.thermalLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute thermal loss based on bandwidth, at T = 290 K.
+Worst case given by the number of resource blocks. Bandwidth is
+given based on the waveform. Computed using matlabs <code class="xref mat mat-obj docutils literal notranslate"><span class="pre">obw</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -394,9 +413,9 @@ leve</td>
 <dd><p>Model parameters</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated">
-<em class="property">static </em><code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds the index of the stations and users associated, e.g.
 how they link with the station and user objects.</p>
 </dd></dl>
@@ -419,9 +438,9 @@ how they link with the station and user objects.</p>
 <dd><p>Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA">
-<em class="property">static </em><code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configures the antenna arrays and their radiation patterns
 For macro stations a ULA Antenna array with 12 elements are considered.
 For micro stations a ULA Antenna array with 6 elements are considered.
@@ -429,9 +448,9 @@ For UEs, a ULA antenna array with 1 element is considered.
 Number of sectors are per default defined to be zero, thus the antenna is omnidirectional.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel">
-<em class="property">static </em><code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use maximum fft size
 However since the same BsClass is used these are most
 likely to be identical</p>
@@ -450,9 +469,9 @@ The logic is similar to that of the baseclass, however the loss is computed from
 <dd><p>Stored impulse response</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout">
-<em class="property">static </em><code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize layout struct by antenna array and number of
 links.</p>
 </dd></dl>
@@ -463,15 +482,15 @@ links.</p>
 <dd><p>Number of receivers, per model</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions">
-<em class="property">static </em><code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the position of the base station and the users in the WINNER layout struct.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario">
-<em class="property">static </em><code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setting of propagation scenario based on the station type and region selected.
 A list of</p>
 </dd></dl>
@@ -502,9 +521,9 @@ For this it needs the following inputs:</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing">
-<em class="property">static </em><code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
+<code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change useridx of pairing to reflect WINNER structure
 cfgLayout.Stations, e.g. If only one station, user one is
 at cfgLayout.Stations(2)

@@ -1,7 +1,7 @@
 function Param = createPHYplot(Param)
 % This function creates the main figure used for PHY visualization
 % Tags are used to identify the plots.
-fig = figure('Name','PHY','Position',[400, 400, 1000, 1000]);
+fig = figure('Name','PHY','Position',[100, 100, 1000, 1000]);
 tabgp = uitabgroup(fig,'Position',[.05 .05 .9 .9]);
 
 %% Setup rx. const tab

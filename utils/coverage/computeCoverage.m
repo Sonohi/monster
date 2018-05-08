@@ -17,13 +17,13 @@ channel.enableInterference = 0;
 
 % Use steps of 10 meters to compute approximated coverage distance
 stepMeters = 10;
-avgCoverageDistance = 0;
+avgCoverageDistance = 20;
 coverage = struct('distance',[],'SNRdB',[],'ChannelModel',channel.DLMode,'ChannelRegion',channel.Region);
 idx = 1;
 %figure
 while true
     % Set distance of user
-    avgCoverageDistance = avgCoverageDistance + stepMeters;
+    avgCoverageDistance = avgCoverageDistance + sqrt(stepMeters^2+stepMeters^2);
     
     % This is considered the base case (LOS) for the macro, if positioned
     % in the middle.
@@ -56,7 +56,7 @@ while true
     %sonohilog(sprintf('Distance %s', num2str(avgCoverageDistance)));
     % Check if SNR is below 0, likely means no transmission possible.
     % TODO: count errors on subframe
-    if sampleUser.Rx.SNRdB < 3
+    if sampleUser.Rx.SNRdB <= 0
         break 
     end
     idx = idx +1;

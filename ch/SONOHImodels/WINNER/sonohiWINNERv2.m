@@ -199,12 +199,12 @@ classdef sonohiWINNERv2 < sonohiBase
             
             rxSig_ = [RxNode.Rx.Waveform;zeros(25,1)];
             % Local variable used for computing difference in power
-            rxSigPw_ = 10*log10(bandpower(rxSig_));  
+            rxSigPw_ = sum(rxSig_.*conj(rxSig_));
 
             % apply WINNER impulse response
             rxSig_ = obj.applyWINNERimpluse(rxSig_, h);
-            rxPw_ = 10*log10(bandpower(rxSig_));
-            lossdB = rxSigPw_-rxPw_;
+            rxPw_ = sum(rxSig_.*conj(rxSig_));
+            lossdB = 10*log10(rxSigPw_/rxPw_);
             
             if enableFading
                 % Normalize the signal
