@@ -37,10 +37,17 @@ validateParam(Param);
 % Disable warnings about casting classes to struct
 w = warning('off', 'all');
 
+if Param.draw
+Param = createLayoutPlot(Param);
+Param = createPHYplot(Param);
+end
+
 % Create Stations, Users and Traffic generators
-[Stations, Param.AreaPlot, Param] = createBaseStations(Param);
+[Stations, Param] = createBaseStations(Param);
+
 Users = createUsers(Param);
 [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param);
+
 
 % Create Channel scenario
 Channel = ChBulk_v2(Param);

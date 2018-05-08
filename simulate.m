@@ -39,9 +39,10 @@ else
 	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
 end
 
-% if Param.draw
-% 	drawHeatMap(HeatMap, Stations);
-% end
+if Param.draw
+    plotcoverage(Stations, Channel, Param)
+ 	%drawHeatMap(HeatMap, Stations);
+end
 
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
 for iRound = 0:(Param.schRounds-1)
@@ -87,6 +88,14 @@ for iRound = 0:(Param.schRounds-1)
 	% -------------------
 	% ENODEB SCHEDULE END
 	% -------------------
+  
+  % ------------------------
+  % Draw scheduled links
+  % ------------------------
+  if Param.draw
+    plotlinks(Users, Stations, Param.LayoutAxes, 'downlink')
+  end
+  
 	
 	% ----------------------------------------------
 	% ENODEB DL-SCH & PDSCH CREATION AND MAPPING
@@ -169,10 +178,8 @@ for iRound = 0:(Param.schRounds-1)
 	
 	% Plot resource grids for all users
 	if Param.draw
-    delete_figs; % Redraws the plots
-		[hScatter(1), hScatter(2)] = plotConstDiagram_rx(Stations,Users);
-		[hGrids(1), hGrids(2)] = plotReGrids(Users);
-		[hSpectrums(1)] = plotSpectrums(Users,Stations);
+		plotConstDiagramDL(Stations,Users, Param);
+		plotSpectrums(Users,Stations, Param);
 	end
 	
 	
