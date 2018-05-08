@@ -97,7 +97,7 @@ classdef sonohiBase
       % This requires a :meth:`computePathLoss` method, which is supplied by child classes.
       % returns updated RxPwdBm of RxNode.Rx
       lossdB = obj.computePathLoss(TxNode, RxNode);
-      EIRPdBm = 10*log10(TxNode.Tx.getEIRP)+30; % Convert EIRP per symbol in watts to dBm
+      EIRPdBm = TxNode.Tx.getEIRPdBm;
       rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
       RxNode.Rx.RxPwdBm = rxPwdBm;
       
