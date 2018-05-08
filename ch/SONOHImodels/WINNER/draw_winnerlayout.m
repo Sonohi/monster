@@ -1,25 +1,25 @@
 function draw_winnerlayout(cfgLayout)
 % Get index of stations and users
 names = {cfgLayout.Stations.Name};
-bs_cidx = strfind(names, 'BS');
-ms_cidx = strfind(names, 'MS');
-bs_idx = not(cellfun('isempty', bs_cidx));
-ms_idx = not(cellfun('isempty', ms_cidx));
+bsCidx = strfind(names, 'BS');
+msCidx = strfind(names, 'MS');
+bsIdx = not(cellfun('isempty', bsCidx));
+msIdx = not(cellfun('isempty', msCidx));
 
 % Get station positions
-bs_pos = [cfgLayout.Stations(bs_idx).Pos]
+bsPos = [cfgLayout.Stations(bsIdx).Pos]
 
 % Get User positions
-ms_pos = [cfgLayout.Stations(ms_idx).Pos]
-ms_pos(:,1)
+msPos = [cfgLayout.Stations(msIdx).Pos]
+msPos(:,1)
 figure
 hold on
-for ms = 1:length(ms_pos)
-locationMS(ms_pos(:,ms))
+for ms = 1:length(msPos)
+locationMS(msPos(:,ms))
 end
 
-for bs = 1:length(bs_pos(1,:))
-locationBS(bs_pos(:,bs))
+for bs = 1:length(bsPos(1,:))
+locationBS(bsPos(:,bs))
 end
 
 drawlinks([cfgLayout.Stations.Pos],cfgLayout.Pairing)
