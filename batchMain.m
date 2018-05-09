@@ -7,9 +7,9 @@ setpref('sonohiLog', 'logFile', logName);
 
 parfor i = 1:4
 	try
-		batch_users_sim(i);
+		batchUsers(i);
 	catch ME
-		sonohilog(sprintf('Error in simulate for users index %i', i),'WRN');
+		sonohilog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', i),'WRN');
 		sonohilog(ME.stack);
 	end			
 end
