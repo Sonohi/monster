@@ -10,3 +10,4 @@
 /logs/*.txt
 /html
 /doctrees
+/utils/coverage/*.mat

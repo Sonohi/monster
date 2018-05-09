@@ -22,12 +22,13 @@ classdef enbTransmitterModule
       obj.TxPwdBm = 10*log10(enb.Pmax)+30;
       obj.Gain = Param.eNBGain;
       obj.NoiseFigure = Param.eNBNoiseFigure;
-      obj.NDLRB = enb.NDLRB;
-      obj.Waveform = zeros(enb.NDLRB * 307.2, 1);
-      obj = setBCH(obj, enb);
-      obj = resetResourceGrid(obj, enb);
-      obj = initPDSCH(obj, enb.NDLRB);
-      [obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
+			obj.NDLRB = enb.NDLRB;
+			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
+			obj.Waveform = zeros(Nfft, 1);
+			obj = setBCH(obj, enb);
+			obj = resetResourceGrid(obj, enb);
+			obj = initPDSCH(obj, enb.NDLRB);
+			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
     end
     
     function EIRPSymbol = getEIRPSymbol(obj)

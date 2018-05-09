@@ -14,6 +14,8 @@ function validateParam(Param)
 	validateattributes(Param.numSubFramesMicro, {'numeric'}, {'>=',0});
 	validateattributes(Param.numMacro, {'numeric'}, [{'>=',0}, {'<=',1}]);
 	validateattributes(Param.numMicro, {'numeric'}, {'>=',0});
+	validateattributes(Param.numPico, {'numeric'}, {'>=',0});
+	validateattributes(Param.numEnodeBs, {'numeric'}, {'>=',0});
 	validateattributes(Param.microPos, {'char'}, {'nonempty'});
 	validateattributes(Param.microUniformRadius, {'numeric'}, {'>=',0});
 	validateattributes(Param.macroHeight, {'numeric'}, {'>=',0});

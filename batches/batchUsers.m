@@ -1,13 +1,13 @@
-function batch_users_sim(users_index)
+function batchUsers(usersIndex)
 
-%   batch_users_sim
+%   batchUsers
 %
 %   Simulation Parameters
-%		users_index				->	users index
+%		usersIndex				->	users index
 
 numUsers = [10 30 60 90];
 initParam;
-Param.numUsers = numUsers(users_index);
+Param.numUsers = numUsers(usersIndex);
 
 validateParam(Param);
 
