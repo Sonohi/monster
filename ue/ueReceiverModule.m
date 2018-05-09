@@ -205,7 +205,17 @@ classdef ueReceiverModule
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
 			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
-		end
+    end
+    
+    function obj = computeOffset(obj, enbObj)
+      % Compute offset based on PSS and SSS. Done every 0 and 5th subframe.
+      if enbObj.NSubframe == 0 || enbObj.NSubframe == 5
+        pssCorr = finddelay(enbObj.Tx.PssRef,obj.Waveform);
+        sssCorr = finddelay(enbObj.Tx.SssRef,obj.Waveform);
+        offset_ = min(pssCorr,sssCorr);
+        obj.Offset = offset_;
+      end
+    end
 		
 		% reference measurements
 		function obj  = referenceMeasurements(obj,enbObj)
@@ -299,7 +309,7 @@ classdef ueReceiverModule
 		% cast object to struct
 		function objstruct = cast2Struct(obj)
 			objstruct = struct(obj);
-		end
+    end
 		
 		% Reset receiver
 		function obj = reset(obj)

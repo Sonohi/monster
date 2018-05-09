@@ -16,12 +16,17 @@ function Users = ueRxBulk(Stations, Users, cec)
     % Get serving station
     station = Stations([Stations.NCellID] == user.ENodeBID);
     scheduled = checkUserSchedule(user,station);
+    
+    % Compute offset based on synchronization signals.
+    user.Rx = user.Rx.computeOffset(station);
+
     if ~scheduled
       % user not scheduled, reset the metrics recorded for this round
       user.Rx = user.Rx.logNotScheduled();
+      Users(iUser) = user;
       continue;
     end
-
+    
     % Apply Offset
     if user.Rx.Offset > length(user.Rx.Waveform)
         sonohilog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
@@ -51,6 +56,7 @@ function Users = ueRxBulk(Stations, Users, cec)
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
       user.Rx = user.Rx.logNotDemodulated();
+      Users(iUser) = user;
       continue;
     end
     % Update parent structure
