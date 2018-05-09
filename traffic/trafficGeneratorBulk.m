@@ -22,7 +22,7 @@ function [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
 		% Now loop through the UEs to assign their start time
 		for iUser = 1:length(Users)
 			UeTrafficGenerator = getTrafficGenerator(Users(iUser).NCellID, TrafficGenerators);
-			Users(iUser).TrafficStartTime = UeTrafficGenerator.getStartingTime(Param);
+			Users(iUser).TrafficStartTime = UeTrafficGenerator.getStartingTime(Users(iUser).NCellID);
 		end
 	else
 		sonohilog('(TRAFFIC GENERATOR BULK) traffic mix cannot be negative', 'ERR');

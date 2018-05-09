@@ -13,6 +13,7 @@ classdef TrafficGenerator
 		arrivalMode;
 		trafficSource; 
 		associatedUeIds; 
+		arrivalTimes;
 	end
 	
 	methods
@@ -48,28 +49,47 @@ classdef TrafficGenerator
 			end
 			obj.arrivalMode = Param.ueArrivalDistribution;
 			obj.associatedUeIds = associatedUeIds;
+			obj.arrivalTimes = obj.setArrivalTimes(Param);
 		end
 		
-		function tStart = getStartingTime(obj, Param)
-			% Get starting time is used to get the initial starting time for a UE
+		function arrivalTimes = setArrivalTimes(obj, Param)
+			% Set arrival times is used to set the starting times for the associated UEs
 			%
 			% :Param.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
 			% :Param.uniformLower: lower limit of the Uniform process, used if the arrival process is Uniform
 			% :Param.uniformUpper: upper limit of the Uniform process, used if the arrival process is Uniform
 			% :Param.staticStart: static start time if the arrival process is static
-			
+			rng(Param.seed);
 			switch obj.arrivalMode
 				case 'Poisson'
-					randomSample = random('Poisson', Param.poissonLambda);
+					for i = 1:length(obj.associatedUeIds)
+						tStart(i,1) = random('Poisson', Param.poissonLambda);
+					end
 				case 'Uniform'
-					randomSample = random('Uniform', Param.uniformLower, Param.uniformUpper);
+					for i = 1:length(obj.associatedUeIds)
+						tStart(i,1) = random('Uniform', Param.uniformLower, Param.uniformUpper);
+					end
 				case 'Static'
-					randomSample = Param.staticStart;
+					tStart(1:length(obj.associatedUeIds), 1) = Param.staticStart;
 				otherwise
 					sonohilog('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode','ERR');
-					randomSample = NaN;
+					tStart = [];
 			end
-			tStart = randomSample*10^-3;
+			arrivalTimes = tStart*10^-3;
+		end
+
+		function tStart = getStartingTime(obj, ueId)
+			% Get starting time is used to get the starting time for an individual UE
+			%
+			% :ueId: UE ID
+			ueIx = find(obj.associatedUeIds == ueId);
+			if ueIx
+				tStart = obj.arrivalTimes(ueIx);
+			else
+				sonohilog('(TRAFFIC GENERATOR getStartingTime) error, UE not found','ERR');
+				tStart = NaN;
+			end
+		
 		end
 		
 		function newQueue = updateTransmissionQueue(obj, User, simTime)

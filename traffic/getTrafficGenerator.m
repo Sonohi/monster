@@ -8,7 +8,7 @@ function TrafficGenerator = getTrafficGenerator(UeId, TrafficGenerators)
 	else
 		primaryUes = TrafficGenerators(1).associatedUeIds;
 		iUser = find(primaryUes == UeId);
-		if isempty(iUser)
+		if ~isempty(iUser)
 			TrafficGenerator = TrafficGenerators(1);
 		else
 			TrafficGenerator = TrafficGenerators(2);
