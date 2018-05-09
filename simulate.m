@@ -102,20 +102,15 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	sonohilog('eNodeB DL-SCH & PDSCH creation and mapping', 'NFO');
 	[Stations, Users] = enbTxBulk(Stations, Users, Param, simTime);
-	
-	% ----------------------------------
-	% DL CHANNEL SYNCHRONIZATION
-	% ------------------------------------
-	% Setup the channel based on scheduled users
-	Channel = Channel.setupChannelDL(Stations,Users);
-	sonohilog('Running sync routine', 'NFO');
-	[Users, Channel] = syncRoutine(Stations, Users, Channel, Param);
-	
+
+
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
+  % Setup the channel based on scheduled users
+	Channel = Channel.setupChannelDL(Stations,Users);
 	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.modeDL), 'NFO');
 	[Stations, Users] = Channel.traverse(Stations, Users, 'downlink');
 	
