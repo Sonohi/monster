@@ -25,7 +25,7 @@ load('SimulationParameters.mat');
 
 % Set log preferences
 dateStr = datestr(datetime, 'yyyy-mm-dd_HH.MM.SS');
-logName = strcat('logs/', dateStr, '-utilLoThr_',num2str(Param.utilLoThr), '-numUsers_',num2str(Param.numUsers),'.txt'); 
+logName = strcat('logs/', dateStr, '-utilLoThr_',num2str(Param.utilLoThr), '-numUsers_',num2str(Param.numUsers),'.txt');
 setpref('sonohiLog', 'logToFile', Param.logToFile);
 setpref('sonohiLog', 'logFile', logName);
 
@@ -38,8 +38,8 @@ validateParam(Param);
 w = warning('off', 'all');
 
 if Param.draw
-Param = createLayoutPlot(Param);
-Param = createPHYplot(Param);
+	Param = createLayoutPlot(Param);
+	Param = createPHYplot(Param);
 end
 
 % Create Stations, Users and Traffic generators
@@ -61,10 +61,10 @@ utilHi = Param.utilHiThr:100;
 
 % Create struct to pass data to the simulation function
 simData = struct(...
-	'TrafficGenerators', TrafficGenerators,... 
+	'TrafficGenerators', TrafficGenerators,...
 	'Stations', Stations,...
 	'Users', Users,...
-	'Channel', Channel,... 
+	'Channel', Channel,...
 	'ChannelEstimator', ChannelEstimator);
 
 % if set, clean the results folder

@@ -40,27 +40,25 @@ classdef ueReceiverModule
 			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
-			for iStation = 1:(Param.numMacro + Param.numMicro)
+			for iStation = 1:Param.numEnodeBs
 				cellstring = char(strcat("NCellID",int2str(iStation)));
 				obj.HistoryStats.(cellstring) = struct('SINRdB',[],'SNRdB',[],'RxPwdBm',[]);
 			end
 		end
 		
-		function old_values = getFromHistory(obj, field, stationID)
+		function oldValues = getFromHistory(obj, field, stationID)
 			stationfield = strcat('NCellID',int2str(stationID));
 			path = {'HistoryStats', stationfield, field};
-			old_values = getfield(obj, path{:});
+			oldValues = getfield(obj, path{:});
 		end
 		
 		function obj = addToHistory(obj, field, stationID)
-			
-			old_values = obj.getFromHistory(field, stationID);
+			oldValues = obj.getFromHistory(field, stationID);
 			stationfield = strcat('NCellID',int2str(stationID));
 			path = {'HistoryStats', stationfield, field};
-			new_value = getfield(obj, field);
-			new_array = [old_values, new_value];
-			obj = setfield(obj, path{:}, new_array);
-			
+			newValue = getfield(obj, field);
+			newArray = [oldValues, newValue];
+			obj = setfield(obj, path{:}, newArray);		
 		end
 		
 		function obj = set.Waveform(obj,Sig)

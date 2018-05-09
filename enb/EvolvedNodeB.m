@@ -55,6 +55,12 @@ classdef EvolvedNodeB
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
+				case 'pico'
+					obj.NDLRB = Param.numSubFramesPico;
+					obj.Pmax = 0.13; % W
+					obj.P0 = 6.8; % W
+					obj.DeltaP = 4.0;
+					obj.Psleep = 4.3; % W
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
@@ -74,7 +80,7 @@ classdef EvolvedNodeB
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.PowerState = 1;
-			obj.Neighbours = zeros(1, Param.numMacro + Param.numMicro);
+			obj.Neighbours = zeros(1, Param.numEnodeBs);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Param.dlFreq;
@@ -127,13 +133,13 @@ classdef EvolvedNodeB
 		% create list of neighbours
 		function obj = setNeighbours(obj, Stations, Param)
 			% the macro eNodeB has neighbours all the micro
-			if obj.BsClass == 'macro'
-				obj.Neighbours(1:Param.numMicro) = find([Stations.NCellID] ~= obj.NCellID);
+			if strcmp(obj.BsClass,'macro')
+				obj.Neighbours(1:Param.numMicro + Param.numPico) = find([Stations.NCellID] ~= obj.NCellID);
 				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
 				% in a circle of radius Param.nboRadius
 			else
 				for iStation = 1:length(Stations)
-					if Stations(iStation).BsClass == 'macro'
+					if strcmp(Stations(iStation).BsClass, 'macro')
 						% insert in array at lowest index with 0
 						ix = find(not(obj.Neighbours), 1 );
 						obj.Neighbours(ix) = Stations(iStation).NCellID;

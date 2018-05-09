@@ -30,15 +30,15 @@ classdef MetricRecorder
 			obj.infoUtilLo = utilLo;
 			obj.infoUtilHi = utilHi;
 			% Initialise for eNodeB
-			obj.util = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
-			obj.powerConsumed = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
-			temp(1:Param.schRounds, Param.numMacro + Param.numMicro, 1:Param.numSubFramesMacro) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			obj.util = zeros(Param.schRounds, Param.numEnodeBs);
+			obj.powerConsumed = zeros(Param.schRounds, Param.numEnodeBs);
+			temp(1:Param.schRounds, Param.numEnodeBs, 1:Param.numSubFramesMacro) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Param.rtxOn
-				obj.harqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
-				obj.arqRtx = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
+				obj.harqRtx = zeros(Param.schRounds, Param.numEnodeBs);
+				obj.arqRtx = zeros(Param.schRounds, Param.numEnodeBs);
 			end
-			obj.powerState = zeros(Param.schRounds, Param.numMacro + Param.numMicro);
+			obj.powerState = zeros(Param.schRounds, Param.numEnodeBs);
 			
 			% Initialise for UE
 			obj.ber = zeros(Param.schRounds,Param.numUsers);

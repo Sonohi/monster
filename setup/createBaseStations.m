@@ -11,24 +11,36 @@ function [Stations, Param] = createBaseStations (Param)
 %
 %   Stations  							-> struct with all Stations details and PDSCH
 
-	% Create position vectors for the macro and micro BSs
-	[macroPos, microPos, Param] = positionBaseStations(Param.numMacro, Param.numMicro, ...
-		Param);
+	% Check that we only have at most 1 macro cell, as only 1 is supported as of now
+	if Param.numMacro >= 0 && Param.numMacro <= 1
+		% Create position vectors for the macro and micro BSs
+		[macroPos, microPos, picoPos, Param] = positionBaseStations(Param.numMacro, Param.numMicro, Param.numPico, Param);
 
-	for iStation = 1: (Param.numMacro + Param.numMicro)
-		% For now only 1 macro in the scenario and it's kept as first elem
-		if (iStation <= Param.numMacro)
-			Stations(iStation) = EvolvedNodeB(Param, 'macro', iStation);
-			Stations(iStation).Position = [macroPos(iStation, :), Param.macroHeight];
-		else
-			Stations(iStation) = EvolvedNodeB(Param, 'micro', iStation);
-			Stations(iStation).Position = [microPos(iStation - Param.numMacro, :), Param.microHeight];
+		% Create some indexes for ease of creation of the eNodeBs
+		macroThr = Param.numMacro;
+		microThr = macroThr + Param.numMicro;
+		picoThr = microThr + Param.numPico;
+
+		for iStation = 1:picoThr
+			if iStation <= macroThr
+				Stations(iStation) = EvolvedNodeB(Param, 'macro', iStation);
+				Stations(iStation).Position = [macroPos(iStation, :), Param.macroHeight];
+			elseif iStation > microThr
+				Stations(iStation) = EvolvedNodeB(Param, 'pico', iStation);
+				Stations(iStation).Position = [picoPos(iStation - microThr, :), Param.picoHeight];
+			else
+				Stations(iStation) = EvolvedNodeB(Param, 'micro', iStation);
+				Stations(iStation).Position = [microPos(iStation - macroThr, :), Param.microHeight];
+			end
 		end
-	end
 
-	% Add neighbours to each eNodeB
-	for iStation = 1:length(Stations)
-		Stations(iStation) = setNeighbours(Stations(iStation), Stations, Param);
+		% Add neighbours to each eNodeB
+		for iStation = 1:length(Stations)
+			Stations(iStation) = setNeighbours(Stations(iStation), Stations, Param);
+		end
+	else
+		sonohilog('(CREATE BASE STATIONS) error, at most 1 macro eNodeB currently supported','ERR');
 	end
+	
 
 end
