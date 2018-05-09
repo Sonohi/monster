@@ -74,9 +74,6 @@ if Param.numMicro > 0
 					
 					f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr yr+microLengthY*2],microImg);
 					set(f, 'AlphaData', alpha);
-					
-					%rectangle(Param.LayoutAxes,'Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
-					%	[0 .5 .5],'FaceColor',[0 .5 .5]);
 					drawnow
 				end
 			end
@@ -110,7 +107,8 @@ if Param.numMicro > 0
 					text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
 						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
 					
-					rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+					f = imagesc(Param.LayoutAxes,[x-microLengthX x+microLengthX],[y y+microLengthY*2],microImg);
+					set(f, 'AlphaData', alpha);
 					drawnow
 				end
 			end
@@ -164,7 +162,9 @@ if Param.numMicro > 0
 					text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
 						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
 					
-					rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .5 .5],'FaceColor',[0 .5 .5]);
+					f = imagesc(Param.LayoutAxes,[x-microLengthX x+microLengthX],[y y+microLengthY*2],microImg);
+					set(f, 'AlphaData', alpha);
+					drawnow
 				end
 			end
 			Param.clusters = clusters;
@@ -204,8 +204,6 @@ if Param.numPico > 0
 					
 					f = imagesc(Param.LayoutAxes,[xr-picoLengthX xr+picoLengthX],[yr yr+picoLengthY*2],picoImg);
 					set(f, 'AlphaData', alpha);
-					%rectangle(Param.LayoutAxes,'Position',[xr-5 yr-5 10 10],'Curvature',[1 1],'EdgeColor', ...
-					% [0 .3 .3],'FaceColor',[0 .3 .3]);
 					drawnow
 				end
 			end
@@ -239,7 +237,8 @@ if Param.numPico > 0
 					text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
 						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
 					
-					rectangle(Param.LayoutAxes,'Position',[x-5 y-5 10 10],'Curvature',[1 1],'EdgeColor',[0 .3 .3],'FaceColor',[0 .3 .3]);
+					f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y y+picoLengthY*2],picoImg);
+					set(f, 'AlphaData', alpha);
 					drawnow
 				end
 			end
