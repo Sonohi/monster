@@ -193,5 +193,10 @@ for iRound = 0:(Param.schRounds-1)
 end % end round
 
 % Once this simulation set is done, save the output
+% Remove figures from the config structure
+% TODO: upper API will contain these figure handles, thus they will not
+% need to be removed from Param.
+Param = rmfield(Param,{'LayoutFigure', 'PHYFigure', 'LayoutAxes','PHYAxes'});
+SimulationMetrics.Param = Param;
 save(strcat('results/', outPrexif, '.mat'), 'SimulationMetrics');
 end
