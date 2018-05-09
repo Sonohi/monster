@@ -31,11 +31,11 @@ Param.numMacro = 1;% Integer used to specify the number of macro eNodeBs in the 
 Param.macroHeight = 35;% Double used to specify the height in metres of the macro eNodeBs
 Param.numMicro = 2;% Integer used to specify the number of micro eNodeBs in the scenario
 Param.microPos = 'uniform'; % Array of char to decide the positioning of the micro BS (uniform, random, clusterized)
-Param.microUniformRadius = 200;% Double radius of distance from centre for microBS in metres
+Param.microUniformRadius = 400;% Double radius of distance from centre for microBS in metres
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
 Param.numPico = 5;% Integer used to specify the number of pico eNodeBs in the scenario
 Param.picoPos = 'uniform'; % Array of char to decide the positioning of the micro BS (uniform, random)
-Param.picoUniformRadius = 100;% Double radius of distance from centre for picoBS in metres
+Param.picoUniformRadius = 300;% Double radius of distance from centre for picoBS in metres
 Param.picoHeight = 5;% Double used to specify the height in metres of the pico eNodeBs
 Param.numEnodeBs = Param.numMacro + Param.numMicro + Param.numPico;
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
@@ -86,6 +86,7 @@ if strcmp(Param.channel.modeDL,'winner')
   Param.channel.region = struct();
 	Param.channel.region.macroScenario = '11';
 	Param.channel.region.microScenario = '3';
+	Param.channel.region.picoScenario = '3';
 end
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres
