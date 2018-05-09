@@ -58,7 +58,17 @@ classdef ChBulk_v2 < SonohiChannel
 			
 			
 			if ~isempty(stations)
-				[Users,obj] = obj.runModel(stations,users, chtype);
+				[stations,users,obj] = obj.runModel(stations,users, chtype);
+				% Overwrite in input struct
+				for iUser = 1:length(users)
+					ueId = users(iUser).NCellID;
+					Users([Users.NCellID] == ueId) = users(iUser);
+				end
+				for iStations = 1:length(stations)
+					enbId = stations(iStations).NCellID;
+					Stations([Stations.NCellID] == enbId) = stations(iStations);
+				end
+      
 			else
 				sonohilog('No users found for any of the stations. Is this supposed to happen?','WRN')
 			end

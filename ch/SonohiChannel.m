@@ -124,7 +124,7 @@ classdef SonohiChannel
     
 end
 
-    function [Users,obj] = runModel(obj,Stations,Users, chtype)
+    function [Stations, Users,obj] = runModel(obj,Stations,Users, chtype)
       validateChannel(obj);
       validateStations(Stations);
       validateUsers(Users);
@@ -135,21 +135,18 @@ end
         case 'downlink'
           [~, users] = obj.DownlinkModel.run(stations,users,'channel',obj);
         case 'uplink'
-          [~, users] = obj.UplinkModel.run(stations,users,'channel',obj);
+          [stations, ~] = obj.UplinkModel.run(stations,users,'channel',obj);
       end
       
       if strcmp(obj.fieldType,'full')
         if obj.enableInterference
           users = obj.applyInterference(stations,users,chtype);
         end
-      end
+			end
       
-      % Overwrite in input struct
-      for iUser = 1:length(users)
-        ueId = users(iUser).NCellID;
-        Users([Users.NCellID] == ueId) = users(iUser);
-      end
-      
+			Users = users;
+			Stations = stations;
+    
       
     end
     
