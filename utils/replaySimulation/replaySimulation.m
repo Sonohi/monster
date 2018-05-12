@@ -17,24 +17,38 @@ Param = createLayoutPlot(SimulationMetrics.Param);
 
 % Create Stations, Users and Traffic generators
 [Stations, SimulationMetrics.Param] = createBaseStations(Param);
-Param = createENBsummaryPlot(Param, Stations);
-
+ENBsummaryplt = ENBsummaryPlot(Stations);
+    
 Users = createUsers(Param);
 
-for stationIdx = 1:length(Stations)
-	eNBpowerTag = sprintf('station%iPowerConsumed',stationIdx);
-	axEq = findall(Param.eNBAxes,'Tag',eNBpowerTag);
-	hPower(stationIdx) = get(axEq,'Children');
-end
+UEsummaryplt = UESummaryPlot(Users);
 
 
 
 for iRound = 1:Param.schRounds
-	for stationIdx = 1:length(Stations)
- 	addpoints(hPower(stationIdx),iRound,SimulationMetrics.powerConsumed(iRound,stationIdx))
-	end
-	pause(1)
- 	drawnow
+    simTime = iRound * 0.001;
+%     for stationIdx = 1:length(Stations)
+%         station = Stations(stationIdx);
+%         ENBsummaryplt.addData(station.NCellID, 'PowerState', simTime, SimulationMetrics.powerState(iRound,stationIdx));
+%         ENBsummaryplt.addData(station.NCellID, 'PowerConsumed', simTime, SimulationMetrics.powerConsumed(iRound,stationIdx));
+%         ENBsummaryplt.addData(station.NCellID, 'HARQ', simTime, SimulationMetrics.harqRtx(iRound,stationIdx));
+%         ENBsummaryplt.addData(station.NCellID, 'Utilization', simTime, SimulationMetrics.util(iRound,stationIdx));
+%         
+%     end
+%     
+    for userIdx = 1:length(Users)
+       user = Users(userIdx);
+       UEsummaryplt.addData(user.NCellID, 'BER', simTime, SimulationMetrics.ber(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'preEVM', simTime, SimulationMetrics.preEvm(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'postEVM', simTime, SimulationMetrics.postEvm(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'CQI', simTime, SimulationMetrics.cqi(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'SNR', simTime, SimulationMetrics.snrdB(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'SINR', simTime, SimulationMetrics.sinrdB(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'ReceivedPower', simTime, SimulationMetrics.receivedPowerdBm(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'RSRP', simTime, SimulationMetrics.rsrpdBm(iRound, userIdx));
+       UEsummaryplt.addData(user.NCellID, 'Throughput', simTime, SimulationMetrics.throughput(iRound, userIdx));
+    end
+    drawnow
 end
 % if isnan(sUser) && isnan(sStation)
 % fprintf('View parameters not set.\n')
@@ -50,32 +64,32 @@ end
 %   sUser = input('\n');
 % end
 % end
-% 
-% 
+%
+%
 % %% Standard display values (axis ranges)
-% 
+%
 % Param.EVM = [0 100];
 % Param.CQI = [0 15];
 % Param.bitrate = [0 10e11];
 % Param.SNR = [-80 120];
 % Param.SINR = [-80 120];
 % Param.distance = [0 300];
-% 
+%
 % Param.Area = [0 300 0 300];
 % Param.NoStations = length(Stations);
-% 
-% temp = [Stations.Position]; 
+%
+% temp = [Stations.Position];
 % Param.StationPos = reshape(temp,3,Param.NoStations);
-% 
-% 
-% 
+%
+%
+%
 % if strcmp(mode,'perStation')
-% 
+%
 %   station = Stations(sStation);
-%   
+%
 %   displayStation(enbOut,Stations,sStation,Param, ueOut, Users)
-%    
-%   
+%
+%
 % elseif strcmp(mode, 'perUser')
 %   while true
 %     data = extractUserMetrics(ueOut,Users,Param);
@@ -91,5 +105,5 @@ end
 %       end
 %     end
 %   end
-% 
+%
 % end
