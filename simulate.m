@@ -40,8 +40,10 @@ else
 end
 
 if Param.draw
-    plotcoverage(Stations, Channel, Param)
- 	%drawHeatMap(HeatMap, Stations);
+	ENBsummaryplt = ENBsummaryPlot(Stations);
+	UEsummaryplt = UESummaryPlot(Users);
+	plotcoverage(Stations, Channel, Param)
+	%drawHeatMap(HeatMap, Stations);
 end
 
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
@@ -175,6 +177,9 @@ for iRound = 0:(Param.schRounds-1)
 	if Param.draw
 		plotConstDiagramDL(Stations,Users, Param);
 		plotSpectrums(Users,Stations, Param);
+    UEsummaryplt.UEBulk_plot(Users, SimulationMetrics, iRound);
+    ENBsummaryplt.ENBBulk_plot(Stations, SimulationMetrics, iRound);
+    drawnow
 	end
 	
 	

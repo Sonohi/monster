@@ -18,7 +18,7 @@ classdef UESummaryPlot < handle
     
     methods
         function obj = UESummaryPlot(Stations)
-            obj.setColors()
+            obj.setColors();
             obj.createFigureHandle();
             obj.createTabGroup();
             obj.getNumberOfRows();
@@ -50,7 +50,7 @@ classdef UESummaryPlot < handle
                 for metricIdx = 1:length(obj.metrics)
                     metric = obj.metrics{metricIdx};
                     metricColor = obj.metricsColor(metricIdx,:);
-                    h = subplot(obj.numRows,obj.numCols,metricIdx,'Tag',sprintf('user%i%s',userID, metric))
+                    h = subplot(obj.numRows,obj.numCols,metricIdx,'Tag',sprintf('user%i%s',userID, metric));
                     animatedline(h,'Color',metricColor)
                     title(h,metric)
                     xlabel(h,'Seconds')
@@ -67,6 +67,24 @@ classdef UESummaryPlot < handle
         function obj = addData(obj,stationId,metric,x,y)
             h = obj.findSubplotHandle(stationId, metric);
             addpoints(h,x,y)
+        end
+        
+        function obj = UEBulk_plot(obj, Users, SimulationMetrics, iRound)
+            simTime = 0.001*iRound;
+            iRound = iRound + 1; % Starts a zero, but also considered the first index.
+             for userIdx = 1:length(Users)
+               user = Users(userIdx);
+               obj.addData(user.NCellID, 'BER', simTime, SimulationMetrics.ber(iRound, userIdx));
+               obj.addData(user.NCellID, 'preEVM', simTime, SimulationMetrics.preEvm(iRound, userIdx));
+               obj.addData(user.NCellID, 'postEVM', simTime, SimulationMetrics.postEvm(iRound, userIdx));
+               obj.addData(user.NCellID, 'CQI', simTime, SimulationMetrics.cqi(iRound, userIdx));
+               obj.addData(user.NCellID, 'SNR', simTime, SimulationMetrics.snrdB(iRound, userIdx));
+               obj.addData(user.NCellID, 'SINR', simTime, SimulationMetrics.sinrdB(iRound, userIdx));
+               obj.addData(user.NCellID, 'ReceivedPower', simTime, SimulationMetrics.receivedPowerdBm(iRound, userIdx));
+               obj.addData(user.NCellID, 'RSRP', simTime, SimulationMetrics.rsrpdBm(iRound, userIdx));
+               obj.addData(user.NCellID, 'Throughput', simTime, SimulationMetrics.throughput(iRound, userIdx));
+            end 
+            
         end
     end
     
