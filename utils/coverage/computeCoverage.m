@@ -20,7 +20,7 @@ stepMeters = 10;
 avgCoverageDistance = 20;
 coverage = struct('distance',[],'SNRdB',[],'ChannelModel',channel.DLMode,'ChannelRegion',channel.Region);
 idx = 1;
-%figure
+figure
 while true
     % Set distance of user
     avgCoverageDistance = avgCoverageDistance + sqrt(stepMeters^2+stepMeters^2);
@@ -47,7 +47,7 @@ while true
 
     % Demod waveform
     [~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
-    %plot(sampleUser.Rx.Subframe,'.')
+    plot(sampleUser.Rx.Subframe,'.')
     % UE reference measurements
     sampleUser.Rx = sampleUser.Rx.referenceMeasurements(station);
     
@@ -57,7 +57,9 @@ while true
     % Check if SNR is below 0, likely means no transmission possible.
     % TODO: count errors on subframe
     if sampleUser.Rx.SNRdB <= 0
-        break 
+        break
+		elseif idx > 5000
+				error('Something went wrong in SNR convergence.')
     end
     idx = idx +1;
     drawnow

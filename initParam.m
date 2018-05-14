@@ -75,18 +75,23 @@ Param.eNBGain = 0; %Antenna gain of the eNB.
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546']
+Param.channel.modeDL = '3GPP38901';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
-Param.channel.region = 'Dense Urban';% String to control the channel region
+Param.channel.region = 'RMa';% String to control the channel region
 Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
-Param.channel.computeCoverage = false; %Only a visualization feature. Force the recomputation of the coverage, otherwise loaded from file if stored.
+Param.channel.computeCoverage = true; %Only a visualization feature. Force the recomputation of the coverage, otherwise loaded from file if stored.
 % WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
 if strcmp(Param.channel.modeDL,'winner')
   Param.channel.region = struct();
 	Param.channel.region.macroScenario = '11';
 	Param.channel.region.microScenario = '3';
 	Param.channel.region.picoScenario = '3';
+elseif strcmp(Param.channel.modeDL, '3GPP38901')
+	Param.channel.region = struct();
+	Param.channel.region.macroScenario = 'UMa';
+	Param.channel.region.microScenario = 'UMi';
+	Param.channel.region.picoScenario = 'UMi';
 end
 %% SON parameters
 Param.nboRadius = 100;% Double to set the maximum radius within which eNodeBs are considered as neighbours in metres

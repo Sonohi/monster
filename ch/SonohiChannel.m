@@ -116,6 +116,8 @@ classdef SonohiChannel
         chModel = sonohiITU(obj, chtype);
     elseif strcmp(mode, 'B2B')
         chModel = sonohiB2B(obj, chtype);
+		elseif strcmp(mode, '3GPP38901')
+				chModel = sonohi3GPP38901(obj, chtype);
     else
         sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
     end
