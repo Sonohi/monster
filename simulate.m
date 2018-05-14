@@ -40,8 +40,10 @@ else
 end
 
 if Param.draw
-    plotcoverage(Stations, Channel, Param)
- 	%drawHeatMap(HeatMap, Stations);
+	ENBsummaryplt = ENBsummaryPlot(Stations);
+	UEsummaryplt = UESummaryPlot(Users);
+	plotcoverage(Stations, Channel, Param)
+	%drawHeatMap(HeatMap, Stations);
 end
 
 % Rounds are 0-based for the subframe indexing, so add 1 when needed
@@ -175,6 +177,9 @@ for iRound = 0:(Param.schRounds-1)
 	if Param.draw
 		plotConstDiagramDL(Stations,Users, Param);
 		plotSpectrums(Users,Stations, Param);
+    UEsummaryplt.UEBulkPlot(Users, SimulationMetrics, iRound);
+    ENBsummaryplt.ENBBulkPlot(Stations, SimulationMetrics, iRound);
+    drawnow
 	end
 	
 	
@@ -193,5 +198,13 @@ for iRound = 0:(Param.schRounds-1)
 end % end round
 
 % Once this simulation set is done, save the output
+% Remove figures from the config structure
+% TODO: upper API will contain these figure handles, thus they will not
+% need to be removed from Param.
+try
+Param = rmfield(Param,{'LayoutFigure', 'PHYFigure', 'LayoutAxes','PHYAxes'});
+catch
+end
+SimulationMetrics.Param = Param;
 save(strcat('results/', outPrexif, '.mat'), 'SimulationMetrics');
 end

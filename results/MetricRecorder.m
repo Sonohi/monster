@@ -21,11 +21,14 @@ classdef MetricRecorder
 		rsrqdB;
 		rsrpdBm;
 		rssidBm;
+		Param;
 	end
 	
 	methods
 		% Constructor
 		function obj = MetricRecorder(Param, utilLo, utilHi)
+			% Store main config
+			obj.Param = Param;
 			% Store utilisation thresholds for information
 			obj.infoUtilLo = utilLo;
 			obj.infoUtilHi = utilHi;

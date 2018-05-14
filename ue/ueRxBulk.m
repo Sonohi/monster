@@ -20,27 +20,30 @@ function Users = ueRxBulk(Stations, Users, cec)
     % Compute offset based on synchronization signals.
     user.Rx = user.Rx.computeOffset(station);
 
-    if ~scheduled
-      % user not scheduled, reset the metrics recorded for this round
-      user.Rx = user.Rx.logNotScheduled();
-      Users(iUser) = user;
-      continue;
-    end
     
     % Apply Offset
     if user.Rx.Offset > length(user.Rx.Waveform)
         sonohilog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
 		else
         user.Rx.Waveform = user.Rx.Waveform(1+abs(user.Rx.Offset):end,:);
-    end
-    
+		end
+		
+				
+		% Conduct reference measurements
+    user.Rx = user.Rx.referenceMeasurements(station);
 
+
+    if ~scheduled
+      % user not scheduled, reset the metrics recorded for this round
+      user.Rx = user.Rx.logNotScheduled();
+      Users(iUser) = user;
+      continue;
+		end
+		
     % Try demodulation
     [demodBool, user.Rx] = user.Rx.demodulateWaveform(station);
     % demodulate received waveform, if it returns 1 (true) then demodulated
     if demodBool
-			% Conduct reference measurements
-      user.Rx = user.Rx.referenceMeasurements(station);
       % Estimate Channel
 			user.Rx = user.Rx.estimateChannel(station, cec);
       % Equalize signal
