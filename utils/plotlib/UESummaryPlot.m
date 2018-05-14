@@ -69,7 +69,7 @@ classdef UESummaryPlot < handle
             addpoints(h,x,y)
         end
         
-        function obj = UEBulk_plot(obj, Users, SimulationMetrics, iRound)
+        function obj = UEBulkPlot(obj, Users, SimulationMetrics, iRound)
             simTime = 0.001*iRound;
             iRound = iRound + 1; % Starts a zero, but also considered the first index.
              for userIdx = 1:length(Users)

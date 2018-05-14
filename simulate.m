@@ -177,8 +177,8 @@ for iRound = 0:(Param.schRounds-1)
 	if Param.draw
 		plotConstDiagramDL(Stations,Users, Param);
 		plotSpectrums(Users,Stations, Param);
-    UEsummaryplt.UEBulk_plot(Users, SimulationMetrics, iRound);
-    ENBsummaryplt.ENBBulk_plot(Stations, SimulationMetrics, iRound);
+    UEsummaryplt.UEBulkPlot(Users, SimulationMetrics, iRound);
+    ENBsummaryplt.ENBBulkPlot(Stations, SimulationMetrics, iRound);
     drawnow
 	end
 	
@@ -201,7 +201,10 @@ end % end round
 % Remove figures from the config structure
 % TODO: upper API will contain these figure handles, thus they will not
 % need to be removed from Param.
+try
 Param = rmfield(Param,{'LayoutFigure', 'PHYFigure', 'LayoutAxes','PHYAxes'});
+catch
+end
 SimulationMetrics.Param = Param;
 save(strcat('results/', outPrexif, '.mat'), 'SimulationMetrics');
 end

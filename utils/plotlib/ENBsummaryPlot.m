@@ -68,7 +68,7 @@ classdef ENBsummaryPlot < handle
 			addpoints(h,x,y)
 		end
 		
-		function obj = ENBBulk_plot(obj, Stations, SimulationMetrics, iRound)
+		function obj = ENBBulkPlot(obj, Stations, SimulationMetrics, iRound)
 			simTime = iRound * 0.001;
 			iRound = iRound + 1;
 			for stationIdx = 1:length(Stations)
