@@ -23,9 +23,10 @@ classdef SonohiChannel
     UplinkModel;
     fieldType; % replace this?
     Seed;
-    SimTime;
+    iRound;
     enableFading;
     enableInterference;
+		enableShadowing;
     BuildingFootprints % Matrix containing footprints of buildings
   end
   
@@ -37,14 +38,17 @@ classdef SonohiChannel
       obj.Seed = Param.seed;
       obj.enableFading = Param.channel.enableFading;
       obj.enableInterference = Param.channel.enableInterference;
+			obj.enableShadowing = Param.channel.enableShadowing;
       obj.BuildingFootprints = Param.buildings;
+			obj.iRound = 0;
     end
     
   end
   
   methods(Static)
     
-    
+
+		
     function distance = getDistance(txPos,rxPos)
       % Get distance between txPos and rxPos
       distance = norm(rxPos-txPos);
@@ -152,7 +156,7 @@ end
       
     end
     
-    function [intSig, intSigdBm] = getInterferers(obj,Stations,station,user)
+    function [intSig, intSigdBm] = getInterferers(obj,interferingStations,associatedStation,user)
       
       % Get power of each station that is not the serving station and
       % compute loss based on pathloss or in the case of winner on
@@ -164,18 +168,19 @@ end
       
       % v1 Uses eHATA based pathloss computation for both cases
       % v2 Switch based on channel mode
-      % v3 switch replaced with setup and traverse functions as regularly used
+			% v3 switch replaced with setup and traverse functions as regularly used
+			% v4 Removed check for interfering stations as this is done before this function call, renamed variables
       
       
       
-      RxPw = zeros(1,length(Stations));
-      for iStation = 1:length(Stations)
-        if Stations(iStation).NCellID ~= station.NCellID
+      RxPw = zeros(1,length(interferingStations));
+      for iStation = 1:length(interferingStations)
           % Get rx of all other stations
-          StationC = Stations(iStation);
+          StationC = interferingStations(iStation);
           
+					% Clean the transmission scenario
           StationC = StationC.resetScheduleDL();
-          StationC.Users(1:length(Stations(iStation).Users)) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+          StationC.Users(1:length(interferingStations(iStation).Users)) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
           StationC.Users(1).UeId = user.NCellID;
           StationC.ScheduleDL(1).UeId = user.NCellID;
           user.Rx.Waveform = [];
@@ -201,7 +206,6 @@ end
           rxSig(:,iStation) = setPower(rxSignorm,RxPw(iStation));
           
           rxPwP = 10*log10(bandpower(rxSig(:,iStation)))+30;
-        end
       end
       % Compute combined recieved spectrum (e.g. sum of all recieved
       % signals)
@@ -218,19 +222,9 @@ end
       %       plot(10*log10(abs(fftshift(fft(rxSig(:,sigs)).^2))));
       %   end
       %end
-      
-      if exist('rxSig','var')
-        intSig = sum(rxSig,2);
-        
-        % total power of interfering signal
-        intSigdBm = 10*log10(bandpower(intSig))+30;
-      else
-        intSig = 0;
-        intSigdBm= 0;
-      end
-      %figure
-      %plot(10*log10(abs(fftshift(fft(intSig)).^2)));
-      
+			intSig = sum(rxSig,2);
+			% total power of interfering signal
+			intSigdBm = 10*log10(bandpower(intSig))+30;
     end
     
     function Users = applyInterference(obj,Stations,Users,chtype)
@@ -255,9 +249,11 @@ end
       validateUsers(Users);
       for iUser = 1:length(Users)
         user = Users(iUser);
-        station = Stations(find([Stations.NCellID] == Users(iUser).ENodeBID));
+				
+				% Find associated eNB
+        AssociatedStation = Stations(find([Stations.NCellID] == Users(iUser).ENodeBID));
         
-        if isempty(station)
+        if isempty(AssociatedStation)
           user.Rx.SINR = user.Rx.SNR;
           Users(iUser) = user;
           continue
@@ -265,8 +261,9 @@ end
         % Find stations with the same BsClass
         % This ensures also same sampling frequency
         % TODO: make this frequency dependent.
-        Stations = Stations(find(strcmp({Stations.BsClass},station.BsClass)));
-        if isempty(Stations)
+        interferingStations = Stations(find(strcmp({Stations.BsClass},AssociatedStation.BsClass)));
+				interferingStations = interferingStations([interferingStations.NCellID]~=AssociatedStation.NCellID);
+        if isempty(interferingStations)
           % No other interfering stations
           user.Rx.SINR = user.Rx.SNR;
           Users(iUser) = user;
@@ -275,7 +272,7 @@ end
         
         
         % Get the combined interfering signal and its loss
-        [intSig, intSigdBm] = obj.getInterferers(Stations,station,user);
+        [intSig, intSigdBm] = obj.getInterferers(interferingStations,AssociatedStation,user);
         user.Rx.IntSigLoss = intSigdBm;
         % If no interference is computed intSig is zero
         if intSig == 0
@@ -305,8 +302,6 @@ end
         % interfering waveforms.
         % TODO: Generalize this, this is not completely accurate.
         user.Rx.Waveform = setPower(rxSig,NormPw);
-        
-        
         
         %                         figure
         %                         hold on
@@ -556,7 +551,16 @@ end
         distance = sqrt(moveX^2+moveY^2);
       end
 
-    end
+		end
+		
+				function seed = getLinkSeed(obj, rxObj)
+			seed = obj.Seed+10*obj.iRound^2+5*rxObj.NCellID^2;
+				end
+		
+				function simTime = getSimTime(obj)
+					% TODO: This should be moved to a parent API
+					simTime = obj.iRound*10^-3;
+				end
     
     
   end

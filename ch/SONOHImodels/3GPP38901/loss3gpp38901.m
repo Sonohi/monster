@@ -123,7 +123,7 @@ switch Scenario
 			std_sf = 4;
 			lossdB = PL_UMI_LOS;
 		else
-			std_sf = 7-82;
+			std_sf = 7.82;
 			if (10 <= d_2d) && (d_2d <= 5000)
 				PL_UMI_NLOS = 35.3*log10(d_3d) + 22.4 + 21.3*log10(f_c) - 0.3*(h_ut -1.5);
 				lossdB = max(PL_UMI_LOS, PL_UMI_NLOS);

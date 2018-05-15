@@ -106,12 +106,12 @@ classdef sonohiBase
     function RxNode = addFading(obj, RxNode)
       % Adds fading using lteFadingChannel
       cfg.SamplingRate = RxNode.Rx.WaveformInfo.SamplingRate;
-      cfg.Seed = RxNode.Seed;        % Rx specific seed
+      cfg.Seed = obj.Channel.getLinkSeed(RxNode);        % Rx specific seed
       cfg.NRxAnts = 1;               % 1 receive antenna
       cfg.DelayProfile = 'EPA';      % EVA delay spread
       cfg.DopplerFreq = 5;         % 120Hz Doppler frequency
       cfg.MIMOCorrelation = 'Low';   % Low (no) MIMO correlation
-      cfg.InitTime = obj.Channel.SimTime;  % Initialization relative to sim time
+      cfg.InitTime = obj.Channel.getSimTime();  % Initialization relative to sim time
       cfg.NTerms = 16;               % Oscillators used in fading model
       cfg.ModelType = 'GMEDS';       % Rayleigh fading model type
       cfg.InitPhase = 'Random';      % Random initial phases

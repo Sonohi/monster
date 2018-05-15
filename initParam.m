@@ -33,9 +33,9 @@ Param.numMicro = 2;% Integer used to specify the number of micro eNodeBs in the 
 Param.microPos = 'uniform'; % Array of char to decide the positioning of the micro BS (uniform, random, clusterized)
 Param.microUniformRadius = 400;% Double radius of distance from centre for microBS in metres
 Param.microHeight = 25;% Double used to specify the height in metres of the micro eNodeBs
-Param.numPico = 5;% Integer used to specify the number of pico eNodeBs in the scenario
+Param.numPico = 3;% Integer used to specify the number of pico eNodeBs in the scenario
 Param.picoPos = 'uniform'; % Array of char to decide the positioning of the micro BS (uniform, random)
-Param.picoUniformRadius = 300;% Double radius of distance from centre for picoBS in metres
+Param.picoUniformRadius = 400;% Double radius of distance from centre for picoBS in metres
 Param.picoHeight = 5;% Double used to specify the height in metres of the pico eNodeBs
 Param.numEnodeBs = Param.numMacro + Param.numMicro + Param.numPico;
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
@@ -75,12 +75,13 @@ Param.eNBGain = 0; %Antenna gain of the eNB.
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = '3GPP38901';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
+Param.channel.modeDL = 'ITU1546';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
-Param.channel.region = 'RMa';% String to control the channel region
+Param.channel.region = 'Urban';% String to control the channel region
 Param.channel.enableFading = true;
 Param.channel.enableInterference = true;
-Param.channel.computeCoverage = true; %Only a visualization feature. Force the recomputation of the coverage, otherwise loaded from file if stored.
+Param.channel.enableShadowing = false; % Only capable for 3GPP38901
+Param.channel.computeCoverage = false; %Only a visualization feature. Force the recomputation of the coverage, otherwise loaded from file if stored.
 % WINNER CONFIGURATION, only if 'winner is used'. See docs for the different varieties.
 if strcmp(Param.channel.modeDL,'winner')
   Param.channel.region = struct();
