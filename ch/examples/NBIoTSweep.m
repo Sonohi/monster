@@ -58,29 +58,29 @@ distance = linspace(20, 5000, 500);
 N = length(distance);
 resultsSuburban = NaN(N,2);
 resultsUrban = NaN(N,2);
-for distance_idx = 1:N
+for distanceIdx = 1:N
   
   ue = User;
   bs = Station;
   
   % Set user position to distance away from BS
 	% LOS based
-  xDiff = bs.Position(1)+distance(distance_idx); %in M
+  xDiff = bs.Position(1)+distance(distanceIdx); %in M
   ue.Position = [xDiff, bs.Position(2), 1.5];
 
   % Traverse channel suburban
   ChSuburban = ChSuburban.setupChannelDL(bs,ue);
   [~, ue] = ChSuburban.traverse(bs,ue,'downlink');
-  resultsSuburban(distance_idx,1) = ue.Rx.SNRdB;
-	resultsSuburban(distance_idx,2) = ue.Rx.RxPwdBm;
+  resultsSuburban(distanceIdx,1) = ue.Rx.SNRdB;
+	resultsSuburban(distanceIdx,2) = ue.Rx.RxPwdBm;
 	
 	% Urban
 	ChUrban = ChUrban.setupChannelDL(bs,ue);
   [~, ue] = ChUrban.traverse(bs,ue,'downlink');
-  resultsUrban(distance_idx,1) = ue.Rx.SNRdB;
-	resultsUrban(distance_idx,2) = ue.Rx.RxPwdBm;
+  resultsUrban(distanceIdx,1) = ue.Rx.SNRdB;
+	resultsUrban(distanceIdx,2) = ue.Rx.RxPwdBm;
 	
-  sonohilog(sprintf('%s/%s',int2str(distance_idx),int2str(N)));
+  sonohilog(sprintf('%s/%s',int2str(distanceIdx),int2str(N)));
 
 end
 
