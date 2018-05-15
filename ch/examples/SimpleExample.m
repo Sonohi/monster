@@ -3,12 +3,19 @@ close all
 load('SimulationParameters.mat');
 Param.numMacro = 1;
 Param.numMicro = 0;
+Param.numPico = 0;
 Param.numUsers = 1;
 Param.channel.region = 'Suburban';
 Param.channel.modeDL = 'ITU1546';
 
+
+if Param.draw
+	Param = createLayoutPlot(Param);
+	Param = createPHYplot(Param);
+end
+
 % Create Stations and Users
-[Station, Param.AreaPlot, Param] = createBaseStations(Param);
+[Station, Param] = createBaseStations(Param);
 User = createUsers(Param);
 
 % Create Channel scenario
