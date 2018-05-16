@@ -45,9 +45,12 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 			[Users(iUser), Stations] = handleHangover(Users(iUser), Stations, targetEnbID, Param, timeNow);
 		end
 	end
+	
+	
 
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
 	for iStation = 1:length(Stations)
+		Stations(iStation) = Stations(iStation).resetScheduleUL();
 		Stations(iStation) = Stations(iStation).setScheduleUL(Param);
 	end
 	for iUser = 1:length(Users)

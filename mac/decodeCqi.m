@@ -7,7 +7,7 @@ function cqi = decodeCqi(pucchBits)
 %
 %   cqi	  			->  decoded CQI in decimal
 
-	cqiBits = pucchBits(1:16, 1);
+	cqiBits = pucchBits(12:16,1);
 	cqi = bi2de(cqiBits', 'left-msb');
 
 end
