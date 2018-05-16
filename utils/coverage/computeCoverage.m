@@ -24,7 +24,11 @@ stepMeters = 10;
 avgCoverageDistance = 20;
 coverage = struct('distance',[],'SNRdB',[],'ChannelModel',channel.DLMode,'ChannelRegion',channel.Region);
 idx = 1;
-figure
+if param.draw
+	cdObj = comm.ConstellationDiagram('SamplesPerSymbol', 1, ...
+                                  'ShowReferenceConstellation', true, ...
+                                  'ReferenceConstellation', qammod(0:3, 4, 'UnitAveragePower', 1));
+end
 while true
     % Set distance of user
     avgCoverageDistance = avgCoverageDistance + sqrt(stepMeters^2+stepMeters^2);
@@ -54,16 +58,17 @@ while true
 
     % Demod waveform
     [~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
-    plot(sampleUser.Rx.Subframe,'.')
+		cdObj(reshape(sampleUser.Rx.Subframe,size(sampleUser.Rx.Subframe,1)* size(sampleUser.Rx.Subframe,2),1))
+    %plot(sampleUser.Rx.Subframe,'.')
     % UE reference measurements
     sampleUser.Rx = sampleUser.Rx.referenceMeasurements(station);
     
     coverage.distance(idx) = avgCoverageDistance;
     coverage.SNRdB(idx) = sampleUser.Rx.SNRdB;
     %sonohilog(sprintf('Distance %s', num2str(avgCoverageDistance)));
-    % Check if SNR is below 0, likely means no transmission possible.
+    % Check if SNR is below 3, likely means no transmission possible.
     % TODO: count errors on subframe
-    if sampleUser.Rx.SNRdB <= 0
+    if sampleUser.Rx.SNRdB <= 3
         break
 		elseif idx > 5000
 				error('Something went wrong in SNR convergence.')
