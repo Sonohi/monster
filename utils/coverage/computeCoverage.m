@@ -35,7 +35,6 @@ while true
     %sampleUser.Position = [avgCoverageDistance+station.Position(1), station.Position(2), sampleUser.Position(3)];
     sampleUser.Position = [avgCoverageDistance+station.Position(1), avgCoverageDistance+station.Position(2), sampleUser.Position(3)];
   
-		
 		% Set random seed
 		channel.Seed = randi([0,9999]);
 		

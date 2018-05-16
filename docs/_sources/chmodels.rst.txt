@@ -4,6 +4,13 @@ Models
 .. autoclass:: sonohiBase
    :members:
 
+3GPP 38901
+----------
+.. module:: ch.SONOHImodels.3GPP38901
+.. autoclass:: sonohi3GPP38901
+    :members:
+
+
 eHATA
 --------
 .. module:: ch.SONOHImodels.eHATA

@@ -3,7 +3,9 @@ classdef sonohiWINNERv2 < sonohiBase
     % 
     % Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
     % Propagations cenarios are as follows: [1=A1, 2=A2, 3=B1, 4=B2, 5=B3, 6=B4, 7=B5a, 8=B5c, 9=B5f, 10=C1, 11=C2, 12=C3, 13=C4, 14=D1, 15=D2a].
-    % 
+		% 
+		% .. warning:: WINNER II is considered some what unstable per 16/05/2018. See issue #67
+		%
     % The table of mapping is as follows
     %
     % +-------+----------------------+--------------------------------------+---------------+
