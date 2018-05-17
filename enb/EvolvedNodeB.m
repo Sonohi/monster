@@ -119,6 +119,10 @@ classdef EvolvedNodeB
 			obj.ScheduleDL = temp;
 		end
 		
+		function obj = resetScheduleUL(obj)
+			obj.ScheduleUL = [];
+		end
+		
 		% set subframe number
 		function obj = set.NSubframe(obj, num)
 			obj.NSubframe = num;
