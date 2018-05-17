@@ -15,7 +15,7 @@ for stationIdx = 1:length(stations)
         sonohilog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','NFO');
         load(filename)
     else
-        sonohilog(sprintf('Calculating coverage for Station %i, EIRP/symbol: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSymbol)+30), num2str(station.Tx.getEIRPdBm)));
+        sonohilog(sprintf('Calculating coverage for Station %i, EIRP/subcarrier: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSubcarrier)+30), num2str(station.Tx.getEIRPdBm)));
         coverage = computeCoverage(station,channel, param);
         save(filename,'coverage')
     end

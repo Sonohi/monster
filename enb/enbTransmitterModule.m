@@ -31,10 +31,11 @@ classdef enbTransmitterModule
 			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
     end
     
-    function EIRPSymbol = getEIRPSymbol(obj)
-      % Returns EIRP per symbol in Watts
-      EIRPSymbol = obj.getEIRP()/(12*obj.NDLRB);
-    end
+    function EIRPSubcarrier = getEIRPSubcarrier(obj)
+      % Returns EIRP per subcarrier in Watts
+      EIRPSubcarrier = obj.getEIRP()/size(obj.ReGrid,1);
+		end
+		
     
     function EIRP = getEIRP(obj)
       % Returns EIRP in Watts
