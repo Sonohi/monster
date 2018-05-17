@@ -50,8 +50,10 @@ while true
     sampleUser.Rx.Waveform = sampleUser.Rx.Waveform(1+sampleUser.Rx.Offset:end);
 
     % Demod waveform
-    [~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
-		cdObj(reshape(sampleUser.Rx.Subframe,size(sampleUser.Rx.Subframe,1)* size(sampleUser.Rx.Subframe,2),1))
+		[~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
+		if Param.draw
+			cdObj(reshape(sampleUser.Rx.Subframe,size(sampleUser.Rx.Subframe,1)* size(sampleUser.Rx.Subframe,2),1))
+		end
     %plot(sampleUser.Rx.Subframe,'.')
     % UE reference measurements
     sampleUser.Rx = sampleUser.Rx.referenceMeasurements(station);
