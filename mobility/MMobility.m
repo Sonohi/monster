@@ -91,18 +91,24 @@ classdef MMobility < handle
 			for round = 2:obj.Rounds
 				
 					% Check state
-					
 					switch state
 						case 'moving'
+							% Reset state variables
+							turnOrCross = false;
+							turn = false;
+							cross = false;
+							
 							oldPos = obj.Trajectory(round-1,:);
 							newPos = obj.movement(oldPos, direction);
 							turnOrCross = obj.checkTurnOrCross(newPos, direction);
 							if turnOrCross
-								[turn, cross, directionNew] = obj.decideTurnOrCross(side);
+								[turn, cross, directionNew] = obj.decideTurnOrCross(direction, side);
 								
 								if turn
+									obj.Trajectory(round,:) = oldPos;
 									state = 'turning';
 								elseif cross
+									obj.Trajectory(round,:) = oldPos;
 									state = 'crossing';
 								end
 							else
@@ -110,14 +116,21 @@ classdef MMobility < handle
 							end
 						case 'turning'
 							obj.timeLeftForTurning = obj.timeLeftForTurning - obj.TimeStep;
-							if obj.timeLeftForTurning <= 0 
+							if obj.timeLeftForTurning <= 0
+								direction = directionNew;
 								state = 'moving';
+								oldPos = obj.Trajectory(round-1,:);
+								newPos = obj.movement(oldPos, direction);
+								
+								obj.Trajectory(round,:) = newPos;
 							else
 								obj.Trajectory(round,:) = oldPos;
 							end
 						case 'crossing'
 							obj.timeLeftForCrossing = obj.timeLeftForCrossing - obj.TimeStep;
-							if obj.timeLeftForCrossing <= 0  
+							if obj.timeLeftForCrossing <= 0
+								% move and cross, 
+								% When moved across road, update obj.currentBuilding  
 								state = 'moving';
 							else
 								obj.Trajectory(round,:) = oldPos;
@@ -165,7 +178,7 @@ classdef MMobility < handle
 			obj.wallDistance = 1;
 			if strcmp(obj.Scenario, 'pedestrian')
 				obj.pedestrianDistance = 0.5;
-				obj.pedestrianTurnPause = 0.2 / obj.TimeStep;
+				obj.pedestrianTurnPause = 0.02 % 20 ms of pause;
 				obj.pedestrianCrossingPause = 5; % Roughly 5 seconds for crossing, equal to 5000 rounds
 				obj.timeLeftForCrossing = obj.pedestrianCrossingPause;
 				obj.timeLeftForTurning = obj.pedestrianTurnPause;
@@ -181,7 +194,7 @@ classdef MMobility < handle
 		end
 		
 		function direction = getMovementDirection(obj, side)
-			if ismember(obj.northsouth, side)
+			if any(ismember(obj.northsouth, side))
 				direction = obj.eastwest(randi(2));
 			else
 				direction = obj.northsouth(randi(2));
@@ -189,7 +202,7 @@ classdef MMobility < handle
 
 		end
 		
-		function [turn, cross, directionNew] = decideTurnOrCross(obj, side)
+		function [turn, cross, directionNew] = decideTurnOrCross(obj, direction, side)
 				% Pick new direction
 				directionNew = randi(4);
 				turn = false;
@@ -209,13 +222,13 @@ classdef MMobility < handle
 		
 		function [turnOrCross] = checkTurnOrCross(obj, newPos, direction)
 				turnOrCross = false;
-				if (direction == 1) && (newPos(2) > obj.currentBuilding(4))
+				if (direction == 1) && (round(newPos(2),5) > round(obj.currentBuilding(4),5))
 						turnOrCross = true;
-					elseif (direction == 2) && (newPos(1) < obj.currentBuilding(1))
+					elseif (direction == 2) && (round(newPos(1),5) < round(obj.currentBuilding(1),5))
 						turnOrCross = true;
-					elseif (direction == 3) && (newPos(2) < obj.currentBuilding(2))
+					elseif (direction == 3) && (round(newPos(2),5) < round(obj.currentBuilding(2),5))
 						turnOrCross = true;
-					elseif (direction == 4) && (newPos(1) < obj.currentBuilding(3))
+					elseif (direction == 4) && (round(newPos(1),5) < round(obj.currentBuilding(3),5))
 						turnOrCross = true;
 				end
 			
