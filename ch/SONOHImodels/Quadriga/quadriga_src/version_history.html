@@ -1,0 +1,559 @@
+<!DOCTYPE HTML>
+<html><head>
+
+
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>QuaDRiGa Version History</title>
+  
+  <meta content="Stephan Jaeckel" name="author"></head><body>
+<h1 style="color: rgb(153, 0, 0);"><small>QuaDRiGa Version History<br>
+</small></h1><span style="font-weight: bold;"><br>
+</span>
+
+
+<hr style="width: 100%; height: 2px;">
+<span style="font-weight: bold;"><br>
+v2.0.0-664</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">(Release: 2017-08-01)<br>
+</span><span style="font-weight: bold;"><br></span>
+<hr style="width: 100%; height: 2px;"><br>
+
+Major update and redesign.<br><br>
+
+
+<hr style="width: 100%; height: 2px;">
+<span style="font-weight: bold;"><br>
+v1.4.8-571</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">(Release: 2016-08-05)<br>
+</span><span style="font-weight: bold;"><br></span>
+<hr style="width: 100%; height: 2px;"><br>
+
+
+v1.4.8-571<br>
+- Bugfix: [array.generate_multi]  There was a sign error in the array generation function for electric tilt angles<br>
+<br>
+
+v1.4.7-570<br>
+- Bugfix: [channel_builder/get_channels] Wrong antenna response was created when using drifting precision 0 (only affects version 1.4.5 and 1.4.6)<br>
+- Performace [array/generate] 3GPP-3D antenna array generation function was inefficient<br>
+<br>
+
+v1.4.5-568<br>
+- Bugfix: [channel_builder/get_channels] Fading of clusters was effectively removed by averaging the power in version v1.3.11-538. This is fixed by a new power-scaling function.<br>
+<br>
+
+v1.4.5-567<br>
+- Feature: Added support for the ground reflection (2-Ray model)<br>
+- Feature: Added config-file for Freespace propagation<br>
+- Update: [channel_builder/init_parameters] Fixed LOS pahse to 0 and ground reflection phase to 180 degree<br>
+- Update: [channel_builder/private/update_angles] Redesign of the "rescale_departure_angles" function<br>
+- Update: Set default intra-cluster angular spreads to 0<br>
+<br>
+
+v1.4.4-566<br>
+- Bugfix: [array.interpolate] crashed when requested agnles for the interpolater were outside the provided angle range in the patterns.<br>
+- Bugfix: [array.visualize] Crashed when single precision patters were provided.<br>
+- Feature: [layout.visualize] Added option to show the Rx numbers.<br>
+<br>
+
+v1.4.3-557<br>
+- Bugfix: [array.set_grid] crashed when the array object only defines a partial angle range and the interpolation was outside this range<br>
+- Bugfix: [layout.get_channels] Crashed while checking the sampling theorem consistency when more than one track was given.<br>
+- Feature: [array.visualize] now returns the figure handle for further image manipulation<br>
+<br>
+
+v1.4.2-556<br>
+- Bugfix: [layout.get_channels] now checks if the sampling theorem is met and adjusts the sample density automatically if a movement profile is given (i.e. by call track.set_speed). <br>
+<br>
+
+v1.4.1-555<br>
+- Feature: [layout.get_channels] now interpolates [par.pg] when speed profiles are provided.<br>
+<br>
+
+<hr style="width: 100%; height: 2px;">
+<span style="font-weight: bold;"><br>
+v1.4.1-551</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">(Release: 2016-03-22)<br>
+</span><span style="font-weight: bold;"><br></span>
+<hr style="width: 100%; height: 2px;"><br>
+
+v1.4.1-551<br>
+- Bugfix: [channel] Setting new coefficients "channel.coeff = X" set the delays to 0 in some cases.<br>
+- Feature: [channel_builder.get_channels] Store LSPs and SSPs used for coefficient generation to "channel.par"<br>
+- Feature: Added "qf" package for commonly used helper functions.<br>
+<br>
+
+v1.4.0-547<br>
+- Feature: Added initial mmMAGIC LOS probability model and parameters<br>
+- Moved commonly used helper functions to folder "+qf"<br>
+<br>
+
+v1.3.12-545<br>
+- Bugfix: [parameter_set.get_sf_profile] crashed when parameters were given in "track.par", but no map was available in "parameter_set"<br>
+- Bugfix: [array.generte_multi] There was a missing "sin" in the weight calculation.<br>
+- Bugfix: [channel_builder.visualize_clusters] displayed garbage when more than one subpath were selected.<br>
+- Feature: [parameter_set.scenpar] Added additional parameters for scaling of LSPs with frequency<br>
+- Feature: Added support for scaling LSPs with frequency in channel builder and map generation<br>
+- Feature: [layout.randomize_rx_positions] Added option to create only a subset of positions<br>
+- Performance: [channel.merge] Speedup for channels with only one segment<br>
+- Refined 3GPP-3D configuration files<br>
+<br>
+
+v1.3.11-538<br>
+- Bugfix: [channel_builder.get_channels] Crashed with multiple UEs per CB and drifting_precision >= 4<br>
+- Bugfix: [channel_builder.get_channels] Causes wrong power-scaling when WINNER-polarization model was used (adding random phases)<br>
+- Feature: [layout.generate] Added options to create regular layouts with 37 sites (3 rings of interferers)<br>
+- Performance: [channel.merge] Speedup for channels with only one segment<br>
+- Performance: [layout.create_parameter_sets] Now runs faster if same scenarios get assigned to different BS<br>
+<br>
+
+v1.3.10-536<br>
+- Bugfix: [layout.create_parameter_sets] Not creating a copy of the track objects (and copying only the handle instead) could lead to wrong LSPs when used in conjunction with "layout.generate_parameters". In this case, the parameters were written to the track objects and subsequently used in "parameter_set.get_sf_profile". <br>
+- Bugfix: [layout.create_parameter_sets] did not process the "xpr"-fields in "track.par" when assigning subtracks to transmitters.<br>
+- Bugfix (minor) [channel_builder.get_channels] Progress bar was inconsistent (number of dots changed depending on the number of BSs)<br>
+- Bugfix (minor) [parameter_set] Progress bar was inconsistent (number of dots changed depending on the number of BSs)<br>
+- Feature: Added distance-dependent elevation-of-departure spread according to 3GPP TR 36.873<br>
+- Feature: Added 3GPP-3D UMi and UMa parameter tables and PL-Models<br>
+- Feature: [array.generate] Added option to set the element spacing for the "3gpp-3d" antenna model.<br>
+- Feature: [channel_builder.get_los_channels] It is now possible to input parameter_set-arrays<br>
+- Feature: [layout.set_scenario] now supports indoor fractions for the 3GPP-3D-UMi and 3GPP-3D-UMa scenarios.<br>
+<br>
+
+v1.3.9-533<br>
+- Feature: Added 3GPP-3D antenna model<br>
+- Feature: Added method [layout.set_scenario] to assign scenarios to users. This implements the distance-dependent LOS probability for 3GPP-3D-UMi and 3GPP-3D-UMa.<br>
+- Feature: [track.set_scenario] Added option to only create segments, but leave the scenario empty.<br>
+- Added parameter files [config] for 3GPP-3D and METIS 50-70 GHz scenarios.<br>
+- Bugfix: Zero-Elevations spreads (2D simulations) caused crash in channel_builder due to division by zero<br>
+- Bugfix: [layout.get_channels] did not return the parameter maps<br>
+- Feature: Setting "simulation_parameters.map_resolution = 0" now allows to automatically choose the optimal map resolution.<br>
+- Feature: Added options in channel objects to store additional evaluation data.<br>
+<br>
+
+v1.3.8-490<br>
+- Bugfix: [channl.split_tx] returned wrong order of channel objects when scenario names were included in channel.name<br>
+- Bugfix: [layout.get_channels] crashed when using non-default paring<br>
+<br>
+
+v1.3.7-485<br>
+- Bugfix: [channel.interpolate] Fixed several bug in the channel interpolation method that could return wrong values<br>
+<br>
+
+v1.3.6-484<br>
+- Updated documentation<br>
+- Performance: [channel.hdf_load] Added persistent storage for the HDF info to significantly reduce loading speeds.<br>
+<br>
+
+v1.3.5-483<br>
+- Feature [channel] Added attribute "pg" to store the average path gain values.<br>
+- Bugfix: [channel.split_tx] crashed due to wrong object initialization.<br>
+- Bugfix: [layout.get_channels] crashed during interpolation when different speed setting was used.<br>
+- Performance: [channel.interpolate] Increased performance when using spline interpolation.<br>
+<br>
+
+v1.3.4-479<br>
+- Bugfix: [array.interpolate] The planar projection of the element positions caused an error when only a subset of the elements is used for interpoaltion.<br>
+- Bugfix: [array.sub_array] Single-precision flag was ignored.<br>
+- Bugfix: [array.set.elevation_grid] Rounding errors could cause error message.<br>
+- Performance: [channel_builder.get_los_channels] Removed unneccessary computaitons.<br>
+<br>
+
+v1.3.3-478<br>
+- Bugfix: [channel_builder.get_channels] Using "drifting_precision = 0" ignored the distance-dependent phase.<br>
+- Bugfix: [channel_builder.get_los_channels] Using "drifting_precision = 0" ignored the distance-dependent phase.<br>
+- Feature: [array] Added option to do array calculations in single precision. This is slightly faster than using double precision. <br>
+- Performance: [channel_builder.get_los_channels] Several performace updates<br>
+- Performance: [array.interpolate] Some small performance updates.<br>
+<br>
+
+v1.3.2-467<br>
+- Feature: [layout.generate] Added regular cell layout with 6 sectors per BS<br>
+- Update: [layout.visualize] Setting the input parameter "show_names" to 0 also disables the tx-names.<br>
+- Performance: [layout.power_map] Some performance improvements<br>
+<br>
+
+v1.3.1-464<br>
+- Bugfix: [array] Array objects did not allow multipe coupling matrices for one pattern.<br>
+- Bugfix: [channel_builder.get_channels] Height direction was not correctly implemented.<br>
+- Performace: [channel_builder.get_los_channels] Added options for single precision computing and unformatted output. This helps to significantly speed up the computations for large data sets.<br>
+- Corrected many typos in the souce code documentation.<br>
+<br>
+
+v1.3.0-460<br>
+- Added Multi-Bounce model<br>
+- Added Massive MIMO parametrization from measurements in downtown Dresden, Germany at 2.6 GHz<br>
+<br>
+
+<hr style="width: 100%; height: 2px;">
+<span style="font-weight: bold;"><br>
+v1.2.32-458</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">(Release: 2015-03-23)<br>
+</span><span style="font-weight: bold;"><br></span>
+<hr style="width: 100%; height: 2px;"><br>
+
+v1.2.32-458<br>
+- Removed HTML Help (Newer MATLAB Versions dont support it anymore)<br>
+- Updated Documentation<br>
+<br>
+
+v1.2.31-457<br>
+- Feature: [channel.split_tx] Added method to split channel objects based on their transmit antenna indices, e.g. to separate the channels from different sectors of a BS.<br>
+- Bugfix: [array.generate_multi] Input conversion of the tilt angle from [deg] to [rad] was wrong.<br>
+- Bugfix: [layout.power_map] The optional input parameters "tx_power" can not be set as a scalar that will be used for all antennas.<br>
+<br>
+
+v1.2.30-456<br>
+- Feature: [layout.get_channels_seg] Added option to return channels segment-wise. This might help to relax memory requirements.<br>
+- Bugfix: [array.generate] returned an error for the "parametric" antenna if no parameters were given.<br>
+- Bugfix: [layout.generate_parameters] returned an error if pairing matrix was not set to default.<br>
+<br>
+
+v1.2.29-448<br>
+- Update: [array] Added geometric option for the calculation of electric downtilts.<br>
+- Update: [array] Added option to define a antenna pattern by a set of parameters ("parametric" antenna).<br>
+<br>
+
+v1.2.29-441<br>
+- Bugfix: Fixed calculation error in "layout.estimate_memory_usage"<br>
+- Feature: [array] Added method to generate multi-element stacked arrays with electrical downtilt.<br>
+- Feature: [array] Added method to concat arrays.<br>
+- Feature: [array] Added method to compress arrays.<br>
+- Feature: [array] Added method to calculate the antenna element gain.<br>
+<br>
+
+v1.2.28-415<br>
+- Bugfix: [array.rotate_pattern] There was an ambiguity at the poles of the pattern.<br>
+- Update: Added [array.import_pattern] again in order to keep compatible with older versions.<br>
+<br>
+
+v1.2.27-413<br>
+- Feature: [array] Added support for different polarization bases: Cartesian, AZ-EL, EL-AZ<br>
+- Feature: [array] Added method to transform polarization bases.<br>
+- Update: Redesigned the "array.visualize" function.<br>
+- Bugfix: "array.combine_pattern" turned the polarization.<br>
+<br>
+
+v1.2.26-410<br>
+- Bugfix: In versions 1.2.23 - 1.2.25, the circular phases were updated for each tx-antenna recursively, causing a phase rotation.<br>
+<br>
+
+v1.2.25-409<br>
+- Bugfix: "channel_builder.get_channels" ; There was a sign-error in the polarization rotation matrix for the receiver.<br>
+<br>
+
+v1.2.24-408<br>
+- Update: Replaced method to calculate effective radiation patterns "combine_patterns" with a more efficient version. <br>
+- Bugfix: "layout.estimate_memory_usage" crashed.<br>
+<br>
+
+v1.2.23-404<br>
+- Update: Changed the method to calculate the polarization rotation. The orientation vector is not needed anymore and the full complex-valued data from the patterns is used in the model core.<br>
+- Feature: Added method to calculate effective radiation patterns from multi-element arrays with fixed phase offset. <br>
+- Feature: Added elevation direction for the track object.<br>
+- Removed method: array.apply_common_phase<br>
+- Removed method: array.estimate_common_phase<br>
+- Removed method: array.estimate_pol_vector<br>
+- Removed method: array.import_pattern<br>
+- Removed property: array.common_phase<br>
+- Removed property: array.pol_vector<br>
+- Removed property: simulation_parameters.drifting_update_threshold<br>
+- Bugfix: Updating the parameter maps did not invalidate the data stored in the parameter_set object. An update did thus not replace the data with the new map.<br>
+<br>
+
+v1.2.22-393<br>
+- Feature: Changed map storage method in parameter_set in order to reduce memory requirement with large layouts. Maps are now stored in single precision. There is one map per parameter. Maps that don't have a variance (i.e. sigma in scenpar is zero) are stored as scalar.<br>
+- Bugfix: The mus and sigma values in the maps got changed slightly after applying the inter-parameter correlation. This was fixed.<br>
+<br>
+
+v1.2.21-382<br>
+- Bugfix: Identical linear cross-polarization values were used for each cluster.<br>
+- Bugxix: WINNER angular mapping function did not correctly apply the departure- and arrival angles for the LOS cluster.<br>
+- Bugfix: WINNER XPOL-Values were not correctly applied to the channel matrix<br>
+<br>
+
+v1.2.20-374<br>
+- Feature: Added option to generate maps using the algorithm from WINNER.<br>
+<br>
+
+v1.2.19-354<br>
+- Feature: Added rescaling of the angles if single-bounce paths were generated in the multi-bounce model.<br>
+- Updated documentation.<br>
+<br>
+
+v1.2.18-353<br>
+- Feature: Added option to select the new or the old (WINNER) angular mapping function. This allows to use QuaDriga also as a WINNER+ reference implementation.<br>
+- Decluttered cluster visualization function.<br>
+<br>
+
+v1.2.17-352<br>
+- Feature: Added method 'channel_builder.calc_scatter_positions' to return the 3-D coordinates of the scatterers.<br>
+- Bugfix: 'update_drifting' had a sign-error that changed the arrival azimuth angles by 180 degrees.<br>
+<br>
+
+v1.2.15-348<br>
+- Feature: Added visualization function for the scattering clusters to the channel builder.<br>
+- Some minor fixes in the drifting module.<br>
+<br>
+
+v1.2.14-347<br>
+- Feature: Added method to 'channel_builder' that initializes the parameters without calculating the channel coefficients.<br>
+- When 'drifting_precision' is set to 4, departure angles in 'channel_builder' are now correctly initialized.<br>
+- Fix: There was a sign-error in the drifting module. However, this had no effect on the results.<br>
+<br>
+
+v.1.2.13-345<br>
+- Fix: Updated method for calculating the departure and arrival angles. The old method had a strong bias when the KF was too big.<br>
+<br>
+
+v1.2.12-340<br>
+- Bugfix: Channel generation crashed when using drifting precision 2 and only one Rx antenna.<br>
+<br>
+
+v1.2.11-338<br>
+- Feature: Added function "layout.estimate_memory_usage" to get an estimate of the required memory of a simulation before running it.<br>
+<br>
+
+v.1.2.10-336<br>
+- Performace: Further reduced memory requirements by up to 75% when using large antenna arrays with spherical wave propagation. <br>
+- Performace: Omitted many unnecessary computations when using spherical wave propagation. Calculations can be up to 50% faster.<br>
+- Bugfix: "drifting_precision = 4" did not use the correct angles for the Tx-array interpolation. <br>
+- Removed support for NLOS-Scattering radius. This feature was untested and unvalidated. A working implementation for fututre reference can be found in Tag "2014.04.30_v1.2.3-307".<br>
+<br>
+
+v1.2.9-335<br>
+- Fix: Reduced memory requirements of "channel_builder.get_channels" by ~60%. This was due to the calculation of all 20 subpaths for each snapshot. The processing is now done per snapshot in realtime.<br>
+- Removed option "simulation_parameters.use_subpath_output". It is no longer possible to return individual subpaths.<br>
+<br>
+
+v1.2.8-333<br>
+- Updated layout/power_map function<br>
+- Updated example section in function description (example was erroneous previously)<br>
+<br>
+
+v1.2.7-332<br>
+- Feature: Added 'rx_height' parameter to layout/power_map function<br>
+- Bugfix: Fixed error in case of unspecified map boundaries<br>
+<br>
+
+v1.2.6-331<br>
+- Fix: Updated definition of "simulation_parameters.drifting_precision". [2] is now strictly for spherical waves at the Rx and planar waves at the Tx. [4] is now for spherical waves at both, Tx and Rx, but without angle mapping.<br>
+- Bugfix: The angular projection in "array.interpolate" ignored the  given element number. That could lead to wrong departure angles in the data if drifting_precision was set to 2 or 3.<br>
+- Bugfix: New delay combining from v1.2.5 function could produce NaN in the delays.<br>
+<br>
+
+v1.2.5-328<br>
+- Update: When setting "channel.individual_delays" from 1 to 0, a power-weighted average of the delays is calculated. Before, only delay of the first MIMO-Link (Tx=1, Rx=1) was used.<br>
+<br>
+
+v1.2.4-327<br>
+- Feature: Added option to interpolate channels for each antenna element separately<br>
+- Fix: "track.interpolate_positions" could decrease the sampling rate when trying to match start and end pints of a track. Now, the sampling is increased (i.e. more samples are added), but never decreased.<br>
+- Fix: "track.interpolate_movement" now strictly uses the given sampling rate.<br>
+<br>
+
+
+v1.2.3-307<br>
+- Bugfix: Setting path to config file in track objects did not work.<br>
+<br>
+
+v1.2.2-305<br>
+- Exchanged correction function for RMS-Angular spread<br>
+<br>
+
+v1.2.1-301<br>
+- Bugfix: Channel Builder created too large angular spreads.<br>
+- Bugfix: Setting path to config file in track objects did not work.<br>
+<br>
+<br>
+
+
+<hr style="width: 100%; height: 2px;">
+
+
+<span style="font-weight: bold;"><br>
+v1.2.0-283</span><br style="font-weight: bold;">
+<span style="font-weight: bold;">(Release: 2014-02-19)<br>
+</span><span style="font-weight: bold;"><br>
+</span>
+
+<hr style="width: 100%; height: 2px;"><span style="font-weight: bold;"></span><span style="font-weight: bold;"></span><span style="font-weight: bold;"><br>
+</span>v1.2.0-283<br>
+- Bugfix: XPR in output channel coefficients did not match the given
+value in the parameter set when
+"simulation_parameters.use_polarization_rotation" was set to 2.<br>
+<br>
+v1.1.4-272<br>
+- Bugfix: NLOS-Circular XPR was asymmetric for LHCP and RHCP<br>
+- Bugfix: The antenna gain was calculated wrong in "array.visualize" when complex valued field patterns were used.<br>
+<br>
+v1.1.3-268<br>
+- Added "xpr" to track.par<br>
+- Bugfix: "parameter_set.update_parameters" did not select the right
+row from "track.par" if more that one transmitter is present and the
+manual parameter mode was used.<br>
+- Bugfix: "layout.create_parameter_sets(0)" used random variables even if no parameters were generated.<br>
+- Bugfix: "parameter_set.update_parameters" used random variables even if no parameters were generated.<br>
+<br>
+v1.1.2-267<br>
+- Removed "channel.copy_objects"<br>
+- Removed "layout.winner_compatible_output"<br>
+- Bugfix: layout.generate_parameters crashed when shortnames were used<br>
+- Feature: Added "tx_power" option to "layout.power_map"<br>
+- Feature: Added shadow-fading mode to "layout.set_pairing"<br>
+- Update of the documentation<br>
+- Added unit test for "layout.set_pairing"<br>
+<br>
+v1.1.1-266<br>
+- Feature: Added link selection by power level to "layout.set_pairing"<br>
+- Feature: Added the option to have different scenarios for each Tx in "layout.power_map"<br>
+- Performance: Added shortname processing to "layout.create_parameter_sets"<span style="font-weight: bold;"><br>
+<br>
+</span>
+<hr style="width: 100%; height: 2px;"><span style="font-weight: bold;"><br>
+v1.1.0-263</span><br style="font-weight: bold;">
+
+
+<span style="font-weight: bold;">(Release: 2014-01-14)<br>
+</span><span style="font-weight: bold;"><br>
+</span>
+<hr style="width: 100%; height: 2px;"><span style="font-weight: bold;"></span><span style="font-weight: bold;"><br>
+</span>v1.1.0-263<br>
+- Updated help files<br>
+- Bugfix: track.set_scenario crashed with only one segment when "create_segments" was enabled<br>
+<br>
+v1.1.0-261<br>
+- Bugfix: Due to false normalization of the radiation field patterns,
+the antenna gains were wrong, at least for dipoles and custom antennas.<br>
+- Feature: added two new supported array types: 'short-dipole' and
+'half-wave_dipole', due to backward compatibility 'dipole' still exists
+and is the same as 'short-dipole'<br>
+- Feature: Added Rx orientation to "channel_builder.get_los_channels"<br>
+- Feature: Added warning message to "channel_builder.get_los_channels" if "parset.rx_array" has more than one antenna object<br>
+- Feature: Added simplified interface to "parameter_set.update_parameters"<br>
+- Feature: Added parsing of MI-index to "parameter_set.get_pl"<br>
+- Removed "array.winner_compatible_output"<br>
+- Removed "channel_builder.winner_compatible_bulkpar"<br>
+- Removed "channel_builder.set_rx_array"<br>
+- Moved "parameter_set.set_LSP_xcorr_matrix" functionality to "parameter_set.set_par"<br>
+- Moved "parameter_set.set_scenpar" functionality to "parameter_set.set_par"<br>
+- Updated documentation of "channel_builder"<br>
+- Updated documentation of "parameter_set"<br>
+<br>
+v1.0.16-244<br>
+- Bugfix: Output XPR values did not match the give XPR<br>
+- Bugfix: channel.get_version crashed when called on a channel array<br>
+- Added private function "generate_initial_xpr" to channel builder<br>
+- Added property "random_pol" to channel builder for processing the WINNER polarization method<br>
+- Added property "xpr" to parameter set<br>
+- Set default polarization method to 2<br>
+<br>
+v1.0.15-240<br>
+- Feature: Config files can be loaded from current working directory.<br>
+<br>
+v1.0.14-238<br>
+- Bugfix: Calling array constructor did not correctly pass arguments to "array.generate"<br>
+<br>
+v1.0.13-235<br>
+- Feature: Added "layout.set_satellite_pos" to calculate TX coordinates for a given satellite orbital position<br>
+- Feature: Added "street"-grid generator to "track.generate"<br>
+- Feature: Added automatic generation of segments along a longer track to "track.set_scenario"<br>
+<br>
+v1.0.12-231<br>
+- Bugfix: MATLAB did not free memory upon clearing an object.<br>
+<br>
+v1.0.11-219<br>
+- Update: Added optional function to "array.import_pattern" to
+calibrates the phase of the pattern. A common phase offset on both
+polarizations is detected and removed.<br>
+- Update: Added alphabetical sorting at the output of "channel.merge".<br>
+- Update: Added option to calculate the phase in "layout.power_map".<br>
+- Update: "layout" now throws an error if Tx or Rx names are not unique.<br>
+- Feature: Added new method for the polarization calculation.
+"simpar.use_polarization_rotation = 3" now uses Pol-Rot. for the
+geometric pol. and WINNER method for the NLOS components.<br>
+<br>
+v1.0.10-218<br>
+- Feature: Added import function of arbitrary antenna patterns<br>
+- Update: Removed "rhcp-lhcp-dipole" and added "lhcp-rhcp-dipole" to default antenna list. Fixed confusen in LHCP and RHCP.<br>
+- Update: Chnged cost function in "array.estimate_pol_vector" to match cost function of "array.import_pattern"<br>
+- Bugfix: "array.visualize" crashed when patterns are "0"<br>
+<br>
+v1.0.9-216<br>
+- Bugfix: channel.merge crashed when only one path was present<br>
+- Bugfix: layout.power_map changed value of simulation_parameters.drifting_precision<br>
+- Update: Changed layout.power_map to return maps for each antenna-pair separately<br>
+- Update: Changed "track" interface to preserve scenario information when updating segments<br>
+- Added unit test for channel merger<br>
+<br>
+v1.0.8-194<br>
+- Bugfix: Manual parameter inferface could apply path gain twice<br>
+<br>
+v1.0.7-191<br>
+- Bugfix: Deleys could be initialized wrongly when setting drifting precision to 2 or 3<br>
+- Set LOS-scatter radius in all config-files to 0 (this feature was not part of WINNER and needs further testing)<br>
+<br>
+v1.0.6-174<br>
+- Bugfix: channel_builder.get_los_channels ignored array geometry<br>
+- Bugfix: fixed a bug, which occurred in the spline_2d function in case
+there is only a single user and the subset of the maps is only 4
+samples wide, by increasing the size of the map subset by a sample in
+each direction<br>
+- Changed structure in "simulation_parameters" class definition<br>
+<br>
+v1.0.5-161<br>
+- Bugfix: Default Tx names now have the format "Tx01" instead of "Tx1".
+This caused the channels to be out of order when morae then 10 Txs were
+used.<br>
+<br>
+v1.0.4-153<br>
+- Feature: Speed profiles are now processed automatically in "layout.get_channels"<br>
+<br>
+v1.0.3-152<br>
+- Feature: Manual Parameter Interface<br>
+- Bugfix: Setting the individual-delays flag in "channel"-objects failed for SISO channels<br>
+- Performance: Added option to skip in-depth checking of config-files <br>
+- Improved comments and variable names in "channel.merge"<br>
+- Moved SF-scaling into "parameter_set.get_pl"<br>
+- Moved 2D spline interpolation in "parameter_set" into a separate subfunction<br>
+- "parameter_set" now uses the same spline interpolation for "update_parameters" and "get_sf_profile"<br>
+<br>
+v1.0.2-146<br>
+- Feature: Added support for short names in config files.<br>
+<br>
+v1.0.1-145<br>
+- Bugfix (major): K-Factor variations also scale shadow fading (error in KF-implementation)<br>
+- Bugfix (minor): WINNER path loss formula now uses ground distance<br>
+- Bugfix (minor): WINNER path loss formula now ignores MT heights lower than 1.5 m (no NaNs in output anymore)<br>
+- Bugfix (minor): layout.get_channels ignored "show_progress_bars"<br>
+- Feature: Disabling track names in "layout.visualize" is now possible (less clutter)<br>
+- Added config-files from WINNER+ and MIMOSA<br><span style="font-weight: bold;"><br>
+</span>
+<hr style="width: 100%; height: 2px;"><span style="font-weight: bold;"><br>
+v1.0.0-139</span><br style="font-weight: bold;">
+
+<span style="font-weight: bold;">(Release: 2013-01-13)<br>
+</span><br>
+<hr style="width: 100%; height: 2px;">QuaDRiGa Copyright (C) 2011-2015
+Fraunhofer Heinrich Hertz Institute<br>
+e-mail: quadriga@hhi.fraunhofer.de<br>
+<br>
+Fraunhofer Heinrich Hertz Institute<br>
+Wireless Communication and Networks<br>
+Einsteinufer 37, 10587 Berlin, Germany<br>
+&nbsp;
+<br>
+This program is free software: you can redistribute it and/or modify<br>
+it under the terms of the GNU Lesser General Public License as
+published by<br>
+the Free Software Foundation, either version 3 of the License, or<br>
+(at your option) any later version.<br>
+&nbsp;<br>
+This program is distributed in the hope that it will be useful,<br>
+but WITHOUT ANY WARRANTY; without even the implied warranty of<br>
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.&nbsp; See the<br>
+GNU General Public License for more details.<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <br>
+You should have received a copy of the GNU General Public License<br>
+along with this program.&nbsp; If not, see
+&lt;http://www.gnu.org/licenses/&gt;.<br>
+
+</body></html>
