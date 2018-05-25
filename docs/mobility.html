@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MATLAB Module Index &mdash; MONSTER 1.0 documentation</title>
+  <title>Mobility &mdash; MONSTER 1.0 documentation</title>
   
 
   
@@ -29,9 +29,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
- 
-
-
+    <link rel="next" title="Traffic" href="traffic.html" />
+    <link rel="prev" title="Models" href="chmodels.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -84,11 +83,11 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="enb.html">EvolvedNodeB</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ch.html">Channel</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mobility.html">Mobility</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mobility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="traffic.html">Traffic</a></li>
 </ul>
 
@@ -135,10 +134,14 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>MATLAB Module Index</li>
+      <li>Mobility</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/mobility.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -150,77 +153,68 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+  <div class="section" id="mobility">
+<h1>Mobility<a class="headerlink" href="#mobility" title="Permalink to this headline">¶</a></h1>
+<p>MONSTeR currently supports 1 mobility model</p>
+<ul class="simple">
+<li><cite>Random walk Pedestrian</cite></li>
+</ul>
+<p>Directions are defined as</p>
+<a class="reference internal image-reference" href="resources/graphics/mobility_directions.svg"><div align="center" class="align-center"><img alt="resources/graphics/mobility_directions.svg" src="resources/graphics/mobility_directions.svg" width="300" /></div>
+</a>
+<dl class="class">
+<dt id="mobility.MMobility">
+<em class="property">class </em><code class="descclassname">mobility.</code><code class="descname">MMobility</code><span class="sig-paren">(</span><em>scenario</em>, <em>velocity</em>, <em>seed</em>, <em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directions defined as:</p>
+<ul class="simple">
+<li>1 = N</li>
+<li>2 = W</li>
+<li>3 = S</li>
+<li>4 = E</li>
+</ul>
+<dl class="method">
+<dt id="mobility.MMobility.randomWalkPedestrian">
+<code class="descname">randomWalkPedestrian</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility.randomWalkPedestrian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk. 
+Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in <code class="xref mat mat-meth docutils literal notranslate"><span class="pre">MMobility.setParameters()</span></code></p>
+</dd></dl>
 
-   <h1>MATLAB Module Index</h1>
+<dl class="method">
+<dt id="mobility.MMobility.setParameters">
+<code class="descname">setParameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility.setParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets parameters for mobility, default values are given as</p>
+<ul class="simple">
+<li>Road width = 10m</li>
+<li>Lane width = Road width / 3</li>
+<li>Wall distance = 1m</li>
+</ul>
+<p>For the scenario of <strong>pedestrian</strong> the parameters are given as</p>
+<ul class="simple">
+<li>pedestrianTurnPause = 0.02 s</li>
+<li>pedestrianCrossingPause = 5 s</li>
+<li>turningDistance = 2 * wall distance</li>
+<li>crossingDistance = road width + 2*wall distance</li>
+</ul>
+</dd></dl>
 
-   <div class="modindex-jumpbox">
-   <a href="#cap-c"><strong>c</strong></a> | 
-   <a href="#cap-e"><strong>e</strong></a> | 
-   <a href="#cap-t"><strong>t</strong></a> | 
-   <a href="#cap-u"><strong>u</strong></a>
-   </div>
+</dd></dl>
 
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-c"><td></td><td>
-       <strong>c</strong></td><td></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-       <td>
-       <a href="ch.html#module-ch"><code class="xref">ch</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="chmodels.html#module-ch.SONOHImodels"><code class="xref">ch.SONOHImodels</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="chmodels.html#module-ch.SONOHImodels.eHATA"><code class="xref">ch.SONOHImodels.eHATA</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="chmodels.html#module-ch.SONOHImodels.ITUR1546"><code class="xref">ch.SONOHImodels.ITUR1546</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="chmodels.html#module-ch.SONOHImodels.WINNER"><code class="xref">ch.SONOHImodels.WINNER</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-e"><td></td><td>
-       <strong>e</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="enb.html#module-enb"><code class="xref">enb</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-t"><td></td><td>
-       <strong>t</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="traffic.html#module-traffic"><code class="xref">traffic</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-u"><td></td><td>
-       <strong>u</strong></td><td></td></tr>
-     <tr>
-       <td></td>
-       <td>
-       <a href="ue.html#module-ue"><code class="xref">ue</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+</div>
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="traffic.html" class="btn btn-neutral float-right" title="Traffic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="chmodels.html" class="btn btn-neutral" title="Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

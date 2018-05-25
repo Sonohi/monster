@@ -91,6 +91,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="mobility.html">Mobility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="traffic.html">Traffic</a></li>
 </ul>
 
@@ -326,47 +327,6 @@
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>A simple example can be found in <cite>ch/examples/simple_setup.m</cite></p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">clear</span> <span class="n">all</span>
-<span class="n">close</span> <span class="n">all</span>
-<span class="n">load</span><span class="p">(</span><span class="s">&#39;SimulationParameters.mat&#39;</span><span class="p">);</span>
-<span class="n">Param</span><span class="p">.</span><span class="n">numMacro</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">Param</span><span class="p">.</span><span class="n">numMicro</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="n">Param</span><span class="p">.</span><span class="n">numUsers</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="n">Param</span><span class="p">.</span><span class="n">channel</span><span class="p">.</span><span class="n">region</span> <span class="p">=</span> <span class="s">&#39;Suburban&#39;</span><span class="p">;</span>
-<span class="n">Param</span><span class="p">.</span><span class="n">channel</span><span class="p">.</span><span class="n">modeDL</span> <span class="p">=</span> <span class="s">&#39;ITU1546&#39;</span><span class="p">;</span>
-
-<span class="c">% Create Stations and Users</span>
-<span class="p">[</span><span class="n">Station</span><span class="p">,</span> <span class="n">Param</span><span class="p">.</span><span class="n">AreaPlot</span><span class="p">,</span> <span class="n">Param</span><span class="p">]</span> <span class="p">=</span> <span class="n">createBaseStations</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
-<span class="n">User</span> <span class="p">=</span> <span class="n">createUsers</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
-
-<span class="c">% Create Channel scenario</span>
-<span class="hll"><span class="n">Channel</span> <span class="p">=</span> <span class="n">ChBulk_v2</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
-</span>
-
-<span class="n">Station</span><span class="p">.</span><span class="n">Users</span> <span class="p">=</span> <span class="n">struct</span><span class="p">(</span><span class="s">&#39;UeId&#39;</span><span class="p">,</span> <span class="n">User</span><span class="p">.</span><span class="n">NCellID</span><span class="p">,</span> <span class="s">&#39;CQI&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;RSSI&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
-<span class="n">Station</span><span class="p">.</span><span class="n">ScheduleDL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">).</span><span class="n">UeId</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">NCellID</span><span class="p">;</span>
-<span class="n">User</span><span class="p">.</span><span class="n">ENodeBID</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">NCellID</span><span class="p">;</span>
-
-<span class="c">% A full LTE frame is stored in Tx.Frame which can be used to debug and</span>
-<span class="c">% test.</span>
-<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">Waveform</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">Frame</span><span class="p">;</span>
-<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">WaveformInfo</span> <span class="p">=</span><span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">FrameInfo</span><span class="p">;</span>
-<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">ReGrid</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">FrameGrid</span><span class="p">;</span>
-
-<span class="hll"><span class="c">% Traverse channel</span>
-</span><span class="hll"><span class="n">Channel</span> <span class="p">=</span> <span class="n">Channel</span><span class="p">.</span><span class="n">setupChannelDL</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span><span class="n">User</span><span class="p">);</span>
-</span><span class="hll"><span class="p">[</span><span class="o">~</span><span class="p">,</span> <span class="n">User</span><span class="p">]</span> <span class="p">=</span> <span class="n">Channel</span><span class="p">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span><span class="n">User</span><span class="p">,</span><span class="s">&#39;downlink&#39;</span><span class="p">);</span>
-</span>
-<span class="c">% Get offset</span>
-<span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Offset</span> <span class="p">=</span> <span class="n">lteDLFrameOffset</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span><span class="p">);</span>
-
-<span class="c">% Apply offset</span>
-<span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Offset</span><span class="p">:</span><span class="k">end</span><span class="p">);</span>
-
-<span class="c">% UE reference measurements</span>
-<span class="n">User</span><span class="p">.</span><span class="n">Rx</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">referenceMeasurements</span><span class="p">(</span><span class="n">Station</span><span class="p">);</span>
-</pre></div>
-</div>
 </div>
 </div>
 

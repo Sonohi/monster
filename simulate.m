@@ -52,6 +52,15 @@ for iRound = 0:(Param.schRounds-1)
 	% allocate PRBs through the scheduling function per each station
 	sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
 	
+	% -----------
+	% UE MOVEMENT
+	% -----------
+	sonohilog('UE movement', 'NFO');
+	for iUser = 1:length(Users)
+		Users(iUser) = Users(iUser).move(iRound);
+	end
+	
+	
 	% refresh UE-eNodeB association
 	simTime = iRound*10^-3;
   Channel.SimTime = simTime;
@@ -165,20 +174,16 @@ for iRound = 0:(Param.schRounds-1)
 	sonohilog('UE-space metrics recording', 'NFO');
 	SimulationMetrics = SimulationMetrics.recordUeMetrics(Users, iRound);
 
-	% -----------
-	% UE MOVEMENT
-	% -----------
-	sonohilog('UE movement', 'NFO');
-	for iUser = 1:length(Users)
-		Users(iUser) = move(Users(iUser), simTime, Param);
-	end
-	
+
 	% Plot resource grids for all users
 	if Param.draw
 		plotConstDiagramDL(Stations,Users, Param);
 		plotSpectrums(Users,Stations, Param);
     UEsummaryplt.UEBulkPlot(Users, SimulationMetrics, iRound);
     ENBsummaryplt.ENBBulkPlot(Stations, SimulationMetrics, iRound);
+		for iUser = 1:length(Users)
+			Users(iUser).plotUEinScenario(Param);
+		end
     drawnow
 	end
 	
