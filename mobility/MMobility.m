@@ -27,15 +27,15 @@ classdef MMobility < handle
 		buildingFootprints;
 		movementSpeed;
 		distanceMoved;
-		eastwest = [2, 4];
-		northsouth = [1, 3];
+		westEast = [2, 4];
+		northSouth = [1, 3];
 	end
 
 	methods
 		function obj = MMobility(scenario, velocity, seed, Param)
 			% Constructor
 			if ~strcmp(scenario, 'pedestrian')
-				sonohilog('Mobility scenario not supported','ERR')
+				sonohilog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
 			end
 			
 			% Set arguments
@@ -274,35 +274,35 @@ classdef MMobility < handle
 		end
 		
 		function direction = getMovementDirection(obj, stateVar)
-			if any(ismember(obj.northsouth, stateVar.currentSide))
-				direction = obj.eastwest(randi(2));
+			if any(ismember(obj.northSouth, stateVar.currentSide))
+				direction = obj.westEast(randi(2));
 			else
-				direction = obj.northsouth(randi(2));
+				direction = obj.northSouth(randi(2));
 			end
 
 		end
 		
-		function Side = getBuildingSide(obj, stateVar, newPos)
+		function side = getBuildingSide(obj, stateVar, newPos)
 			if round(newPos(1),5) < round(stateVar.currentBuilding(1),5)
-				Side = 2;
+				side = 2;
 			elseif round(newPos(1),5) > round(stateVar.currentBuilding(3),5)
-				Side = 4;
+				side = 4;
 			elseif round(newPos(2),5) < round(stateVar.currentBuilding(2),5)
-				Side = 3;
+				side = 3;
 			elseif round(newPos(2),5) > round(stateVar.currentBuilding(4),5)
-				Side = 1;
+				side = 1;
 			end
 		end
 		
 		function [turn, cross, directionNew] = decideTurnOrCross(obj, stateVar, newPos)
 				% Pick new direction, not possible to go back.
 				possibledirections = [];
-				if any(ismember(obj.northsouth, stateVar.currentDirection))
+				if any(ismember(obj.northSouth, stateVar.currentDirection))
 					possibledirections = [possibledirections stateVar.currentDirection];
-					possibledirections = [possibledirections obj.eastwest];
+					possibledirections = [possibledirections obj.westEast];
 				else
 					possibledirections = [possibledirections stateVar.currentDirection];
-					possibledirections = [possibledirections obj.northsouth];
+					possibledirections = [possibledirections obj.northSouth];
 				end
 
 				% Checking the current position against the building grid to ensure we're not moving beyond.
