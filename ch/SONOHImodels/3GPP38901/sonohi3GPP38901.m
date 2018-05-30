@@ -11,13 +11,96 @@ classdef sonohi3GPP38901 < sonohiBase
 % * 'RMa' - Rural Macro
 % * 'UMa' - Urban Macro
 % * 'UMi' - Urban Micro
+
+properties
+	ShadowMaps = struct();
+end
+
 methods
 
     function obj = sonohi3GPP38901(Channel, Chtype)
       % Inherits :class:`ch.SONOHImodels.sonohiBase`
-      obj = obj@sonohiBase(Channel, Chtype);
-    end
+			obj = obj@sonohiBase(Channel, Chtype);
 
+		end
+
+		function setupShadowing(obj, Stations)
+			% For each base station, construct a shadow map
+			for stationIdx = 1:length(Stations)
+				station = Stations(stationIdx);
+				stationString = sprintf('station%i',station.NCellID);
+
+				obj.ShadowMaps.(stationString) = struct();
+
+				% Generate map for station based on station class
+				[LOSmap, NLOSmap, axisLOS, axisNLOS] = obj.generateShadowMap(station);
+				obj.ShadowMaps.(stationString).LOS = LOSmap;
+				obj.ShadowMaps.(stationString).NLOS = NLOSmap;
+				obj.ShadowMaps.(stationString).axisLOS = axisLOS;
+				obj.ShadowMaps.(stationString).axisNLOS = axisNLOS;
+
+			end
+		end
+		
+		function [mapLOS, mapNLOS, axisLOS, axisNLOS] = generateShadowMap(obj, station)
+
+			% Get frequency in MHz
+			areaType = obj.getAreaType(station);
+			fMHz = station.DlFreq; % Freqency in MHz
+			radius = obj.Channel.getAreaSize(); % Get range of grid
+			switch areaType
+				case 'RMa'
+					sigmaSFLOS = 5;
+					sigmaSFNLOS = 8;
+					dCorrLOS = 37;
+					dCorrNLOS = 120;
+				case 'UMa'
+					sigmaSFLOS = 4;
+					sigmaSFNLOS = 6;
+					dCorrLOS = 37;
+					dCorrNLOS = 50;
+				case 'UMi'
+					sigmaSFLOS = 4;
+					sigmaSFNLOS = 7.82;
+					dCorrLOS = 10;
+					dCorrNLOS = 13;
+			end
+			[mapLOS, xaxis, yaxis] = obj.spartialCorrMap(sigmaSFLOS, dCorrLOS, fMHz, radius, 'interpolation');
+			axisLOS = [xaxis; yaxis];
+			[mapNLOS, xaxis, yaxis] = obj.spartialCorrMap(sigmaSFNLOS, dCorrNLOS, fMHz, radius, 'interpolation');
+			axisNLOS = [xaxis; yaxis];
+		end
+
+
+		function [map, xaxis, yaxis] = spartialCorrMap(obj, sigmaSF, dCorr, fMHz, radius, method)
+
+			switch method
+			case 'interpolation'
+				lambdac=300/fMHz;   % wavelength in m
+				interprate=round(dCorr/lambdac);
+				Lcorr=lambdac*interprate;
+				Nsamples=round(radius/Lcorr);
+				
+				map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
+				xaxis=[-Nsamples:Nsamples-1]*Lcorr;
+				yaxis=[-Nsamples:Nsamples-1]*Lcorr;
+			end
+			
+
+		end
+
+
+		function areatype = getAreaType(obj,Station)
+			% TODO: This mapping can be generalized and moved to a parent
+			% stucture
+			if strcmp(Station.BsClass, 'macro')
+				areatype = obj.Channel.Region.macroScenario; % 'RMa', 'UMa', 'UMi'
+			elseif strcmp(Station.BsClass,'micro')
+				areatype = obj.Channel.Region.microScenario;
+			elseif strcmp(Station.BsClass,'pico')
+				areatype = obj.Channel.Region.picoScenario;
+			end
+		end
 
     function [lossdB] = computePathLoss(obj, TxNode, RxNode)
 			% Computes path loss. uses the following parameters
@@ -36,16 +119,8 @@ methods
       hUt = RxNode.Position(3);
 			distance2d =  obj.Channel.getDistance(TxNode.Position(1:2),RxNode.Position(1:2));
       distance3d = obj.Channel.getDistance(TxNode.Position,RxNode.Position);
-			
-			% TODO: This mapping can be generalized and moved to a parent
-			% stucture
-			if strcmp(TxNode.BsClass, 'macro')
-				areatype = obj.Channel.Region.macroScenario; % 'RMa', 'UMa', 'UMi'
-			elseif strcmp(TxNode.BsClass,'micro')
-				areatype = obj.Channel.Region.microScenario;
-			elseif strcmp(TxNode.BsClass,'pico')
-				areatype = obj.Channel.Region.picoScenario;
-			end
+
+			areatype = obj.getAreaType(TxNode);
 			seed = obj.Channel.getLinkSeed(RxNode);
 			LOS = obj.Channel.isLinkLOS(TxNode, RxNode, false);
 			shadowing = obj.Channel.enableShadowing;

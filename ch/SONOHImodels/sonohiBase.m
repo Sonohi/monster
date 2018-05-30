@@ -1,4 +1,4 @@
-classdef sonohiBase
+classdef sonohiBase < handle
   % This is the parent class for all channel modelling. Wrappers for channel models should be written using this structure. For examples on how to do so see the other implementations.
 
   properties
@@ -83,9 +83,13 @@ classdef sonohiBase
         % Write changes to user object in array.
         users(find([Users.NCellID] == Pairing(2,i))) = user;
       end
-    end
+		end
 
-
+		function setupShadowing(obj, varargin)
+			% Function needs overwrite from models to enable shadowing
+			sonohilog(sprintf('No setupShadowing method detected on chosen model %s',obj.Chtype),'ERR');
+		end
+		
     function RxNode = addPropDelay(obj,  TxNode, RxNode)
       % Adds propagation delay based on distance and frequency
       RxNode.Rx.PropDelay = obj.Channel.getDistance(TxNode.Position, RxNode.Position);

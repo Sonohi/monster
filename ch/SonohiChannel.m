@@ -1,4 +1,4 @@
-classdef SonohiChannel
+classdef SonohiChannel < handle
   % This is the base coordinator class for the physical channels.
   %
   % Currently supported models: [:attr:`winner`, :attr:`eHATA`, :attr:`ITU1546`, :attr:`B2B`]
@@ -31,7 +31,7 @@ classdef SonohiChannel
   end
   
   methods
-    function obj = SonohiChannel(Param)
+    function obj = SonohiChannel(Stations, Users, Param)
       obj.DLMode = Param.channel.modeDL;
       obj.ULMode = Param.channel.modeUL;
       obj.Region = Param.channel.region;
@@ -41,6 +41,15 @@ classdef SonohiChannel
 			obj.enableShadowing = Param.channel.enableShadowing;
       obj.BuildingFootprints = Param.buildings;
 			obj.iRound = 0;
+			
+			% Get class for chosen model for downlink
+			obj.DownlinkModel = obj.findChannelClass('downlink');
+			obj.UplinkModel = obj.findChannelClass('uplink');
+			
+			if obj.enableShadowing
+				obj.DownlinkModel.setupShadowing(Stations)
+			end
+			
     end
     
   end
@@ -53,30 +62,7 @@ classdef SonohiChannel
       % Get distance between txPos and rxPos
       distance = norm(rxPos-txPos);
     end
-    
-    function thermalNoise = ThermalNoise(NDLRB)
-      % Calculate thermalnoise based on bandwidth
-      switch NDLRB
-        case 6
-          BW = 1.4e6;
-        case 15
-          BW = 3e6;
-        case 25
-          BW = 5e6;
-        case 50
-          BW = 10e6;
-        case 75
-          BW = 15e6;
-        case 100
-          BW = 20e6;
-      end
-      
-      T = 290;
-      k = physconst('Boltzmann');
-      thermalNoise = k*T*BW;
-    end
-    
-    
+   
     
     function [stations, users] = getAssociated(Stations,Users)
       % Returns stations and users that are associated
@@ -101,34 +87,65 @@ classdef SonohiChannel
   end
   
   methods
-                        
-  function chModel = setupChannel(obj,Stations,Users,chtype)
-    % Setup association to traverse
-    switch chtype
-        case 'downlink'
-            mode = obj.DLMode;
-        case 'uplink'
-            mode = obj.ULMode;
-    end
-    
-    if strcmp(mode,'winner')
-        WINNER = sonohiWINNERv2(Stations,Users, obj,chtype);
-        chModel = WINNER.setup();
-    elseif strcmp(mode,'eHATA')
-        chModel = sonohieHATA(obj, chtype);
-    elseif strcmp(mode,'ITU1546')
-        chModel = sonohiITU(obj, chtype);
-    elseif strcmp(mode, 'B2B')
-        chModel = sonohiB2B(obj, chtype);
-		elseif strcmp(mode, '3GPP38901')
+		
+		function chModel = findChannelClass(obj,chtype)
+			% Setup association to traverse
+			switch chtype
+				case 'downlink'
+					mode = obj.DLMode;
+				case 'uplink'
+					mode = obj.ULMode;
+			end
+			
+			if strcmp(mode,'eHATA')
+				chModel = sonohieHATA(obj, chtype);
+			elseif strcmp(mode,'ITU1546')
+				chModel = sonohiITU(obj, chtype);
+			elseif strcmp(mode, 'B2B')
+				chModel = sonohiB2B(obj, chtype);
+			elseif strcmp(mode, '3GPP38901')
 				chModel = sonohi3GPP38901(obj, chtype);
-    else
-        sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
-    end
-    
-    
-    
-end
+			else
+				sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
+			end
+			
+			
+			
+		end
+
+		function area = getAreaSize(obj)
+			extraSamples = 400; %meters
+			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples; 
+		end
+		
+                        
+%   function chModel = setupChannel(obj,Stations,Users,chtype)
+%     % Setup association to traverse
+%     switch chtype
+%         case 'downlink'
+%             mode = obj.DLMode;
+%         case 'uplink'
+%             mode = obj.ULMode;
+%     end
+%     
+%     if strcmp(mode,'winner')
+%         WINNER = sonohiWINNERv2(Stations,Users, obj,chtype);
+%         chModel = WINNER.setup();
+%     elseif strcmp(mode,'eHATA')
+%         chModel = sonohieHATA(obj, chtype);
+%     elseif strcmp(mode,'ITU1546')
+%         chModel = sonohiITU(obj, chtype);
+%     elseif strcmp(mode, 'B2B')
+%         chModel = sonohiB2B(obj, chtype);
+% 		elseif strcmp(mode, '3GPP38901')
+% 				chModel = sonohi3GPP38901(obj, chtype);
+%     else
+%         sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
+% 		end
+%     
+%     
+%     
+% 	end
 
     function [Stations, Users,obj] = runModel(obj,Stations,Users, chtype)
       validateChannel(obj);

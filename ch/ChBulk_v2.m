@@ -2,9 +2,9 @@ classdef ChBulk_v2 < SonohiChannel
 	% This is the main API class for interfacing with implemented models.
 	methods
 
-		function obj = ChBulk_v2(Param)
+		function obj = ChBulk_v2(Stations, Users, Param)
 			% See :class:`SonohiChannel` for the structure of :attr:`Param`
-			obj = obj@SonohiChannel(Param);
+			obj = obj@SonohiChannel(Stations, Users, Param);
 		end
 		
 		
@@ -80,17 +80,17 @@ classdef ChBulk_v2 < SonohiChannel
             obj.DownlinkModel = [];
             obj.UplinkModel = [];
         end
-        
-        function obj = setupChannelDL(obj,Stations,Users)
-            % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
-            %
-            % :param Stations: 
-            % :type Stations: :class:`enb.EvolvedNodeB`
-            % :param Users: 
-            % :type Users: :class:`ue.UserEquipment`
-            [stations, users] = obj.getAssociated(Stations, Users);
-            obj.DownlinkModel = obj.setupChannel(stations,users,'downlink');
-        end
+%         
+%         function obj = setupChannelDL(obj,Stations,Users)
+%             % Setup channel given the DL schedule, e.g. the association to simulate when traversed.
+%             %
+%             % :param Stations: 
+%             % :type Stations: :class:`enb.EvolvedNodeB`
+%             % :param Users: 
+%             % :type Users: :class:`ue.UserEquipment`
+%             [stations, users] = obj.getAssociated(Stations, Users);
+%             obj.DownlinkModel = obj.setupChannel(stations,users,'downlink');
+%         end
         
         function obj = setupChannelUL(obj, Stations, Users,varargin)
             % Setup channel given the UL schedule, e.g. the association to simulate when traversed.

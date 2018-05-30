@@ -44,8 +44,7 @@ while true
 		
     % Compute impairments
     try
-        channel = channel.setupChannelDL(station,sampleUser);
-        [~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
+				[~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
     catch ME
         sonohilog(sprintf('Channel error, %s',ME.message),'WRN')
         break

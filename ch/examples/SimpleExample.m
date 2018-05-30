@@ -6,6 +6,7 @@ Param.numMicro = 0;
 Param.numPico = 0;
 Param.numUsers = 1;
 Param.channel.region = 'Suburban';
+Param.channel.enableShadowing = false;
 Param.channel.modeDL = 'ITU1546';
 
 
@@ -19,7 +20,7 @@ end
 User = createUsers(Param);
 
 % Create Channel scenario
-Channel = ChBulk_v2(Param);
+Channel = ChBulk_v2(Station, User, Param);
 
 
 Station.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
@@ -33,7 +34,6 @@ Station.Tx.WaveformInfo =Station.Tx.FrameInfo;
 Station.Tx.ReGrid = Station.Tx.FrameGrid;
 
 % Traverse channel
-Channel = Channel.setupChannelDL(Station,User);
 [~, User] = Channel.traverse(Station,User,'downlink');
 
 % Get offset
