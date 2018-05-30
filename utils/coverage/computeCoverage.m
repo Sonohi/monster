@@ -58,7 +58,7 @@ while true
 
     % Demod waveform
 		[~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
-		if Param.draw
+		if param.draw
 			cdObj(reshape(sampleUser.Rx.Subframe,size(sampleUser.Rx.Subframe,1)* size(sampleUser.Rx.Subframe,2),1))
 		end
     %plot(sampleUser.Rx.Subframe,'.')
