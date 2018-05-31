@@ -62,7 +62,9 @@ classdef UserEquipment
 				'lineWidth', 2);
 			obj.Mobility = MMobility('pedestrian', 1, Param.mobilitySeed * userId, Param);
 			obj.Position = [obj.Mobility.Trajectory(1,:), Param.ueHeight];
-			obj.plotUEinScenario(Param);
+			if Param.draw
+				obj.plotUEinScenario(Param);
+			end
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;

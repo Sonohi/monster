@@ -1,4 +1,4 @@
-function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS, shadowing, seed)
+function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS)
 % http://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf
 % V1 - implemeted base RMa, UMa, and UMi 
 %
@@ -136,11 +136,6 @@ switch Scenario
 		
 		
 		
-end
-
-if shadowing
-	rng(seed)
-	lossdB = lossdB + std_sf*randn(1,1);
 end
 
 end

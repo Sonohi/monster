@@ -89,6 +89,19 @@ methods
 
 		end
 
+		function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
+			stationString = sprintf('station%i',stationID);
+			if LOS
+				map = obj.ShadowMaps.(stationString).LOS;
+				axisXY = obj.ShadowMaps.(stationString).axisLOS;
+			else
+				map = obj.ShadowMaps.(stationString).NLOS;
+				axisXY = obj.ShadowMaps.(stationString).axisNLOS;
+			end
+			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+
+		end
+
 
 		function areatype = getAreaType(obj,Station)
 			% TODO: This mapping can be generalized and moved to a parent
@@ -126,8 +139,12 @@ methods
 			shadowing = obj.Channel.enableShadowing;
 			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
 			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
-      lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS, shadowing, seed);
-    end
+      lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+		
+			if shadowing
+				lossdB = lossdB + obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+			end
+		end
 
   end
 
