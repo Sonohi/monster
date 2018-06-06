@@ -122,7 +122,6 @@ for iRound = 0:(Param.schRounds-1)
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
   % Setup the channel based on scheduled users
-	Channel = Channel.setupChannelDL(Stations,Users);
 	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.modeDL), 'NFO');
 	[Stations, Users] = Channel.traverse(Stations, Users, 'downlink');
 	
@@ -199,7 +198,6 @@ for iRound = 0:(Param.schRounds-1)
 	for iStation = 1:length(Stations)
 		Stations(iStation) = Stations(iStation).reset(iRound + 1);
 	end
-	Channel = Channel.resetChannelModels();
 	
 end % end round
 

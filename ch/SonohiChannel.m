@@ -1,8 +1,8 @@
 classdef SonohiChannel < handle
   % This is the base coordinator class for the physical channels.
   %
-  % Currently supported models: [:attr:`winner`, :attr:`eHATA`, :attr:`ITU1546`, :attr:`B2B`]
-  %
+  % Currently supported models: [:attr:`winner`, :attr:`eHATA`, :attr:`ITU1546`, :attr:`3GPP38901`, :attr:`B2B`]
+	%
   % .. warning:: 'uplink' is currently only available in B2B mode.
   %
   % The constructor requires the following options:
@@ -14,7 +14,9 @@ classdef SonohiChannel < handle
   % :Param.Seed: (int) Base seed for the channel
   % :Param.channel.enableFading: (bool) Enable/disable fading
   % :Param.channel.enableInterference: (bool) Enable/disable interference
-  % :Param.buildings: (optional) Needed for :obj:`winner` to determine LOS. Structure containing footprints of buildings, given by (x0, y0, x1, y1) coordinates.
+	% :Param.enableShadowing: (bool) Enable/disable spartial correlated shadowing, currently only supported using :attr:`3GPP38901`
+	% :Param.LOSMethod: (str) `'fresnel'` or `'3GPP38901-probability'`, See :meth:`ch.SonohiChannel.isLinkLOS` for more info.
+	% :Param.buildings: (optional) Needed for `'fresnel'` LOSMethod, Structure containing footprints of buildings, given by (x0, y0, x1, y1) coordinates.
   properties
     ULMode;
     DLMode;
@@ -27,6 +29,7 @@ classdef SonohiChannel < handle
     enableFading;
     enableInterference;
 		enableShadowing;
+		LOSMethod;
     BuildingFootprints % Matrix containing footprints of buildings
   end
   
@@ -34,7 +37,8 @@ classdef SonohiChannel < handle
     function obj = SonohiChannel(Stations, Users, Param)
       obj.DLMode = Param.channel.modeDL;
       obj.ULMode = Param.channel.modeUL;
-      obj.Region = Param.channel.region;
+			obj.Region = Param.channel.region;
+			obj.LOSMethod = Param.channel.LOSMethod;
       obj.Seed = Param.seed;
       obj.enableFading = Param.channel.enableFading;
       obj.enableInterference = Param.channel.enableInterference;
@@ -88,6 +92,18 @@ classdef SonohiChannel < handle
   
   methods
 		
+		
+		function areatype = getAreaType(obj,Station)
+			if strcmp(Station.BsClass, 'macro')
+				areatype = obj.Region.macroScenario; 
+			elseif strcmp(Station.BsClass,'micro')
+				areatype = obj.Region.microScenario;
+			elseif strcmp(Station.BsClass,'pico')
+				areatype = obj.Region.picoScenario;
+			end
+		end
+
+		
 		function chModel = findChannelClass(obj,chtype)
 			% Setup association to traverse
 			switch chtype
@@ -105,6 +121,8 @@ classdef SonohiChannel < handle
 				chModel = sonohiB2B(obj, chtype);
 			elseif strcmp(mode, '3GPP38901')
 				chModel = sonohi3GPP38901(obj, chtype);
+			elseif strcmp(mode, 'winner')
+				chModel = sonohiWINNERv2(obj, chtype);
 			else
 				sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
 			end
@@ -117,35 +135,7 @@ classdef SonohiChannel < handle
 			extraSamples = 400; %meters
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples; 
 		end
-		
-                        
-%   function chModel = setupChannel(obj,Stations,Users,chtype)
-%     % Setup association to traverse
-%     switch chtype
-%         case 'downlink'
-%             mode = obj.DLMode;
-%         case 'uplink'
-%             mode = obj.ULMode;
-%     end
-%     
-%     if strcmp(mode,'winner')
-%         WINNER = sonohiWINNERv2(Stations,Users, obj,chtype);
-%         chModel = WINNER.setup();
-%     elseif strcmp(mode,'eHATA')
-%         chModel = sonohieHATA(obj, chtype);
-%     elseif strcmp(mode,'ITU1546')
-%         chModel = sonohiITU(obj, chtype);
-%     elseif strcmp(mode, 'B2B')
-%         chModel = sonohiB2B(obj, chtype);
-% 		elseif strcmp(mode, '3GPP38901')
-% 				chModel = sonohi3GPP38901(obj, chtype);
-%     else
-%         sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
-% 		end
-%     
-%     
-%     
-% 	end
+   
 
     function [Stations, Users,obj] = runModel(obj,Stations,Users, chtype)
       validateChannel(obj);
@@ -201,9 +191,6 @@ classdef SonohiChannel < handle
           StationC.Users(1).UeId = user.NCellID;
           StationC.ScheduleDL(1).UeId = user.NCellID;
           user.Rx.Waveform = [];
-          
-          % Select channel model using switcher
-          obj = obj.setupChannelDL(StationC, user);
           
           [~, user] = obj.DownlinkModel.run(StationC, user);
           
@@ -365,7 +352,7 @@ classdef SonohiChannel < handle
         StationC.ScheduleDL(1).UeId = User.NCellID;
         User.ENodeBID = StationC.NCellID;
         
-        obj = obj.setupChannelDL(StationC, User);
+
         
         % Reset any existing channel conditions
         %if strcmp(obj.Mode,'winner')
@@ -428,17 +415,30 @@ classdef SonohiChannel < handle
     end
 
     function LOS = isLinkLOS(obj, Station, User, draw)
-      % Check if link between `txPos` and `rxPos` is LOS using the 1st Fresnel zone and the building footprint. 
-      % 
-      % :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
+      % Check if link between `txPos` and `rxPos` is LOS using one of two methods
+			% 
+			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint. 
+      % 2. :attr:`SonohiChannel.LOSMethod` : :attr:`3GPP38901-probability` Uses probability given table 7.4.2-1 of 3GPP TR 38.901. See :meth:`ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability` for more the implementation.
+      %
+			% :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
       % :type Station: :class:`enb.EvolvedNodeB`
       % :param User: Need :attr:`User.Position`
       % :type User: :class:`ue.UserEquipment`
       % :param bool draw: Draws fresnel zone and elevation profile.
       % :returns: LOS (bool) indicating LOS
-      txPos = Station.Position;
+
+			switch obj.LOSMethod
+			case 'fresnel'
+				LOS = obj.fresnelLOScomputation(Station, User, draw);
+			case '3GPP38901-probability'
+				LOS = sonohi3GPP38901.LOSprobability(obj, Station, User);
+			end
+		end
+		
+		function LOS = fresnelLOScomputation(obj, Station, User, draw)
+			txPos = Station.Position;
       txFreq = Station.DlFreq;
-      rxPos = User.Position;
+			rxPos = User.Position;
 
       [numPoints,distVec,elevProfile] = obj.getElevation(txPos,rxPos);
 
@@ -476,9 +476,7 @@ classdef SonohiChannel < handle
         ylabel('Height (m)')
         legend('Building footprints', 'LOS path', '1st Fresnel zone')
       end
- 
-
-    end
+		end
 
 
     function [numPoints,distVec,elavationProfile] = getElevation(obj,txPos,rxPos)

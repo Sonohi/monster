@@ -29,3 +29,8 @@ ITUR1546
 .. automodule:: ch.SONOHImodels.ITUR1546
 .. autoclass:: sonohiITU
     :members:
+
+
+.. rubric:: Footnotes
+
+.. [#chmodelbook] Pérez-Fontán, F., Mariño Espiñeira, P., & Wiley InterScience (Online service). (2008). Modeling the wireless propagation channel : a simulation approach with Matlab. Wiley. 
