@@ -1,7 +1,7 @@
 classdef ChBulk_v2 < SonohiChannel
 	% This is the main API class for interfacing with implemented models.
 	methods
-
+		
 		function obj = ChBulk_v2(Stations, Users, Param)
 			% See :class:`SonohiChannel` for the structure of :attr:`Param`
 			obj = obj@SonohiChannel(Stations, Users, Param);
@@ -9,8 +9,8 @@ classdef ChBulk_v2 < SonohiChannel
 		
 		
 		function [Stations,Users,obj] = traverse(obj,Stations,Users,chtype,varargin)
-			% This method applies the channel properties to the receiver modules. The recieved waveform and meaningful physical parameters are written to the receiver module depending on the channel type selected. Two options exist. 
-			% 
+			% This method applies the channel properties to the receiver modules. The recieved waveform and meaningful physical parameters are written to the receiver module depending on the channel type selected. Two options exist.
+			%
 			% :param Stations: Station objects with a transmitter and receiver module.
 			% :type Stations: :class:`enb.EvolvedNodeB`
 			% :param Users: UE objects with a transmitter and receiver module
@@ -28,10 +28,10 @@ classdef ChBulk_v2 < SonohiChannel
 			%  2. :attr:`Users.ENodeBID`: Identifier to link association
 			%  3. :attr:`Users.Tx`: Transmitter module
 			%  4. :attr:`Users.Rx`: Receiver module
-            if ~strcmp(chtype,'downlink') && ~strcmp(chtype,'uplink')
+			if ~strcmp(chtype,'downlink') && ~strcmp(chtype,'uplink')
 				sonohilog('Unknown channel type selected.','ERR')
 			end
-
+			
 			if isempty(varargin)
 				obj.fieldType = 'full';
 			else
@@ -68,37 +68,37 @@ classdef ChBulk_v2 < SonohiChannel
 					enbId = stations(iStations).NCellID;
 					Stations([Stations.NCellID] == enbId) = stations(iStations);
 				end
-      
+				
 			else
 				sonohilog('No users found for any of the stations. Is this supposed to happen?','WRN')
 			end
 			
 		end
-        
-        function obj = setupChannelUL(obj, Stations, Users,varargin)
-            % Setup channel given the UL schedule, e.g. the association to simulate when traversed.
-            %
-            % :param Stations: 
-            % :type Stations: :class:`enb.EvolvedNodeB`
-            % :param Users: 
-            % :type Users: :class:`ue.UserEquipment`
-             if ~isempty(varargin)
-                vargs = varargin;
-                nVargs = length(vargs);
-                
-                for k = 1:nVargs
-                    if strcmp(vargs{k},'compoundWaveform')
-                        compoundWaveform = vargs{k+1};
-                    end
-                end
-            end
-            [stations, users] = obj.getAssociated(Stations, Users);
-            obj.UplinkModel.CompoundWaveform = compoundWaveform;
-        end
-        
-
 		
-	
+		function obj = setupChannelUL(obj, Stations, Users,varargin)
+			% Setup channel given the UL schedule, e.g. the association to simulate when traversed.
+			%
+			% :param Stations:
+			% :type Stations: :class:`enb.EvolvedNodeB`
+			% :param Users:
+			% :type Users: :class:`ue.UserEquipment`
+			if ~isempty(varargin)
+				vargs = varargin;
+				nVargs = length(vargs);
+				
+				for k = 1:nVargs
+					if strcmp(vargs{k},'compoundWaveform')
+						compoundWaveform = vargs{k+1};
+					end
+				end
+			end
+			[stations, users] = obj.getAssociated(Stations, Users);
+			obj.UplinkModel.CompoundWaveform = compoundWaveform;
+		end
+		
+		
+		
+		
 		
 	end
 end
