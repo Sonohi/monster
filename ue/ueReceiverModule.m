@@ -237,6 +237,10 @@ classdef ueReceiverModule
 			obj.RSRQdB = meas.RSRQdB;
 		end
 		
+		function obj = applyOffset(obj)
+			obj.Waveform = obj.Waveform(obj.Offset+1:end);
+		end
+		
 		% Block reception
 		function obj  = logBlockReception(obj,ueObj)
 			validateRxLogBlockReception(obj);

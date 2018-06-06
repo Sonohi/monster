@@ -160,9 +160,14 @@
   <div class="section" id="channel">
 <h1>Channel<a class="headerlink" href="#channel" title="Permalink to this headline">¶</a></h1>
 <a class="reference internal image-reference" href="resources/graphics/linkBudgetE2E.png"><img alt="resources/graphics/linkBudgetE2E.png" class="align-center" src="resources/graphics/linkBudgetE2E.png" /></a>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">‘winner’ is considered highly unstable.</p>
+</div>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="chmodels.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="chmodels.html#module-ch.SONOHImodels.3GPP38901">3GPP 38901</a></li>
 <li class="toctree-l2"><a class="reference internal" href="chmodels.html#module-ch.SONOHImodels.eHATA">eHATA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="chmodels.html#module-ch.SONOHImodels.WINNER">WINNER II</a></li>
 <li class="toctree-l2"><a class="reference internal" href="chmodels.html#module-ch.SONOHImodels.ITUR1546">ITUR1546</a></li>
@@ -172,36 +177,12 @@
 </div>
 <span class="target" id="module-ch"></span><dl class="class">
 <dt id="ch.ChBulk_v2">
-<em class="property">class </em><code class="descclassname">ch.</code><code class="descname">ChBulk_v2</code><span class="sig-paren">(</span><em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ch.</code><code class="descname">ChBulk_v2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the main API class for interfacing with implemented models.</p>
 <dl class="method">
 <dt id="ch.ChBulk_v2.ChBulk_v2">
-<code class="descname">ChBulk_v2</code><span class="sig-paren">(</span><em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.ChBulk_v2" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ChBulk_v2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.ChBulk_v2" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#ch.SonohiChannel" title="ch.SonohiChannel"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">SonohiChannel</span></code></a> for the structure of <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">Param</span></code></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ch.ChBulk_v2.resetChannelModels">
-<code class="descname">resetChannelModels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.resetChannelModels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets any channel setup</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ch.ChBulk_v2.setupChannelDL">
-<code class="descname">setupChannelDL</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.ChBulk_v2.setupChannelDL" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setup channel given the DL schedule, e.g. the association to simulate when traversed.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>Stations</strong> (<a class="reference internal" href="enb.html#enb.EvolvedNodeB" title="enb.EvolvedNodeB"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">enb.EvolvedNodeB</span></code></a>) – </li>
-<li><strong>Users</strong> (<a class="reference internal" href="ue.html#ue.UserEquipment" title="ue.UserEquipment"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ue.UserEquipment</span></code></a>) – </li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="method">
@@ -264,9 +245,9 @@
 
 <dl class="class">
 <dt id="ch.SonohiChannel">
-<em class="property">class </em><code class="descclassname">ch.</code><code class="descname">SonohiChannel</code><span class="sig-paren">(</span><em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SonohiChannel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ch.</code><code class="descname">SonohiChannel</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SonohiChannel" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the base coordinator class for the physical channels.</p>
-<p>Currently supported models: [<code class="xref mat mat-attr docutils literal notranslate"><span class="pre">winner</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">eHATA</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">ITU1546</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">B2B</span></code>]</p>
+<p>Currently supported models: [<code class="xref mat mat-attr docutils literal notranslate"><span class="pre">winner</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">eHATA</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">ITU1546</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">3GPP38901</span></code>, <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">B2B</span></code>]</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">‘uplink’ is currently only available in B2B mode.</p>
@@ -295,15 +276,25 @@
 <tr class="field-odd field"><th class="field-name" colspan="2">Param.channel.enableInterference:</th></tr>
 <tr class="field-odd field"><td>&#160;</td><td class="field-body">(bool) Enable/disable interference</td>
 </tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Param.enableShadowing:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">(bool) Enable/disable spartial correlated shadowing, currently only supported using <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">3GPP38901</span></code></td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Param.LOSMethod:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">(str) <cite>‘fresnel’</cite> or <cite>‘3GPP38901-probability’</cite>, See <a class="reference internal" href="#ch.SonohiChannel.isLinkLOS" title="ch.SonohiChannel.isLinkLOS"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">ch.SonohiChannel.isLinkLOS()</span></code></a> for more info.</td>
+</tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Param.buildings:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body">(optional) Needed for <code class="xref mat mat-obj docutils literal notranslate"><span class="pre">winner</span></code> to determine LOS. Structure containing footprints of buildings, given by (x0, y0, x1, y1) coordinates.</td>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">(optional) Needed for <cite>‘fresnel’</cite> LOSMethod, Structure containing footprints of buildings, given by (x0, y0, x1, y1) coordinates.</td>
 </tr>
 </tbody>
 </table>
 <dl class="method">
 <dt id="ch.SonohiChannel.isLinkLOS">
 <code class="descname">isLinkLOS</code><span class="sig-paren">(</span><em>Station</em>, <em>User</em>, <em>draw</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SonohiChannel.isLinkLOS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if link between <cite>txPos</cite> and <cite>rxPos</cite> is LOS using the 1st Fresnel zone and the building footprint.</p>
+<dd><p>Check if link between <cite>txPos</cite> and <cite>rxPos</cite> is LOS using one of two methods</p>
+<ol class="arabic simple">
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">SonohiChannel.LOSMethod</span></code> : <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">fresnel</span></code> 1st Fresnel zone and the building footprint.</li>
+<li><code class="xref mat mat-attr docutils literal notranslate"><span class="pre">SonohiChannel.LOSMethod</span></code> : <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">3GPP38901-probability</span></code> Uses probability given table 7.4.2-1 of 3GPP TR 38.901. See <a class="reference internal" href="chmodels.html#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability" title="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability()</span></code></a> for more the implementation.</li>
+</ol>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

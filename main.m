@@ -50,7 +50,7 @@ Users = createUsers(Param);
 
 
 % Create Channel scenario
-Channel = ChBulk_v2(Param);
+Channel = ChBulk_v2(Stations, Users, Param);
 
 % Create channel estimator
 ChannelEstimator = createChannelEstimator();
