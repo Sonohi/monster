@@ -5,6 +5,8 @@ Channel
    :scale: 80%
    :align: center
 
+.. warning:: 'winner' is considered highly unstable.
+
 .. toctree::
 
     chmodels

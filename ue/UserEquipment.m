@@ -36,7 +36,7 @@ classdef UserEquipment
 		Hangover;
 		Pmax;
 		Seed;
-		MobilitySeed;
+		Mobility;
 		TrafficStartTime;
 	end
 	
@@ -45,7 +45,6 @@ classdef UserEquipment
 		function obj = UserEquipment(Param, userId)
 			obj.NCellID = userId;
 			obj.Seed = userId*Param.seed;
-			obj.MobilitySeed = userId*Param.mobilitySeed;
 			obj.ENodeBID = -1;
 			obj.NULRB = Param.numSubFramesUE;
 			obj.RNTI = 1;
@@ -61,7 +60,11 @@ classdef UserEquipment
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj = mobility(obj, Param);
+			obj.Mobility = MMobility('pedestrian', 1, Param.mobilitySeed * userId, Param);
+			obj.Position = [obj.Mobility.Trajectory(1,:), Param.ueHeight];
+			if Param.draw
+				obj.plotUEinScenario(Param);
+			end
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
@@ -84,6 +87,10 @@ classdef UserEquipment
 			obj.Queue = queue;
 		end
 		
+		function obj = move(obj, round)
+			obj.Position(1:2) = obj.Mobility.Trajectory(round+1,:);
+		end
+		
 		% toggle scheduled
 		function obj = setScheduled(obj, status)
 			obj.Scheduled = status;
@@ -92,49 +99,6 @@ classdef UserEquipment
 		function obj = set.TrafficStartTime(obj, tStart)
 			% Used to set the starting time for requesting traffic
 			obj.TrafficStartTime = tStart;
-		end
-		
-		% move User
-		function obj = move(obj, ts, Param)
-			% if we are at the beginning, don't move
-			if ts > 0 && mod(ts * 1000, Param.mobilityStep * 1000) == 0
-        sonohilog('UE moving', 'NFO');
-
-				% delta of time since last step
-				tDelta = ts - obj.TLast;
-				
-				% check if the current position is the last one of the trajectory
-				if obj.PLast(1) == length(obj.Trajectory)
-					% reverse the trajectory and use it upside down
-					obj.Trajectory = flipud(obj.Trajectory);
-					obj.PLast = [0 0];
-				end
-				
-				% get current position and trajectory
-				p0 = obj.Position;
-				p0(3) = [];
-				trj = obj.Trajectory;
-				
-				% get next position
-				x1 = trj(obj.PLast(1) + 1, 1);
-				y1 = trj(obj.PLast(2) + 1, 2);
-				p1 = [x1, y1];
-				
-				% get distance
-				dist = sqrt((p1(1)-p0(1))^2 + (p1(2)-p0(2))^2 );
-				
-				% time to pass the distance
-				td = dist/obj.Velocity;
-				
-				% check whether we need to make this step
-				if td >= tDelta
-					% move UE and update attributes
-					obj.Position = [x1 y1 obj.Position(3)];
-					obj.TLast = ts;
-					obj.PLast = obj.PLast + 1;
-				end
-				
-			end
 		end
 		
 		% set TransportBlock
@@ -213,10 +177,29 @@ classdef UserEquipment
 			obj.Rx = obj.Rx.reset();
 		end
 		
-	end
-	
-	methods (Access = private)
+		function plotUEinScenario(obj, Param)
+				x0 = obj.Position(1);
+				y0 = obj.Position(2);
+
+				% UE in initial position
+				plot(Param.LayoutAxes,x0, y0, ...
+						'Marker', obj.PlotStyle.marker, ...
+						'MarkerFaceColor', obj.PlotStyle.colour, ...
+						'MarkerEdgeColor', obj.PlotStyle.edgeColour, ...
+						'MarkerSize',  obj.PlotStyle.markerSize, ...
+						'DisplayName', strcat('UE ', num2str(obj.NCellID)));
+
+				% Trajectory
+				plot(Param.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
+						'Color', obj.PlotStyle.colour, ...
+						'LineStyle', '--', ...
+						'LineWidth', obj.PlotStyle.lineWidth,...
+						'DisplayName', strcat('UE ', num2str(obj.NCellID), ' trajectory'));
+				drawnow()
+		end
+		
 		
 	end
+	
 	
 end

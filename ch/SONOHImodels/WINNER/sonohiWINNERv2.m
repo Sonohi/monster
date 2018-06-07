@@ -3,7 +3,9 @@ classdef sonohiWINNERv2 < sonohiBase
     % 
     % Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
     % Propagations cenarios are as follows: [1=A1, 2=A2, 3=B1, 4=B2, 5=B3, 6=B4, 7=B5a, 8=B5c, 9=B5f, 10=C1, 11=C2, 12=C3, 13=C4, 14=D1, 15=D2a].
-    % 
+		% 
+		% .. warning:: WINNER II is considered some what unstable per 16/05/2018. See issue #67
+		%
     % The table of mapping is as follows
     %
     % +-------+----------------------+--------------------------------------+---------------+
@@ -50,7 +52,7 @@ classdef sonohiWINNERv2 < sonohiBase
 
     methods
 
-        function obj = sonohiWINNERv2(Stations, Users, Channel, Chtype)
+        function obj = sonohiWINNERv2(Channel, Chtype)
             % The constructor inherits :class:`ch.SONOHImodels.sonohiBase` and does the needed manipulation of data structures to use the WINNER library. This primarily includes a mapping between the WINNER layout/config and the mapping done in MONSTER.
             % For this it needs the following inputs:
             %
@@ -60,8 +62,11 @@ classdef sonohiWINNERv2 < sonohiBase
             % :type Users: :class:`ue.UserEquipment`
             % :param Channel: Channel object
             % :type Channel: :class:`ch.SonohiChannel`
-            obj = obj@sonohiBase(Channel, Chtype)
-            classes = unique({Stations.BsClass});
+            obj = obj@sonohiBase(Channel, Chtype);
+        end
+
+				function obj = setup(obj, Stations, Users)
+						classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};
                 types.(varname) = find(strcmp({Stations.BsClass},varname));
@@ -96,11 +101,11 @@ classdef sonohiWINNERv2 < sonohiBase
                 obj.WconfigLayout{model} = obj.setPositions(obj.WconfigLayout{model} ,Stations,Users);
 
 
-                obj.WconfigLayout{model}.Pairing = Channel.getPairing(Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx)));
+                obj.WconfigLayout{model}.Pairing = obj.Channel.getPairing(Stations(ismember([Stations.NCellID],obj.WconfigLayout{model}.StationIdx)));
 
                 obj.WconfigLayout{model}  = obj.updateIndexing(obj.WconfigLayout{model} ,Stations);
 
-                obj.WconfigLayout{model}  = obj.setPropagationScenario(obj.WconfigLayout{model} ,Stations,Users, Channel);
+                obj.WconfigLayout{model}  = obj.setPropagationScenario(obj.WconfigLayout{model} ,Stations,Users, obj.Channel);
 
                 obj.WconfigParset{model}  = obj.configureModel(obj.WconfigLayout{model},Stations);
                 
@@ -112,10 +117,6 @@ classdef sonohiWINNERv2 < sonohiBase
                 obj.WconfigParset{model}.RandomSeed = randi(999);
 
             end
-
-        end
-
-        function obj = setup(obj)
             % Computes impulse response of initalized winner model
             for model = 1:length(obj.WconfigLayout)
 
@@ -140,7 +141,8 @@ classdef sonohiWINNERv2 < sonohiBase
         function [users] = downlink(obj,Stations,Users)
             % This overwrites the method of the baseclass :class:`ch.SONOHImodels.sonohiBase`.
             % The logic is similar to that of the baseclass, however the loss is computed from the wavefrom on which the impulse response is applied. 
-            users = Users;
+						obj = obj.setup(Stations, Users);
+						users = Users;
             for model = 1:length(obj.WconfigLayout)
 
                 if isempty(obj.WconfigLayout{model})
@@ -188,7 +190,7 @@ classdef sonohiWINNERv2 < sonohiBase
    
         function [RxNode] = calculateRecievedPower(obj, TxNode, RxNode, lossdB)
             % Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.
-            EIRPdBm = 10*log10(TxNode.Tx.getEIRPSymbol)+30; % Convert EIRP per symbol in watts to dBm
+            EIRPdBm = TxNode.Tx.getEIRPdBm; % 
             rxPwdBm = EIRPdBm-lossdB-RxNode.Rx.NoiseFigure; %dBm
             RxNode.Rx.RxPwdBm = rxPwdBm;
     

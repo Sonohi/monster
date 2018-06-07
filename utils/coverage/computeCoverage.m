@@ -15,7 +15,11 @@ station.Tx.ReGrid = station.Tx.FrameGrid;
 channel.enableFading = 0;
 channel.enableInterference = 0;
 
-% Use steps of 10 meters to compute approximated coverage distance
+% Set station position to bottom left hand corner to ensure NLOS scenarios
+% when moving diagonal
+station.Position(1:2) = [0, 0];
+
+% Use steps of 10 meters in x and y to compute approximated coverage distance
 stepMeters = 10;
 avgCoverageDistance = 20;
 coverage = struct('distance',[],'SNRdB',[],'ChannelModel',channel.DLMode,'ChannelRegion',channel.Region);
@@ -34,11 +38,13 @@ while true
     % We want worst case coverage, thus we move in a x and y direction
     %sampleUser.Position = [avgCoverageDistance+station.Position(1), station.Position(2), sampleUser.Position(3)];
     sampleUser.Position = [avgCoverageDistance+station.Position(1), avgCoverageDistance+station.Position(2), sampleUser.Position(3)];
-    
+  
+		% Set random seed
+		channel.Seed = randi([0,9999]);
+		
     % Compute impairments
     try
-        channel = channel.setupChannelDL(station,sampleUser);
-        [~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
+				[~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
     catch ME
         sonohilog(sprintf('Channel error, %s',ME.message),'WRN')
         break
@@ -51,7 +57,7 @@ while true
 
     % Demod waveform
 		[~, sampleUser.Rx] = sampleUser.Rx.demodulateWaveform(station);
-		if Param.draw
+		if param.draw
 			cdObj(reshape(sampleUser.Rx.Subframe,size(sampleUser.Rx.Subframe,1)* size(sampleUser.Rx.Subframe,2),1))
 		end
     %plot(sampleUser.Rx.Subframe,'.')

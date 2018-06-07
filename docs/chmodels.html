@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Traffic" href="traffic.html" />
+    <link rel="next" title="Mobility" href="mobility.html" />
     <link rel="prev" title="Channel" href="ch.html" /> 
 
   
@@ -88,6 +88,7 @@
 <li class="toctree-l1"><a class="reference internal" href="ue.html">UserEquipment</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="ch.html">Channel</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.3GPP38901">3GPP 38901</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.eHATA">eHATA</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.WINNER">WINNER II</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-ch.SONOHImodels.ITUR1546">ITUR1546</a></li>
@@ -96,6 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="ch.html#examples">Examples</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="mobility.html">Mobility</a></li>
 <li class="toctree-l1"><a class="reference internal" href="traffic.html">Traffic</a></li>
 </ul>
 
@@ -266,6 +268,12 @@ The downlink logic follows the follow flow</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="ch.SONOHImodels.sonohiBase.setupShadowing">
+<code class="descname">setupShadowing</code><span class="sig-paren">(</span><em>varargin</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setupShadowing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function needs overwrite from models to enable shadowing</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="ch.SONOHImodels.sonohiBase.thermalLoss">
 <code class="descname">thermalLoss</code><span class="sig-paren">(</span><em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.thermalLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute thermal loss based on bandwidth, at T = 290 K.
@@ -275,6 +283,69 @@ given based on the waveform. Computed using matlabs <code class="xref mat mat-ob
 
 </dd></dl>
 
+<div class="section" id="module-ch.SONOHImodels.3GPP38901">
+<span id="gpp-38901"></span><h2>3GPP 38901<a class="headerlink" href="#module-ch.SONOHImodels.3GPP38901" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901">
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.3GPP38901.</code><code class="descname">sonohi3GPP38901</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is implemented using the 3GPP TR 38901 v14 document
+5G; Study on channel model for frequencies from .5 to 100 GHZ</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add fast fading as specified by the specification. E.g. CDL and TDL</p>
+</div>
+<p>V1 contains only the implementation of pathloss with shadowing added as log-normal distributions based on a standard deviation.</p>
+<p>Current scenarios are implemented and usable:</p>
+<ul class="simple">
+<li>‘RMa’ - Rural Macro</li>
+<li>‘UMa’ - Urban Macro</li>
+<li>‘UMi’ - Urban Micro</li>
+</ul>
+<dl class="method">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability">
+<code class="descname">LOSprobability</code><span class="sig-paren">(</span><em>Channel</em>, <em>Station</em>, <em>User</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability" title="Permalink to this definition">¶</a></dt>
+<dd><p>LOS probability using table 7.4.2-1 of 3GPP TR 38.901</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.ShadowMaps">
+<code class="descname">ShadowMaps</code><em class="property"> = 'struct()'</em><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.ShadowMaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Struct for storing shadow maps for each staiton</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computePathLoss">
+<code class="descname">computePathLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computePathLoss" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes path loss. uses the following parameters</p>
+<ul class="simple">
+<li><cite>f</cite> - Frequency in GHz</li>
+<li><cite>hBs</cite> - Height of Tx</li>
+<li><cite>hUt</cite> - height of Rx</li>
+<li><cite>d2d</cite> - Distance in 2D</li>
+<li><cite>d3d</cite> - Distance in 3D</li>
+<li><cite>LOS</cite> - Link LOS boolean, determined by <a class="reference internal" href="ch.html#ch.SonohiChannel.isLinkLOS" title="ch.SonohiChannel.isLinkLOS"><code class="xref mat mat-meth docutils literal notranslate"><span class="pre">ch.SonohiChannel.isLinkLOS()</span></code></a></li>
+<li><cite>shadowing</cite> - Boolean for enabling/disabling shadowing using log-normal distribution</li>
+<li><cite>avgBuilding</cite> - Average height of buildings</li>
+<li><cite>avgStreetWidth</cite> - Average width of the streets</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.setupShadowing">
+<code class="descname">setupShadowing</code><span class="sig-paren">(</span><em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.setupShadowing" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each base station, construct a shadow map. This is done using ‘<cite>interpolation</cite>’ method as described in <a class="footnote-reference" href="#chmodelbook" id="id1">[1]</a>.
+Values for decorrelation distance and the magnitude of shadowing are given in Table 7.5-6 of TR 38.901</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.sonohi3GPP38901">
+<code class="descname">sonohi3GPP38901</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.sonohi3GPP38901" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-ch.SONOHImodels.eHATA">
 <span id="ehata"></span><h2>eHATA<a class="headerlink" href="#module-ch.SONOHImodels.eHATA" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -306,10 +377,14 @@ The Extended Hata (eHATA) propagation model code was implemented by employees of
 <span id="winner-ii"></span><h2>WINNER II<a class="headerlink" href="#module-ch.SONOHImodels.WINNER" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2">
-<em class="property">class </em><code class="descclassname">ch.SONOHImodels.WINNER.</code><code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ch.SONOHImodels.WINNER.</code><code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The main objective of this class is to manipulate variables and structures with that of the WINNER II model which is available standalone, in MATLAB. <a class="reference external" href="https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox">https://se.mathworks.com/matlabcentral/fileexchange/59690-winner-ii-channel-model-for-communications-system-toolbox</a></p>
 <p>Antenna arrays are per default loaded from .mat files, and any changes to these are reflected.
 Propagations cenarios are as follows: [1=A1, 2=A2, 3=B1, 4=B2, 5=B3, 6=B4, 7=B5a, 8=B5c, 9=B5f, 10=C1, 11=C2, 12=C3, 13=C4, 14=D1, 15=D2a].</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">WINNER II is considered some what unstable per 16/05/2018. See issue #67</p>
+</div>
 <p>The table of mapping is as follows</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -496,14 +571,8 @@ A list of</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setup">
-<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes impulse response of initalized winner model</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.sonohiWINNERv2">
-<code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Stations</em>, <em>Users</em>, <em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
+<code class="descname">sonohiWINNERv2</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.sonohiWINNERv2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The constructor inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a> and does the needed manipulation of data structures to use the WINNER library. This primarily includes a mapping between the WINNER layout/config and the mapping done in MONSTER.
 For this it needs the following inputs:</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -561,6 +630,13 @@ dependent on the cfgLayout.Stations struct.</p>
 
 </dd></dl>
 
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="chmodelbook" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Pérez-Fontán, F., Mariño Espiñeira, P., &amp; Wiley InterScience (Online service). (2008). Modeling the wireless propagation channel : a simulation approach with Matlab. Wiley.</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 
@@ -572,7 +648,7 @@ dependent on the cfgLayout.Stations struct.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="traffic.html" class="btn btn-neutral float-right" title="Traffic" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="mobility.html" class="btn btn-neutral float-right" title="Mobility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ch.html" class="btn btn-neutral" title="Channel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
