@@ -12,6 +12,10 @@ classdef sonohiBase < handle
 			obj.Channel = Channel;
 			obj.Chtype = Chtype;
 		end
+
+		function obj = setup(obj, ~, ~, ~)
+			% pass
+		end
 		
 		function [stations,users] = run(obj,Stations,Users,varargin)
 			% Main execution method, switches between uplink and downlink logic.

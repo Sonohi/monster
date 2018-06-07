@@ -50,9 +50,12 @@ classdef SonohiChannel < handle
 			obj.DownlinkModel = obj.findChannelClass('downlink');
 			obj.UplinkModel = obj.findChannelClass('uplink');
 			
+			obj.DownlinkModel.setup(Stations, Users, Param)
+
 			if obj.enableShadowing
 				obj.DownlinkModel.setupShadowing(Stations)
 			end
+
 			
 		end
 		
@@ -123,6 +126,8 @@ classdef SonohiChannel < handle
 				chModel = sonohi3GPP38901(obj, chtype);
 			elseif strcmp(mode, 'winner')
 				chModel = sonohiWINNERv2(obj, chtype);
+			elseif strcmp(mode, 'Quadriga')
+				chModel = sonohiQuadriga(obj, chtype);
 			else
 				sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
 			end
