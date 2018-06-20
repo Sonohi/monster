@@ -167,7 +167,7 @@ classdef sonohi3GPP38901 < sonohiBase
 						else
 							sonohilog('Error in computing LOS. Height out of range','ERR');
 						end
-						prop = (18/dist2d + exp(-1*((dist2d)/36))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
+						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
 					end
 					
 				otherwise
