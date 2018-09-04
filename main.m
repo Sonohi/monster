@@ -20,7 +20,7 @@ clearvars;
 clc;
 close all;
 
-% Load parameters
+% Load parameter
 load('SimulationParameters.mat');
 
 % Set log preferences
