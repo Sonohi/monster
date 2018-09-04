@@ -20,7 +20,7 @@ UEsummaryplt = UESummaryPlot(Users);
 for iRound = 0:Param.schRounds-1
 	
     simTime = iRound * 0.001;
-		ENBsummaryplt.ENBBulk_plot(Stations, SimulationMetrics, iRound);
-    UEsummaryplt.UEBulk_plot(Users, SimulationMetrics, iRound);
+		ENBsummaryplt.ENBBulkPlot(Stations, SimulationMetrics, iRound);
+    UEsummaryplt.UEBulkPlot(Users, SimulationMetrics, iRound);
     drawnow
 end
