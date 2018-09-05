@@ -13,7 +13,7 @@ classdef sonohi3GPP38901 < sonohiBase
 	% * 'UMi' - Urban Micro
 	
 	properties
-		ShadowMaps = struct(); % Struct for storing shadow maps for each staiton
+		SpatialMaps = struct(); % Struct for storing shadow maps for each staiton
 	end
 	
 	methods
@@ -31,19 +31,22 @@ classdef sonohi3GPP38901 < sonohiBase
 				station = Stations(stationIdx);
 				stationString = sprintf('station%i',station.NCellID);
 				
-				obj.ShadowMaps.(stationString) = struct();
+				obj.SpatialMaps.(stationString) = struct();
 				
 				% Generate map for station based on station class
-				[LOSmap, NLOSmap, axisLOS, axisNLOS] = obj.generateShadowMap(station);
-				obj.ShadowMaps.(stationString).LOS = LOSmap;
-				obj.ShadowMaps.(stationString).NLOS = NLOSmap;
-				obj.ShadowMaps.(stationString).axisLOS = axisLOS;
-				obj.ShadowMaps.(stationString).axisNLOS = axisNLOS;
+				[LOSmap, NLOSmap, LOSpropmap, axisLOS, axisNLOS, axisLOSprop] = obj.generateShadowMap(station);
+                
+                obj.SpatialMaps.(stationString).LOSprop = LOSpropmap;
+				obj.SpatialMaps.(stationString).LOS = LOSmap;
+				obj.SpatialMaps.(stationString).NLOS = NLOSmap;
+				obj.SpatialMaps.(stationString).axisLOS = axisLOS;
+				obj.SpatialMaps.(stationString).axisNLOS = axisNLOS;
+                obj.SpatialMaps.(stationString).axisLOSprop = axisLOSprop; 
 				
 			end
 		end
 		
-		function [mapLOS, mapNLOS, axisLOS, axisNLOS] = generateShadowMap(obj, station)
+		function [mapLOS, mapNLOS, mapLOSprop, axisLOS, axisNLOS, axisLOSprop] = generateShadowMap(obj, station)
 			areaType = obj.Channel.getAreaType(station);
 			fMHz = station.DlFreq; % Freqency in MHz
 			radius = obj.Channel.getAreaSize(); % Get range of grid
@@ -53,54 +56,99 @@ classdef sonohi3GPP38901 < sonohiBase
 					sigmaSFNLOS = 8;
 					dCorrLOS = 37;
 					dCorrNLOS = 120;
+                    dCorrLOSprop = 60;
 				case 'UMa'
 					sigmaSFLOS = 4;
 					sigmaSFNLOS = 6;
 					dCorrLOS = 37;
 					dCorrNLOS = 50;
+                    dCorrLOSprop = 50;
 				case 'UMi'
 					sigmaSFLOS = 4;
 					sigmaSFNLOS = 7.82;
 					dCorrLOS = 10;
 					dCorrNLOS = 13;
-			end
-			[mapLOS, xaxis, yaxis] = obj.spartialCorrMap(sigmaSFLOS, dCorrLOS, fMHz, radius, 'interpolation');
+                    dCorrLOSprop = 50;
+            end
+            % Configure LOS probability map G, with correlation distance
+            % according to 7.6-18. Need to compute final H matrix.
+            [mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius);
+            axisLOSprop = [xaxis; yaxis];
+            
+            % Spatial correlation map of LOS pathloss + shadowing
+			[mapLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFLOS, dCorrLOS, fMHz, radius);
 			axisLOS = [xaxis; yaxis];
-			[mapNLOS, xaxis, yaxis] = obj.spartialCorrMap(sigmaSFNLOS, dCorrNLOS, fMHz, radius, 'interpolation');
+            
+            % Spatial correlation map of NLOS pathloss + shadowing
+			[mapNLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFNLOS, dCorrNLOS, fMHz, radius);
 			axisNLOS = [xaxis; yaxis];
 		end
 		
 		
-		function [map, xaxis, yaxis] = spartialCorrMap(obj, sigmaSF, dCorr, fMHz, radius, method)
+		function [map, xaxis, yaxis] = spatialCorrMap(~, sigmaSF, dCorr, fMHz, radius)
+            % Create a map of independent Gaussian random variables according to the decorrelation distance. Interpolation between the random variables can be used to realize the 2D correlations. 
+            lambdac=300/fMHz;   % wavelength in m
+            interprate=round(dCorr/lambdac);
+            Lcorr=lambdac*interprate;
+            Nsamples=round(radius/Lcorr);
+
+            map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
+            xaxis=[-Nsamples:Nsamples-1]*Lcorr;
+            yaxis=[-Nsamples:Nsamples-1]*Lcorr;
 			
-			switch method
-				case 'interpolation'
-					lambdac=300/fMHz;   % wavelength in m
-					interprate=round(dCorr/lambdac);
-					Lcorr=lambdac*interprate;
-					Nsamples=round(radius/Lcorr);
-					
-					map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
-					xaxis=[-Nsamples:Nsamples-1]*Lcorr;
-					yaxis=[-Nsamples:Nsamples-1]*Lcorr;
-			end
-			
-			
-		end
-		
-		function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
+        end
+        
+        function [map, xaxis, yaxis] = LOSpropMap(~, dCorr, fMHz, radius)
+            % Spatial correlation of LOS probabilities, used to realize if
+            % the link is LOS. See 7.6.3.3.
+            % The 2D map is created using the i
+            lambdac=300/fMHz;   % wavelength in m
+            interprate=round(dCorr/lambdac);
+            Lcorr=lambdac*interprate;
+            Nsamples=round(radius/Lcorr);
+            
+            % LOS is determined by probability and realized by comparing
+            % the distance-based LOS probability function with the spatial
+            % correlated random variable.
+            map = rand(2*Nsamples,2*Nsamples);
+            xaxis=[-Nsamples:Nsamples-1]*Lcorr;
+            yaxis=[-Nsamples:Nsamples-1]*Lcorr;
+            
+        end
+        
+        
+        function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
+            % Interpolation between the random variables initialized
+            % provides the magnitude of shadow fading given the LOS state.
 			stationString = sprintf('station%i',stationID);
 			if LOS
-				map = obj.ShadowMaps.(stationString).LOS;
-				axisXY = obj.ShadowMaps.(stationString).axisLOS;
+				map = obj.SpatialMaps.(stationString).LOS;
+				axisXY = obj.SpatialMaps.(stationString).axisLOS;
 			else
-				map = obj.ShadowMaps.(stationString).NLOS;
-				axisXY = obj.ShadowMaps.(stationString).axisNLOS;
+				map = obj.SpatialMaps.(stationString).NLOS;
+				axisXY = obj.SpatialMaps.(stationString).axisNLOS;
 			end
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 			
-		end
-		
+        end
+        
+        function LOS = spatialLOSstate(obj, stationID, userPosition, LOSprop)
+            % Determine spatial LOS state by realizing random variable from
+            % spatial correlated map and comparing to LOS probability. Done
+            % according to 7.6.3.3
+            stationString = sprintf('station%i',stationID);
+            map = obj.SpatialMaps.(stationString).LOSprop;
+            axisXY = obj.SpatialMaps.(stationString).axisLOSprop;
+            LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+            if LOSrealize < LOSprop
+               LOS = 1;
+            else
+               LOS = 0;
+            end
+            
+        end
+        
+        
 		
 		function [lossdB] = computePathLoss(obj, TxNode, RxNode)
 			% Computes path loss. uses the following parameters
@@ -122,21 +170,30 @@ classdef sonohi3GPP38901 < sonohiBase
 			
 			areatype = obj.Channel.getAreaType(TxNode);
 			seed = obj.Channel.getLinkSeed(RxNode);
-			LOS = obj.Channel.isLinkLOS(TxNode, RxNode, false);
+			[LOS, prop] = obj.Channel.isLinkLOS(TxNode, RxNode, false);
+            if ~isnan(prop)
+                % LOS state is determined by comparing with spatial map of
+                % random variables, if the probability of determining LOS
+                % is used. 
+                LOS = obj.spatialLOSstate(TxNode.NCellID, RxNode.Position, prop);
+            end
+        
+            XCorr = obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+           
 			shadowing = obj.Channel.enableShadowing;
 			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
 			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
 			lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 			
 			if shadowing
-				lossdB = lossdB + obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+				lossdB = lossdB + XCorr;
 			end
 		end
 		
 	end
 	
 	methods(Static)
-		function LOS = LOSprobability(Channel, Station, User)
+		function [LOS, prop] = LOSprobability(Channel, Station, User)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			areaType = Channel.getAreaType(Station);
 			dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));

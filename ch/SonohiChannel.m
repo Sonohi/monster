@@ -414,7 +414,7 @@ classdef SonohiChannel < handle
 			
 		end
 		
-		function LOS = isLinkLOS(obj, Station, User, draw)
+		function [LOS, prop] = isLinkLOS(obj, Station, User, draw)
 			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
 			%
 			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
@@ -426,12 +426,14 @@ classdef SonohiChannel < handle
 			% :type User: :class:`ue.UserEquipment`
 			% :param bool draw: Draws fresnel zone and elevation profile.
 			% :returns: LOS (bool) indicating LOS
+            % :returns: (optional) probability is returned if :attr:`3GPP38901-probability` is assigned
 			
 			switch obj.LOSMethod
 				case 'fresnel'
 					LOS = obj.fresnelLOScomputation(Station, User, draw);
+                    prop = NaN;
 				case '3GPP38901-probability'
-					LOS = sonohi3GPP38901.LOSprobability(obj, Station, User);
+					[LOS, prop] = sonohi3GPP38901.LOSprobability(obj, Station, User);
 			end
 		end
 		
