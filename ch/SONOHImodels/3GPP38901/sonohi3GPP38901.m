@@ -116,6 +116,27 @@ classdef sonohi3GPP38901 < sonohiBase
             
         end
         
+        function checkInterpolationRange(~, axisXY, Position)
+           % Function used to check if the position can be interpolated
+           extrapolation = false;
+           if Position(1) > max(axisXY(1,:))
+               extrapolation = true;
+           elseif Position(1) < min(axisXY(1,:))
+               extrapolation = true;
+           elseif Position(2) > max(axisXY(2,:))
+               extrapolation = true;
+           elseif Position(3) < min(axisXY(2,:))
+               extrapolation = true;
+           end
+           
+           if extrapolation
+                pos = sprintf('(%s)',num2str(Position));
+                bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
+                sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
+           end
+               
+        end
+        
         
         function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
             % Interpolation between the random variables initialized
@@ -127,7 +148,9 @@ classdef sonohi3GPP38901 < sonohiBase
 			else
 				map = obj.SpatialMaps.(stationString).NLOS;
 				axisXY = obj.SpatialMaps.(stationString).axisNLOS;
-			end
+            end
+            
+            obj.checkInterpolationRange(axisXY, userPosition);
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 			
         end
@@ -150,7 +173,7 @@ classdef sonohi3GPP38901 < sonohiBase
         
         
 		
-		function [lossdB] = computePathLoss(obj, TxNode, RxNode)
+		function [lossdB, varargout] = computePathLoss(obj, TxNode, RxNode)
 			% Computes path loss. uses the following parameters
 			%
 			% * `f` - Frequency in GHz
@@ -185,9 +208,22 @@ classdef sonohi3GPP38901 < sonohiBase
 			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
 			lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 			
-			if shadowing
+
+            
+            % Return of channel conditions if required.
+            RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
+            RxNode.Rx.ChannelConditions.lossdB = lossdB;
+            RxNode.Rx.ChannelConditions.LOS = LOS;
+            RxNode.Rx.ChannelConditions.LOSprop = prop;
+            RxNode.Rx.ChannelConditions.AreaType = areatype;
+            
+            if shadowing
 				lossdB = lossdB + XCorr;
-			end
+            end
+            
+            RxNode.Rx.ChannelConditions.pathloss = lossdB;
+            
+            varargout{1} = RxNode;
 		end
 		
 	end

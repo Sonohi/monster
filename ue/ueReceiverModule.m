@@ -11,7 +11,7 @@ classdef ueReceiverModule
 		SNR;
 		SNRdB;
 		Waveform;
-    WaveformInfo;
+        WaveformInfo;
 		RxPwdBm; % Wideband
 		IntSigLoss;
 		Subframe;
@@ -30,6 +30,7 @@ classdef ueReceiverModule
 		PDSCH;
 		PropDelay;
 		HistoryStats;
+        ChannelConditions = struct(); % Storage of channel conditions
 	end
 	
 	methods

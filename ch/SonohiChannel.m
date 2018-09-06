@@ -132,7 +132,7 @@ classdef SonohiChannel < handle
 		end
 		
 		function area = getAreaSize(obj)
-			extraSamples = 400; %meters
+			extraSamples = 2000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples;
 		end
 		
