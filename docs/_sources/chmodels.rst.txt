@@ -31,6 +31,6 @@ ITUR1546
     :members:
 
 
-.. rubric:: Footnotes
+.. rubric:: References
 
 .. [#chmodelbook] Pérez-Fontán, F., Mariño Espiñeira, P., & Wiley InterScience (Online service). (2008). Modeling the wireless propagation channel : a simulation approach with Matlab. Wiley. 

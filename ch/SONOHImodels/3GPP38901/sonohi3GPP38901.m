@@ -84,60 +84,7 @@ classdef sonohi3GPP38901 < sonohiBase
 			axisNLOS = [xaxis; yaxis];
 		end
 		
-		
-		function [map, xaxis, yaxis] = spatialCorrMap(~, sigmaSF, dCorr, fMHz, radius)
-            % Create a map of independent Gaussian random variables according to the decorrelation distance. Interpolation between the random variables can be used to realize the 2D correlations. 
-            lambdac=300/fMHz;   % wavelength in m
-            interprate=round(dCorr/lambdac);
-            Lcorr=lambdac*interprate;
-            Nsamples=round(radius/Lcorr);
-
-            map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
-            xaxis=[-Nsamples:Nsamples-1]*Lcorr;
-            yaxis=[-Nsamples:Nsamples-1]*Lcorr;
-			
-        end
-        
-        function [map, xaxis, yaxis] = LOSpropMap(~, dCorr, fMHz, radius)
-            % Spatial correlation of LOS probabilities, used to realize if
-            % the link is LOS. See 7.6.3.3.
-            % The 2D map is created using the i
-            lambdac=300/fMHz;   % wavelength in m
-            interprate=round(dCorr/lambdac);
-            Lcorr=lambdac*interprate;
-            Nsamples=round(radius/Lcorr);
-            
-            % LOS is determined by probability and realized by comparing
-            % the distance-based LOS probability function with the spatial
-            % correlated random variable.
-            map = rand(2*Nsamples,2*Nsamples);
-            xaxis=[-Nsamples:Nsamples-1]*Lcorr;
-            yaxis=[-Nsamples:Nsamples-1]*Lcorr;
-            
-        end
-        
-        function checkInterpolationRange(~, axisXY, Position)
-           % Function used to check if the position can be interpolated
-           extrapolation = false;
-           if Position(1) > max(axisXY(1,:))
-               extrapolation = true;
-           elseif Position(1) < min(axisXY(1,:))
-               extrapolation = true;
-           elseif Position(2) > max(axisXY(2,:))
-               extrapolation = true;
-           elseif Position(3) < min(axisXY(2,:))
-               extrapolation = true;
-           end
-           
-           if extrapolation
-                pos = sprintf('(%s)',num2str(Position));
-                bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
-                sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
-           end
-               
-        end
-        
-        
+      
         function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
             % Interpolation between the random variables initialized
             % provides the magnitude of shadow fading given the LOS state.
@@ -229,6 +176,62 @@ classdef sonohi3GPP38901 < sonohiBase
 	end
 	
 	methods(Static)
+
+			
+		function [map, xaxis, yaxis] = spatialCorrMap(sigmaSF, dCorr, fMHz, radius)
+			% Create a map of independent Gaussian random variables according to the decorrelation distance. Interpolation between the random variables can be used to realize the 2D correlations. 
+			lambdac=300/fMHz;   % wavelength in m
+			interprate=round(dCorr/lambdac);
+			Lcorr=lambdac*interprate;
+			Nsamples=round(radius/Lcorr);
+
+			map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
+			xaxis=[-Nsamples:Nsamples-1]*Lcorr;
+			yaxis=[-Nsamples:Nsamples-1]*Lcorr;
+			
+		end
+		
+		function [map, xaxis, yaxis] = LOSpropMap(dCorr, fMHz, radius)
+			% Spatial correlation of LOS probabilities, used to realize if
+			% the link is LOS. See 7.6.3.3.
+			% The 2D map is created using the i
+			lambdac=300/fMHz;   % wavelength in m
+			interprate=round(dCorr/lambdac);
+			Lcorr=lambdac*interprate;
+			Nsamples=round(radius/Lcorr);
+			
+			% LOS is determined by probability and realized by comparing
+			% the distance-based LOS probability function with the spatial
+			% correlated random variable.
+			map = rand(2*Nsamples,2*Nsamples);
+			xaxis=[-Nsamples:Nsamples-1]*Lcorr;
+			yaxis=[-Nsamples:Nsamples-1]*Lcorr;
+			
+		end
+		
+		function checkInterpolationRange(axisXY, Position)
+		% Function used to check if the position can be interpolated
+		extrapolation = false;
+		if Position(1) > max(axisXY(1,:))
+			extrapolation = true;
+		elseif Position(1) < min(axisXY(1,:))
+			extrapolation = true;
+		elseif Position(2) > max(axisXY(2,:))
+			extrapolation = true;
+		elseif Position(3) < min(axisXY(2,:))
+			extrapolation = true;
+		end
+		
+		if extrapolation
+				pos = sprintf('(%s)',num2str(Position));
+				bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
+				sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
+		end
+			
+		end
+		
+
+
 		function [LOS, prop] = LOSprobability(Channel, Station, User)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			areaType = Channel.getAreaType(Station);
