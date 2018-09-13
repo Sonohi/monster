@@ -13,7 +13,7 @@ classdef sonohi3GPP38901 < sonohiBase
 	% * 'UMi' - Urban Micro
 	
 	properties
-		SpatialMaps = struct(); % Struct for storing shadow maps for each staiton
+		SpatialMaps = struct(); % Struct for storing spatial maps for each station.
 	end
 	
 	methods
@@ -71,15 +71,15 @@ classdef sonohi3GPP38901 < sonohiBase
                     dCorrLOSprop = 50;
             end
             % Configure LOS probability map G, with correlation distance
-            % according to 7.6-18. Need to compute final H matrix.
+            % according to 7.6-18. 
             [mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius);
             axisLOSprop = [xaxis; yaxis];
             
-            % Spatial correlation map of LOS pathloss + shadowing
+            % Spatial correlation map of LOS Large-scale SF
 			[mapLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFLOS, dCorrLOS, fMHz, radius);
 			axisLOS = [xaxis; yaxis];
             
-            % Spatial correlation map of NLOS pathloss + shadowing
+            % Spatial correlation map of NLOS Large-scale SF
 			[mapNLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFNLOS, dCorrNLOS, fMHz, radius);
 			axisNLOS = [xaxis; yaxis];
 		end
@@ -87,7 +87,8 @@ classdef sonohi3GPP38901 < sonohiBase
       
         function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
             % Interpolation between the random variables initialized
-            % provides the magnitude of shadow fading given the LOS state.
+			% provides the magnitude of shadow fading given the LOS state.
+			% .. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.
 			stationString = sprintf('station%i',stationID);
 			if LOS
 				map = obj.SpatialMaps.(stationString).LOS;
@@ -192,7 +193,7 @@ classdef sonohi3GPP38901 < sonohiBase
 		function [map, xaxis, yaxis] = LOSpropMap(dCorr, fMHz, radius)
 			% Spatial correlation of LOS probabilities, used to realize if
 			% the link is LOS. See 7.6.3.3.
-			% The 2D map is created using the i
+			% .. todo:: refactorize this function with spatialCorrMap, only difference is the prior distribution of uniform vs gaussian.
 			lambdac=300/fMHz;   % wavelength in m
 			interprate=round(dCorr/lambdac);
 			Lcorr=lambdac*interprate;
