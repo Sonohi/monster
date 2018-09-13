@@ -5,6 +5,7 @@ Param.channel.region = struct();
 Param.channel.region.macroScenario = 'UMa';
 Param.channel.region.microScenario = 'UMi';
 Param.channel.region.picoScenario = 'UMi';
+Param.channel.LOSMethod = '3GPP38901-probability';
 Param.numMacro = 1;
 Param.numMicro = 0;
 Param.numPico = 0;

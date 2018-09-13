@@ -154,9 +154,7 @@ classdef sonohi3GPP38901 < sonohiBase
 			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
 			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
 			lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-			
-
-            
+			            
             % Return of channel conditions if required.
             RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
             RxNode.Rx.ChannelConditions.lossdB = lossdB;

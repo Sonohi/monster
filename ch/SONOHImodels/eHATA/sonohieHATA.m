@@ -14,7 +14,7 @@ methods
     end
 
 
-    function [lossdB] = computePathLoss(obj, TxNode, RxNode)
+    function [lossdB, varargout] = computePathLoss(obj, TxNode, RxNode)
       % Computes path loss
       f = TxNode.DlFreq; % Frequency in MHz
       hbPos = TxNode.Position;
@@ -22,6 +22,7 @@ methods
       distance = obj.Channel.getDistance(TxNode.Position,RxNode.Position)/1e3; % in Km.
       areatype = obj.Channel.Region; % 'Rural', 'Urban', 'Dense Urban', 'Sea'
       [lossdB, ~] = ExtendedHata_MedianBasicPropLoss(f, distance, hbPos(3), hmPos(3), areatype);
+      
     end
 
   end
