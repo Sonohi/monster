@@ -46,7 +46,7 @@ classdef ChBulk_v2 < SonohiChannel
 			end
 			
 			if isempty(obj.DownlinkModel) && strcmp(chtype,'downlink')
-				sonohilog('Hey, no downlink channel is setup. Please run Channel.setup.','ERR')
+				sonohilog('Hey, no downlink channel is defined. Please the type is supported.','ERR')
 			end
 			
 			if isempty(obj.UplinkModel) && strcmp(chtype,'uplink')

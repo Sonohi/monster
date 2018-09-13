@@ -232,7 +232,7 @@ classdef sonohi3GPP38901 < sonohiBase
 		
 
 
-		function [LOS, prop] = LOSprobability(Channel, Station, User)
+		function [LOS, varargout] = LOSprobability(Channel, Station, User)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			areaType = Channel.getAreaType(Station);
 			dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
@@ -263,7 +263,7 @@ classdef sonohi3GPP38901 < sonohiBase
 						else
 							sonohilog('Error in computing LOS. Height out of range','ERR');
 						end
-						prop = (18/dist2d + exp(-1*((dist2d)/36))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
+						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
 					end
 					
 				otherwise
@@ -277,6 +277,13 @@ classdef sonohi3GPP38901 < sonohiBase
 			else
 				LOS = 1;
 			end
+			
+			if nargout > 1
+				varargout{1} = prop;
+				varargout{2} = x;
+				varargout{3} = dist2d;
+			end
+			
 		end
 	end
 	
