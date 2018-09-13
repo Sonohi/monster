@@ -317,13 +317,13 @@ given based on the waveform. Computed using matlabs <code class="xref mat mat-ob
 <em class="property">static </em><code class="descname">LOSpropMap</code><span class="sig-paren">(</span><em>dCorr</em>, <em>fMHz</em>, <em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSpropMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spatial correlation of LOS probabilities, used to realize if
 the link is LOS. See 7.6.3.3.
-The 2D map is created using the i</p>
+.. todo:: refactorize this function with spatialCorrMap, only difference is the prior distribution of uniform vs gaussian.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.SpatialMaps">
 <code class="descname">SpatialMaps</code><em class="property"> = 'struct()'</em><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.SpatialMaps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Struct for storing shadow maps for each staiton</p>
+<dd><p>Struct for storing spatial maps for each station.</p>
 </dd></dl>
 
 <dl class="staticmethod">
@@ -353,7 +353,8 @@ The 2D map is created using the i</p>
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computeShadowingLoss">
 <code class="descname">computeShadowingLoss</code><span class="sig-paren">(</span><em>stationID</em>, <em>userPosition</em>, <em>LOS</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computeShadowingLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolation between the random variables initialized
-provides the magnitude of shadow fading given the LOS state.</p>
+provides the magnitude of shadow fading given the LOS state.
+.. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.</p>
 </dd></dl>
 
 <dl class="method">
