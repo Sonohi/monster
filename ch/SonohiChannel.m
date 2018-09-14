@@ -137,7 +137,7 @@ classdef SonohiChannel < handle
 		end
 		
 		function area = getAreaSize(obj)
-			extraSamples = 2000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
+			extraSamples = 3000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples;
 		end
 		
@@ -432,14 +432,23 @@ classdef SonohiChannel < handle
 			% :param bool draw: Draws fresnel zone and elevation profile.
 			% :returns: LOS (bool) indicating LOS
             % :returns: (optional) probability is returned if :attr:`3GPP38901-probability` is assigned
+            
+            % Check if User is indoor
+            % Else use probability to determine LOS state
+            if User.Mobility.Indoor 
+                LOS = 0;
+                prop = NaN;
+            else
 			
-			switch obj.LOSMethod
-				case 'fresnel'
-					LOS = obj.fresnelLOScomputation(Station, User, draw);
-                    prop = NaN;
-				case '3GPP38901-probability'
-					[LOS, prop] = sonohi3GPP38901.LOSprobability(obj, Station, User);
-			end
+                switch obj.LOSMethod
+                    case 'fresnel'
+                        LOS = obj.fresnelLOScomputation(Station, User, draw);
+                        prop = NaN;
+                    case '3GPP38901-probability'
+                        [LOS, prop] = sonohi3GPP38901.LOSprobability(obj, Station, User);
+                end
+                
+            end
 		end
 		
 		function LOS = fresnelLOScomputation(obj, Station, User, draw)

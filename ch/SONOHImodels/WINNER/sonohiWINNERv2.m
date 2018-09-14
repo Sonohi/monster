@@ -65,7 +65,7 @@ classdef sonohiWINNERv2 < sonohiBase
             obj = obj@sonohiBase(Channel, Chtype);
         end
 
-				function obj = setup(obj, Stations, Users)
+		function obj = setup(obj, Stations, Users, Param)
 						classes = unique({Stations.BsClass});
             for class = 1:length(classes)
                 varname = classes{class};

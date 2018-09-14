@@ -60,7 +60,7 @@ classdef UserEquipment
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = MMobility('pedestrian', 1, Param.mobilitySeed * userId, Param);
+			obj.Mobility = MMobility(Param.mobilityScenario, 1, Param.mobilitySeed * userId, Param);
 			obj.Position = [obj.Mobility.Trajectory(1,:), Param.ueHeight];
 			if Param.draw
 				obj.plotUEinScenario(Param);

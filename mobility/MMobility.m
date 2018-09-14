@@ -12,6 +12,7 @@ classdef MMobility < handle
 		Seed;
 		Rounds;
 		Trajectory = [];
+		Indoor;
 		TimeStep = 1e-3;
 	end
 	
@@ -29,12 +30,14 @@ classdef MMobility < handle
 		distanceMoved;
 		westEast = [2, 4];
 		northSouth = [1, 3];
+        avgfloorHeight = 3; % Roughly 3m
+		supportedScenarios = {'pedestrian', 'pedestrian-indoor'}
 	end
 
 	methods
 		function obj = MMobility(scenario, velocity, seed, Param)
 			% Constructor
-			if ~strcmp(scenario, 'pedestrian')
+			if ~any(strcmp(scenario, obj.supportedScenarios))
 				sonohilog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
 			end
 			
@@ -75,7 +78,30 @@ classdef MMobility < handle
 				obj.Trajectory = zeros(obj.Rounds, 2); % x and y
 				if strcmp(obj.Scenario, 'pedestrian')
 					obj.randomWalkPedestrian();
+				elseif strcmp(obj.Scenario, 'pedestrian-indoor')
+					obj.randomWalkPedestrianIndoor();
 				end
+		end
+
+		function obj = randomWalkPedestrianIndoor(obj)
+			rng(obj.Seed)
+			% Get random building
+			[start, ~] = obj.getRandomBuilding();
+
+			% Get random floor given the height of the building
+			bHeight = obj.buildingFootprints(start, 5)
+            numFloors = floor(bHeight/obj.avgfloorHeight);
+            randFloor = randi([0,numFloors]);
+
+			% Pick random position inside building
+
+			% Create distribution of movement and still states
+
+			% Construct movement based on distribution inside building
+
+            % return trajectory AND height of the trajectory. Needs
+            % refactorizaiton here.
+
 		end
 		
 		function obj = randomWalkPedestrian(obj)
@@ -206,6 +232,7 @@ classdef MMobility < handle
 			% * pedestrianCrossingPause = 5 s
 			% * turningDistance = 2 * wall distance
 			% * crossingDistance = road width + 2*wall distance
+			% * Indoor = if scenario is given
 			obj.roadWidth = 10;
 			obj.laneWidth = obj.roadWidth / 3;
 			obj.wallDistance = 1;
@@ -219,6 +246,13 @@ classdef MMobility < handle
 			end
 			
 			obj.distanceMoved = obj.TimeStep * obj.movementSpeed;
+
+			% Set indoor boolean
+			if strcmp(obj.Scenario,'pedestrian-indoor')
+				obj.Indoor = 1;
+			else
+				obj.Indoor = 0;
+			end
 		end
 		
 		function [buildingIdx, buildingSide] = getRandomBuilding(obj)
