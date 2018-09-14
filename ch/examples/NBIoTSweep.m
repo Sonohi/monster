@@ -7,6 +7,7 @@ Param.numPico = 0;
 Param.numUsers = 1;
 Param.channel.enableInterference = 0;
 Param.channel.enableFading = 0;
+Param.channel.enableShadowing = 0;
 
 
 
@@ -22,10 +23,10 @@ User = createUsers(Param);
 % Create Channel scenario
 Param.channel.region = 'Suburban';
 Param.channel.modeDL = 'ITU1546';
-ChSuburban = ChBulk_v2(Param);
+ChSuburban = ChBulk_v2(Station, User, Param);
 Param.channel.region = 'Urban';
 Param.channel.modeDL = 'ITU1546';
-ChUrban = ChBulk_v2(Param);
+ChUrban = ChBulk_v2(Station, User, Param);
 
 
 Station.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
@@ -69,13 +70,11 @@ for distanceIdx = 1:N
   ue.Position = [xDiff, bs.Position(2), 1.5];
 
   % Traverse channel suburban
-  ChSuburban = ChSuburban.setupChannelDL(bs,ue);
   [~, ue] = ChSuburban.traverse(bs,ue,'downlink');
   resultsSuburban(distanceIdx,1) = ue.Rx.SNRdB;
 	resultsSuburban(distanceIdx,2) = ue.Rx.RxPwdBm;
 	
 	% Urban
-	ChUrban = ChUrban.setupChannelDL(bs,ue);
   [~, ue] = ChUrban.traverse(bs,ue,'downlink');
   resultsUrban(distanceIdx,1) = ue.Rx.SNRdB;
 	resultsUrban(distanceIdx,2) = ue.Rx.RxPwdBm;

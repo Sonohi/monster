@@ -24,8 +24,7 @@
 
   
 
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -306,7 +305,10 @@
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">LOS (bool) indicating LOS</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">LOS (bool) indicating LOS</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(optional) probability is returned if <code class="xref mat mat-attr docutils literal notranslate"><span class="pre">3GPP38901-probability</span></code> is assigned</p>
 </td>
 </tr>
 </tbody>
@@ -317,7 +319,55 @@
 
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>A simple example can be found in <cite>ch/examples/simple_setup.m</cite></p>
+<p>A simple example can be found in <cite>ch/examples/SimpleExample.m</cite></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">clear</span> <span class="n">all</span>
+<span class="n">close</span> <span class="n">all</span>
+<span class="n">load</span><span class="p">(</span><span class="s">&#39;SimulationParameters.mat&#39;</span><span class="p">);</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">numMacro</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">numMicro</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">numPico</span> <span class="p">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">numUsers</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">channel</span><span class="p">.</span><span class="n">region</span> <span class="p">=</span> <span class="s">&#39;Suburban&#39;</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">channel</span><span class="p">.</span><span class="n">enableShadowing</span> <span class="p">=</span> <span class="n">false</span><span class="p">;</span>
+<span class="n">Param</span><span class="p">.</span><span class="n">channel</span><span class="p">.</span><span class="n">modeDL</span> <span class="p">=</span> <span class="s">&#39;ITU1546&#39;</span><span class="p">;</span>
+
+
+<span class="k">if</span> <span class="n">Param</span><span class="p">.</span><span class="n">draw</span>
+	<span class="n">Param</span> <span class="p">=</span> <span class="n">createLayoutPlot</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
+<span class="hll">	<span class="n">Param</span> <span class="p">=</span> <span class="n">createPHYplot</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
+</span><span class="k">end</span>
+
+<span class="c">% Create Stations and Users</span>
+<span class="p">[</span><span class="n">Station</span><span class="p">,</span> <span class="n">Param</span><span class="p">]</span> <span class="p">=</span> <span class="n">createBaseStations</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
+<span class="n">User</span> <span class="p">=</span> <span class="n">createUsers</span><span class="p">(</span><span class="n">Param</span><span class="p">);</span>
+
+<span class="c">% Create Channel scenario</span>
+<span class="n">Channel</span> <span class="p">=</span> <span class="n">ChBulk_v2</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Param</span><span class="p">);</span>
+
+
+<span class="n">Station</span><span class="p">.</span><span class="n">Users</span> <span class="p">=</span> <span class="n">struct</span><span class="p">(</span><span class="s">&#39;UeId&#39;</span><span class="p">,</span> <span class="n">User</span><span class="p">.</span><span class="n">NCellID</span><span class="p">,</span> <span class="s">&#39;CQI&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;RSSI&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+<span class="n">Station</span><span class="p">.</span><span class="n">ScheduleDL</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">).</span><span class="n">UeId</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">NCellID</span><span class="p">;</span>
+<span class="hll"><span class="n">User</span><span class="p">.</span><span class="n">ENodeBID</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">NCellID</span><span class="p">;</span>
+</span><span class="hll">
+</span><span class="hll"><span class="c">% A full LTE frame is stored in Tx.Frame which can be used to debug and</span>
+</span><span class="c">% test.</span>
+<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">Waveform</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">Frame</span><span class="p">;</span>
+<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">WaveformInfo</span> <span class="p">=</span><span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">FrameInfo</span><span class="p">;</span>
+<span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">ReGrid</span> <span class="p">=</span> <span class="n">Station</span><span class="p">.</span><span class="n">Tx</span><span class="p">.</span><span class="n">FrameGrid</span><span class="p">;</span>
+
+<span class="c">% Traverse channel</span>
+<span class="p">[</span><span class="o">~</span><span class="p">,</span> <span class="n">User</span><span class="p">]</span> <span class="p">=</span> <span class="n">Channel</span><span class="p">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span><span class="n">User</span><span class="p">,</span><span class="s">&#39;downlink&#39;</span><span class="p">);</span>
+
+<span class="c">% Get offset</span>
+<span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Offset</span> <span class="p">=</span> <span class="n">lteDLFrameOffset</span><span class="p">(</span><span class="n">Station</span><span class="p">,</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span><span class="p">);</span>
+
+<span class="c">% Apply offset</span>
+<span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Waveform</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">Offset</span><span class="p">:</span><span class="k">end</span><span class="p">);</span>
+
+<span class="c">% UE reference measurements</span>
+<span class="n">User</span><span class="p">.</span><span class="n">Rx</span> <span class="p">=</span> <span class="n">User</span><span class="p">.</span><span class="n">Rx</span><span class="p">.</span><span class="n">referenceMeasurements</span><span class="p">(</span><span class="n">Station</span><span class="p">);</span>
+</pre></div>
+</div>
 </div>
 </div>
 
@@ -377,16 +427,11 @@
 
   
 
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
-          
-          SphinxRtdTheme.Navigation.enableSticky();
-          
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script> 
 

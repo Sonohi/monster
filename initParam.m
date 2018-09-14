@@ -75,7 +75,7 @@ Param.eNBGain = 0; %Antenna gain of the eNB.
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = '3GPP38901';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
+Param.channel.modeDL = 'Quadriga';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
 Param.channel.enableFading = true;
