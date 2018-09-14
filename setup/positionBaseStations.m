@@ -22,6 +22,37 @@ buildings = Param.buildings;
 area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
 	max(buildings(:, 4))];
 
+% Draw grid first
+if Param.draw
+	for i = 1:length(buildings(:,1))
+		x0 = buildings(i,1);
+		y0 = buildings(i,2);
+		x = buildings(i,3)-x0;
+		y = buildings(i,4)-y0;
+		rectangle(Param.LayoutAxes,'Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
+	end
+	
+	% Plot 3d manhattan grid.
+	%h2 = figure;
+	%set(gca, 'XTick', []);
+	%set(gca, 'YTick', []);
+	%set(gca,'Visible','off')
+	%hold on
+	%for i = 1:length(buildings(:,1))
+	%   x0 = buildings(i,1);
+	%   y0 = buildings(i,2);
+	%   x = buildings(i,3);
+	%   y = buildings(i,4);
+	%   z = buildings(i,5);
+	%   verts = [x0 y0 0; x y0 0; x y 0; x0 y 0;
+	%             x0 y0 z; x y0 z; x y z; x0 y z];
+	%   fac = [1 2 3 4; 2 3 7 6; 1 2 6 5; 4 3 7 8;
+	%             5 8 7 6; 1 4 8 5];
+	%   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])
+	%end
+	drawnow
+end
+
 % Macro BS positioned at centre with single BS
 if (maBS == 1)
 	xc = (area(3) - area(1))/2;
@@ -68,33 +99,29 @@ if Param.numMicro > 0
 				xr = xc + r*cos(rho+iMicro*theta);
 				yr = yc + r*sin(rho+iMicro*theta);
 				microPos(iMicro, :) = [xr yr];
-				if Param.draw
-					text(xr,yr+20,strcat('Micro BS ', num2str(iMicro+1),' (',num2str(round(xr)),', ', ...
-						num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-					f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr yr+microLengthY*2],microImg);
-					set(f, 'AlphaData', alpha);
-					drawnow
-				end
 			end
+
 		case 'random'
 			for (i = 1 : miBS)
 				valid = false;
 				while (~valid)
+					%Choose random position, within the grid 
 					x = rand * (area(3) + area(1)) - area(1);
 					y = rand * (area(4) + area(2)) - area(2);
+					%Avoid collisions with buildings
 					for (b = 1 : length(buildings(:, 1)))
 						if (x > buildings(b, 1) && x < buildings(b, 3) && y > buildings(b, 2) && y < buildings(b, 4))
 							valid = true;
 						end
 					end
+					%Avoid placement too close to a macro BST
 					for (m = 1 : maBS)
 						d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
 						if (d < 20)
 							valid = false;
 						end
 					end
-					
+					%Avoid placement too close to another micro BST
 					for (m = 1 : i - 1)
 						d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
 						if (d < 20)
@@ -102,15 +129,8 @@ if Param.numMicro > 0
 						end
 					end
 				end
-				microPos(i, :) = [x y];
-				if Param.draw
-					text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-					f = imagesc(Param.LayoutAxes,[x-microLengthX x+microLengthX],[y y+microLengthY*2],microImg);
-					set(f, 'AlphaData', alpha);
-					drawnow
-				end
+				%Save coordinate and draw
+				microPos(i, :) = [x y];		
 			end
 			
 		case 'clusterized'
@@ -158,20 +178,43 @@ if Param.numMicro > 0
 			for (i = 1 : miBS),
 				x = microPos(i, 1);
 				y = microPos(i, 2);
-				if Param.draw
-					text(x,y+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-					f = imagesc(Param.LayoutAxes,[x-microLengthX x+microLengthX],[y y+microLengthY*2],microImg);
-					set(f, 'AlphaData', alpha);
-					drawnow
-				end
 			end
 			Param.clusters = clusters;
-			
+		
+		case 'hexagonal'
+			xc = (area(3) - area(1))/2;
+			yc = (area(4) - area(2))/2;
+			rho = 0;
+			theta = 2*pi/6;
+			if miBS < 6
+				theta = 2*pi/miBS;
+			end
+			for iMicro=1:miBS
+				xr = xc + r*cos(rho+iMicro*theta);
+				yr = yc + r*sin(rho+iMicro*theta);
+				microPos(iMicro, :) = [xr yr];
+			end
 		otherwise
 			sonohiLog('Unknown choice for micro BS positioning strategy', 'ERR');
 	end
+	%Check for large amount of interferrence with macro BST and draw
+	maxInterferrenceDistMicro2Macro = 50; %TODO should adapt to transmission levels of macro and micro BST
+	for (i=1:miBS)
+		d = sqrt((macroPos(1, 1) - microPos(i,1)) ^ 2 + (macroPos(1, 2) - microPos(i,2)) ^ 2);
+		if d< maxInterferrenceDistMicro2Macro
+			sonohilog(strcat('Warning! Too high interferrence detected between macro and micro BST at',num2str(microPos(i,1)),',',num2str(microPos(i,2))),'WRN');
+		end
+		xr = microPos(i,1);
+		yr = microPos(i,2);
+		if Param.draw
+			text(xr,yr+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(xr)),', ', ...
+				num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
+					
+			f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr yr+microLengthY*2],microImg);
+			set(f, 'AlphaData', alpha);
+			drawnow
+		end
+	end	
 end
 
 %Pico BS positioning
@@ -197,20 +240,19 @@ if Param.numPico > 0
 			for iPico = 1:piBS
 				xr = xc + r*cos(rho+iPico*theta);
 				yr = yc + r*sin(rho+iPico*theta);
-				picoPos(iPico, :) = [xr yr];
-				if Param.draw
-					text(xr,yr+20,strcat('Pico BS ', num2str(iPico+1),' (',num2str(round(xr)),', ', ...
-						num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-					f = imagesc(Param.LayoutAxes,[xr-picoLengthX xr+picoLengthX],[yr yr+picoLengthY*2],picoImg);
-					set(f, 'AlphaData', alpha);
-					drawnow
+				%Check for collision with microBaseStations
+				for iMicro = 1:miBS
+					if [xr,yr] == microPos(iMicro,:)
+						sonohilog(strcat('Warning at ',num2str(xr),',',num2str(yr), ' collision detected between pico and other BST'),'WRN');
+					end
 				end
+				picoPos(iPico, :) = [xr yr];
 			end
 		case 'random'
 			for i = 1 : piBS
 				valid = false;
 				while (~valid)
+					%Choose random position, within the grid 
 					x = rand * (area(3) + area(1)) - area(1);
 					y = rand * (area(4) + area(2)) - area(2);
 					for (b = 1 : length(buildings(:, 1)))
@@ -218,13 +260,21 @@ if Param.numPico > 0
 							valid = true;
 						end
 					end
+					%Avoid placement too close to macro BST
 					for m = 1 : maBS
 						d = sqrt((macroPos(m, 1) - x) ^ 2 + (macroPos(m, 2) - y) ^ 2);
 						if (d < 20)
 							valid = false;
 						end
 					end
-					
+					%Avoid placement too close to micro BST
+					for (m = 1 : i - 1)
+						d = sqrt((microPos(m, 1) - x) ^ 2 + (microPos(m, 2) - y) ^ 2);
+						if (d < 20)
+							valid = false;
+						end
+					end
+					%Avoid placement too close to another pico BST
 					for m = 1 : i - 1
 						d = sqrt((picoPos(m, 1) - x) ^ 2 + (picoPos(m, 2) - y) ^ 2);
 						if (d < 20)
@@ -233,51 +283,39 @@ if Param.numPico > 0
 					end
 				end
 				picoPos(i, :) = [x y];
-				if Param.draw
-					text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-						num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-					f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y y+picoLengthY*2],picoImg);
-					set(f, 'AlphaData', alpha);
-					drawnow
-				end
 			end
 		otherwise
-			sonohiLog('Unknown choice for pico BS positioning strategy', 'ERR');
+			sonohilog('Unknown choice for pico BS positioning strategy', 'ERR');
 	end
-end
 
-% Draw grid
-if Param.draw
-	for i = 1:length(buildings(:,1))
-		x0 = buildings(i,1);
-		y0 = buildings(i,2);
-		x = buildings(i,3)-x0;
-		y = buildings(i,4)-y0;
-		rectangle(Param.LayoutAxes,'Position',[x0 y0 x y],'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
+	%Check for large amount of interferrence with macro BST
+	maxInterferrenceDistPico2Macro = 75; %TODO should adapt to transmission levels of macro and micro BST
+	maxInterferrenceDistPico2Micro = 25; %TODO should adapt to transmission levels of macro and micro BST
+	for (i=1:piBS)
+		d = sqrt((macroPos(1, 1) - picoPos(i,1)) ^ 2 + (macroPos(1, 2) - picoPos(i,2)) ^ 2);
+		if d< maxInterferrenceDistPico2Macro
+			sonohilog(strcat('Warning! Too high interferrence detected between macro and pico BST at',num2str(picoPos(i,1)),',',num2str(picoPos(i,2))),'WRN');
+		end
+		%Check for large amount of interferrence with micro BST
+		for (j=1:miBS)
+			d = sqrt((microPos(j, 1) - picoPos(i,1)) ^ 2 + (microPos(j, 2) - picoPos(i,2)) ^ 2);
+			if d< maxInterferrenceDistPico2Micro
+				sonohilog(strcat('Warning! Too high interferrence detected between micro and pico BST at',num2str(picoPos(i,1)),',',num2str(picoPos(i,2))),'WRN');
+			end
+		end
+		%Draw the picoBaseStations
+		x = picoPos(i,1);
+		y = picoPos(i,2);
+		if Param.draw
+			text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+				num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
+					
+			f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y y+picoLengthY*2],picoImg);
+			set(f, 'AlphaData', alpha);
+			drawnow
+		end
+
 	end
 	
-	% Plot 3d manhattan grid.
-	%h2 = figure;
-	%set(gca, 'XTick', []);
-	%set(gca, 'YTick', []);
-	%set(gca,'Visible','off')
-	%hold on
-	%for i = 1:length(buildings(:,1))
-	%   x0 = buildings(i,1);
-	%   y0 = buildings(i,2);
-	%   x = buildings(i,3);
-	%   y = buildings(i,4);
-	%   z = buildings(i,5);
-	%   verts = [x0 y0 0; x y0 0; x y 0; x0 y 0;
-	%             x0 y0 z; x y0 z; x y z; x0 y z];
-	%   fac = [1 2 3 4; 2 3 7 6; 1 2 6 5; 4 3 7 8;
-	%             5 8 7 6; 1 4 8 5];
-	%   patch('Vertices',verts,'Faces',fac,'FaceColor',[0.9 .9 .9])
-	%end
-	drawnow
 end
-
-
-
 end
