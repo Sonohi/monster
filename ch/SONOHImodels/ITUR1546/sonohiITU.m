@@ -16,7 +16,7 @@ classdef sonohiITU < sonohiBase
         end
 
 
-        function [lossdB] = computePathLoss(obj, TxNode, RxNode)
+        function [lossdB, varargout] = computePathLoss(obj, TxNode, RxNode)
             % Computes ITU pathloss
             f = TxNode.DlFreq; % Frequency in MHz
             percentage_time = 50; % Percentage time 
@@ -52,6 +52,7 @@ classdef sonohiITU < sonohiBase
             pathinfo = 0; 
             debug = 0;
             [T,~,lossdB] = evalc('P1546FieldStrMixed(f,percentage_time,tx_heff,rx_heff,R2,areatype,distance,path_c, pathinfo, [], [], [], [], [], [], [], [], [], [], debug)');
+            varargout{1} = RxNode;
         end
 
 

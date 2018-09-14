@@ -23,10 +23,10 @@ Channel
 
 Examples
 -----------
-A simple example can be found in `ch/examples/simple_setup.m`
+A simple example can be found in `ch/examples/SimpleExample.m`
 
 .. highlight:: matlab
-.. literalinclude:: ../../ch/examples/simple_setup.m
+.. literalinclude:: ../../ch/examples/SimpleExample.m
     :emphasize-lines: 15, 28-30
 
 

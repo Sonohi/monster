@@ -43,9 +43,6 @@ function locationMS(XYZ)
 plot(XYZ(1),XYZ(2),'o');
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% A function that draws the location of Bs
 function locationBS(XYZ);
 plot(XYZ(1),XYZ(2),'^');
 end
