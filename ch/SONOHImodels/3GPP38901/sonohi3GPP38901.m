@@ -1,10 +1,10 @@
 classdef sonohi3GPP38901 < sonohiBase
-	% This is implemented using the 3GPP TR 38901 v14 document
-	% 5G; Study on channel model for frequencies from .5 to 100 GHZ
+	% V1 This is implemented using the 3GPP TR 38901 v14 document 5G; Study on channel model for frequencies from .5 to 100 GHZ
 	%
 	% .. todo:: Add fast fading as specified by the specification. E.g. CDL and TDL
 	%
 	% V1 contains only the implementation of pathloss with shadowing added as log-normal distributions based on a standard deviation.
+	% V2 added indoor propagation losses with uniform distributions based on indoor depth and material losses as documented in 38901.
 	%
 	% Current scenarios are implemented and usable:
 	%
@@ -47,6 +47,7 @@ classdef sonohi3GPP38901 < sonohiBase
 		end
 		
 		function [mapLOS, mapNLOS, mapLOSprop, axisLOS, axisNLOS, axisLOSprop] = generateShadowMap(obj, station)
+			% .. todo:: check station.Seed is unique per station.
 			areaType = obj.Channel.getAreaType(station);
 			fMHz = station.DlFreq; % Freqency in MHz
 			radius = obj.Channel.getAreaSize(); % Get range of grid
@@ -56,51 +57,51 @@ classdef sonohi3GPP38901 < sonohiBase
 					sigmaSFNLOS = 8;
 					dCorrLOS = 37;
 					dCorrNLOS = 120;
-                    dCorrLOSprop = 60;
+          dCorrLOSprop = 60;
 				case 'UMa'
 					sigmaSFLOS = 4;
 					sigmaSFNLOS = 6;
 					dCorrLOS = 37;
 					dCorrNLOS = 50;
-                    dCorrLOSprop = 50;
+          dCorrLOSprop = 50;
 				case 'UMi'
 					sigmaSFLOS = 4;
 					sigmaSFNLOS = 7.82;
 					dCorrLOS = 10;
 					dCorrNLOS = 13;
-                    dCorrLOSprop = 50;
-            end
-            % Configure LOS probability map G, with correlation distance
-            % according to 7.6-18. 
-            [mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius);
-            axisLOSprop = [xaxis; yaxis];
-            
-            % Spatial correlation map of LOS Large-scale SF
-            % .. todo:: check station.Seed is unique per station.
+					dCorrLOSprop = 50;
+      end
+			% Configure LOS probability map G, with correlation distance
+			% according to 7.6-18. 
+			[mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius);
+			axisLOSprop = [xaxis; yaxis];
+			
+			% Spatial correlation map of LOS Large-scale SF
 			[mapLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFLOS, dCorrLOS, fMHz, radius, station.Seed);
 			axisLOS = [xaxis; yaxis];
-            
-            % Spatial correlation map of NLOS Large-scale SF
+			
+			% Spatial correlation map of NLOS Large-scale SF
 			[mapNLOS, xaxis, yaxis] = obj.spatialCorrMap(sigmaSFNLOS, dCorrNLOS, fMHz, radius, station.Seed);
 			axisNLOS = [xaxis; yaxis];
-		end
+			end
 		
       
         function XCorr = computeShadowingLoss(obj, stationID, userPosition, LOS)
-            % Interpolation between the random variables initialized
-			% provides the magnitude of shadow fading given the LOS state.
-			% .. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.
-			stationString = sprintf('station%i',stationID);
-			if LOS
-				map = obj.SpatialMaps.(stationString).LOS;
-				axisXY = obj.SpatialMaps.(stationString).axisLOS;
-			else
-				map = obj.SpatialMaps.(stationString).NLOS;
-				axisXY = obj.SpatialMaps.(stationString).axisNLOS;
+        % Interpolation between the random variables initialized
+				% provides the magnitude of shadow fading given the LOS state.
+				%
+				% .. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.
+				stationString = sprintf('station%i',stationID);
+				if LOS
+					map = obj.SpatialMaps.(stationString).LOS;
+					axisXY = obj.SpatialMaps.(stationString).axisLOS;
+				else
+					map = obj.SpatialMaps.(stationString).NLOS;
+					axisXY = obj.SpatialMaps.(stationString).axisNLOS;
             end
             
             obj.checkInterpolationRange(axisXY, userPosition);
-			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+						XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 			
         end
         
@@ -125,6 +126,8 @@ classdef sonohi3GPP38901 < sonohiBase
 		function [lossdB, varargout] = computePathLoss(obj, TxNode, RxNode)
 			% Computes path loss. uses the following parameters
 			%
+			% ..todo:: Compute indoor depth from mobility class
+			%
 			% * `f` - Frequency in GHz
 			% * `hBs` - Height of Tx
 			% * `hUt` - height of Rx
@@ -143,14 +146,14 @@ classdef sonohi3GPP38901 < sonohiBase
 			areatype = obj.Channel.getAreaType(TxNode);
 			seed = obj.Channel.getLinkSeed(RxNode);
 			[LOS, prop] = obj.Channel.isLinkLOS(TxNode, RxNode, false);
-            if ~isnan(prop)
-                % LOS state is determined by comparing with spatial map of
-                % random variables, if the probability of determining LOS
-                % is used. 
-                LOS = obj.spatialLOSstate(TxNode.NCellID, RxNode.Position, prop);
-            end
-        
-            XCorr = obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+			if ~isnan(prop)
+					% LOS state is determined by comparing with spatial map of
+					% random variables, if the probability of determining LOS
+					% is used. 
+					LOS = obj.spatialLOSstate(TxNode.NCellID, RxNode.Position, prop);
+			end
+
+			XCorr = obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
            
 			shadowing = obj.Channel.enableShadowing;
 			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
@@ -173,26 +176,26 @@ classdef sonohi3GPP38901 < sonohiBase
 				%PL_in = indoorloss3gpp38901('', 2d_in);
 				% Otherwise sample from uniform
 				PL_in  = indoorloss3gpp38901(areatype);
-				indoorLosses = PL_tw; %+ PL_in; %+ randn(1, 1)*sigma_P;
+				indoorLosses = PL_tw + PL_in + randn(1, 1)*sigma_P;
 				lossdB = lossdB + indoorLosses;
+				RxNode.Rx.ChannelConditions.IndoorLoss = indoorLosses;
 
 			end
 			            
-            % Return of channel conditions if required.
-            RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
-            RxNode.Rx.ChannelConditions.lossdB = lossdB;
-            RxNode.Rx.ChannelConditions.IndoorLoss = indoorLosses;
-            RxNode.Rx.ChannelConditions.LOS = LOS;
-            RxNode.Rx.ChannelConditions.LOSprop = prop;
-            RxNode.Rx.ChannelConditions.AreaType = areatype;
-            
-            if shadowing
+			% Return of channel conditions if required.
+			RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
+			RxNode.Rx.ChannelConditions.lossdB = lossdB;
+			RxNode.Rx.ChannelConditions.LOS = LOS;
+			RxNode.Rx.ChannelConditions.LOSprop = prop;
+			RxNode.Rx.ChannelConditions.AreaType = areatype;
+
+			if shadowing
 				lossdB = lossdB + XCorr;
-            end
-            
-            RxNode.Rx.ChannelConditions.pathloss = lossdB;
-            
-            varargout{1} = RxNode;
+			end
+
+			RxNode.Rx.ChannelConditions.pathloss = lossdB;
+
+			varargout{1} = RxNode;
 		end
 		
 	end
@@ -216,6 +219,7 @@ classdef sonohi3GPP38901 < sonohiBase
 		function [map, xaxis, yaxis] = LOSpropMap(dCorr, fMHz, radius)
 			% Spatial correlation of LOS probabilities, used to realize if
 			% the link is LOS. See 7.6.3.3.
+			%
 			% .. todo:: refactorize this function with spatialCorrMap, only difference is the prior distribution of uniform vs gaussian.
 			lambdac=300/fMHz;   % wavelength in m
 			interprate=round(dCorr/lambdac);

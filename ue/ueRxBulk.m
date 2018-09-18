@@ -58,7 +58,8 @@ function Users = ueRxBulk(Stations, Users, cec)
 			user.Rx = user.Rx.logBlockReception(user);
     else
       sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
-      user.Rx = user.Rx.logNotDemodulated();
+			user.Rx = user.Rx.logNotDemodulated();
+			user.Rx.CQI = 3;
       Users(iUser) = user;
       continue;
     end

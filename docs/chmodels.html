@@ -24,7 +24,8 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -260,9 +261,9 @@ The downlink logic follows the follow flow</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.sonohiBase.setWaveform">
-<em class="property">static </em><code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setWaveform</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.sonohiBase.setWaveform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Copies waveform and waveform info to Rx module, enables transmission.</p>
 </dd></dl>
 
@@ -293,31 +294,34 @@ given based on the waveform. Computed using matlabs <code class="xref mat mat-ob
 <dl class="class">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901">
 <em class="property">class </em><code class="descclassname">ch.SONOHImodels.3GPP38901.</code><code class="descname">sonohi3GPP38901</code><span class="sig-paren">(</span><em>Channel</em>, <em>Chtype</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is implemented using the 3GPP TR 38901 v14 document
-5G; Study on channel model for frequencies from .5 to 100 GHZ</p>
+<dd><p>V1 This is implemented using the 3GPP TR 38901 v14 document 5G; Study on channel model for frequencies from .5 to 100 GHZ</p>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
 <p class="last">Add fast fading as specified by the specification. E.g. CDL and TDL</p>
 </div>
-<p>V1 contains only the implementation of pathloss with shadowing added as log-normal distributions based on a standard deviation.</p>
+<p>V1 contains only the implementation of pathloss with shadowing added as log-normal distributions based on a standard deviation.
+V2 added indoor propagation losses with uniform distributions based on indoor depth and material losses as documented in 38901.</p>
 <p>Current scenarios are implemented and usable:</p>
 <ul class="simple">
 <li>‘RMa’ - Rural Macro</li>
 <li>‘UMa’ - Urban Macro</li>
 <li>‘UMi’ - Urban Micro</li>
 </ul>
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability">
-<em class="property">static </em><code class="descname">LOSprobability</code><span class="sig-paren">(</span><em>Channel</em>, <em>Station</em>, <em>User</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability" title="Permalink to this definition">¶</a></dt>
+<code class="descname">LOSprobability</code><span class="sig-paren">(</span><em>Channel</em>, <em>Station</em>, <em>User</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability" title="Permalink to this definition">¶</a></dt>
 <dd><p>LOS probability using table 7.4.2-1 of 3GPP TR 38.901</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSpropMap">
-<em class="property">static </em><code class="descname">LOSpropMap</code><span class="sig-paren">(</span><em>dCorr</em>, <em>fMHz</em>, <em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSpropMap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">LOSpropMap</code><span class="sig-paren">(</span><em>dCorr</em>, <em>fMHz</em>, <em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSpropMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spatial correlation of LOS probabilities, used to realize if
-the link is LOS. See 7.6.3.3.
-.. todo:: refactorize this function with spatialCorrMap, only difference is the prior distribution of uniform vs gaussian.</p>
+the link is LOS. See 7.6.3.3.</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">refactorize this function with spatialCorrMap, only difference is the prior distribution of uniform vs gaussian.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -326,9 +330,9 @@ the link is LOS. See 7.6.3.3.
 <dd><p>Struct for storing spatial maps for each station.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.checkInterpolationRange">
-<em class="property">static </em><code class="descname">checkInterpolationRange</code><span class="sig-paren">(</span><em>axisXY</em>, <em>Position</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.checkInterpolationRange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">checkInterpolationRange</code><span class="sig-paren">(</span><em>axisXY</em>, <em>Position</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.checkInterpolationRange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function used to check if the position can be interpolated</p>
 </dd></dl>
 
@@ -336,6 +340,7 @@ the link is LOS. See 7.6.3.3.
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computePathLoss">
 <code class="descname">computePathLoss</code><span class="sig-paren">(</span><em>TxNode</em>, <em>RxNode</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computePathLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes path loss. uses the following parameters</p>
+<p>..todo:: Compute indoor depth from mobility class</p>
 <ul class="simple">
 <li><cite>f</cite> - Frequency in GHz</li>
 <li><cite>hBs</cite> - Height of Tx</li>
@@ -353,8 +358,20 @@ the link is LOS. See 7.6.3.3.
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computeShadowingLoss">
 <code class="descname">computeShadowingLoss</code><span class="sig-paren">(</span><em>stationID</em>, <em>userPosition</em>, <em>LOS</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.computeShadowingLoss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolation between the random variables initialized
-provides the magnitude of shadow fading given the LOS state.
-.. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.</p>
+provides the magnitude of shadow fading given the LOS state.</p>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.generateShadowMap">
+<code class="descname">generateShadowMap</code><span class="sig-paren">(</span><em>station</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.generateShadowMap" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-todo admonition" id="index-3">
+<p class="first admonition-title">Todo</p>
+<p class="last">check station.Seed is unique per station.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -370,9 +387,9 @@ Values for decorrelation distance and the magnitude of shadowing are given in Ta
 <dd><p>Inherits <a class="reference internal" href="#ch.SONOHImodels.sonohiBase" title="ch.SONOHImodels.sonohiBase"><code class="xref mat mat-class docutils literal notranslate"><span class="pre">ch.SONOHImodels.sonohiBase</span></code></a></p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.3GPP38901.sonohi3GPP38901.spatialCorrMap">
-<em class="property">static </em><code class="descname">spatialCorrMap</code><span class="sig-paren">(</span><em>sigmaSF</em>, <em>dCorr</em>, <em>fMHz</em>, <em>radius</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.spatialCorrMap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">spatialCorrMap</code><span class="sig-paren">(</span><em>sigmaSF</em>, <em>dCorr</em>, <em>fMHz</em>, <em>radius</em>, <em>seed</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.3GPP38901.sonohi3GPP38901.spatialCorrMap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a map of independent Gaussian random variables according to the decorrelation distance. Interpolation between the random variables can be used to realize the 2D correlations.</p>
 </dd></dl>
 
@@ -529,9 +546,9 @@ leve</td>
 <dd><p>Model parameters</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated">
-<em class="property">static </em><code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addAssociated</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.addAssociated" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds the index of the stations and users associated, e.g.
 how they link with the station and user objects.</p>
 </dd></dl>
@@ -554,9 +571,9 @@ how they link with the station and user objects.</p>
 <dd><p>Given the loss of the impulse response and the EIRP of the transmitter, the recieved power is computed.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA">
-<em class="property">static </em><code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configureAA</code><span class="sig-paren">(</span><em>type</em>, <em>stations</em>, <em>users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureAA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configures the antenna arrays and their radiation patterns
 For macro stations a ULA Antenna array with 12 elements are considered.
 For micro stations a ULA Antenna array with 6 elements are considered.
@@ -564,9 +581,9 @@ For UEs, a ULA antenna array with 1 element is considered.
 Number of sectors are per default defined to be zero, thus the antenna is omnidirectional.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel">
-<em class="property">static </em><code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configureModel</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.configureModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use maximum fft size
 However since the same BsClass is used these are most
 likely to be identical</p>
@@ -585,9 +602,9 @@ The logic is similar to that of the baseclass, however the loss is computed from
 <dd><p>Stored impulse response</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout">
-<em class="property">static </em><code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
+<code class="descname">initializeLayout</code><span class="sig-paren">(</span><em>useridx</em>, <em>eNBidx</em>, <em>numLinks</em>, <em>AA</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.initializeLayout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize layout struct by antenna array and number of
 links.</p>
 </dd></dl>
@@ -598,15 +615,15 @@ links.</p>
 <dd><p>Number of receivers, per model</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions">
-<em class="property">static </em><code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPositions</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPositions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the position of the base station and the users in the WINNER layout struct.</p>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario">
-<em class="property">static </em><code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setPropagationScenario</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em>, <em>Users</em>, <em>Ch</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.setPropagationScenario" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setting of propagation scenario based on the station type and region selected.
 A list of</p>
 </dd></dl>
@@ -631,9 +648,9 @@ For this it needs the following inputs:</p>
 </table>
 </dd></dl>
 
-<dl class="staticmethod">
+<dl class="method">
 <dt id="ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing">
-<em class="property">static </em><code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
+<code class="descname">updateIndexing</code><span class="sig-paren">(</span><em>cfgLayout</em>, <em>Stations</em><span class="sig-paren">)</span><a class="headerlink" href="#ch.SONOHImodels.WINNER.sonohiWINNERv2.updateIndexing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change useridx of pairing to reflect WINNER structure
 cfgLayout.Stations, e.g. If only one station, user one is
 at cfgLayout.Stations(2)
@@ -737,11 +754,16 @@ dependent on the cfgLayout.Stations struct.</p>
 
   
 
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
 
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
   </script> 
 

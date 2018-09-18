@@ -206,6 +206,9 @@ classdef ueReceiverModule
 		function obj = selectCqi(obj, enbObj)
 			enb = cast2Struct(enbObj);
 			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			if isnan(obj.CQI)
+				sonohilog('CQI is NaN - something went wrong in the selection.','ERR')
+			end
     end
     
     function obj = computeOffset(obj, enbObj)

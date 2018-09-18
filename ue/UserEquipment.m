@@ -61,7 +61,7 @@ classdef UserEquipment
 				'markerSize', 8, ...
 				'lineWidth', 2);
 			obj.Mobility = MMobility(Param.mobilityScenario, 1, Param.mobilitySeed * userId, Param);
-			obj.Position = [obj.Mobility.Trajectory(1,:), Param.ueHeight];
+			obj.Position = obj.Mobility.Trajectory(1,:);
 			if Param.draw
 				obj.plotUEinScenario(Param);
 			end
@@ -88,7 +88,7 @@ classdef UserEquipment
 		end
 		
 		function obj = move(obj, round)
-			obj.Position(1:2) = obj.Mobility.Trajectory(round+1,:);
+			obj.Position(1:3) = obj.Mobility.Trajectory(round+1,:);
 		end
 		
 		% toggle scheduled
