@@ -24,7 +24,8 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -154,9 +155,10 @@
             
   <div class="section" id="mobility">
 <h1>Mobility<a class="headerlink" href="#mobility" title="Permalink to this headline">¶</a></h1>
-<p>MONSTeR currently supports 1 mobility model</p>
+<p>MONSTeR currently supports 2 mobility model</p>
 <ul class="simple">
 <li><cite>Random walk Pedestrian</cite></li>
+<li><cite>Random walk Pedestrian Indoor</cite></li>
 </ul>
 <p>Directions are defined as</p>
 <a class="reference internal image-reference" href="resources/graphics/mobility_directions.svg"><div align="center" class="align-center"><img alt="resources/graphics/mobility_directions.svg" src="resources/graphics/mobility_directions.svg" width="300" /></div>
@@ -179,8 +181,21 @@ Turns and crosses are based on turning and crossing times, as well as turn and c
 </dd></dl>
 
 <dl class="method">
+<dt id="mobility.MMobility.randomWalkPedestrianIndoor">
+<code class="descname">randomWalkPedestrianIndoor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility.randomWalkPedestrianIndoor" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Create distribution of movement and still states</p>
+</div>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Add turning inside building, turning is currently only done if the building boundaries are exceeded.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="mobility.MMobility.setParameters">
-<code class="descname">setParameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility.setParameters" title="Permalink to this definition">¶</a></dt>
+<code class="descname">setParameters</code><span class="sig-paren">(</span><em>Param</em><span class="sig-paren">)</span><a class="headerlink" href="#mobility.MMobility.setParameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets parameters for mobility, default values are given as</p>
 <ul class="simple">
 <li>Road width = 10m</li>
@@ -193,6 +208,7 @@ Turns and crosses are based on turning and crossing times, as well as turn and c
 <li>pedestrianCrossingPause = 5 s</li>
 <li>turningDistance = 2 * wall distance</li>
 <li>crossingDistance = road width + 2*wall distance</li>
+<li>Indoor = if scenario is given</li>
 </ul>
 </dd></dl>
 
@@ -256,11 +272,16 @@ Turns and crosses are based on turning and crossing times, as well as turn and c
 
   
 
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
 
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
       });
   </script> 
 

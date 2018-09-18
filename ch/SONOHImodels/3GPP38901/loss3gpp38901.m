@@ -17,8 +17,6 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 % h = average height of buildings
 % W = average width of roads
 % LOS = LOS or not.
-% shadowing = boolean for deciding if shadowing should be included.
-% base seed for shadowing
 
 c = physconst('LightSpeed');
 d_bp = 4*h_bs*h_ut*(f_c*10e9)/c;
@@ -132,11 +130,10 @@ switch Scenario
 			end
 		end
 	otherwise
-		error('Scenario not recognized.')
-		
-		
+		error('Scenario not recognized.')	
 		
 end
+
 
 end
 

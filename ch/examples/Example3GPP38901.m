@@ -15,6 +15,7 @@ Param.channel.modeDL = '3GPP38901';
 Param.area = [-1000, -1000, 1000, 1000];
 Param.channel.region = struct();
 Param.channel.region.macroScenario = 'UMa';
+Param.mobilityScenario = 'pedestrian-indoor';
 
 
 if Param.draw
@@ -33,7 +34,6 @@ ChannelUMa = ChBulk_v2(Station, User, Param);
 Param.channel.region.macroScenario = 'RMa';
 ChannelRMa = ChBulk_v2(Station, User, Param);
 
-whwat :j
 Station.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
 Station.ScheduleDL(1,1).UeId = User.NCellID;
 User.ENodeBID = Station.NCellID;

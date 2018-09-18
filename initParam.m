@@ -11,7 +11,7 @@ Param.draw = 1;
 Param.storeTxData = 0;
 
 % Integer used to control the number of scheduling rounds (subframes) to simulate
-Param.schRounds = 10;
+Param.schRounds = 100000;
 Param.seed = 42;% Integer used for the simulation seed
 Param.mobilitySeed = 19; % Integer for randomizing user positioning and trajectories
 % Boolean to save a whole LTE frame for the macro eNodeB for testing
@@ -39,8 +39,8 @@ Param.picoUniformRadius = 400;% Double radius of distance from centre for picoBS
 Param.picoHeight = 5;% Double used to specify the height in metres of the pico eNodeBs
 Param.numEnodeBs = Param.numMacro + Param.numMicro + Param.numPico;
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
-Param.numUsers = 15;% Integer used for the number of UEs
-Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, vehicular, static, superman, straight)
+Param.numUsers = 10;% Integer used for the number of UEs
+Param.mobilityScenario = 'pedestrian';% Integer to choose the mobility scenario (pedestrian, pedestrian-indoor, vehicular, static, superman, straight)
 Param.buildings = 'mobility/buildings.txt';% Path for loading the file with the buildings
 Param.mobilityStep = 0.01;
 Param.pucchFormat = 2;% PUCCH format (only 2 and 3 work)
@@ -75,7 +75,7 @@ Param.eNBGain = 0; %Antenna gain of the eNB.
 Param.prbRe = 168;% Integer used for the number of RE in a RB
 Param.PRACHInterval = 10; %Given as the number of subframes between each PRACH.
 %% Channel configuration
-Param.channel.modeDL = 'Quadriga';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
+Param.channel.modeDL = '3GPP38901';% String to control the channel mode in DL ['winner', 'eHATA', 'ITU1546', '3GPP38901']
 Param.channel.modeUL = 'B2B';% String to control the channel mode in UL
 Param.channel.region = 'Urban';% String to control the channel region
 Param.channel.enableFading = true;

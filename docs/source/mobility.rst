@@ -1,8 +1,9 @@
 Mobility
 ==============
-MONSTeR currently supports 1 mobility model
+MONSTeR currently supports 2 mobility model
 
 * `Random walk Pedestrian`
+* `Random walk Pedestrian Indoor`
 
 Directions are defined as 
 
@@ -11,4 +12,4 @@ Directions are defined as
    :align: center
 
 .. autoclass:: mobility.MMobility
-    :members: randomWalkPedestrian, setParameters
+    :members: randomWalkPedestrian, setParameters, randomWalkPedestrianIndoor

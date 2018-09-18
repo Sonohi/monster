@@ -28,6 +28,7 @@ Param.channel.LOSMethod = '3GPP38901-probability';
 Param.channel.modeDL = '3GPP38901';
 Param.channel.region = struct();
 Param.channel.region.macroScenario = 'UMa';
+Param.mobilityScenario = 'pedestrian';
 ChannelUMa = ChBulk_v2(Station, User, Param);
 
 Param.channel.region.macroScenario = 'UMi';
@@ -46,10 +47,10 @@ Param.channel.modeDL = 'ITU1546';
 Param.channel.region = 'Urban';
 ChITUUrban = ChBulk_v2(Station, User, Param);
 
-Param.channel.modeDL = 'winner';
-Param.channel.region = struct();
-Param.channel.region.macroScenario = '11';
-ChWINNER = ChBulk_v2(Station, User, Param);
+%Param.channel.modeDL = 'winner';
+%Param.channel.region = struct();
+%Param.channel.region.macroScenario = '11';
+%ChWINNER = ChBulk_v2(Station, User, Param);
 
 Station.Users = struct('UeId', User.NCellID, 'CQI', -1, 'RSSI', -1);
 Station.ScheduleDL(1,1).UeId = User.NCellID;
@@ -61,7 +62,7 @@ Station.Tx.Waveform = Station.Tx.Frame;
 Station.Tx.WaveformInfo =Station.Tx.FrameInfo;
 Station.Tx.ReGrid = Station.Tx.FrameGrid;
 
-distanceXY = 10:10:400;
+distanceXY = 10:10:300;
 distanceTotal = sqrt(distanceXY.^2+distanceXY.^2);
 N = length(distanceXY);
 resultsUMa = NaN(N,2);
@@ -85,7 +86,7 @@ for distanceIdx = 1:N
 	[~, ueRMa] = ChannelRMa.traverse(bs,ue,'downlink');
 	[~, ueITUDU] = ChITUDenseUrban.traverse(bs, ue, 'downlink');
 	[~, ueITUU] = ChITUUrban.traverse(bs, ue, 'downlink');
-	[~, ueWINNER] = ChWINNER.traverse(bs, ue, 'downlink');
+	%[~, ueWINNER] = ChWINNER.traverse(bs, ue, 'downlink');
 
 	% Get offset
 	ueUMa.Rx.Offset = lteDLFrameOffset(bs, ueUMa.Rx.Waveform);
@@ -93,7 +94,7 @@ for distanceIdx = 1:N
 	ueRMa.Rx.Offset = lteDLFrameOffset(bs, ueRMa.Rx.Waveform);
 	ueITUDU.Rx.Offset = lteDLFrameOffset(bs, ueITUDU.Rx.Waveform);
 	ueITUU.Rx.Offset = lteDLFrameOffset(bs, ueITUU.Rx.Waveform);
-	ueWINNER.Rx.Offset = lteDLFrameOffset(bs, ueWINNER.Rx.Waveform);
+	%ueWINNER.Rx.Offset = lteDLFrameOffset(bs, ueWINNER.Rx.Waveform);
 	
 	
 	
@@ -103,7 +104,7 @@ for distanceIdx = 1:N
 	ueRMa.Rx.Waveform = ueRMa.Rx.Waveform(1+ueRMa.Rx.Offset:end);
 	ueITUDU.Rx.Waveform = ueITUDU.Rx.Waveform(1+ueITUDU.Rx.Offset:end);
 	ueITUU.Rx = ueITUU.Rx.applyOffset();
-	ueWINNER.Rx = ueWINNER.Rx.applyOffset();
+	%ueWINNER.Rx = ueWINNER.Rx.applyOffset();
 
 	% UE reference measurements
 	ueUMa.Rx = ueUMa.Rx.referenceMeasurements(bs);
@@ -127,9 +128,9 @@ for distanceIdx = 1:N
 	resultsITUUrban(distanceIdx,2) = ueITUU.Rx.RxPwdBm;
 	
 			
-	ueWINNER.Rx = ueWINNER.Rx.referenceMeasurements(bs);
-	resultsWINNER(distanceIdx,1) = ueWINNER.Rx.SNRdB;
-	resultsWINNER(distanceIdx,2) = ueWINNER.Rx.RxPwdBm;
+	%ueWINNER.Rx = ueWINNER.Rx.referenceMeasurements(bs);
+	%resultsWINNER(distanceIdx,1) = ueWINNER.Rx.SNRdB;
+	%resultsWINNER(distanceIdx,2) = ueWINNER.Rx.RxPwdBm;
 end
 figure; 
 plot(distanceTotal, resultsUMa(:,2));
@@ -138,5 +139,5 @@ plot(distanceTotal, resultsUMi(:,2));
 plot(distanceTotal, resultsRMa(:,2));
 plot(distanceTotal, resultsITUDenseUrban(:,2));
 plot(distanceTotal, resultsITUUrban(:,2));
-plot(distanceTotal, resultsWINNER(:,2));
+%plot(distanceTotal, resultsWINNER(:,2));
 legend('UMa','UMi','RMa','ITU Dense Urban', 'ITU Urban', 'WINNER Urban');
