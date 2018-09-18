@@ -181,19 +181,29 @@ if Param.numMicro > 0
 			end
 			Param.clusters = clusters;
 		
-		case 'hexagonal'
+		case 'hexagonal'		%hexagonal grid
 			xc = (area(3) - area(1))/2;
 			yc = (area(4) - area(2))/2;
-			rho = 0;
+			rho = pi/6;
 			theta = 2*pi/6;
+			r = sqrt(3)/2*Param.macroRadius;
+			RING_COUNTER = 1; %counter to keep track of number of rings to determine number of BSTs to place
 			if miBS < 6
 				theta = 2*pi/miBS;
 			end
 			for iMicro=1:miBS
+				
 				xr = xc + r*cos(rho+iMicro*theta);
 				yr = yc + r*sin(rho+iMicro*theta);
 				microPos(iMicro, :) = [xr yr];
+				if mod(iMicro,6*RING_COUNTER)==0
+					r = r+ sqrt(3)/2*Param.macroRadius;
+					rho = rho + rho;
+					RING_COUNTER = RING_COUNTER +1;
+				end
+				
 			end
+
 		otherwise
 			sonohiLog('Unknown choice for micro BS positioning strategy', 'ERR');
 	end
