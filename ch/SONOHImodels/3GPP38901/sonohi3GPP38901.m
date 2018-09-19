@@ -73,7 +73,7 @@ classdef sonohi3GPP38901 < sonohiBase
       end
 			% Configure LOS probability map G, with correlation distance
 			% according to 7.6-18. 
-			[mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius);
+			[mapLOSprop, xaxis, yaxis] = obj.LOSpropMap(dCorrLOSprop, fMHz, radius,  station.Seed);
 			axisLOSprop = [xaxis; yaxis];
 			
 			% Spatial correlation map of LOS Large-scale SF
@@ -216,7 +216,7 @@ classdef sonohi3GPP38901 < sonohiBase
 			
 		end
 		
-		function [map, xaxis, yaxis] = LOSpropMap(dCorr, fMHz, radius)
+		function [map, xaxis, yaxis] = LOSpropMap(dCorr, fMHz, radius, seed)
 			% Spatial correlation of LOS probabilities, used to realize if
 			% the link is LOS. See 7.6.3.3.
 			%
@@ -229,6 +229,7 @@ classdef sonohi3GPP38901 < sonohiBase
 			% LOS is determined by probability and realized by comparing
 			% the distance-based LOS probability function with the spatial
 			% correlated random variable.
+			rng(seed);
 			map = rand(2*Nsamples,2*Nsamples);
 			xaxis=[-Nsamples:Nsamples-1]*Lcorr;
 			yaxis=[-Nsamples:Nsamples-1]*Lcorr;

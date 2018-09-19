@@ -50,7 +50,7 @@ classdef SonohiChannel < handle
 			obj.DownlinkModel = obj.findChannelClass('downlink');
 			obj.UplinkModel = obj.findChannelClass('uplink');
 			
-			obj.DownlinkModel.setup(Stations, Users, Param)
+			obj.DownlinkModel.setup(Stations, Users, Param);
 
 			if obj.enableShadowing
 				obj.DownlinkModel.setupShadowing(Stations)
@@ -137,7 +137,7 @@ classdef SonohiChannel < handle
 		end
 		
 		function area = getAreaSize(obj)
-			extraSamples = 3000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
+			extraSamples = 5000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples;
 		end
 		
