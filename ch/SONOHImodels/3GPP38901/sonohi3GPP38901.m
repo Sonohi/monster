@@ -209,7 +209,7 @@ classdef sonohi3GPP38901 < sonohiBase
 			interprate=round(dCorr/lambdac);
 			Lcorr=lambdac*interprate;
 			Nsamples=round(radius/Lcorr);
-            rng(seed);
+      rng(seed);
 			map = randn(2*Nsamples,2*Nsamples)*sigmaSF;
 			xaxis=[-Nsamples:Nsamples-1]*Lcorr;
 			yaxis=[-Nsamples:Nsamples-1]*Lcorr;

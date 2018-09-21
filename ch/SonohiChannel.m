@@ -137,7 +137,7 @@ classdef SonohiChannel < handle
 		end
 		
 		function area = getAreaSize(obj)
-			extraSamples = 5000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
+			extraSamples = 2000; % Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + extraSamples;
 		end
 		
@@ -446,6 +446,15 @@ classdef SonohiChannel < handle
                         prop = NaN;
                     case '3GPP38901-probability'
                         [LOS, prop] = sonohi3GPP38901.LOSprobability(obj, Station, User);
+												
+										case 'NLOS'
+											LOS = 0;
+											prop = NaN;
+
+										case 'LOS'
+											LOS = 1;
+											prop = NaN;
+										
                 end
                 
             end
