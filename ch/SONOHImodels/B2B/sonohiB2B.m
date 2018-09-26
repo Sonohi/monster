@@ -8,7 +8,7 @@ classdef sonohiB2B < sonohiBase
 
         function obj = sonohiB2B(Channel, Chtype)
             obj = obj@sonohiBase(Channel, Chtype)
-            sonohilog('Running B2B','WRN')
+            %sonohilog('Running B2B','WRN')
 
         end
     

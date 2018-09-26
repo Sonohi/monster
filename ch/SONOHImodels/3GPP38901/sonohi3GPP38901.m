@@ -153,7 +153,7 @@ classdef sonohi3GPP38901 < sonohiBase
 					LOS = obj.spatialLOSstate(TxNode.NCellID, RxNode.Position, prop);
 			end
 
-			XCorr = obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+			
            
 			shadowing = obj.Channel.enableShadowing;
 			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
@@ -183,13 +183,14 @@ classdef sonohi3GPP38901 < sonohiBase
 			end
 			            
 			% Return of channel conditions if required.
-			RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
 			RxNode.Rx.ChannelConditions.lossdB = lossdB;
 			RxNode.Rx.ChannelConditions.LOS = LOS;
 			RxNode.Rx.ChannelConditions.LOSprop = prop;
 			RxNode.Rx.ChannelConditions.AreaType = areatype;
 
 			if shadowing
+				XCorr = obj.computeShadowingLoss(TxNode.NCellID, RxNode.Position, LOS);
+				RxNode.Rx.ChannelConditions.LSP = XCorr; % Only large scale parameters at the moment is shadowing.
 				lossdB = lossdB + XCorr;
 			end
 
