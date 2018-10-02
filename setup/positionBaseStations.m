@@ -69,8 +69,37 @@ if (maBS == 1)
 		macroLengthY = length(macroImg(:,1,1))/scale;
 		macroLengthX = length(macroImg(1,:,1))/scale;
 		% Position and set alpha from png image
-		f = imagesc(Param.LayoutAxes,[xc-macroLengthX xc+macroLengthX],[yc yc+macroLengthY*2],macroImg);
+		f = imagesc(Param.LayoutAxes,[xc-macroLengthX xc+macroLengthX],[yc-macroLengthY yc+macroLengthY],macroImg);
 		set(f, 'AlphaData', alpha);
+
+		%Draw hexagon (flat top and bottom)
+		xcHex = xc;
+		ycHex = yc;
+		theta = pi/3;
+		r = Param.macroRadius;
+		xHex = zeros(7);
+		yHex = zeros(7);
+		rho = 0;
+		for i=1:7 %Should be iMacro
+
+			for j=1:7
+				xHex(j) = xcHex + r*cos(j*theta);
+				yHex(j) = ycHex + r*sin(j*theta);
+			end
+
+			l = line(Param.LayoutAxes,xHex,yHex, 'Color', 'k');
+			for j=1:7
+			set(get(get(l(j),'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
+			end
+
+			if i==1
+				rho = rho +pi/6;
+			end
+			xcHex = xc + sqrt(3)*r*cos(rho +i*theta);
+			ycHex = yc + sqrt(3)*r*sin(rho +i*theta);
+		end
+
+		drawnow
 	end
 end
 
@@ -181,24 +210,27 @@ if Param.numMicro > 0
 			end
 			Param.clusters = clusters;
 		
-		case 'hexagonal'		%hexagonal grid
+		case 'hexagonal'		%Hexagonal grid
 			xc = (area(3) - area(1))/2;
 			yc = (area(4) - area(2))/2;
 			rho = pi/6;
 			theta = 2*pi/6;
 			r = sqrt(3)/2*Param.macroRadius;
-			RING_COUNTER = 1; %counter to keep track of number of rings to determine number of BSTs to place
+			RING_COUNTER = 1; %Counter to keep track of number of rings to determine number of BSTs to place
 			if miBS < 6
 				theta = 2*pi/miBS;
 			end
+			%TODO make generic and fit to multiple macro when that is implemented
 			for iMicro=1:miBS
 				
 				xr = xc + r*cos(rho+iMicro*theta);
 				yr = yc + r*sin(rho+iMicro*theta);
 				microPos(iMicro, :) = [xr yr];
 				if mod(iMicro,6*RING_COUNTER)==0
-					r = r+ sqrt(3)/2*Param.macroRadius;
-					rho = rho + rho;
+					if RING_COUNTER == 1
+						r = r*sqrt(3);
+						rho = rho + rho;
+					end
 					RING_COUNTER = RING_COUNTER +1;
 				end
 				
@@ -217,11 +249,12 @@ if Param.numMicro > 0
 		xr = microPos(i,1);
 		yr = microPos(i,2);
 		if Param.draw
+			f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr-microLengthY yr+microLengthY],microImg);
+			set(f, 'AlphaData', alpha);
+			
 			text(xr,yr+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(xr)),', ', ...
 				num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
-					
-			f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr yr+microLengthY*2],microImg);
-			set(f, 'AlphaData', alpha);
+								
 			drawnow
 		end
 	end	
@@ -320,7 +353,7 @@ if Param.numPico > 0
 			text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
 				num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
 					
-			f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y y+picoLengthY*2],picoImg);
+			f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y-picoLengthY y+picoLengthY],picoImg);
 			set(f, 'AlphaData', alpha);
 			drawnow
 		end

@@ -17,8 +17,9 @@ end
 if (strcmp(Param.microPos,'uniform')  && Param.microUniformRadius > maxRadius)
     maxRadius = Param.microUniformRadius;
 end
-if (strcmp(Param.microPos,'hexagonal')  && (Param.macroRadius*sqrt(3) > maxRadius && Param.numMicro > 6 ))
-    maxRadius = Param.macroRadius*sqrt(3);
+%If hexagonal
+if (strcmp(Param.microPos,'hexagonal')  && (Param.macroRadius*3/2 > maxRadius && Param.numMicro > 6 ))
+    maxRadius = Param.macroRadius*3/2;
 end
 %Check pico
 if (strcmp(Param.picoPos,'uniform') && Param.picoUniformRadius > maxRadius)
