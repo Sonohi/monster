@@ -12,9 +12,9 @@ function [Stations, Param] = createBaseStations (Param)
 %   Stations  							-> struct with all Stations details and PDSCH
 
 	% Check that we only have at most 1 macro cell, as only 1 is supported as of now
-	if Param.numMacro >= 0 && Param.numMacro <= 1
+	if Param.numMacro >= 0 && Param.numMacro <= 19
 		% Create position vectors for the macro and micro BSs
-		[macroPos, microPos, picoPos, Param] = positionBaseStations(Param.numMacro, Param.numMicro, Param.numPico, Param);
+		[macroPos, microPos, picoPos] = positionBaseStations(Param.numMacro, Param.numMicro, Param.numPico, Param);
 
 		% Create some indexes for ease of creation of the eNodeBs
 		macroThr = Param.numMacro;

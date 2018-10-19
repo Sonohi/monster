@@ -8,7 +8,7 @@ for stationIdx = 1:length(stations)
         region = channel.Region;
     end
     filename = sprintf('utils/coverage/coverage_%s_%s_%s.mat',channel.DLMode, region, num2str(station.Pmax));
-
+    
     % Results are saved in mat files to speed up the simulation. It can be
     % forced by setting a flag in the config.
     if exist(filename, 'file') && ~param.channel.computeCoverage

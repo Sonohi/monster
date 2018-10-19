@@ -3,7 +3,7 @@ function validateParam(Param)
 	%   VALIDATE PARAMETERS is used to validate the paramenters
 	%
 	%   Function fingerprint
-	%   PAram		->  test
+	%   Param		->  test
 
 	validateattributes(Param, {'struct'}, {'nonempty'});
 	validateattributes(Param.reset, {'numeric'}, [{'>=',0}, {'<=',1}]);
@@ -13,7 +13,7 @@ function validateParam(Param)
 	validateattributes(Param.numSubFramesMacro, {'numeric'}, {'>=',0});
 	validateattributes(Param.numSubFramesMicro, {'numeric'}, {'>=',0});
 	validateattributes(Param.numMacro, {'numeric'}, [{'>=',0}, {'<=',1}]);
-	validateattributes(Param.numMicro, {'numeric'}, {'>=',0});
+	validateattributes(Param.numMicro, {'numeric'}, [{'>=',0}, {'<=',12}]);
 	validateattributes(Param.numPico, {'numeric'}, {'>=',0});
 	validateattributes(Param.numEnodeBs, {'numeric'}, {'>=',0});
 	validateattributes(Param.microPos, {'char'}, {'nonempty'});
