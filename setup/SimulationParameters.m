@@ -1,5 +1,4 @@
 %% SIMULATION PARAMETERS
-clear all
 Param.reset = 0;% Boolean used to reset the folder structure and reload everything
 Param.rmResults = 0;% Boolean to clean the results folder
 Param.logToFile = 0; % Boolean, if true all logs are re-directed to a file in /logs
@@ -124,10 +123,10 @@ Param.arq.rtxMax = 1;% Integer to choose the maximum number of ARQ retransmissio
 Param.maxTbSize = 97896;% Double used for the maximum size of a TB for storing in bits
 Param.maxCwdSize = 10e5;% Double used for the maximum size of a codeword for storing in bits
 %% Buildings
-Param.buildings = load(Param.buildings);
-Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings
-Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
+%Param.buildings = load(Param.buildings);
+%Param.buildingHeight = [20,50];% Double interval used to specify the height interval in metres of the buildings
+%Param.area = [min(Param.buildings(:, 1)), min(Param.buildings(:, 2)), ...
 	max(Param.buildings(:, 3)), max(Param.buildings(:, 4))];
-Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
+%Param.buildings(:,5) = randi([Param.buildingHeight],[1 length(Param.buildings(:,1))]);
 
 save('SimulationParameters.mat', 'Param');

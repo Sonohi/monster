@@ -16,24 +16,24 @@
 %>   and set the relevant ones manually to avoid mistakes. After changing the preferences run `clear all` to
 %>   make them effective.
 %>
-%>   * setpref('roboLog', 'logToFile', VALUE) [Default: 0]
+%>   * setpref('monsterLog', 'logToFile', VALUE) [Default: 0]
 %>     - 0: Log to standard output
 %>     - 1: Log to file
 %>     - 2: Log both to standard output and file
 %>
-%>   * setpref('roboLog', 'logFile', FILENAME)
+%>   * setpref('monsterLog', 'logFile', FILENAME)
 %>
-%>   * setpref('roboLog', 'logLevel', LEVEL) [Default: Maximum]
+%>   * setpref('monsterLog', 'logLevel', LEVEL) [Default: Maximum]
 %>     - 1: Log errors (ERR)
 %>     - 2: Log errors and warnings (ERR, WRN)
 %>     - 3: Log errors, warnings and custom debug info (ERR, WRN, DBG)
 %>     - 4: Log errors, warnings, custom debug info, general info (ERR, WRN, DBG, NFO)
 %>     - 5: Log errors, warnings, custom debug info, general info, and trivial info (ERR, WRN, DBG, NFO, NFO0)
 %>
-%>   * setpref('roboLog', 'logInBlack', LEVEL) [Default: 1]
+%>   * setpref('monsterLog', 'logInBlack', LEVEL) [Default: 1]
 %>     - 0: Don't use colors in log output (faster)
 %>     - 1: Use colors in log output
-function sonohilog(msg, varargin)
+function monsterLog(msg, varargin)
 %Constants
 validLogTypeValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};
 textColors = {[1 0 0], [1, 0.5, 0], [0 0.7 1],[0 0 0], [0 0.7 1]}; % Black, orange, red, cyan

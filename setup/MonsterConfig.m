@@ -4,6 +4,7 @@ classdef MonsterConfig < handle
 	% An instance of the class MonsterConfig has the following properties:
 	% 
 	% :Runtime: (struct) configuration for the simulation runtime
+	% :Logs: (struct)
 	% :SimulationPlot: (struct) configuration for plotting
 	% :MacroENodeB: (struct) configuration for macro eNodeBs
 	% :MicroENodeB: (struct) configuration for micro eNodeBs
@@ -23,7 +24,11 @@ classdef MonsterConfig < handle
 	properties 
 		% Parameters related to simulation run time
 		Runtime = struct('totalRounds', 1000, 'simTimeElapsed', 0, 'simTimeRemaining', 1, ...
-			'realTimeElaspsed', 0, 'realTimeRemaining', 1000, 'currentRound', 0, 'currentTime', 0)
+			'realTimeElaspsed', 0, 'realTimeRemaining', 1000, 'currentRound', 0, 'currentTime', 0,...
+			'reInstall', 0);
+		
+		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
+			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName': '');
 
 		% Properties related to drawing and plotting
 		SimulationPlot = struct('runtimePlot', 0, 'generateCoverageMap', 0, 'generateHeatMap', 0, ...
@@ -87,7 +92,13 @@ classdef MonsterConfig < handle
 			% Runtime
 			obj.Runtime.totalRounds = Param.schRounds;
 			obj.Runtime.simTimeRemaining = Param.schRounds/1000;
+			obj.Runtime.reInstall = Param.reset;
 			
+			% Logs
+			obj.Logs.logToFile = Param.logToFile;
+			dateStr = dateStr(datetime, obj.Logs.dateFormat);
+			obj.Logs.defaultLogName = strcat(obj.Logs.logPath, dateStr);
+
 			% Simulation plotting
 			obj.SimulationPlot.runtimePlot = Param.draw;
 			obj.SimulationPlot.generateCoverageMap = Param.channel.computeCoverage;
@@ -204,6 +215,15 @@ classdef MonsterConfig < handle
 
 		end
 
+		function storeConfig(obj, logName)
+			% storeConfig is used to log the configuration used for a simulation
+			%
+			% :obj: the MonsterConfig instance
+			% :logName: the name of the log to use, minus path and date
+			
+			fullLogName = strcat(obj.Logs.defaultLogName, logName);
+			save(fullLogName, 'obj')
+		end
 
 
 
