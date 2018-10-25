@@ -6,5 +6,7 @@ function simConfig = monsterSetup(Param)
 % monsterSetup is called from the main simulation file and returns a simulation configuration object
 
 	
+	simConfig = MonsterConfig(Param);
+
 	
 end
