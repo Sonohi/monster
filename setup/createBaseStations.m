@@ -14,25 +14,29 @@ function [Stations, Param] = createBaseStations (Param)
 	% Check that we only have at most 1 macro cell, as only 1 is supported as of now
 	if Param.numMacro >= 0 && Param.numMacro <= 19
 		% Create position vectors for the macro and micro BSs
-		[macroPos, microPos, picoPos] = positionBaseStations(Param.numMacro, Param.numMicro, Param.numPico, Param);
+		%[macroPos, microPos, picoPos, networkLayout] = positionBaseStations(Param.numMacro, Param.numMicro, Param.numPico, Param);
+		xc = (Param.area(3)-Param.area(1))/2;
+		yc = (Param.area(4)-Param.area(2))/2;
+		networkLayout = NetworkLayout(xc,yc,Param);
 
-		% Create some indexes for ease of creation of the eNodeBs
-		macroThr = Param.numMacro;
-		microThr = macroThr + Param.numMicro;
-		picoThr = microThr + Param.numPico;
+		%TODO: Replace with new config class
+		Param = networkLayout.Param; %To update parameters to match a chosen scenario
 
-		for iStation = 1:picoThr
-			if iStation <= macroThr
-				Stations(iStation) = EvolvedNodeB(Param, 'macro', iStation);
-				Stations(iStation).Position = [macroPos(iStation, :), Param.macroHeight];
-			elseif iStation > microThr
-				Stations(iStation) = EvolvedNodeB(Param, 'pico', iStation);
-				Stations(iStation).Position = [picoPos(iStation - microThr, :), Param.picoHeight];
-			else
-				Stations(iStation) = EvolvedNodeB(Param, 'micro', iStation);
-				Stations(iStation).Position = [microPos(iStation - macroThr, :), Param.microHeight];
-			end
+		%Draw the base stations
+		networkLayout.draweNBs(Param);	
+		for iStation = 1:networkLayout.NumMacro
+			Stations(iStation) = EvolvedNodeB(Param, 'macro', networkLayout.MacroCells{iStation}.CellID);
+			Stations(iStation).Position = [networkLayout.MacroCoordinates(iStation, :), Param.macroHeight];
 		end
+		for iStation = 1:networkLayout.NumMicro
+			Stations(iStation) = EvolvedNodeB(Param, 'micro', networkLayout.MicroCells{iStation}.CellID);
+			Stations(iStation).Position = [networkLayout.MicroCoordinates(iStation, :), Param.microHeight];
+		end
+		for iStation = 1:networkLayout.NumPico
+			Stations(iStation) = EvolvedNodeB(Param, 'pico', networkLayout.PicoCells{iStation}.CellID);
+			Stations(iStation).Position = [networkLayout.PicoCoordinates(iStation, :), Param.picoHeight];
+		end
+
 
 		% Add neighbours to each eNodeB
 		for iStation = 1:length(Stations)

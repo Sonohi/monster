@@ -4,27 +4,129 @@ classdef NetworkLayout < handle
     properties 
         Center;             %Center of the target area
         MacroCoordinates;   %Center of each macro cell
-        Cells;              %Cell array containing all macro cell obj
+        MacroCells;              %Cell array containing all macro cell objs
+        MicroCells;             %Cell array containing all micro cell objs
+        PicoCells;              %Cell array containing all pico cell objs
         Radius;             %The ISD of macrocells
         NumMacro;                %The number of macro cells
         NumMicro;
         NumPico;
         MicroCoordinates;    %Coordinates of the micro BST, placed on the middle of the edges of the cell border
         PicoCoordinates;
+        PosScheme;
+        Param;
     end
 
     methods 
         function obj = NetworkLayout(xc, yc, Param)
             %Constructor functions
+            %Check for positioning scheme
+            switch Param.posScheme
+                case '3GPP TR 38.901 UMa' % from https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf Table 7.2-1
+                    obj.PosScheme = '3GPP TR 38.901 UMa';
+                    Param.macroRadius = 500;
+                    Param.numMacro = 19;
+                    Param.numMicro = 0;
+                    Param.numPico = 0;
+                    Param.macroHeight = 25;
+                    Param.numUsers = 30 * Param.numMacro; %Estimated, not mentioned directly
+                    Param.ueHeight = 1.5;
+                    %original scenario has 80% indoor users
+                    %All users move with an avg of 3km/h
+                    %Uniformly distributed users
+
+                case '3GPP TR 38.901 RMa' % from https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf Table 7.2-3
+                    obj.PosScheme = '3GPP TR 38.901 RMa';
+                    Param.macroRadius = 1732;  % or 5000m
+                    Param.numMacro = 19;
+                    Param.numMicro = 0;
+                    Param.numPico = 0;
+                    Param.macroHeight = 35;
+                    Param.numUsers = 30 * Param.numMacro;
+                    Param.ueHeight = 1.5;
+                    %Carrier freq: up to 7 GHz
+                    %uniformly distributed users
+                    %50% indoor, 50% in car
+
+
+                case 'ITU-R M.2412-0 5.B.C' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.B Configuration C
+                    obj.PosScheme = 'ITU-R M.2412-0 5.B.C';
+                    Param.macroRadius = 200;
+                    Param.numMacro = 19;
+                    Param.numMicro = 9*Param.numMacro;
+                    Param.numPico = 0;
+                    Param.macroHeight = 25;
+                    Param.microHeight = 10;
+                    Param.ueHeight = 1.5;
+                    Param.numUsers = 30 * Param.numMacro;
+                    Param.primaryTrafficModelling = 'fullBuffer';
+                    Param.trafficMix = 1;
+                    %Perhaps larger building grid??
+                    %Carrier frequency: 4 GHz and 30 GHz available in macro and micro layers
+                    %Total transmit power per TRxP:  -Macro 4 GHz:
+                                                    %   44 dBm for 20 MHz bandwidth
+                                                    %   41 dBm for 10 MHz bandwidth
+                                                    %-Macro 30 GHz:
+                                                    %   40 dBm for 80 MHz bandwidth
+                                                    %   37 dBm for 40 MHz bandwidth
+                                                    %e.i.r.p. should not exceed 73 dBm
+                                                    %-Micro 4 GHz:
+                                                    %   33 dBm for 20 MHz bandwidth
+                                                    %   30 dBm for 10 MHz bandwidth
+                                                    %-Micro 30 GHz:
+                                                    %   33 dBm for 80 MHz bandwidth
+                                                    %   30 dBm for 40 MHz bandwidth
+                                                    %e.i.r.p. should not exceed 68 dBm
+                    %UE power class: 4 GHz: 23 dBm, 30 GHz: 23 dBm, e.i.r.p. should not exceed 43 dBm
+                    %Percentage of high and low loss building type: 20% high loss, 80% low loss
+                    %Number of antenna elements per TRxP: 256 Tx/Rx
+                    %Number of UE Antenna elements: 4 GHz: Up to 8 Tx/Rx, 30 GHz: Up to 32 Tx/Rx
+                    % 80% indoor, 20% outdoor (in car)
+
+
+                case 'ITU-R M2412-0 5.C.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.C Configuration A
+                    obj.PosScheme = 'ITU-R M.2412-0 5.C.A';
+                    Param.macroRadius = 1732; 
+                    Param.numMacro = 19;
+                    Param.numMicro = 0;
+                    Param.numPico = 0;
+                    Param.macroHeight = 35;
+                    Param.ueHeight = 1.5;
+                    Param.numUsers = 30 * Param.numMacro;
+                    Param.primaryTrafficModelling = 'fullBuffer';
+                    Param.trafficMix = 1;
+                    %Load no buildings...
+
+                case 'Single Cell' % Deploys a single cell with 3 micro BST and randomly placed pico BST in each sector
+                    obj.PosScheme = 'Single Cell';
+                    Param.macroRadius = 300;
+                    Param.numMacro = 1;
+                    Param.numMicro = 9 * Param.numMacro;
+                    Param.numPico = Param.numPicoPerSector * 3 * Param.numMacro; 
+                    Param.macroHeight = 35;
+                    Param.microHeight = 10;
+                    Param.picoHeight = 5;
+                    Param.numUsers = 15;
+                    Param.ueHeight = 1.5;
+                    Param.primaryTrafficModelling = 'fullBuffer';
+                    Param.trafficMix = 1;
+
+                otherwise
+                    obj.PosScheme = 'None';
+            end
             obj.Center = [xc yc];
             obj.Radius = Param.macroRadius;
             obj.NumMacro = Param.numMacro;
-            obj.computeMacroCoordinates();
-            obj.generateCells(Param);
+            obj.findMacroCoordinates();
+            obj.generateMacroCells(Param);
             obj.findMicroCoordinates(Param);
+            obj.NumMicro = length(obj.MicroCoordinates(:,1));
+            obj.generateMicroCells(Param);
             obj.findPicoCoordinates(Param);
-            obj.NumMicro = length(obj.MicroCoordinates(:,1))
-            obj.NumPico = length(obj.PicoCoordinates(:,1))
+            obj.NumPico = length(obj.PicoCoordinates(:,1));
+            obj.generatePicoCells(Param);
+            obj.Param = Param;
+            
         end
 
         function draweNBs(obj, Param)
@@ -46,9 +148,9 @@ classdef NetworkLayout < handle
 
             %Draw macros
             for i=1:obj.NumMacro
-                xc = obj.Cells{i}.Center(1);
-                yc = obj.Cells{i}.Center(2);
-                text(Param.LayoutAxes,xc,yc-20,strcat('Macro BS (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center');
+                xc = obj.MacroCells{i}.Center(1);
+                yc = obj.MacroCells{i}.Center(2);
+                text(Param.LayoutAxes,xc,yc-20,strcat('Macro BS ', num2str(obj.MacroCells{i}.CellID), ' (',num2str(round(xc)),', ',num2str(round(yc)),')'),'HorizontalAlignment','center');
                 [macroImg, ~, alpha] = imread('utils/images/macro.png');
                 % For some magical reason the image is rotated 180 degrees.
                 macroImg = imrotate(macroImg,180);
@@ -64,11 +166,11 @@ classdef NetworkLayout < handle
                 theta = pi/3;
                 xyHex = zeros(7,2);
                 for i=1:3 
-                    cHex = [(xc + obj.Cells{1}.CellRadius * cos((i-1)*2*theta)) ...
-                            (yc + obj.Cells{1}.CellRadius * sin((i-1)*2*theta))];
+                    cHex = [(xc + obj.MacroCells{1}.CellRadius * cos((i-1)*2*theta)) ...
+                            (yc + obj.MacroCells{1}.CellRadius * sin((i-1)*2*theta))];
                     for j=1:7
-                        xyHex(j,1) = cHex(1) + obj.Cells{1}.CellRadius*cos(j*theta);
-                        xyHex(j,2) = cHex(2) + obj.Cells{1}.CellRadius*sin(j*theta);
+                        xyHex(j,1) = cHex(1) + obj.MacroCells{1}.CellRadius*cos(j*theta);
+                        xyHex(j,2) = cHex(2) + obj.MacroCells{1}.CellRadius*sin(j*theta);
                     end
 
                     l = line(Param.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
@@ -88,17 +190,14 @@ classdef NetworkLayout < handle
             microLengthX = length(microImg(1,:,1))/scale;
 
             for i=1:obj.NumMicro
-                % d = sqrt((macroPos(1, 1) - microPos(i,1)) ^ 2 + (macroPos(1, 2) - microPos(i,2)) ^ 2);
-                % if d< maxInterferrenceDistMicro2Macro
-                % 	sonohilog(strcat('Warning! Too high interferrence detected between macro and micro BST at',num2str(microPos(i,1)),',',num2str(microPos(i,2))),'WRN');
-                % end
+
                 xr = obj.MicroCoordinates(i,1);
                 yr = obj.MicroCoordinates(i,2);
 
                 f = imagesc(Param.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr-microLengthY yr+microLengthY],microImg);
                 set(f, 'AlphaData', alpha);
                 
-                text(xr,yr+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(xr)),', ', ...
+                text(xr,yr+20,strcat('Micro BS ', num2str(obj.MicroCells{i}.CellID),' (',num2str(round(xr)),', ', ...
                     num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
             end
 
@@ -115,7 +214,7 @@ classdef NetworkLayout < handle
             for i=1:obj.NumPico
                 x = obj.PicoCoordinates(i,1);
                 y = obj.PicoCoordinates(i,2);
-                text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
+                text(x,y+20,strcat('Pico BS ', num2str(obj.PicoCells{i}.CellID),' (',num2str(round(x)),', ', ...
                     num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
                         
                 f = imagesc(Param.LayoutAxes,[x-picoLengthX x+picoLengthX],[y-picoLengthY y+picoLengthY],picoImg);
@@ -129,7 +228,7 @@ classdef NetworkLayout < handle
 
     methods (Access = private)
 
-        function obj = computeMacroCoordinates(obj)
+        function obj = findMacroCoordinates(obj)
             %Computes the center coordinates by walking in hexagons around the center
             centers = zeros(obj.NumMacro,2);
             steps = 1;
@@ -196,12 +295,12 @@ classdef NetworkLayout < handle
             obj.MacroCoordinates = centers;
         end
         %Generate Macrocell objects from MacroCoordinates
-        function obj = generateCells(obj,Param)
+        function obj = generateMacroCells(obj,Param)
             cells = cell(obj.NumMacro,1);
             for i=1:obj.NumMacro
                 cells(i)={MacroCell(obj.MacroCoordinates(i,1),obj.MacroCoordinates(i,2),Param,i)};
             end
-            obj.Cells = cells;
+            obj.MacroCells = cells;
         end
 
         %Find the coordinates of all microcells in all macrocells
@@ -215,7 +314,7 @@ classdef NetworkLayout < handle
 
                     %Find the micro stations that are actually set up, e.i. more than 9 micro stations pr macro site is not supported
                     if iMicro <= Param.numMicro 
-                        microCenters(iMicro,:) = obj.Cells{iMacro}.MicroPos(i,:);
+                        microCenters(iMicro,:) = obj.MacroCells{iMacro}.MicroPos(i,:);
                         iMicro = iMicro +1 ;
                     end
                 end
@@ -228,17 +327,59 @@ classdef NetworkLayout < handle
             obj.MicroCoordinates = microCenters(1:iMicro-1,:);
         end
 
+        %Generate MicroCells objects 
+        function obj = generateMicroCells(obj,Param)
+            cells = cell(obj.NumMicro,1);
+            for i=1:obj.NumMicro
+                cells(i)={MicroCell(obj.MicroCoordinates(i,1),obj.MicroCoordinates(i,2),Param,(i+obj.MacroCells{obj.NumMacro}.CellID))};
+            end
+            obj.MicroCells = cells;
+        end
+
         %Find the coordinates of all picocells in all macrocells
         function obj = findPicoCoordinates(obj,Param)
-            
+            %Place pico stations at potential positions until all are placed
             picoCenters = zeros(Param.numPico,2);
             iPico = 1;
-            for i=1:obj.NumMacro
-                nPico = length(obj.Cells{i}.PicoPos(:,1));
-                picoCenters(iPico:iPico+nPico-1,:) = obj.Cells{i}.PicoPos;
-                iPico = iPico+ nPico;
+            picoTrack = ones(obj.NumMacro,1);
+            while iPico <= Param.numPico
+                for i=1:obj.NumMacro
+
+                    for j=picoTrack(i):picoTrack(i) +2
+                        picoCenters(iPico,:) = obj.MacroCells{i}.PicoPos(j,:);
+                        if iPico +1 > Param.numPico
+                            picoTrack(:) = 0;
+                            iPico = iPico +1;
+                            break
+                        end
+                        iPico = iPico +1;
+                        picoTrack(i) = picoTrack(i)+1;
+                    end
+
+                    if picoTrack(1) == 0
+                        break
+                    end
+
+                end
             end
-            obj.PicoCoordinates = picoCenters(1:iPico-1,:);
+
+            obj.PicoCoordinates = picoCenters;
+
+        end
+
+        %Generate the PicoCells objects
+        function obj = generatePicoCells(obj,Param)
+            cells = cell(obj.NumPico,1);
+
+            if obj.NumMicro <1 
+                n = obj.NumMacro;
+            else
+                n = obj.MicroCells{obj.NumMicro}.CellID;
+            end
+            for i=1:obj.NumPico
+                cells(i)={PicoCell(obj.PicoCoordinates(i,1),obj.PicoCoordinates(i,2),Param, (i+n))};
+            end
+            obj.PicoCells = cells;
         end
 
     end

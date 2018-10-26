@@ -138,7 +138,7 @@ classdef EvolvedNodeB
 		function obj = setNeighbours(obj, Stations, Param)
 			% the macro eNodeB has neighbours all the micro
 			if strcmp(obj.BsClass,'macro')
-				obj.Neighbours(1:Param.numMicro + Param.numPico) = find([Stations.NCellID] ~= obj.NCellID);
+				obj.Neighbours(1:Param.numMacro + Param.numMicro + Param.numPico-1) = find([Stations.NCellID] ~= obj.NCellID);
 				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
 				% in a circle of radius Param.nboRadius
 			else
