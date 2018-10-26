@@ -97,10 +97,6 @@ classdef UserEquipment
 			obj.Pmax = 10; %10dBm
     end
 		
-		% Change queue
-		function obj = set.Queue(obj, queue)		%Can be outcommented with no consequences
-			obj.Queue = queue;
-		end
 		
 		function obj = move(obj, round)
 			obj.Position(1:2) = obj.Mobility.Trajectory(round+1,:);
@@ -111,21 +107,6 @@ classdef UserEquipment
 			obj.Scheduled = status;
 		end
 
-		function obj = set.TrafficStartTime(obj, tStart)
-			% Used to set the starting time for requesting traffic
-			obj.TrafficStartTime = tStart;
-		end
-		
-		% set TransportBlock
-		function obj = set.TransportBlock(obj, tb)
-			obj.TransportBlock = tb;
-		end
-		
-		% set TransportBlockInfo
-		function obj = set.TransportBlockInfo(obj, info)
-			obj.TransportBlockInfo = info;
-		end
-		
 		% Create codeword
 		function obj = createCodeword(obj)
 			% perform CRC encoding with 24A poly
@@ -143,25 +124,7 @@ classdef UserEquipment
 			obj.Codeword = cwd;
 		end
 				
-		% set SymbolsInfo
-		function obj = set.SymbolsInfo(obj, info)
-			obj.SymbolsInfo = info;
-		end
-		
-		% set NSubframe
-		function obj = set.NSubframe(obj, num)
-			obj.NSubframe = num;
-		end
-		
-		% set NFrame
-		function obj = set.NFrame(obj, num)
-			obj.NFrame = num;
-		end
-		
-		% set NULRB
-		function obj = set.NULRB(obj, num)
-			obj.NULRB = num;
-		end
+
 		
 		% cast object to struct
 		function objstruct = cast2Struct(obj)

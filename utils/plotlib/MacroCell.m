@@ -1,5 +1,13 @@
 %Class defining all relevant coordinates for a site with 3 sectors.
 classdef MacroCell < BaseCell
+    % This is the class for defiing a macrocell. A macrocell has one site and 3 cells originating from that site.
+    %
+    % The constructor requires the following options:
+    %
+    % :input Param: Parameter struck containing the following:
+    % :Param.macroRadius: (double) Radius or ISD for macrocells.
+    % :Param.numPico: (int) Number of pico basestations.
+
 
     %Properties
     properties 

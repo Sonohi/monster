@@ -9,7 +9,10 @@ classdef NetworkLayout < handle
     % :Param.numMacro: (int) Number of Macro sites. Each Site corersponds to 3 macrocells in a hexagonal structure.
     % :Param.numMicro: (int) Number of Micro sites. Placement restricted to how the macrocells are placed.
     % :Param.numPico: (int) Number of Pico cells, randomly placed.
-    %
+    % :Param.macroRadius: (double) Radius or ISD for macrocells.
+    % :Param.posScheme: (str) Chose a predefined scheme/scenario. If none is chosen custom setup is used.
+    % :Param.buildings: (2-dimensional array of double) Building coordinaates defining the layout of the city.
+    % 
     properties 
         Center;             %Center of the target area
         MacroCoordinates;   %Center of each macro cell
