@@ -3,41 +3,56 @@
 classdef UserEquipment
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
-		NCellID;
-		ENodeBID;
-		NULRB;
-		RNTI;
-		DuplexMode;
-		CyclicPrefixUL;
-		NSubframe;
-		NFrame;
-		NTxAnts;
-		Position;
-		PLast; % indexes in trajectory vector of the latest position of the UE
+		%Matlab tool box for LTE
+		RNTI;			%Radio network temporary identifier. Required for matlab LTE toolbox
+		DuplexMode; 	%Duplex mode, e.g. 'FDD' or 'TDD' (matlab LTE toolbox), when removed matalb chrashes
+		CyclicPrefixUL; %Cyclic Prefix (matlab LTE toolbox)
+
+		%Practical info about the UE
+		NCellID;		%ID number for the UE
+		NTxAnts;		%Number of transmission antennas
+		ENodeBID;		%Associated eNB
+		Position;		%Coordinates to the UE location
+		PLast; 			% indexes in trajectory vector of the latest position of the UE
+		TLast; 			% timestamp of the latest movement done by the UE
+		Trajectory;		%Movement track
+		Velocity;		%Speed fo the UE
+		Mobility;		%Mobility scenario
+
+		%Frames and subframes
+		NULRB;			%Something with subframes
+		NSubframe;		%
+		NFrame;			%
+		
+		%Draw and plot functions
+		PlotStyle;		%Style to control plot functions
+		
+		%Scheduling info
 		Queue;
-		PlotStyle;
-		Scheduled;
-		Sinr;
-		TLast; % timestamp of the latest movement done by the UE
-		Trajectory;
-		Velocity;
+		Scheduled;		
+		SchedulingSlots;
+		
+		%Reciever and Transmitter modules and similar
 		RxAmpli;
-		Rx;
-		Tx;
-		Symbols;
-		SymbolsInfo;
-		Codeword;
+		Rx;				%Reciver module
+		Tx;				%Transmit module
+		Symbols;		%Symbols
+		SymbolsInfo;	%Info about symbols
+		Codeword;		
 		CodewordInfo;
 		TransportBlock;
 		TransportBlockInfo;
-		Mac;
-		Rlc;
-		SchedulingSlots;
-		Hangover;
-		Pmax;
-		Seed;
-		Mobility;
-		TrafficStartTime;
+		Mac;			%For Harq Tx Processes
+		Rlc;			%For Arq Tx Buffers
+		Hangover;		%Handover info
+
+		%Simulation specific properties
+		Seed;			%Seed to repeat or differentiate
+
+		%Other properteis
+		Sinr;			%Signal to noise ratio, though connection is very unclear
+		Pmax;			%Maximum power
+		TrafficStartTime; %Used to set the starting time for requesting traffic
 	end
 	
 	methods
@@ -83,7 +98,7 @@ classdef UserEquipment
     end
 		
 		% Change queue
-		function obj = set.Queue(obj, queue)
+		function obj = set.Queue(obj, queue)		%Can be outcommented with no consequences
 			obj.Queue = queue;
 		end
 		

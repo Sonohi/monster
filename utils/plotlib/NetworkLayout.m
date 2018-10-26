@@ -1,6 +1,15 @@
 classdef NetworkLayout < handle
-    %This is the class defining the layout for macro cells
-
+    % This is the class defining the layout and placement of the different cells.
+    %
+    % Currently implmented standard scenarioes: [:attr:`3GPP TR 38.901 UMa`, :attr:`3GPP TR 38.901 RMa`, :attr:`ITU-R M.2412-0 5.B.C`, :attr:`ITU-R M.2412-0 5.B.A`, :attr:`Single Cell`]
+    %
+    % The constructor requires the following:
+    %
+    % :input Param: Parameter struct containing the following:
+    % :Param.numMacro: (int) Number of Macro sites. Each Site corersponds to 3 macrocells in a hexagonal structure.
+    % :Param.numMicro: (int) Number of Micro sites. Placement restricted to how the macrocells are placed.
+    % :Param.numPico: (int) Number of Pico cells, randomly placed.
+    %
     properties 
         Center;             %Center of the target area
         MacroCoordinates;   %Center of each macro cell
@@ -49,7 +58,7 @@ classdef NetworkLayout < handle
                     %50% indoor, 50% in car
 
 
-                case 'ITU-R M.2412-0 5.B.C' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.B Configuration C
+                case 'ITU-R M.2412-0 5.B.C' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.b Configuration C
                     obj.PosScheme = 'ITU-R M.2412-0 5.B.C';
                     Param.macroRadius = 200;
                     Param.numMacro = 19;
@@ -82,9 +91,23 @@ classdef NetworkLayout < handle
                     %Number of antenna elements per TRxP: 256 Tx/Rx
                     %Number of UE Antenna elements: 4 GHz: Up to 8 Tx/Rx, 30 GHz: Up to 32 Tx/Rx
                     % 80% indoor, 20% outdoor (in car)
+                    %Mobility modelling: Fixed and idential speed v of all UEs, random direction
+                    %UE speed: indoor: 3km/h    outdoor: 30km/h (in car)
+                    %BS noise figure: 4GHz -> 5dB
+                                    %30GHz -> 7dB
+                    %UE noise figure: 4GHz -> 7dB
+                                    %30GHz -> 10dB (assumed for high performance UEs. For low performance 13 dB could be considered)
+                    %Thermal noise: -174 dBm/Hz
+                    %BS antenna element gain: 4GHz -> 8dBi, 30GHz -> Macro TRxP: 8dBi
+                    %UE antenna element gain: 4GHz -> 0dBi, 30GHz -> 5dBi
+                    %Bandwidths: 4GHz -> 20MHz for TDD or 10MHz + 10MHz for FDD
+                    %           30GHz -> 80MHz for TDD or 40MHz + 40MHz for FDD
+                    %UE density: 10 UEs per TRxP
 
 
-                case 'ITU-R M2412-0 5.C.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.C Configuration A
+
+
+                case 'ITU-R M2412-0 5.C.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.c Configuration A
                     obj.PosScheme = 'ITU-R M.2412-0 5.C.A';
                     Param.macroRadius = 1732; 
                     Param.numMacro = 19;
@@ -96,6 +119,7 @@ classdef NetworkLayout < handle
                     Param.primaryTrafficModelling = 'fullBuffer';
                     Param.trafficMix = 1;
                     %Load no buildings...
+                    %
 
                 case 'Single Cell' % Deploys a single cell with 3 micro BST and randomly placed pico BST in each sector
                     obj.PosScheme = 'Single Cell';
@@ -113,6 +137,7 @@ classdef NetworkLayout < handle
 
                 otherwise
                     obj.PosScheme = 'None';
+
             end
             obj.Center = [xc yc];
             obj.Radius = Param.macroRadius;
@@ -125,6 +150,7 @@ classdef NetworkLayout < handle
             obj.findPicoCoordinates(Param);
             obj.NumPico = length(obj.PicoCoordinates(:,1));
             obj.generatePicoCells(Param);
+            Param.numEnodeBs=obj.NumMacro + obj.NumMicro + obj.NumPico;
             obj.Param = Param;
             
         end

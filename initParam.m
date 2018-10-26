@@ -39,7 +39,7 @@ Param.picoPos = 'uniform'; % Array of char to decide the positioning of the micr
 Param.picoUniformRadius = 200;% Double radius of distance from centre for picoBS in metres
 Param.picoHeight = 5;% Double used to specify the height in metres of the pico eNodeBs
 Param.numEnodeBs = Param.numMacro + Param.numMicro + Param.numPico;
-Param.posScheme = 'ITU-R M.2412-0 5.B.C' % Array of char describing if a standard scheme/scenario should be used 
+Param.posScheme = 'Single Cell' % Array of char describing if a standard scheme/scenario should be used 
 				%['3GPP TR 38.901 UMa', '3GPP TR 38.901 RMa', 'ITU-R M.2412-0 5.B.C', 'ITU-R M2412-0 5.C.A', 'Single Cell'] leave empty for no scenario
 Param.ueHeight = 1.5;% Double used to specify the height in metres of the UEs
 Param.numUsers = 15;% Integer used for the number of UEs
