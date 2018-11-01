@@ -31,6 +31,7 @@ classdef SonohiChannel < handle
 		enableShadowing;
 		LOSMethod;
 		BuildingFootprints % Matrix containing footprints of buildings
+		Estimator;
 	end
 	
 	methods
@@ -56,7 +57,15 @@ classdef SonohiChannel < handle
 				obj.DownlinkModel.setupShadowing(Stations)
 			end
 
-			
+			obj.Estimator = struct(...
+				'Downlink', struct(...
+					'PilotAverage', 'UserDefined', 'FreqWindow', 31, ...
+					'TimeWindow', 23, 'InterpType', 'Cubic',...
+					'InterpWindow', 'Centered', 'InterpWinSize', 1)...,
+				'Uplink', struct(...
+				'PilotAverage', 'UserDefined', 'FreqWindow', 13, ...
+				'TimeWindow', 1, 'InterpType', 'Cubic',...
+				'Reference', 'Antennas'));
 		end
 		
 	end

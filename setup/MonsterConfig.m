@@ -107,6 +107,8 @@ classdef MonsterConfig < handle
 			obj.SimulationPlot.heatMapRes = Param.heatMapRes;
 
 			% Macro eNodeBs
+			% Check the number of macros and throw an error if set to an unsupported number
+			assert(Param.numMacro == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
 			obj.MacroENodeB.number = Param.numMacro;
 			obj.MacroENodeB.subframes = Param.numSubFramesMacro;
 			obj.MacroENodeB.height = Param.macroHeight;

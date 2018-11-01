@@ -34,26 +34,15 @@
 %>     - 0: Don't use colors in log output (faster)
 %>     - 1: Use colors in log output
 function monsterLog(msg, varargin)
+	
 %Constants
 validLogTypeValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};
 textColors = {[1 0 0], [1, 0.5, 0], [0 0.7 1],[0 0 0], [0 0.7 1]}; % Black, orange, red, cyan
 
-% Get global preferences
-% persistent logToFile
-% persistent logFile
-% persistent logLevel
-% persistent logInBlack
-% if isempty(logToFile)
-%     logToFile=getpref('sonohiLog', 'logToFile', false);
-%     logFile=getpref('sonohiLog', 'logFile', 'sonohiLog.txt');
-%     logLevel=getpref('sonohiLog','logLevel', length(validLogTypeValues));
-%     logInBlack=getpref('sonohiLog','logInBlack', 0);
-% end
-
-logToFile=getpref('sonohiLog', 'logToFile', false);
-logFile=getpref('sonohiLog', 'logFile', 'sonohiLog.txt');
-logLevel=getpref('sonohiLog','logLevel', length(validLogTypeValues));
-logInBlack=getpref('sonohiLog','logInBlack', 0);
+logToFile=getpref('monsterLog', 'logToFile', false);
+logFile=getpref('monsterLog', 'logFile', 'monsterLog.txt');
+logLevel=getpref('monsterLog','logLevel', length(validLogTypeValues));
+logInBlack=getpref('monsterLog','logInBlack', 0);
 
 if logLevel < 1
     error('Sonohi log level must be >= 1');
