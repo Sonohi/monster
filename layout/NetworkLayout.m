@@ -12,7 +12,50 @@ classdef NetworkLayout < handle
     % :Param.macroRadius: (double) Radius or ISD for macrocells.
     % :Param.posScheme: (str) Chose a predefined scheme/scenario. If none is chosen custom setup is used.
     % :Param.buildings: (2-dimensional array of double) Building coordinaates defining the layout of the city.
-    % 
+    % From _ITU M.2412-0: https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf table 5.b configuration C
+    %
+    % +---------------------+------------------------------------------------------+
+    % | Carrier frequency   | 4 GHz and 30 GHz available in macro and micro layers | 
+    % +---------------------+------------------------------------------------------+
+    % | BS antenna height   | 25m for macro and 10m for micro                      |
+    % +---------------------+------------------------------------------------------+
+    % | Total transmit      | -Macro 4 GHz:                                        |
+    % | power pr TRxP       |   44 dBm for 20 MHz bandwidth                        |
+    % |                     |   41 dBm for 10 MHz bandwidth                        |
+    % |                     | -Macro 30 GHz:                                       |
+    % |                     |   40 dBm for 80 MHz bandwidth                        |
+    % |                     |   37 dBm for 40 MHz bandwidth                        |
+    % |                     |   e.i.r.p. should not exceed 73 dBm                  |
+    % |                     | -Micro 4 GHz:                                        |
+    % |                     |   33 dBm for 20 MHz bandwidth                        |
+    % |                     |   30 dBm for 10 MHz bandwidth                        |
+    % |                     | -Micro 30 GHz:                                       |
+    % |                     |   33 dBm for 80 MHz bandwidth                        |
+    % |                     |   30 dBm for 40 MHz bandwidth                        |
+    % |                     |   e.i.r.p. should not exceed 68 dBm                  |
+    % +---------------------+------------------------------------------------------+
+    % |UE power class       | 4 GHz: 23 dBm                                        |
+    % |                     | 30 GHz: 23 dBm, e.i.r.p should not exceed 43 dBm     |
+    % +---------------------+------------------------------------------------------+
+    % | Percentage of high  | 20% high loss, 80% low loss                          |
+    % | and low loss        |                                                      |
+    % | building type       |                                                      |
+    % +---------------------+------------------------------------------------------+
+    % | Inter-site distance | Macro layer: 200m, micro layer can be seen in figure |
+    % +---------------------+------------------------------------------------------+
+    % | Number of antenna   | Up to 256 Tx/Rx                                      |
+    % | elements pr TRxp    |                                                      |
+    % +---------------------+------------------------------------------------------+
+    % | Number of UE        | 4 GHz: Up to 8 Tx/Rx                                 |
+    % | antenna elements    | 30 GHz: Up to 4 Tx/Rx                                |
+    % +---------------------+------------------------------------------------------+
+    % | Device deployment   | 80% indoor, 20% outdoor (in car), uniformly random   |
+    % +---------------------+------------------------------------------------------+
+    % | UE Mobility model   | Fixed speed for all UE in same mobility class.       |
+    % |                     | Uniformly random directions.                         |
+    % +---------------------+------------------------------------------------------+
+    % | UE speeds           | Indoor: 3km/h, outdoor (in car): 30km/h              |
+    % +---------------------+------------------------------------------------------+
     properties 
         Center;             %Center of the target area
         MacroCoordinates;   %Center of each macro cell
@@ -107,9 +150,9 @@ classdef NetworkLayout < handle
                     %           30GHz -> 80MHz for TDD or 40MHz + 40MHz for FDD
                     %UE density: 10 UEs per TRxP
 
-
-
-
+                    % Table in restructuretext to try it out.
+                  
+                    % 
                 case 'ITU-R M2412-0 5.C.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.c Configuration A
                     obj.PosScheme = 'ITU-R M.2412-0 5.C.A';
                     Param.macroRadius = 1732; 
@@ -159,6 +202,12 @@ classdef NetworkLayout < handle
         end
 
         function draweNBs(obj, Param)
+            % This method uses the previously calculated coordinates of all 3 kinds of cells (macro, micro, pico) and draws them on top of the building grid in the figure made from the createLayoutPlot function.
+            % 
+            % :input Param: Parameter struct containing the following:
+            % :Param.buildings: (2-dimensional array of double) Building coordinaates defining the layout of the city.
+            % :Param.LayoutAxes: Axes to plot on defined in createLayoutPlot
+            %
             buildings = Param.buildings;
 
             %Find simulation area
