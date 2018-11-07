@@ -1,6 +1,6 @@
 classdef enbTransmitterModule
   properties
-    Waveform;
+    Waveform;         %
     WaveformInfo;
     ReGrid;
     PDSCH;

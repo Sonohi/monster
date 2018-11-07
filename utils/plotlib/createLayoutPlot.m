@@ -8,23 +8,13 @@ area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
 xc = (area(3) - area(1))/2;
 yc = (area(4) - area(2))/2;
 maxRadius = max(area(3)/2,area(4)/2);
-%Depending on position scenario and radius resize axes to that or resize to building grid
+%Depending on position scenario and radius resize axes to match, otherwise resize to building grid
+
 %Check macro
-if Param.macroRadius >maxRadius
-    maxRadius = Param.macroRadius;
+if Param.macroRadius*Param.numMacro >maxRadius
+    maxRadius = Param.macroRadius*Param.numMacro;
 end
-%Check micro
-if (strcmp(Param.microPos,'uniform')  && Param.microUniformRadius > maxRadius)
-    maxRadius = Param.microUniformRadius;
-end
-%If hexagonal
-if (strcmp(Param.microPos,'hexagonal')  && (Param.macroRadius*3/2 > maxRadius && Param.numMicro > 6 ))
-    maxRadius = Param.macroRadius*3/2;
-end
-%Check pico
-if (strcmp(Param.picoPos,'uniform') && Param.picoUniformRadius > maxRadius)
-    maxRadius = Param.picoUniformRadius;
-end
+
 %Set axes accordingly
 set(layout_axes,'XLim',[xc-maxRadius-10,xc+maxRadius+10],'YLim',[yc-maxRadius-10,yc+maxRadius+10]); %+/-10 for better looks
 set(layout_axes,'XTick',[]);

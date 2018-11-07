@@ -1,42 +1,56 @@
 classdef EvolvedNodeB
 	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties
-		NCellID;
-		DuplexMode;
-		Position;
-		NDLRB;
-		CellRefP;
-		CyclicPrefix;
-		CFI;
-		DlFreq;
-		PHICHDuration;
-		Ng;
-		TotSubframes;
-		OCNG;
-		Windowing;
-		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
-		ScheduleDL;
-		ScheduleUL;
-		RoundRobinDLNext;
-		RoundRobinULNext;
-		Channel;
-		NSubframe;
-		BsClass;
-		PowerState;
-		Neighbours;
-		HystCount;
-		SwitchCount;
-		Pmax;
-		P0;
-		DeltaP;
-		Psleep;
-		Tx;
-		Rx;
-		Mac;
-		Rlc;
-		Seed;
-		AbsMask;
-		PowerIn;
+		%Matlab tool box default cell wide properties
+		NDLRB;				%Number of DL Resource Blocks (matlab LTE toolbox)
+		CyclicPrefix;		%Cyclic Prefix (matlab LTE toolbox)
+		PHICHDuration;		%Physical Hybrid-ARQ Indicator Channel duration (matlab LTE toolbox)
+		DuplexMode;			%Duplex mode, e.g. 'FDD' or 'TDD' (matlab LTE toolbox)
+		CFI;				%Control Format Indicator, number of PDCCH(Physical Downlink Control Channel) symbols (matlab LTE toolbox)
+		Ng;					%Hybrid-ARQ Indicator Channel groups (matlab LTE toolbox)
+		CellRefP;			%Number of antenna ports (matlab LTE toolbox)
+		NCellID;			%Cell ID (matlab LTE toolbox)
+		NSubframe;			%Subframe number (matlab LTE toolbox)
+
+		%Practical information about the eNB
+		Position;			%Position of the eNB
+		BsClass;			%Base Station class
+		Neighbours;			%Neighbouring micro and pico stations, cant find neighbouring macro stations.
+		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1); 
+		
+		%Scheduling
+		TotSubframes;		%Scheduling rounds (subframes)
+		ScheduleDL;			% 
+		ScheduleUL;			% 
+		RoundRobinDLNext;	%
+		RoundRobinULNext;	%
+	
+		%Power related properties
+		PowerState;			%Power state, 1->active, 2->overload, 3->underload, 4->underload has exceeded the hysteresis timer, 5-> shutdown, 6-> boot.
+		Pmax;				%Power used when transmitting the most.
+		P0;					%Minimum power used when active
+		DeltaP;				%
+		Psleep;				%Power consumption when inactive
+		PowerIn;			%Current powerconsumption?
+
+		HystCount;			%Hysteresis counter
+		SwitchCount;		%Switch counter, controls when to switch on or off.
+
+		%Modules
+		Tx;					%Transmitter module
+		Rx;					%Reciever module
+		Mac;				%For Harq Tx Processes
+		Rlc;				%For Arq Tx Buffers
+
+		%Simulation specific properties
+		Seed;				%Random seed for simulation
+
+		%Other properties
+		DlFreq;				%Downlink carrier frequency in MHz
+		OCNG;				%Orthogonal Frequency Division Multiple Access Channel Noise Generator
+		Windowing;			%
+		AbsMask;			%Subframe mask
+		
 	end
 	
 	methods
@@ -64,7 +78,7 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
-			obj.Seed = cellId*Param.seed;
+			obj.Seed = cellId*Param.seed; %generate a unique seed for each eNB
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -138,7 +152,7 @@ classdef EvolvedNodeB
 		function obj = setNeighbours(obj, Stations, Param)
 			% the macro eNodeB has neighbours all the micro
 			if strcmp(obj.BsClass,'macro')
-				obj.Neighbours(1:Param.numMicro + Param.numPico) = find([Stations.NCellID] ~= obj.NCellID);
+				obj.Neighbours(1:Param.numMacro + Param.numMicro + Param.numPico-1) = find([Stations.NCellID] ~= obj.NCellID);
 				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
 				% in a circle of radius Param.nboRadius
 			else

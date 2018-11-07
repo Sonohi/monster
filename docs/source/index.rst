@@ -15,6 +15,7 @@ Welcome to MONSTER's documentation!
    ch
    mobility
    traffic
+   layout
 	 
 
 Indices and tables

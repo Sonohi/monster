@@ -1,5 +1,13 @@
 %Class defining all relevant coordinates for a site with 3 sectors.
 classdef MacroCell < BaseCell
+    % This is the class for defiing a macrocell. A macrocell has one site and 3 cells originating from that site.
+    %
+    % The constructor requires the following options:
+    %
+    % :input Param: Parameter struck containing the following:
+    % :Param.macroRadius: (double) Radius or ISD for macrocells.
+    % :Param.numPico: (int) Number of pico basestations.
+
 
     %Properties
     properties 
@@ -44,7 +52,7 @@ classdef MacroCell < BaseCell
         %Compute random pico pos within the different cells
         function obj = computePicoPos(obj, Param)
             %Picocells pr macro site
-            picoPos = zeros(floor(Param.numPico/Param.numMacro),2);
+            picoPos = zeros(Param.numPico,2);
             iPico = 1;
             theta = 2*pi/3;
             while iPico <= length(picoPos(:,1))
@@ -58,20 +66,20 @@ classdef MacroCell < BaseCell
 
                 %Avoid placement too close to macro BST
                 d = sqrt((obj.Center(1) - x) ^ 2 + (obj.Center(2) - y) ^ 2);
-                if d < 20
+                if d < 35
                     valid = false;
                 end
                 %Avoid placement too close to micro BST
                 for m = 1:9
                     d = sqrt((obj.MicroPos(m, 1) - x) ^ 2 + (obj.MicroPos(m, 2) - y) ^ 2);
-                    if (d < 20)
+                    if (d < 30)
                         valid = false;
                     end
                 end
                 %Avoid placement too close to another pico BST
                 for m = 1:iPico-1
                     d = sqrt((picoPos(m, 1) - x) ^ 2 + (picoPos(m, 2) - y) ^ 2);
-                    if (d < 15)
+                    if (d < 20)
                         valid = false;
                     end
                 end
