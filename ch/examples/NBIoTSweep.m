@@ -114,7 +114,7 @@ for distanceIdx = 1:N
 	results3gpp2600(distanceIdx,5) = ue2600.Rx.RxPwdBm;
 	results3gpp2600(distanceIdx,6) = ue2600.Rx.ChannelConditions.pathloss;
 	
-  sonohilog(sprintf('%s/%s',int2str(distanceIdx),int2str(N)));
+  monsterLog(sprintf('%s/%s',int2str(distanceIdx),int2str(N)));
 
 end
 

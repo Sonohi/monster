@@ -161,6 +161,7 @@ classdef MonsterConfig < handle
 			% Traffic
 			obj.Traffic.primary = Param.primaryTrafficModel;
 			obj.Traffic.secondary = Param.secondaryTrafficModel;
+			assert(Param.trafficMix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
 			obj.Traffic.mix = Param.trafficMix;
 			obj.Traffic.arrivalDistribution = Param.ueArrivalDistribution;
 			obj.Traffic.poissonLambda = Param.poissonLambda;

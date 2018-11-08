@@ -39,7 +39,7 @@ function [Stations, Param] = createBaseStations (Param)
 			Stations(iStation) = setNeighbours(Stations(iStation), Stations, Param);
 		end
 	else
-		sonohilog('(CREATE BASE STATIONS) error, at most 1 macro eNodeB currently supported','ERR');
+		monsterLog('(CREATE BASE STATIONS) error, at most 1 macro eNodeB currently supported','ERR');
 	end
 	
 

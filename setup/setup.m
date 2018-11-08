@@ -1,7 +1,7 @@
-function [Config, Stations, Users, Channel, Traffic] = setup()
+function [Config, Stations, Users, Channel, Traffic, Results] = setup()
 % setup - performs all the task related to setting up a simulation 
 %
-% Syntax: [Config, Stations, Users, Traffic, Channel] = setup()
+% Syntax: [Config, Stations, Users, Traffic, Channel, Results] = setup()
 % setup is called from the main file and returns the following:
 %
 % :Config: (MonsterConfig) simulation config class instance
@@ -9,6 +9,7 @@ function [Config, Stations, Users, Channel, Traffic] = setup()
 % :Users: (Array<UserEquipment>) simulation UEs class instances
 % :Channel: (Channel) simulation channel class instance
 % :Traffic: (TrafficGenerator) simulation traffic generator class instance
+% :Results: (MetricRecorder) simulation results class instance
 
 % Clean workspace
 clearvars;
@@ -48,6 +49,10 @@ Channel = setupChannel(Stations, Users, Config)
 
 % Setup traffic
 monsterLog('(SETUP) setting up simulation traffic', 'NFO');
+[Traffic, Users] = setupTraffic(USers, Config);
 
+% Setup results
+monsterLog('(SETUP) setting up simulation metrics recorder', 'NFO');
+Results = setupResults(Config)
 	
 end

@@ -193,13 +193,13 @@ classdef ueReceiverModule
 			EVM.AveragingDimensions = [1 2];
 			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
-			sonohilog(s,'NFO0')
+			monsterLog(s,'NFO0')
 			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
 			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
-			sonohilog(s,'NFO0')
+			monsterLog(s,'NFO0')
 		end
 		
 		% select CQI
@@ -207,7 +207,7 @@ classdef ueReceiverModule
 			enb = cast2Struct(enbObj);
 			[obj.CQI, ~] = lteCQISelect(enb, enb.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 			if isnan(obj.CQI)
-				sonohilog('CQI is NaN - something went wrong in the selection.','ERR')
+				monsterLog('CQI is NaN - something went wrong in the selection.','ERR')
 			end
     end
     
@@ -271,7 +271,7 @@ classdef ueReceiverModule
 				errEx = 0;
 				tot = length(tbTx);
 			else
-				sonohilog('(ueReceiverModule - logBlockReception) TBs sizes mismatch', 'WRN');
+				monsterLog('(ueReceiverModule - logBlockReception) TBs sizes mismatch', 'WRN');
 				% In this case, we do the xor between the minimum common set of bits
 				if sizeCheck > 0
 					% the original TB was bigger than the received one, so test on the

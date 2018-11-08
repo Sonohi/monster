@@ -40,7 +40,7 @@ classdef MMobility < handle
 		function obj = MMobility(scenario, velocity, seed, Param)
 			% Constructor
 			if ~any(strcmp(scenario, obj.supportedScenarios))
-				sonohilog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
+				monsterLog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
 			end
 			
 			% Set arguments
@@ -365,7 +365,7 @@ classdef MMobility < handle
 			building = obj.buildingFootprints(intersect(cornerXIdx, cornerYIdx),:);
 			
 			if isempty(building)
-				sonohilog('Something went wrong in finding closest building','ERR')
+				monsterLog('Something went wrong in finding closest building','ERR')
 				
 			end
 			

@@ -16,7 +16,7 @@ for iStation = 1:length(Stations)
 	% First off, check whether this station has received anything in UL.
 	% If not, it simply means that there are no UEs connected to it
 	if isempty(enb.Rx.Waveform)
-		sonohilog(sprintf('eNodeB %i has an empty received waveform',enb.NCellID), 'NFO');
+		monsterLog(sprintf('eNodeB %i has an empty received waveform',enb.NCellID), 'NFO');
 		continue;
 	end
 	% In the other cases find all UEs that are linked to this station in this round

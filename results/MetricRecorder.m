@@ -92,7 +92,7 @@ classdef MetricRecorder
 					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo);
 					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
 				else
-					sonohilog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
+					monsterLog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
 				end
 			end
 		end

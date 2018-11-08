@@ -49,7 +49,7 @@ classdef ArqRx
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-				sonohilog('ARQ received duplicate TB', 'NFO');
+				monsterLog('ARQ received duplicate TB', 'NFO');
 			end
 		end
 

@@ -18,7 +18,7 @@ switch Param.mobilityScenario
         obj.Velocity = 10 / 12; % in m/s
         [x, y] = straightMobility( obj.Velocity, obj.MobilitySeed, Param );
     otherwise
-        sonohilog('Unknown mobility scenario selected','ERR');
+        monsterLog('Unknown mobility scenario selected','ERR');
         return;
 end
 

@@ -253,7 +253,7 @@ classdef sonohi3GPP38901 < sonohiBase
 		if extrapolation
 				pos = sprintf('(%s)',num2str(Position));
 				bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
-				sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
+				monsterLog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
 		end
 			
 		end
@@ -289,13 +289,13 @@ classdef sonohi3GPP38901 < sonohiBase
 						elseif (User.Position(3) > 13) && (User.Position(3) <= 23)
 							C = ((User.Position(3)-13)/10)^(1.5);
 						else
-							sonohilog('Error in computing LOS. Height out of range','ERR');
+							monsterLog('Error in computing LOS. Height out of range','ERR');
 						end
 						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
 					end
 					
 				otherwise
-					sonohilog(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
+					monsterLog(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
 					
 			end
 			

@@ -138,7 +138,7 @@ classdef SonohiChannel < handle
 			elseif strcmp(mode, 'Quadriga')
 				chModel = sonohiQuadriga(obj, chtype);
 			else
-				sonohilog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
+				monsterLog(sprintf('Channel mode: %s not supported. Choose [eHATA, ITU1546, winner]',mode),'ERR')
 			end
 			
 			
@@ -251,7 +251,7 @@ classdef SonohiChannel < handle
 				case 'downlink'
 					Users = obj.applyDownlinkInteference(Stations,Users);
 				case 'uplink'
-					sonohilog('Interference computation in uplink not implemented yet.','WRN')
+					monsterLog('Interference computation in uplink not implemented yet.','WRN')
 			end
 			
 			
@@ -260,7 +260,7 @@ classdef SonohiChannel < handle
 		function Users = applyDownlinkInteference(obj, Stations, Users)
 			
 			% Method used to apply the interference on a specific received waveform
-			sonohilog('Computing and applying interference based on station class','NFO')
+			monsterLog('Computing and applying interference based on station class','NFO')
 			% Validate arguments
 			validateChannel(obj);
 			validateStations(Stations);
@@ -308,7 +308,7 @@ classdef SonohiChannel < handle
 				powerThreshold = 0.05;
 				UserRxSigPwdBm = 10*log10(bandpower(UserRxSig))+30;
 				if abs(UserRxSigPwdBm-user.Rx.RxPwdBm) > powerThreshold %in dB
-					sonohilog('Power scaling is incorrect or exceeded threshold of dB','WRN')
+					monsterLog('Power scaling is incorrect or exceeded threshold of dB','WRN')
 				end
 				
 				% Create combined signal
@@ -353,7 +353,7 @@ classdef SonohiChannel < handle
 			
 			% For user try association with all stations and select
 			% the one with highest Rx power
-			sonohilog(sprintf('Finding User association for User(%i) based on Rx power',User.NCellID),'NFO0')
+			monsterLog(sprintf('Finding User association for User(%i) based on Rx power',User.NCellID),'NFO0')
 			
 			RxPw = cell(length(Stations),1);
 			for iStation = 1:length(Stations)

@@ -46,7 +46,7 @@ while true
     try
 				[~, sampleUser] = channel.traverse(station,sampleUser,'downlink');
     catch ME
-        sonohilog(sprintf('Channel error, %s',ME.message),'WRN')
+        monsterLog(sprintf('Channel error, %s',ME.message),'WRN')
         break
     end
     % Get offset
@@ -66,7 +66,7 @@ while true
     
     coverage.distance(idx) = avgCoverageDistance;
     coverage.SNRdB(idx) = sampleUser.Rx.SNRdB;
-    %sonohilog(sprintf('Distance %s', num2str(avgCoverageDistance)));
+    %monsterLog(sprintf('Distance %s', num2str(avgCoverageDistance)));
     % Check if SNR is below 3, likely means no transmission possible.
     % TODO: count errors on subframe
     if sampleUser.Rx.SNRdB <= 3

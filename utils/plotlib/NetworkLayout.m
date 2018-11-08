@@ -90,7 +90,7 @@ classdef NetworkLayout < handle
             for i=1:obj.NumMicro
                 % d = sqrt((macroPos(1, 1) - microPos(i,1)) ^ 2 + (macroPos(1, 2) - microPos(i,2)) ^ 2);
                 % if d< maxInterferrenceDistMicro2Macro
-                % 	sonohilog(strcat('Warning! Too high interferrence detected between macro and micro BST at',num2str(microPos(i,1)),',',num2str(microPos(i,2))),'WRN');
+                % 	monsterLog(strcat('Warning! Too high interferrence detected between macro and micro BST at',num2str(microPos(i,1)),',',num2str(microPos(i,2))),'WRN');
                 % end
                 xr = obj.MicroCoordinates(i,1);
                 yr = obj.MicroCoordinates(i,2);
@@ -223,7 +223,7 @@ classdef NetworkLayout < handle
             end
            %informs if microstations were unable to be placed
             if iMicro-1 < Param.numMicro
-                sonohilog(strcat('Cannot place the last  ', num2str(Param.numMicro-(iMicro-1)),' micro BST.'),'WRN');
+                monsterLog(strcat('Cannot place the last  ', num2str(Param.numMicro-(iMicro-1)),' micro BST.'),'WRN');
             end
             obj.MicroCoordinates = microCenters(1:iMicro-1,:);
         end

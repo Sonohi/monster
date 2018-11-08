@@ -52,7 +52,7 @@ function [Stations, compoundWaveforms, Users] = ueTxBulk(Stations,Users, NSubfra
         Users(mainIUser) = ue;
       else
         %(can this even happen here?)
-        sonohilog('UE NULRB quota is below minimum', 'WRN');
+        monsterLog('UE NULRB quota is below minimum', 'WRN');
       end
     end
     % Update main structure

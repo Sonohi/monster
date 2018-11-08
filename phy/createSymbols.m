@@ -32,7 +32,7 @@ function [Station, User] = createSymbols(Station, User)
 	if length(cwd) ~= SymInfo.G
 		% In this case seomthing went wrong with the rate maching and in the
 		% creation of the codeword, so we need to flag it
-		sonohilog('Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+		monsterLog('Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
 	end
 
 	% error handling for symbol creation
@@ -41,7 +41,7 @@ function [Station, User] = createSymbols(Station, User)
 	catch ME
 		fSpec = 'symbols generation failed for codeword with length %i\n';
 		s=sprintf(fSpec, length(cwd));
-    sonohilog(s,'WRN')
+    monsterLog(s,'WRN')
 		sym = [];
 	end
 	

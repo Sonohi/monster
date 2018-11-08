@@ -37,7 +37,7 @@ classdef UserEquipment
 		Pmax;
 		Seed;
 		Mobility;
-		TrafficStartTime;
+		Traffic = struct('generatorId', 1, 'startTime', 0)
 	end
 	
 	methods

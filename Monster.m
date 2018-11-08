@@ -14,17 +14,24 @@ classdef Monster < handle
 		Users;
 		Channel;
 		Traffic;
+		Results;
 	end
 
 	methods 
-		function obj = Monster(Config, Stations, Users, Channel, Traffic)
+		function obj = Monster(Config, Stations, Users, Channel, Traffic, Results)
 			obj.Config = Config;
 			obj.Stations = Stations;
 			obj.Users = Users;
 			obj.Channel = Channel;
 			obj.Traffic = Traffic;		
+			obj.Results = Results;
 		end
 
-		
+		function run(obj)
+		end
+
 	end	
+
+	methods (Access = private)
+	end
 end

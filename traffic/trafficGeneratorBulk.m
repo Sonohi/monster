@@ -8,13 +8,13 @@ function [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
 		thresholdPrimary = ceil(Param.trafficMix*length(Users));
 		totIds = [Users.NCellID];
 		if thresholdPrimary == 0
-			sonohilog('(TRAFFIC GENERATOR BULK) there will only be UEs for the primary traffic profile', 'NFO');
+			monsterLog('(TRAFFIC GENERATOR BULK) there will only be UEs for the primary traffic profile', 'NFO');
 			TrafficGenerators(1) = TrafficGenerator(Param.primaryTrafficModel, totIds, Param);
 		elseif thresholdPrimary == length(Users)
-			sonohilog('(TRAFFIC GENERATOR BULK) there will only be UEs for the secondary traffic profile', 'NFO');
+			monsterLog('(TRAFFIC GENERATOR BULK) there will only be UEs for the secondary traffic profile', 'NFO');
 			TrafficGenerators(1) = TrafficGenerator(Param.secondaryTrafficModel, totIds, Param);
 		else
-			sonohilog('(TRAFFIC GENERATOR BULK) there will UEs for both traffic profiles', 'NFO');
+			monsterLog('(TRAFFIC GENERATOR BULK) there will UEs for both traffic profiles', 'NFO');
 			TrafficGenerators(1) = TrafficGenerator(Param.primaryTrafficModel, totIds(1:thresholdPrimary), Param);
 			TrafficGenerators(2) = TrafficGenerator(Param.secondaryTrafficModel, totIds(thresholdPrimary + 1: length(Users)), Param);	
 		end	
@@ -25,6 +25,6 @@ function [Users, TrafficGenerators] = trafficGeneratorBulk(Users, Param)
 			Users(iUser).TrafficStartTime = UeTrafficGenerator.getStartingTime(Users(iUser).NCellID);
 		end
 	else
-		sonohilog('(TRAFFIC GENERATOR BULK) traffic mix cannot be negative', 'ERR');
+		monsterLog('(TRAFFIC GENERATOR BULK) traffic mix cannot be negative', 'ERR');
 	end
 end

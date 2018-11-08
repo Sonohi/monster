@@ -141,7 +141,7 @@ classdef HarqTx
 			if isempty(obj.processes(iProc).tb)
 				fSpec = 'Delayed ACK/NACK received at HARQ TX for process %i\n';
 				s=sprintf(fSpec, procId);
-    		sonohilog(s,'WRN');
+    		monsterLog(s,'WRN');
 				sqn = [];
 				state = [];
 			else

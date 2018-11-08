@@ -33,7 +33,7 @@ if Param.generateHeatMap
 		case 'perStation'
 			HeatMap = generateHeatmap(Stations, Channel, Param);
 		otherwise
-			sonohilog('Unknown heatMapType selected in simulation parameters', 'ERR')
+			monsterLog('Unknown heatMapType selected in simulation parameters', 'ERR')
 	end
 else
 	load('utils/heatmap/HeatMap_eHATA_fBS_pos_5m_res');
@@ -50,12 +50,12 @@ end
 for iRound = 0:(Param.schRounds-1)
 	% In each scheduling round, check UEs associated with each station and
 	% allocate PRBs through the scheduling function per each station
-	sonohilog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
+	monsterLog(sprintf('Round %i/%i',iRound+1,Param.schRounds),'NFO');
 	
 	% -----------
 	% UE MOVEMENT
 	% -----------
-	sonohilog('UE movement', 'NFO');
+	monsterLog('UE movement', 'NFO');
 	for iUser = 1:length(Users)
 		Users(iUser) = Users(iUser).move(iRound);
 	end
@@ -66,7 +66,7 @@ for iRound = 0:(Param.schRounds-1)
 	% TODO: Add this to the traverse or setup function of the channel
   Channel.iRound = iRound;
 	if mod(simTime, Param.refreshAssociationTimer) == 0
-		sonohilog('Refreshing user association', 'NFO');
+		monsterLog('Refreshing user association', 'NFO');
 		[Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, simTime);
 	end
 	
@@ -112,7 +112,7 @@ for iRound = 0:(Param.schRounds-1)
 	% ----------------------------------------------
 	% ENODEB DL-SCH & PDSCH CREATION AND MAPPING
 	% ----------------------------------------------
-	sonohilog('eNodeB DL-SCH & PDSCH creation and mapping', 'NFO');
+	monsterLog('eNodeB DL-SCH & PDSCH creation and mapping', 'NFO');
 	[Stations, Users] = enbTxBulk(Stations, Users, Param, simTime);
 
 
@@ -122,56 +122,56 @@ for iRound = 0:(Param.schRounds-1)
 	% Once all eNodeBs have created and stored their txWaveforms, we can go
 	% through the UEs and compute the rxWaveforms
   % Setup the channel based on scheduled users
-	sonohilog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.modeDL), 'NFO');
+	monsterLog(sprintf('Traversing channel in DL (mode: %s)...',Param.channel.modeDL), 'NFO');
 	[Stations, Users] = Channel.traverse(Stations, Users, 'downlink');
 	
 	% ------------
 	% UE RECEPTION
 	% ------------
-	sonohilog('UE reception block', 'NFO');
+	monsterLog('UE reception block', 'NFO');
 	Users = ueRxBulk(Stations, Users, ChannelEstimator.Downlink);
 
 	% ----------------
 	% UE DATA DECODING
 	% ----------------
-	sonohilog('UE data decoding block', 'NFO');
+	monsterLog('UE data decoding block', 'NFO');
 	[Stations, Users] = ueDataDecoding(Stations, Users, Param, simTime);
 	
 	% --------------------------
 	% UE UPLINK
 	% ---------------------------
-	sonohilog('Uplink transmission', 'NFO');
+	monsterLog('Uplink transmission', 'NFO');
 	[Stations, compoundWaveforms, Users] = ueTxBulk(Stations, Users, iRound, mod(iRound,10), Param);
 
 	% ------------------
 	% CHANNEL TRAVERSE
 	% ------------------
-	sonohilog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.modeUL), 'NFO');
+	monsterLog(sprintf('Traversing channel in UL (mode: %s)...',Param.channel.modeUL), 'NFO');
 	Channel = Channel.setupChannelUL(Stations,Users,'compoundWaveform',compoundWaveforms);
 	[Stations, Users] = Channel.traverse(Stations, Users,'uplink');
 
 	% --------------------------
 	% ENODEB RECEPTION
 	% ---------------------------
-	sonohilog('eNodeB reception block', 'NFO');
+	monsterLog('eNodeB reception block', 'NFO');
 	Stations = enbRxBulk(Stations, Users, simTime, ChannelEstimator.Uplink);
 
 	% ----------------
 	% ENODEB DATA DECODING
 	% ----------------
-	sonohilog('eNodeB data decoding block', 'NFO');
+	monsterLog('eNodeB data decoding block', 'NFO');
 	[Stations, Users] = enbDataDecoding(Stations, Users, Param, simTime);
 
 	% --------------------------
 	% ENODEB SPACE METRICS RECORDING
 	% ---------------------------
-	sonohilog('eNodeB-space metrics recording', 'NFO');
+	monsterLog('eNodeB-space metrics recording', 'NFO');
 	SimulationMetrics = SimulationMetrics.recordEnbMetrics(Stations, iRound, Param, utilLo);
 	
 	% --------------------------
 	% UE SPACE METRICS RECORDING
 	% ---------------------------
-	sonohilog('UE-space metrics recording', 'NFO');
+	monsterLog('UE-space metrics recording', 'NFO');
 	SimulationMetrics = SimulationMetrics.recordUeMetrics(Users, iRound);
 
 
@@ -191,7 +191,7 @@ for iRound = 0:(Param.schRounds-1)
 	% --------------------
 	% RESET FOR NEXT ROUND
 	% --------------------
-	sonohilog('Resetting objects for next simulation round', 'NFO');
+	monsterLog('Resetting objects for next simulation round', 'NFO');
 	for iUser = 1:length(Users)
 		Users(iUser) = Users(iUser).reset();
 	end

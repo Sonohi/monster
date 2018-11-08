@@ -146,7 +146,7 @@ classdef sonohiWINNERv2 < sonohiBase
             for model = 1:length(obj.WconfigLayout)
 
                 if isempty(obj.WconfigLayout{model})
-                    sonohilog(sprintf('Nothing assigned to %i model',model),'NFO0')
+                    monsterLog(sprintf('Nothing assigned to %i model',model),'NFO0')
                     continue
                 end
                 for link = 1:obj.numRx{model}
@@ -232,7 +232,7 @@ classdef sonohiWINNERv2 < sonohiBase
                   AA(1) = winner2.AntennaArray('ULA', 12, 0.15,'FP-ECS', pattern, 'Azimuth', Az);
                   save('macroAA.mat','AA')
                 else
-                  sonohilog('Loading pregenerated antenna AA.','NFO0')
+                  monsterLog('Loading pregenerated antenna AA.','NFO0')
                   load('macroAA.mat');
                 end
                 %AA(1) = winner2.AntennaArray('UCA', 8,  0.2);
@@ -243,13 +243,13 @@ classdef sonohiWINNERv2 < sonohiBase
                 AA(1) = winner2.AntennaArray('ULA', 6, 0.15,'FP-ECS', pattern,'Azimuth', Az);
                 save('microAA.mat','AA')
               else
-                sonohilog('Loading pregenerated antenna AA.','NFO0')
+                monsterLog('Loading pregenerated antenna AA.','NFO0')
                 load('microAA.mat');
               end
                 %AA(1) = winner2.AntennaArray('UCA', 4,  0.15);
             else
 
-                sonohilog(sprintf('Antenna type for %s BsClass not defined, defaulting.',type),'WRN')
+                monsterLog(sprintf('Antenna type for %s BsClass not defined, defaulting.',type),'WRN')
                 AA(1) = winner2.AntennaArray('UCA', 1,  0.3);
             end
 
@@ -260,7 +260,7 @@ classdef sonohiWINNERv2 < sonohiBase
               save('UEAA.mat','ueAA')
               AA(2) = ueAA;
             else
-              sonohilog('Loading pregenerated antenna AA.','NFO0')
+              monsterLog('Loading pregenerated antenna AA.','NFO0')
               load('UEAA.mat')
               AA(2) = ueAA;
             end
@@ -342,21 +342,21 @@ classdef sonohiWINNERv2 < sonohiBase
                 distance = Ch.getDistance(cBs.Position(1:2),cMs.Position(1:2));
                 if distance >= 5000
                     % Winner only supports < 5km
-                    sonohilog('Distance is above 5km, not supported for the WINNER channel model','ERR')
+                    monsterLog('Distance is above 5km, not supported for the WINNER channel model','ERR')
                 end
                 LOS = Ch.isLinkLOS(cBs, cMs, false);
                 if cBs.BsClass == 'micro'
                     scenario = str2num(Ch.Region.microScenario);
                     if distance <= 20 && scenario == 3
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with LOS, swapping to B4 LOS', stationNCellId,userIdx,num2str(distance));
-                        sonohilog(msg,'NFO0');
+                        monsterLog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 6; % 
                         cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
 
                     elseif distance <= 50 && scenario == 3 && ~LOS
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for B1 with NLOS, swapping to B1 LOS', stationNCellId,userIdx,num2str(distance));
-                        sonohilog(msg,'NFO0');
+                        monsterLog(msg,'NFO0');
 
                         cfgLayout.ScenarioVector(i) = 3; % 
                         cfgLayout.PropagConditionVector(i) = 1; %1 for LOS
@@ -368,7 +368,7 @@ classdef sonohiWINNERv2 < sonohiBase
                     scenario = str2num(Ch.Region.macroScenario);
                     if distance < 50 && scenario == 11 && ~LOS
                         msg = sprintf('(Station %i to User %i) Distance is %s, which is less than supported for C2 NLOS, swapping to LOS', stationNCellId,userIdx,num2str(distance));
-                        sonohilog(msg,'NFO0');
+                        monsterLog(msg,'NFO0');
                         cfgLayout.ScenarioVector(i) = 11; %
                         cfgLayout.PropagConditionVector(i) = 1; %
                     else

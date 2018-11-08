@@ -23,7 +23,7 @@ function Users = ueRxBulk(Stations, Users, cec)
     
     % Apply Offset
     if user.Rx.Offset > length(user.Rx.Waveform)
-        sonohilog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
+        monsterLog(sprintf('Offset for User %i out of bounds, not able to synchronize',user.NCellID),'WRN')
 		else
         user.Rx.Waveform = user.Rx.Waveform(1+abs(user.Rx.Offset):end,:);
 		end
@@ -57,7 +57,7 @@ function Users = ueRxBulk(Stations, Users, cec)
 			% Log block reception stats
 			user.Rx = user.Rx.logBlockReception(user);
     else
-      sonohilog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
+      monsterLog(sprintf('Not able to demodulate Station(%i) -> User(%i)...',station.NCellID,user.NCellID),'WRN');
 			user.Rx = user.Rx.logNotDemodulated();
 			user.Rx.CQI = 3;
       Users(iUser) = user;

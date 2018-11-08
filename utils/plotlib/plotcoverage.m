@@ -12,14 +12,14 @@ for stationIdx = 1:length(stations)
     % Results are saved in mat files to speed up the simulation. It can be
     % forced by setting a flag in the config.
     if exist(filename, 'file') && ~param.channel.computeCoverage
-        sonohilog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','NFO');
+        monsterLog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','NFO');
         load(filename)
     else
-        sonohilog(sprintf('Calculating coverage for Station %i, EIRP/subcarrier: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSubcarrier)+30), num2str(station.Tx.getEIRPdBm)));
+        monsterLog(sprintf('Calculating coverage for Station %i, EIRP/subcarrier: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSubcarrier)+30), num2str(station.Tx.getEIRPdBm)));
         coverage = computeCoverage(station,channel, param);
         save(filename,'coverage')
     end
-    sonohilog(sprintf('Coverage of Station: %i, approx. %0.2f (m)/NLOS',station.NCellID,coverage.distance(end)));
+    monsterLog(sprintf('Coverage of Station: %i, approx. %0.2f (m)/NLOS',station.NCellID,coverage.distance(end)));
     % Plot circles of coverage.
     r = coverage.distance(end);
     d = r*2;

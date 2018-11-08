@@ -8,7 +8,7 @@ classdef sonohiBase < handle
 	
 	methods
 		function obj = sonohiBase(Channel, Chtype)
-			sonohilog('Initializing channel model.','NFO0')
+			monsterLog('Initializing channel model.','NFO0')
 			obj.Channel = Channel;
 			obj.Chtype = Chtype;
 		end
@@ -91,7 +91,7 @@ classdef sonohiBase < handle
 		
 		function setupShadowing(obj, varargin)
 			% Function needs overwrite from models to enable shadowing
-			sonohilog(sprintf('No setupShadowing method detected on chosen model %s',obj.Chtype),'ERR');
+			monsterLog(sprintf('No setupShadowing method detected on chosen model %s',obj.Chtype),'ERR');
 		end
 		
 		function RxNode = addPropDelay(obj,  TxNode, RxNode)
@@ -168,7 +168,7 @@ classdef sonohiBase < handle
 			SNR = RxNode.Rx.RxPwdBm-rxNoiseFloor;
 			SNRLin = 10^(SNR/10);
 			str1 = sprintf('Station(%i) to User(%i)\n SNR:  %s\n RxPw:  %s\n', TxNode.NCellID,RxNode.NCellID,num2str(SNR),num2str(RxNode.Rx.RxPwdBm));
-			sonohilog(str1,'NFO0');
+			monsterLog(str1,'NFO0');
 			Es = sqrt(2.0*TxNode.CellRefP*double(RxNode.Rx.WaveformInfo.Nfft));
 			
 			% Compute spectral noise density NO

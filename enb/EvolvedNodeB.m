@@ -289,7 +289,7 @@ classdef EvolvedNodeB
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						sonohilog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'INFO');
+						monsterLog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'INFO');
 						break;
 					end
 				end

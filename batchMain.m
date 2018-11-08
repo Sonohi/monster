@@ -9,7 +9,7 @@ parfor i = 1:4
 	try
 		batchUsers(i);
 	catch ME
-		sonohilog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', i),'WRN');
-		sonohilog(ME.stack);
+		monsterLog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', i),'WRN');
+		monsterLog(ME.stack);
 	end			
 end

@@ -29,7 +29,7 @@ classdef ChBulk_v2 < SonohiChannel
 			%  3. :attr:`Users.Tx`: Transmitter module
 			%  4. :attr:`Users.Rx`: Receiver module
 			if ~strcmp(chtype,'downlink') && ~strcmp(chtype,'uplink')
-				sonohilog('Unknown channel type selected.','ERR')
+				monsterLog('Unknown channel type selected.','ERR')
 			end
 			
 			if isempty(varargin)
@@ -46,11 +46,11 @@ classdef ChBulk_v2 < SonohiChannel
 			end
 			
 			if isempty(obj.DownlinkModel) && strcmp(chtype,'downlink')
-				sonohilog('Hey, no downlink channel is defined.','ERR')
+				monsterLog('Hey, no downlink channel is defined.','ERR')
 			end
 			
 			if isempty(obj.UplinkModel) && strcmp(chtype,'uplink')
-				sonohilog('Hey, no uplink channel is defined.','ERR')
+				monsterLog('Hey, no uplink channel is defined.','ERR')
 			end
 			
 			
@@ -70,7 +70,7 @@ classdef ChBulk_v2 < SonohiChannel
 				end
 				
 			else
-				sonohilog('No users found for any of the stations. Is this supposed to happen?','WRN')
+				monsterLog('No users found for any of the stations. Is this supposed to happen?','WRN')
 			end
 			
 		end

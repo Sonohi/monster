@@ -29,7 +29,7 @@ classdef BaseCell < handle
                     obj.PosScenario = Param.picoPos;
                     obj.Radius = Param.picoUniformRadius;
                 otherwise
-                    sonohilog('Unknown cell type selected.','ERR')
+                    monsterLog('Unknown cell type selected.','ERR')
             end   
 
         end

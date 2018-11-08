@@ -45,7 +45,7 @@ classdef TrafficGenerator
 						clear traffic
 					end
 				otherwise
-					sonohilog('(TRAFFIC GENERATOR constructor) error, unsupported traffic model','ERR');
+					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported traffic model','ERR');
 			end
 			obj.arrivalMode = Param.ueArrivalDistribution;
 			obj.associatedUeIds = associatedUeIds;
@@ -72,7 +72,7 @@ classdef TrafficGenerator
 				case 'Static'
 					tStart(1:length(obj.associatedUeIds), 1) = Param.staticStart;
 				otherwise
-					sonohilog('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode','ERR');
+					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode','ERR');
 					tStart = [];
 			end
 			arrivalTimes = tStart*10^-3;
@@ -86,7 +86,7 @@ classdef TrafficGenerator
 			if ueIx
 				tStart = obj.arrivalTimes(ueIx);
 			else
-				sonohilog('(TRAFFIC GENERATOR getStartingTime) error, UE not found','ERR');
+				monsterLog('(TRAFFIC GENERATOR getStartingTime) error, UE not found','ERR');
 				tStart = NaN;
 			end
 		

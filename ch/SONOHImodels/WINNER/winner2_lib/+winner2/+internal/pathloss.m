@@ -128,7 +128,7 @@ switch Scenario
                 Dist_out = MsBsDistance - (MsBsDistance-StreetWidth/2).*rand(uniStream,1,length(MsBsDistance));
                 iter = iter+1;
                 if mod(iter,5000) == 0
-                    sonohilog(sprintf('Iter for B4 case: %i',iter),'NFO0')
+                    monsterLog(sprintf('Iter for B4 case: %i',iter),'NFO0')
                 end
 
                 if iter > 100000
