@@ -16,17 +16,16 @@ monsterLog('(MAIN) main simulation instance created', 'NFO');
 
 % Main simulation loop
 for iRound = 0:(Config.Runtime.totalRounds - 1)
-	Config.Runtime.currentRound = iRound;
+	Simulation.setupRound(iRound);
 
-	monsterLog(sprintf(...
-		'(MAIN) simulation round %i, rounds left %i, time elapsed %f s, time left %f s',....
-		iRound, Config.Runtime.totalRounds, Config.Runtime.simTimeElapsed, Config.Runtime.simTimeRemaining), 'NFO');	
+	monsterLog(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
+		Simulation.Config.Runtime.currentRound, obj.Config.Runtime.currentTime, ...
+		obj.Config.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
 
-	monsterLog(sprintf(...
-		'(MAIN) completed simulation round %i, rounds left %i, time elapsed %f s, time left %f s',....
-		iRound, Config.Runtime.totalRounds, Config.Runtime.simTimeElapsed, Config.Runtime.simTimeRemaining), 'NFO');
+	monsterLog(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
+		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
 
 	Simulation.collectResults();
 
@@ -35,7 +34,5 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 	Simulation.clean();
 
 	monsterLog('(MAIN) cleaned parameters for next round', 'NFO');
-
-	
 end
 

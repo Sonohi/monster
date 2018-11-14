@@ -2,15 +2,15 @@ classdef NetworkLayout < handle
     %This is the class defining the layout for macro cells
 
     properties 
-        Center;             %Center of the target area
-        MacroCoordinates;   %Center of each macro cell
-        Cells;              %Cell array containing all macro cell obj
-        Radius;             %The ISD of macrocells
-        NumMacro;                %The number of macro cells
-        NumMicro;
-        NumPico;
-        MicroCoordinates;    %Coordinates of the micro BST, placed on the middle of the edges of the cell border
-        PicoCoordinates;
+			Center;             %Center of the target area
+			MacroCoordinates;   %Center of each macro cell
+			Cells;              %Cell array containing all macro cell obj
+			Radius;             %The ISD of macrocells
+			NumMacro;                %The number of macro cells
+			NumMicro;
+			NumPico;
+			MicroCoordinates;    %Coordinates of the micro BST, placed on the middle of the edges of the cell border
+			PicoCoordinates;
     end
 
     methods 

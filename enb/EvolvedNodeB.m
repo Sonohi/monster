@@ -37,6 +37,8 @@ classdef EvolvedNodeB
 		Seed;
 		AbsMask;
 		PowerIn;
+		ShouldSchedule;
+		Utilisation;
 	end
 	
 	methods
@@ -93,6 +95,8 @@ classdef EvolvedNodeB
 			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
+			obj.ShouldSchedule = 0;
+			obj.Utilisation = 0;
     end
 		
     function TxPw = getTransmissionPower(obj)
@@ -160,13 +164,20 @@ classdef EvolvedNodeB
 			end
 		end
 		
-		% check utilisation wrapper
-		function obj = evaluatePowerState(obj, util, Param, loThr, hiThr, Stations)
+		
+		function obj = evaluatePowerState(obj, Config, Stations)
+			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
+			% 
+			% :obj: EvolvedNodeB instance
+			% :Config: MonsterConfig instance
+			% :Stations: Array<EvolvedNodeB> instances in case neighbours are needed
+			% 
+
 			% overload
-			if util > hiThr && hiThr ~= 100
+			if obj.Utilisation > Config.Son.utilHigh && Config.Son.utilHigh ~= 100
 				obj.PowerState = 2;
 				obj.HystCount = obj.HystCount + 1;
-				if obj.HystCount >= Param.tHyst/10^-3
+				if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
 					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
@@ -190,8 +201,8 @@ classdef EvolvedNodeB
 					end
 				end
 				
-				% underload, shutdown, inactive or boot
-			elseif util < loThr && loThr ~= 1
+			% underload, shutdown, inactive or boot
+			elseif obj.Utilisation < Config.Son.utilLow && Config.Son.utilLow ~= 1
 				switch obj.PowerState
 					case 1
 						% eNodeB active and going in underload for the first time
@@ -207,7 +218,7 @@ classdef EvolvedNodeB
 						end
 					case 4
 						obj.SwitchCount = obj.SwitchCount + 1;
-						if obj.SwitchCount >= Param.tSwitch/10^-3
+						if obj.SwitchCount >= Config.Son.hysteresisTimer/10^-3
 							% the shutdown is completed
 							obj.PowerState = 5;
 							obj.SwitchCount = 0;
@@ -215,7 +226,7 @@ classdef EvolvedNodeB
 						end
 					case 6
 						obj.SwitchCount = obj.SwitchCount + 1;
-						if obj.SwitchCount >= Param.tSwitch/10^-3
+						if obj.SwitchCount >= Config.Son.switchTimer/10^-3
 							% the boot is completed
 							obj.PowerState = 1;
 							obj.SwitchCount = 0;
@@ -223,7 +234,7 @@ classdef EvolvedNodeB
 						end
 				end
 				
-				% normal operative range
+			% normal operative range
 			else
 				obj.PowerState = 1;
 				obj.HystCount = 0;
@@ -297,12 +308,6 @@ classdef EvolvedNodeB
 			end
 		end
 
-		% Used to initiate the reboot of an eNodeB by traffic demand
-		function obj = initiateBoot(obj)
-			obj.PowerState = 6;
-			obj.SwitchCount = 0;
-		end
-
 		% used to calculate the power in based on the BS class
 		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
 			% The output power over the air depends on the utilisation, if energy saving is enabled
@@ -337,6 +342,58 @@ classdef EvolvedNodeB
 			% Reset the receiver
 			obj.Rx = obj.Rx.reset();
 			
+		end
+
+		function obj = evaluateScheduling(obj, Users)
+			% evaluateScheduling sets the ShouldSchedule flag depending on attached UEs and their queues
+			% 
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> instances
+			% 
+
+			schFlag = false;
+			if ~isempty(find([obj.Users.UeId] ~= -1)) 
+				% There are users connected, filter them from the Users list and check the queue
+				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));			
+				if any([enbUsers.Queue.Size])
+					% Now check the power status of the eNodeB
+					if ~isempty(find([1, 2, 3] == obj.PowerState))
+						% Normal, underload and overload => the eNodeB can schedule
+						schFlag = true; 
+					elseif ~isempty(find([4, 6] == obj.PowerState))
+						% The eNodeB is shutting down or booting up => the eNodeB cannot schedule
+						schFlag = false;
+					elseif enb.PowerState == 5
+						% The eNodeB is inactive, but should be restarted 
+						obj.PowerState = 6;
+						obj.SwitchCount = 0;
+					end
+				end
+			end
+
+			% Finally, assign the result of the scheduling check to the object property
+			obj.ShouldSchedule = schFlag;
+		end
+		
+		function obj = downlinkSchedule(obj, Users, Config)
+			% downlinkSchedule is wrapper method for calling the scheduling function
+			%
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> instances
+			% :Config: MonsterConfig instance
+
+			if obj.ShouldSchedule
+				[obj, Users] = schedule(obj, Users, Config)
+				% Check utilisation
+				sch = find([obj.ScheduleDL.UeId] ~= -1);
+				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.ScheduleDL]);
+				
+				if isempty(obj.Utilisation)
+					obj.Utilisation = 0;
+				end
+			else	
+				obj.Utilisation = 0;
+			end				
 		end
 		
 	end

@@ -23,8 +23,8 @@ classdef MonsterConfig < handle
 
 	properties 
 		% Parameters related to simulation run time
-		Runtime = struct('totalRounds', 1000, 'simTimeElapsed', 0, 'simTimeRemaining', 1, ...
-			'realTimeElaspsed', 0, 'realTimeRemaining', 1000, 'currentRound', 0, 'currentTime', 0,...
+		Runtime = struct('totalRounds', 1000, 'remainingRounds', 1000, 'currentRound', 0, 'currentTime', 0,...
+			'remainingTime', 1, 'realTimeElaspsed', 0, 'realTimeRemaining', 1000,...
 			'reInstall', 0);
 		
 		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
@@ -75,7 +75,7 @@ classdef MonsterConfig < handle
 
 		% Properties related to SON and power saving
 		Son = struct('neighbourRadius', 100, 'hysteresisTimer', 0.001, 'switchTimer', 0.001, ...
-			'utilisationRange', [1,100], 'powerScale', 1);
+			'utilisationRange', [1,100], 'utilLow', 1, 'utilHigh', 100, 'powerScale', 1);
 
 		% Properties related to HARQ
 		Harq = struct('active', true, 'maxRetransmissions', 3, 'redundacyVersion', [1, 3, 2], ...
@@ -91,7 +91,8 @@ classdef MonsterConfig < handle
 			% The constructor replaces the default values of the class with those in the Param structure
 			% Runtime
 			obj.Runtime.totalRounds = Param.schRounds;
-			obj.Runtime.simTimeRemaining = Param.schRounds/1000;
+			obj.Runtime.remainingRounds = Param.schRounds;
+			obj.Runtime.remainingTime = Param.schRounds*10e-3;
 			obj.Runtime.reInstall = Param.reset;
 			
 			% Logs
@@ -201,6 +202,8 @@ classdef MonsterConfig < handle
 			obj.Son.hysteresisTimer = Param.tHyst;
 			obj.Son.switchTimer = Param.tSwitch;
 			obj.Son.utilisationRange = [Param.utilLoThr, Param.utilHiThr];
+			obj.Son.utilLow = obj.Son.utilisationRange(1);
+			obj.Son.utilHigh = obj.Son.utilisationRange
 			obj.Son.powerScale = Param.otaPowerScale;
 			
 			% HARQ 

@@ -14,18 +14,18 @@ function [Traffic, Users] = setupTraffic (Users, Config)
 	totIds = [Users.NCellID];
 	if thresholdPrimary == 0
 		monsterLog('(SETUP - setupTraffic) creating primary traffic model for all UEs', 'NFO');
-		Traffic(1) = TrafficGenerator(Config.Traffic.primary, totIds, Config);
+		Traffic(1) = TrafficGenerator(Config.Traffic.primary, totIds, Config, 1);
 		% Define allocation ranges
 		trafficGenAllocation = ones(1, length(Users));
 	elseif thresholdPrimary == length(Users)
 		monsterLog('(SETUP - setupTraffic) creating secondary traffic model for all UEs', 'NFO');
-		Traffic(1) = TrafficGenerator(Config.Traffic.secondary, totIds, Config);
+		Traffic(1) = TrafficGenerator(Config.Traffic.secondary, totIds, Config, 1);
 		% Define allocation ranges
 		trafficGenAllocation = ones(1, length(Users));
 	else
 		monsterLog('(SETUP - setupTraffic) creating primary and secondary traffic model for UEs', 'NFO');
-		Traffic(1) = TrafficGenerator(Config.Traffic.primary, totIds(1:thresholdPrimary), Config);
-		Traffic(2) = TrafficGenerator(Config.Traffic.secondary, totIds(thresholdPrimary + 1: length(Users)), Config);	
+		Traffic(1) = TrafficGenerator(Config.Traffic.primary, totIds(1:thresholdPrimary), Config, 1);
+		Traffic(2) = TrafficGenerator(Config.Traffic.secondary, totIds(thresholdPrimary + 1: length(Users)), Config, 2);	
 		% Define allocation ranges
 		trafficGenAllocation = ones(1, length(Users));
 		trafficGenAllocation(thresholdPrimary + 1: length(Users)) = 2;
