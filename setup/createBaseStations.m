@@ -29,12 +29,12 @@ function [Stations, Param] = createBaseStations (Param)
 			Stations(iStation).Position = [networkLayout.MacroCoordinates(iStation, :), Param.macroHeight];
 		end
 		for iStation = 1:networkLayout.NumMicro
-			Stations(iStation) = EvolvedNodeB(Param, 'micro', networkLayout.MicroCells{iStation}.CellID);
-			Stations(iStation).Position = [networkLayout.MicroCoordinates(iStation, :), Param.microHeight];
+			Stations(iStation+networkLayout.NumMacro) = EvolvedNodeB(Param, 'micro', networkLayout.MicroCells{iStation}.CellID);
+			Stations(iStation+networkLayout.NumMacro).Position = [networkLayout.MicroCoordinates(iStation, :), Param.microHeight];
 		end
 		for iStation = 1:networkLayout.NumPico
-			Stations(iStation) = EvolvedNodeB(Param, 'pico', networkLayout.PicoCells{iStation}.CellID);
-			Stations(iStation).Position = [networkLayout.PicoCoordinates(iStation, :), Param.picoHeight];
+			Stations(iStation+networkLayout.NumMacro+networkLayout.NumMicro) = EvolvedNodeB(Param, 'pico', networkLayout.PicoCells{iStation}.CellID);
+			Stations(iStation+networkLayout.NumMacro+networkLayout.NumMicro).Position = [networkLayout.PicoCoordinates(iStation, :), Param.picoHeight];
 		end
 
 
