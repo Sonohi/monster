@@ -178,24 +178,99 @@ classdef UserEquipment
 		end
 		
 		function plotUEinScenario(obj, Param)
-				x0 = obj.Position(1);
-				y0 = obj.Position(2);
+			x0 = obj.Position(1);
+			y0 = obj.Position(2);
 
-				% UE in initial position
-				plot(Param.LayoutAxes,x0, y0, ...
-						'Marker', obj.PlotStyle.marker, ...
-						'MarkerFaceColor', obj.PlotStyle.colour, ...
-						'MarkerEdgeColor', obj.PlotStyle.edgeColour, ...
-						'MarkerSize',  obj.PlotStyle.markerSize, ...
-						'DisplayName', strcat('UE ', num2str(obj.NCellID)));
+			% UE in initial position
+			plot(Param.LayoutAxes,x0, y0, ...
+				'Marker', obj.PlotStyle.marker, ...
+				'MarkerFaceColor', obj.PlotStyle.colour, ...
+				'MarkerEdgeColor', obj.PlotStyle.edgeColour, ...
+				'MarkerSize',  obj.PlotStyle.markerSize, ...
+				'DisplayName', strcat('UE ', num2str(obj.NCellID)));
 
-				% Trajectory
-				plot(Param.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
-						'Color', obj.PlotStyle.colour, ...
-						'LineStyle', '--', ...
-						'LineWidth', obj.PlotStyle.lineWidth,...
-						'DisplayName', strcat('UE ', num2str(obj.NCellID), ' trajectory'));
-				drawnow()
+			% Trajectory
+			plot(Param.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
+				'Color', obj.PlotStyle.colour, ...
+				'LineStyle', '--', ...
+				'LineWidth', obj.PlotStyle.lineWidth,...
+				'DisplayName', strcat('UE ', num2str(obj.NCellID), ' trajectory'));
+			drawnow()
+		end
+
+		function obj = generateTransportBlock(obj, Stations, Config)
+			% generateTransportBlock is used to create a TB with dummy data for the UE
+			%
+			% :obj: UserEquipment instance
+			% :Stations: Array<EvolvedNodeB> instances
+			% :Config: MonsterConfig instance
+			%
+
+			% Get the current serving station for this UE
+			enb = Stations([Stations.NCellID] == user.ENodeBID);
+
+			% Find the schedule of this UE in the eNodeB
+			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
+			qsz = obj.Queue.Size
+			numPrb = length(ueScheduleIndexes)
+			if numPrb > 0 && qsz > 0:
+				% Get the scheduling slots assigned to this UE and the averages
+				ueSchedule = enb.ScheduleDL(ueScheduleIndexes);
+				avMcs = round(sum([ueSchedule.Mcs])/numPrb);
+				avMord = round(sum([ueSchedule.ModOrd])/numPrb);
+
+				% the TB is created of a size that matches the allocation that the 
+				% PDSCH symbols will have on the grid and the rate matching for the CWD
+				[~, mod, ~] = lteMCS(avMCS);
+				enb.Tx.PDSCH.Modulation = mod;
+				enb.Tx.PDSCH.PRBSet = (ueScheduleIndexes - 1).';	
+				[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+				TbInfo.rateMatch = info.G;
+				% the redundacy version (RV) is defaulted to 0
+				TbInfo.rv = 0;
+				% Finally, we need to calculate the TB size given the scheduling
+				TbInfo.tbSize = lteTBS(numPRB, avMCS);
+
+				% Encode the SQN and the HARQ process ID into the TB if retransmissions are on
+				% Use the first 13 bits for that. 
+				% The first 3 are the HARQ PID, the other 10 are the SQN.
+				newTb = false;
+				if Config.Harq.active
+					[Station, sqn] = getSqn(Station, User.NCellID, 'outFormat', 'b');
+					[Station, harqPid, newTb] = getHarqPid(Station, User, sqn, 'outFormat', 'b', 'inFormat', 'b');
+					ctrlBits = cat(1, harqPid, sqn);
+					tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);
+					tb = cat(1, ctrlBits, tbPayload);
+					if newTb
+						Station = setArqTb(Station, User, sqn, timeNow, tb);
+						Station = setHarqTb(Station, User, harqPid, timeNow, tb);
+					end
+				else
+					tb = randi([0 1], TbInfo.tbSize, 1);
+				end
+
+
+
+			else
+				% UE not scheduled or has nothing to send in the transmission queue
+				obj.TransportBlock = [];
+				obj.TransportBlockInfo = [];
+			end
+
+		
+		end
+
+		function obj = donwlinkReception(obj, Stations)
+			% downlinkReception is used to handle the reception and demodulation of a DL waveform
+			%
+			% :obj: UserEquipment instance
+			% :Stations: Array<EvolvedNodeB>
+			%
+
+			% Get the current serving station for this UE
+			enb = Stations([Stations.NCellID] == user.ENodeBID);
+
+		
 		end
 		
 		

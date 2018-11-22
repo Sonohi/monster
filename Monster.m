@@ -60,6 +60,12 @@ classdef Monster < handle
 			monsterLog('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'NFO');
 			obj.setupStationsTransmitters();
 
+			monsterLog('(MONSTER - run) traversing channel in downlink', 'NFO');
+			obj.donwlinkTraverse();
+
+			monsterLog('(MONSTER - run) downlink UE reception', 'NFO');
+			obj.donwlinkUeReception();
+
 
 
 
@@ -118,7 +124,7 @@ classdef Monster < handle
 		end
 
 		function obj = setupStationsTransmitters(obj)
-			% setupStationsTransmitters is used to pprepare the data for the downlink transmission
+			% setupStationsTransmitters is used to prepare the data for the downlink transmission
 			% 
 			% :obj: Monster instance
 			%
@@ -134,6 +140,26 @@ classdef Monster < handle
 
 			% Finally modulate the waveform for all the eNodeBs
 			arrayfun(@(x)x.modulateTxWaveform(), obj.Stations);
+
+		end
+
+		function obj = donwlinkTraverse(obj)
+			% donwlinkTraverse is used to perform a channel traversal in the downlink
+			% 
+			% :obj: Monster instance
+			%
+			
+			[obj.Stations, obj.Users] = obj.Channel.traverse(obj.Stations, obj.Users, 'downlink');
+
+		end
+
+		function obj = donwlinkUeReception(obj)
+			% donwlinkUeReception is used to perform the reception of the eNodeBs waveforms in downlink at the UEs
+			% 
+			% :obj: Monster instance
+			%
+			
+			arrayfun(@(x, y)x.downlinkReception(y), obj.Users, obj.Stations);
 
 		end
 
