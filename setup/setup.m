@@ -49,7 +49,7 @@ Channel = setupChannel(Stations, Users, Config)
 
 % Setup traffic
 monsterLog('(SETUP) setting up simulation traffic', 'NFO');
-[Traffic, Users] = setupTraffic(USers, Config);
+[Traffic, Users] = setupTraffic(Users, Config);
 
 % Setup results
 monsterLog('(SETUP) setting up simulation metrics recorder', 'NFO');

@@ -28,36 +28,36 @@ classdef MonsterConfig < handle
 			'reInstall', 0);
 		
 		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
-			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName': '');
+			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName', '');  %Using the ":" gives an error. Using "," does not
 
 		% Properties related to drawing and plotting
 		SimulationPlot = struct('runtimePlot', 0, 'generateCoverageMap', 0, 'generateHeatMap', 0, ...
 			'heatMapType', 'perStation', 'heatMapRes', 10);
 
 		% Properties related to the configuration of eNodeBs
-		MacroENodeB = struct('number': 1, 'subframes': 50, 'height': 35, 'positioning': 'centre',...
-			'noiseFigure': 7, 'antennaGain': 0);
-		MicroENodeB = struct('number': 1, 'subframes': 25, 'height': 25, 'positioning': 'hexagonal',...
-			'radius': 200, 'noiseFigure', 7, 'antennaGain', 0);
-		PicoENodeB = struct('number': 1, 'subframes': 6, 'height': 5, 'positioning': 'uniform', ...
-			'radius': 200, 'noiseFigure', 7, 'antennaGain', 0);
+		MacroENodeB = struct('number', 1, 'subframes', 50, 'height', 35, 'positioning', 'centre',...
+			'noiseFigure', 7, 'antennaGain', 0);
+		MicroENodeB = struct('number', 1, 'subframes', 25, 'height', 25, 'positioning', 'hexagonal',...
+			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
+		PicoENodeB = struct('number', 1, 'subframes', 6, 'height', 5, 'positioning', 'uniform', ...
+			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
 
 		% Properties related to the configuration of UEs
-		Ue = struct('number': 1, 'subframes': 25, 'height': 1.5, 'noiseFigure': 7, 'antennaGain': 0);
+		Ue = struct('number', 1, 'subframes', 25, 'height', 1.5, 'noiseFigure', 7, 'antennaGain', 0);
 
 		% Properties related to mobility
-		Mobility = struct('scenario': 'pedestrian', 'step': 0.01);
+		Mobility = struct('scenario', 'pedestrian', 'step', 0.01);
 
 		% Properties related to handover
-		Handover = struct('x2Timer': 0.01);
+		Handover = struct('x2Timer', 0.01);
 
 		% Properties related to terrain and scenario 
-		Terrain = struct('buildingsFile', 'mobility/buildings.txt', 'heightRange': [20,50], ...
-			'buildings', [],'area': []);
+		Terrain = struct('buildingsFile', 'mobility/buildings.txt', 'heightRange', [20,50], ...
+			'buildings', [],'area', []);
 
 		% Properties related to the traffic
-		Traffic = struct('primary': 'webBrowsing', 'secondary': 'videoStreaming', 'mix': 0.5,... 
-			'arrivalDistribution': 'Poisson', 'poissonLambda': 5, 'uniformRange': [6, 10], 'static': 0 );
+		Traffic = struct('primary', 'webBrowsing', 'secondary', 'videoStreaming', 'mix', 0.5,... 
+			'arrivalDistribution', 'Poisson', 'poissonLambda', 5, 'uniformRange', [6, 10], 'static', 0 );
 
 		% Properties related to the physical layer
 		Phy = struct('uplinkFrequency', 1747.5, 'downlinkFrequency', 1842.5,...
@@ -65,12 +65,12 @@ classdef MonsterConfig < handle
 			'maxTbSize', 97896, 'maxCwdSize', 10e5);
 
 		% Properties related to the channel
-		Channel = struct('uplinkMode': 'B2B', 'downlinkMode': '3GPP38901', 'fadingActive': true,...
-			'interferenceActive': true, 'shadowingActive': true, 'losMethod': '3GPP38901-probability', ...
-			'region': struct('type': 'Urban', 'macroScenario', 'UMa', 'microScenario': 'UMi', 'picoScenario', 'UMi'));
+		Channel = struct('uplinkMode', 'B2B', 'downlinkMode', '3GPP38901', 'fadingActive', true,...
+			'interferenceActive', true, 'shadowingActive', true, 'losMethod', '3GPP38901-probability', ...
+			'region', struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi'));
 
 		% Properties related to scheduling
-		Scheduling = struct('type': 'roundRobin', 'refreshAssociationTimer': 0.01, 'icScheme', 'none', ...
+		Scheduling = struct('type', 'roundRobin', 'refreshAssociationTimer', 0.01, 'icScheme', 'none', ...
 			'absMask', [1,0,1,0,0,0,0,0,0,0]);
 
 		% Properties related to SON and power saving
@@ -79,10 +79,13 @@ classdef MonsterConfig < handle
 
 		% Properties related to HARQ
 		Harq = struct('active', true, 'maxRetransmissions', 3, 'redundacyVersion', [1, 3, 2], ...
-			'processes', 8, 'timeout': 3);
+			'processes', 8, 'timeout', 3);
 
 		% Properties related to ARQ
 		Arq = struct('active', true, 'maxRetransmissions', 1, 'maxBufferSize', 1024, 'timeout', 20);
+
+		% Properties related to plotting
+		Plot = struct('LayoutFigure','','LayoutAxes', axes, 'PHYFigure', '', 'PHYAxes', axes);
 
 	end
 
@@ -97,7 +100,7 @@ classdef MonsterConfig < handle
 			
 			% Logs
 			obj.Logs.logToFile = Param.logToFile;
-			dateStr = dateStr(datetime, obj.Logs.dateFormat);
+			dateStr = datestr(datetime, obj.Logs.dateFormat);
 			obj.Logs.defaultLogName = strcat(obj.Logs.logPath, dateStr);
 
 			% Simulation plotting
@@ -115,6 +118,7 @@ classdef MonsterConfig < handle
 			obj.MacroENodeB.height = Param.macroHeight;
 			obj.MacroENodeB.noiseFigure = Param.eNBNoiseFigure;
 			obj.MacroENodeB.antennaGain = Param.eNBGain;
+			obj.MacroENodeB.radius = Param.macroRadius;   %Radius used by NetworkLayout
 
 			% Micro eNodeBs
 			obj.MicroENodeB.number = Param.numMicro;
@@ -151,7 +155,7 @@ classdef MonsterConfig < handle
 			% Terrain
 			obj.Terrain.buildingsFile = Param.buildings;
 			obj.Terrain.heightRange = Param.buildingHeight;
-			obj.Terrain.buildings = load(obj.Terrain.buildingsFile);
+			obj.Terrain.buildings = Param.buildings %load(obj.Terrain.buildingsFile);
 			obj.Terrain.buildings(:,5) = randi([obj.Terrain.heightRange],[1 length(obj.Terrain.buildings(:,1))]);
 			obj.Terrain.area = [...
 				min(obj.Terrain.buildings(:, 1)), ...
@@ -219,6 +223,18 @@ classdef MonsterConfig < handle
 			obj.Arq.maxBufferSize = Param.arq.maxBufferSize;
 			obj.Arq.timeout = Param.arq.bufferFlusTimer;			
 
+			% PLOT
+			if Param.draw
+				Param = createLayoutPlot(Param);
+				obj.Plot.LayoutFigure = Param.LayoutFigure;
+				obj.Plot.LayoutAxes = Param.LayoutAxes;
+
+				Param = createPHYplot(Param);
+				obj.Plot.PHYFigure = Param.PHYFigure;
+				obj.Plot.PHYAxes = Param.PHYAxes;
+			end
+			
+
 		end
 
 		function storeConfig(obj, logName)
@@ -235,4 +251,5 @@ classdef MonsterConfig < handle
 
 		
 	end
-en
+
+end %Previously 'en' now changed to end.
