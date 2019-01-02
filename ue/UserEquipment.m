@@ -260,21 +260,103 @@ classdef UserEquipment
 		
 		end
 
-		function obj = donwlinkReception(obj, Stations)
+		function obj = downlinkReception(obj, Stations, ChannelEstimator)
 			% downlinkReception is used to handle the reception and demodulation of a DL waveform
 			%
 			% :obj: UserEquipment instance
 			% :Stations: Array<EvolvedNodeB>
+			% :ChannelEstimator: Channel.Estimator property 
 			%
 
 			% Get the current serving station for this UE
 			enb = Stations([Stations.NCellID] == user.ENodeBID);
+			% Find the schedule of this UE in the eNodeB
+			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
+			
+			% Compute offset based on synchronization signals.
+			obj.Rx = obj.Rx.computeOffset(enb);
+			% Apply Offset
+			if obj.Rx.Offset > length(obj.Rx.Waveform)
+				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) Offset for User %i out of bounds, not able to synchronize',obj.NCellID),'WRN')
+			else
+				obj.Rx.Waveform = obj.Rx.Waveform(1+abs(obj.Rx.Offset):end,:);
+			end
+
+			% Conduct reference measurements
+			obj.Rx = obj.Rx.referenceMeasurements(enb);
+
+			% If the UE is not scheduled, reset the metrics for the round
+			if length(ueScheduleIndexes) <= 0
+				obj.Rx = obj.Rx.logNotScheduled()
+				continue;
+			end
+
+			% Try to demodulate
+			[demodBool, obj.Rx] = obj.Rx.demodulateWaveform(enb);
+			% demodulate received waveform, if it returns 1 (true) then demodulated
+			if demodBool
+				% Estimate Channel
+				obj.Rx = obj.Rx.estimateChannel(enb, ChannelEstimator);
+				% Equalize signal
+				obj.Rx = obj.Rx.equaliseSubframe();
+				% Estimate PDSCH (main data channel)
+				obj.Rx = obj.Rx.estimatePdsch(obj, enb);
+				% calculate EVM
+				obj.Rx = obj.Rx.calculateEvm(enb);
+				% Calculate the CQI to use
+				obj.Rx = obj.Rx.selectCqi(enb);
+				% Log block reception stats
+				obj.Rx = obj.Rx.logBlockReception(obj);
+			else
+				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) Not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				obj.Rx = obj.Rx.logNotDemodulated();
+				obj.Rx.CQI = 3;
+				continue;
+			end					
+		end
+
+		function obj = downlinkDataDecoding(obj, Stations, Config)
+			% downlinkDataDecoding performs the decoding of the demodulated waveform
+			% 
+			% :obj: UserEquipment instance
+			% :Stations: Array<EvolvedNodeB> instances
+			% :Config: MonsterConfig instance
+			%
+
+			% Currently data decoding is only used for retransmissions
+			if ~isempty(obj.Rx.TransportBlock) && Config.HARQ.active
+				% Decode HARQ bits 
+				[harqPid, iProc] = obj.Mac.HarqRxProcesses.decodeHarqPid(obj.Rx.TransportBlock);
+				harqPidBits = de2bi(harqPid, 3, 'left-msb')';
+				if length(harqPidBits) ~= 3
+					harqPidBits = cat(1, zeros(3-length(harqPidBits), 1), harqPidBits);
+				end
+
+				if ~isempty(iProc)
+					% Handle HARQ TB reception
+					[obj.Mac.HarqRxProcesses, state] = obj.Mac.HarqRxProcesses.handleTbReception(iProc,obj.Rx.TransportBlock, obj.Rx.Crc, Config, Config.Runtime.currentTime);
+
+					% Depending on the state the process is, contact ARQ
+					if state == 0
+						sqn = obj.Rlc.ArqRxBuffer.decodeSqn(obj.Rx.TransportBlock);
+						if ~isempty(sqn)
+							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime);
+						end	
+						% Set ACK and PID information for this UE to report back to the serving eNodeB 
+						obj.Mac.HarqReport.pid = harqPidBits;
+						obj.Mac.HarqReport.ack = 1;
+					else
+						% The process has entered or remained in the state where it needs TB copies
+						% we should not then contact the ARQ, but just send back a NACK
+						obj.Mac.HarqReport.pid = harqPidBits;
+						obj.Mac.HarqReport.ack = 0;
+					end
+				end
+			end
+		end
 
 		
-		end
 		
 		
-	end
-	
-	
+	end	
 end

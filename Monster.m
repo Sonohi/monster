@@ -37,6 +37,11 @@ classdef Monster < handle
 
 		function obj = setupRound(obj, iRound)
 			% setupRound configures the simulation runtime parameters prior the start of a round
+			%
+			% :obj: Monster instance
+			% :iRound: Integer that represents the new simulation round
+			%
+
 			obj.Config.Runtime.currentRound = iRound;
 			obj.Config.Runtime.currentTime = iRound*10e-3;  
 			obj.Config.Runtime.remainingTime = (obj.Config.Runtime.totalRounds - obj.Config.Runtime.currentRound)*10e-3;
@@ -45,6 +50,10 @@ classdef Monster < handle
 
 		function obj = run(obj)
 			% run performs all the calls to methods needed for a single simulation round
+			%
+			% :obj: Monster instance
+			%
+
 			monsterLog('(MONSTER - run) performing UE movement', 'NFO');
 			obj.moveUsers();
 
@@ -58,20 +67,58 @@ classdef Monster < handle
 			obj.schedule()
 
 			monsterLog('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'NFO');
-			obj.setupStationsTransmitters();
+			obj.setupEnbTransmitters();
 
 			monsterLog('(MONSTER - run) traversing channel in downlink', 'NFO');
-			obj.donwlinkTraverse();
+			obj.downlinkTraverse();
 
 			monsterLog('(MONSTER - run) downlink UE reception', 'NFO');
-			obj.donwlinkUeReception();
+			obj.downlinkUeReception();
 
+			monsterLog('(MONSTER - run) downlink UE data decoding', 'NFO');
+			obj.downlinkUeDataDecoding();
 
+			monsterLog('(MONSTER - run) setting up UE uplink', 'NFO');
+			obj.setupUeTransmitters();
+			
+			monsterLog('(MONSTER - run) traversing channel in uplink', 'NFO');
+			obj.uplinkTraverse();
 
+			monsterLog('(MONSTER - run) uplink eNodeB reception', 'NFO');
+			obj.uplinkEnbReception();
 
-
-
+			monsterLog('(MONSTER - run) uplink eNodeB data decoding', 'NFO');
+			obj.uplinkEnbDataDecoding();
 		end
+
+		function obj = collectResults(obj)
+			% collectResults performs the collection and processing of a simulation round
+			%
+			% :obj: Monster instance
+			%
+
+			monsterLog('(MONSTER - collectResults) eNodeB metrics recording', 'NFO');
+			obj.recordEnbResults();
+
+			monsterLog('(MONSTER - collectResults) UE metrics recording', 'NFO');
+			obj.recordUeResults();
+		
+		end
+
+		function obj = clean(obj)
+			% clean performs a cleanup of the simulation data structures for the next round
+			%
+			% :obj: Monster instance
+			%
+
+			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
+			obj.cleanEnb();
+
+			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
+			obj.cleanUe();
+		
+		end
+			
 
 	end	
 
@@ -123,8 +170,8 @@ classdef Monster < handle
 			arrayfun(@(x, y, z)x.evaluatePowerState(y, z), obj.Stations, obj.Config, obj.Stations)
 		end
 
-		function obj = setupStationsTransmitters(obj)
-			% setupStationsTransmitters is used to prepare the data for the downlink transmission
+		function obj = setupEnbTransmitters(obj)
+			% setupEnbTransmitters is used to prepare the data for the downlink transmission
 			% 
 			% :obj: Monster instance
 			%
@@ -143,7 +190,7 @@ classdef Monster < handle
 
 		end
 
-		function obj = donwlinkTraverse(obj)
+		function obj = downlinkTraverse(obj)
 			% donwlinkTraverse is used to perform a channel traversal in the downlink
 			% 
 			% :obj: Monster instance
@@ -153,16 +200,47 @@ classdef Monster < handle
 
 		end
 
-		function obj = donwlinkUeReception(obj)
+		function obj = downlinkUeReception(obj)
 			% donwlinkUeReception is used to perform the reception of the eNodeBs waveforms in downlink at the UEs
 			% 
 			% :obj: Monster instance
 			%
 			
-			arrayfun(@(x, y)x.downlinkReception(y), obj.Users, obj.Stations);
+			arrayfun(@(x, y, z)x.downlinkReception(y, z), obj.Users, obj.Stations, obj.Channel.Estimator);
 
 		end
 
+		function obj = downlinkUeDataDecoding(obj)
+			% downlinkUeDataDecoding is used to decode the data contained in the demodulated waveform
+			% 
+			% :obj: Monster instance
+			%
+
+			arrayfun(@(x, y, z)x.downlinkDataDecoding(y, z), obj.Users, obj.Stations, obj.Config)
+		end
+
+		function obj = setupUeTransmitters(obj)
+			% setupUeTransmitters is used to setup the UE transmitters for the uplink
+			% 
+			% :obj: Monster instance
+			% 
+
+			%% TODO this has to be revised upon merging of the uplink_ch branch
+		
+		end
+
+		function obj = uplinkTraverse(obj)
+			% uplinkTraverse is used to perform a channel traversal in the uplink
+			% 
+			% :obj: Monster instance
+			% 
+
+			obj.Channel = obj.Channel.setupChannelUL(obj.Stations, obj.Users);
+			[obj.Stations, obj.Users] = obj.Channel.traverse(obj.Stations, obj.Users,'uplink');
+		
+		end
+
+		
 
 
 	end

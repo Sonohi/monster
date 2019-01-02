@@ -246,10 +246,6 @@ classdef MonsterConfig < handle
 			fullLogName = strcat(obj.Logs.defaultLogName, logName);
 			save(fullLogName, 'obj')
 		end
-
-
-
 		
 	end
-
-end %Previously 'en' now changed to end.
+end
