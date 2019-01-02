@@ -98,10 +98,10 @@ classdef Monster < handle
 			%
 
 			monsterLog('(MONSTER - collectResults) eNodeB metrics recording', 'NFO');
-			obj.recordEnbResults();
+			obj.Results = obj.Results.recordEnbMetrics(obj.Stations, obj.Config);
 
 			monsterLog('(MONSTER - collectResults) UE metrics recording', 'NFO');
-			obj.recordUeResults();
+			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Config.Runtime.currentRound);
 		
 		end
 
@@ -112,11 +112,10 @@ classdef Monster < handle
 			%
 
 			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
-			obj.cleanEnb();
+			arrayfun(@(x, y)x.reset(y), obj.Stations, obj.Config.Runtime.currentRound + 1);
 
 			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
-			obj.cleanUe();
-		
+			arrayfun(@(x)x.reset(), obj.Users);		
 		end
 			
 
@@ -240,7 +239,27 @@ classdef Monster < handle
 		
 		end
 
+		function obj = uplinkEnbReception(obj)
+			% uplinkEnbReception performs the reception of the UEs waveforms in uplink at the eNodeBs
+			% 
+			% :obj: Monster instance
+			%
+
+			arrayfun(@(x, y, z, k)x.uplinkReception(y,z,k), obj.Stations, obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator);			
 		
+		end 
+
+		function obj = uplinkEnbDataDecoding(obj)
+			% uplinkEnbDataDecoding performs the decoding of the data contained in the demodulated waveform
+			%
+			% :obj: Monster instance
+			%
+
+			arrayfun(@(x,y,z)x.uplinkDataDecoding(y,z), obj.Stations, obj.Users, obj.Config);
+		
+		end
+
+
 
 
 	end

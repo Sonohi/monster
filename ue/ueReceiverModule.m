@@ -30,7 +30,7 @@ classdef ueReceiverModule
 		PDSCH;
 		PropDelay;
 		HistoryStats;
-        ChannelConditions = struct(); % Storage of channel conditions
+    ChannelConditions = struct(); % Storage of channel conditions
 	end
 	
 	methods

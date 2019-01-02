@@ -396,6 +396,101 @@ classdef EvolvedNodeB
 			end				
 		end
 		
+		function obj = uplinkReception(obj, Users, timeNow, ChannelEstimator)
+			% uplinkReception performs uplink demodulation and decoding
+			% 
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> UEs instances
+			% :timeNow: Float current simulation time in seconds
+			% :ChannelEstimator: Struct Channel.Estimator property
+			% 
+
+			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
+			if isempty(obj.Rx.Waveform)
+				monsterLog(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
+				continue;
+			end
+
+			% TODO revise upon merging with uplink_ch branch
+
+			% IDs of users and their position in the Users struct correspond
+			scheduledUEsIndexes = find([obj.ScheduleUL] ~= -1);
+			scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
+			enbUsers = Users(scheduledUEsIds);
+			
+			% Parse received waveform
+			obj.Rx = obj.Rx.parseWaveform(obj);
+			
+			% Demodulate received waveforms
+			enb.Rx = obj.Rx.demodulateWaveforms(enbUsers);
+			
+			% Estimate Channel
+			obj.Rx = obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
+			
+			% Equalise
+			obj.Rx = obj.Rx.equaliseSubframes(enbUsers);
+			
+			% Estimate PUCCH (Main UL control channel) for UEs
+			obj.Rx = obj.Rx.estimatePucch(obj, enbUsers, timeNow);
+			
+			% Estimate PUSCH (Main UL control channel) for UEs
+			obj.Rx = obj.Rx.estimatePusch(obj, enbUsers, timeNow);		
+		end
+
+		function obj = uplinkDataDecoding(obj, Users, Config)
+			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
+			% 
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> UEs instances
+			% :Config: MonsterConfig instance
+			%
+			
+			% TODO revise upon merging with uplink_ch branch
+
+			% Filter UEs linked to this eNodeB
+			timeNow = Config.Runtime.currentTime;
+			ueGroup = find([Users.ENodeBID] == enb.NCellID);
+			enbUsers = Users(ueGroup);
+
+			for iUser = 1:length(obj.Rx.UeData)
+				% If empty, no uplink UE data has been received in this round and skip
+				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
+					cqi = decodeCqi(obj.Rx.UeData(iUser).PUCCH);
+					ueEnodeBIX = find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
+					if ~isempty(ueEnodeBIX)
+						obj.Users(ueEnodeBIX).CQI = cqi;
+					end
+
+					if Config.Harq.active
+						% Decode HARQ feedback
+						[harqPid, harqAck] = obj.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(obj.Rx.UeData(iUser).PUCCH);
+
+						if ~isempty(harqPid)
+							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config);
+
+							% Contact ARQ based on the feedback
+							if Config.Arq.active && ~isempty(sqn)
+								arqIndex = find([obj.Rlc.ArqTxBuffers.rxId] == obj.Rx.UeData(iUser).UeId);
+
+								if state == 0
+									% The process has been acknowledged 
+									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Config);
+								elseif state == 4
+									% The process has failed 
+									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Config);
+								else
+									% No action to be taken by ARQ
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+
+		
+
+
+
 	end
-	
 end

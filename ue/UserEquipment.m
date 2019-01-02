@@ -324,7 +324,7 @@ classdef UserEquipment
 			%
 
 			% Currently data decoding is only used for retransmissions
-			if ~isempty(obj.Rx.TransportBlock) && Config.HARQ.active
+			if ~isempty(obj.Rx.TransportBlock) && Config.Harq.active
 				% Decode HARQ bits 
 				[harqPid, iProc] = obj.Mac.HarqRxProcesses.decodeHarqPid(obj.Rx.TransportBlock);
 				harqPidBits = de2bi(harqPid, 3, 'left-msb')';
@@ -355,7 +355,7 @@ classdef UserEquipment
 			end
 		end
 
-		
+
 		
 		
 	end	
