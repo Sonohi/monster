@@ -15,26 +15,26 @@ function Stations = setupStations (Config)
 	% Setup macro
 	monsterLog('(SETUP - setupStations) setting up macro eNodeBs', 'NFO');
 	rangeA = 1;
-	rangeB = Config.MacroENodeB.number;
+	rangeB = Config.MacroEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'macro', rangeA:rangeB);
 	Stations(rangeA:rangeB).Position = [...
-		Layout.MacroCoordinates(rangeA:rangeB,:), Config.MacroENodeB.height];
+		Layout.MacroCoordinates(rangeA:rangeB,:), Config.MacroEnb.height];
 
 	% Setup micro
 	monsterLog('(SETUP - setupStations) setting up micro eNodeBs', 'NFO');
-	rangeA = Config.MacroENodeB.number + 1
-	rangeB = Config.MicroENodeB.number + Config.MacroENodeB.number;
+	rangeA = Config.MacroEnb.number + 1
+	rangeB = Config.MicroEnb.number + Config.MacroEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'micro', rangeA:rangeB);
 	Stations(rangeA:rangeB).Position = [...
-		Layout.Cells{1}.MicroPos(rangeA:rangeB,:), Config.MicroENodeB.height];
+		Layout.Cells{1}.MicroPos(rangeA:rangeB,:), Config.MicroEnb.height];
 
 	% Setup pico
 	monsterLog('(SETUP - setupStations) creating pico', 'NFO');
-	rangeA = Config.MacroENodeB.number + Config.MicroENodeB.number + 1;
-	rangeB = Config.MacroENodeB.number + Config.MicroENodeB.number + Config.PicoENodeB.number;
+	rangeA = Config.MacroEnb.number + Config.MicroEnb.number + 1;
+	rangeB = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'pico', rangeA:rangeB);
 	Stations(rangeA:rangeB).Position = [...
-		Layout.Cells{1}.PicoPos(rangeA:rangeB,:), Config.PicoENodeB.height];
+		Layout.Cells{1}.PicoPos(rangeA:rangeB,:), Config.PicoEnb.height];
 
 	% Setup neighbour relationships
 	monsterLog('(SETUP - setupStations) setting up eNodeBs neighbours', 'NFO');

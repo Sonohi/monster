@@ -17,7 +17,7 @@ clc;
 close all;
 
 % Load parameters structure
-if exist('SimulationParameters', 'file') == 2
+if exist('SimulationParameters.mat', 'file') == 2
 	load('SimulationParameters.mat');
 else
 	SimulationParameters;

@@ -6,9 +6,9 @@ classdef MonsterConfig < handle
 	% :Runtime: (struct) configuration for the simulation runtime
 	% :Logs: (struct)
 	% :SimulationPlot: (struct) configuration for plotting
-	% :MacroENodeB: (struct) configuration for macro eNodeBs
-	% :MicroENodeB: (struct) configuration for micro eNodeBs
-	% :PicoENodeB: (struct) configuration for pico eNodeBs
+	% :MacroEnb: (struct) configuration for macro eNodeBs
+	% :MicroEnb: (struct) configuration for micro eNodeBs
+	% :PicoEnb: (struct) configuration for pico eNodeBs
 	%	:Ue: (struct) configuration for UEs
 	% :Mobility: (struct) configuration for UE mobility
 	% :Handover: (struct) configuration for X2 and S1 handover
@@ -35,11 +35,11 @@ classdef MonsterConfig < handle
 			'heatMapType', 'perStation', 'heatMapRes', 10);
 
 		% Properties related to the configuration of eNodeBs
-		MacroENodeB = struct('number', 1, 'subframes', 50, 'height', 35, 'positioning', 'centre',...
+		MacroEnb = struct('number', 1, 'subframes', 50, 'height', 35, 'positioning', 'centre',...
 			'noiseFigure', 7, 'antennaGain', 0);
-		MicroENodeB = struct('number', 1, 'subframes', 25, 'height', 25, 'positioning', 'hexagonal',...
+		MicroEnb = struct('number', 1, 'subframes', 25, 'height', 25, 'positioning', 'hexagonal',...
 			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
-		PicoENodeB = struct('number', 1, 'subframes', 6, 'height', 5, 'positioning', 'uniform', ...
+		PicoEnb = struct('number', 1, 'subframes', 6, 'height', 5, 'positioning', 'uniform', ...
 			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
 
 		% Properties related to the configuration of UEs
@@ -113,30 +113,30 @@ classdef MonsterConfig < handle
 			% Macro eNodeBs
 			% Check the number of macros and throw an error if set to an unsupported number
 			assert(Param.numMacro == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-			obj.MacroENodeB.number = Param.numMacro;
-			obj.MacroENodeB.subframes = Param.numSubFramesMacro;
-			obj.MacroENodeB.height = Param.macroHeight;
-			obj.MacroENodeB.noiseFigure = Param.eNBNoiseFigure;
-			obj.MacroENodeB.antennaGain = Param.eNBGain;
-			obj.MacroENodeB.radius = Param.macroRadius;   %Radius used by NetworkLayout
+			obj.MacroEnb.number = Param.numMacro;
+			obj.MacroEnb.subframes = Param.numSubFramesMacro;
+			obj.MacroEnb.height = Param.macroHeight;
+			obj.MacroEnb.noiseFigure = Param.eNBNoiseFigure;
+			obj.MacroEnb.antennaGain = Param.eNBGain;
+			obj.MacroEnb.radius = Param.macroRadius;   %Radius used by NetworkLayout
 
 			% Micro eNodeBs
-			obj.MicroENodeB.number = Param.numMicro;
-			obj.MicroENodeB.subframes = Param.numSubFramesMicro;
-			obj.MicroENodeB.height = Param.microHeight;
-			obj.MicroENodeB.noiseFigure = Param.eNBNoiseFigure;
-			obj.MicroENodeB.antennaGain = Param.eNBGain;
-			obj.MicroENodeB.positioning = Param.microPos;
-			obj.MicroENodeB.radius = Param.microUniformRadius;
+			obj.MicroEnb.number = Param.numMicro;
+			obj.MicroEnb.subframes = Param.numSubFramesMicro;
+			obj.MicroEnb.height = Param.microHeight;
+			obj.MicroEnb.noiseFigure = Param.eNBNoiseFigure;
+			obj.MicroEnb.antennaGain = Param.eNBGain;
+			obj.MicroEnb.positioning = Param.microPos;
+			obj.MicroEnb.radius = Param.microUniformRadius;
 
 			% Pico eNodeBs
-			obj.PicoENodeB.number = Param.numPico;
-			obj.PicoENodeB.subframes = Param.numSubFramesPico;
-			obj.PicoENodeB.height = Param.picoHeight;
-			obj.PicoENodeB.noiseFigure = Param.eNBNoiseFigure;
-			obj.PicoENodeB.antennaGain = Param.eNBGain;
-			obj.PicoENodeB.positioning = Param.picoPos;
-			obj.PicoENodeB.radius = Param.picoUniformRadius;
+			obj.PicoEnb.number = Param.numPico;
+			obj.PicoEnb.subframes = Param.numSubFramesPico;
+			obj.PicoEnb.height = Param.picoHeight;
+			obj.PicoEnb.noiseFigure = Param.eNBNoiseFigure;
+			obj.PicoEnb.antennaGain = Param.eNBGain;
+			obj.PicoEnb.positioning = Param.picoPos;
+			obj.PicoEnb.radius = Param.picoUniformRadius;
 			
 			% UEs
 			obj.Ue.number = Param.numUsers;

@@ -1,8 +1,9 @@
 % Main entry point for MONSTER
 
-monsterLog('(MAIN) initialising simulation', 'NFO');
-% Add setup folder to path
+% Add log and setup folder to path
+addpath('logs');
 addpath('setup');
+monsterLog('(MAIN) initialising simulation', 'NFO');
 
 % Run setup function and get a configuration object
 monsterLog('(MAIN) running simulation setup', 'NFO');
