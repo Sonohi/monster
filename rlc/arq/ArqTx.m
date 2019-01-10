@@ -20,7 +20,7 @@ classdef ArqTx
 
 	methods
 		% Constructor
-		function obj = ArqTx(Param, transmitter, receiver, timeNow)
+		function obj = ArqTx(timeNow, transmitter, receiver, Param)
 			obj.txId = transmitter;
 			obj.rxId = receiver;
 			obj.sqn = 0;

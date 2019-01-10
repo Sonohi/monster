@@ -1,0 +1,3 @@
+remove simulationParameters
+move assign traffic to users in monster constructor
+move plotting of nodes in monster constructor

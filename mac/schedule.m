@@ -75,7 +75,7 @@ switch Param.scheduling
 			% If there are still PRBs available, then we can schedule either a new TB or a RTX
 			if prbsAv > 0
 				if schedulingFlag && (noRtxSchedulingFlag || rtxSchedulingFlag)
-					modOrd = cqi2modOrd(Users(iCurrUe).Rx.CQI);
+					modOrd = Config.Phy.modOrdTable(Users(iCurrUe).Rx.CQI);
 					if noRtxSchedulingFlag
 						prbsNeed = ceil(double(Users(iCurrUe).Queue.Size)/(modOrd * Param.prbSym));
 					else
@@ -104,7 +104,7 @@ switch Param.scheduling
 					% write to schedule struct and indicate also in the struct whether this is new data or RTX
 					for iPrb = 1:Station.NDLRB
 						if Station.ScheduleDL(iPrb).UeId == -1
-							mcs = cqi2mcs(Users(iCurrUe).Rx.CQI);
+							mcs = Config.Phy.mcsTable(Users(iCurrUe).Rx.CQI + 1, 1);
 							for iSch = 0:prbsSch-1
 								Station.ScheduleDL(iPrb + iSch) = struct(...
 									'UeId', Users(iCurrUe).NCellID,...

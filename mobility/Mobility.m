@@ -1,6 +1,6 @@
 classdef Mobility < handle
 	% Directions defined as:
-	% 
+	%
 	% * 1 = N
 	% * 2 = W
 	% * 3 = S
@@ -32,10 +32,10 @@ classdef Mobility < handle
 		distanceMoved;
 		westEast = [2, 4];
 		northSouth = [1, 3];
-    avgfloorHeight = 3; % Roughly 3m
+		avgfloorHeight = 3; % Roughly 3m
 		supportedScenarios = {'pedestrian', 'pedestrian-indoor'}
 	end
-
+	
 	methods
 		function obj = Mobility(scenario, velocity, seed, Config)
 			% Constructor
@@ -55,7 +55,7 @@ classdef Mobility < handle
 			obj.createTrajectory();
 		end
 		
-				
+		
 		function plotTrajectory(obj)
 			startPos = obj.Trajectory(1,1:2);
 			figure
@@ -72,19 +72,19 @@ classdef Mobility < handle
 			end
 		end
 	end
-
+	
 	methods (Access = private)
-
+		
 		function obj = createTrajectory(obj)
-				% Create vector of trajectory with length(rounds)
-				obj.Trajectory = zeros(obj.Rounds, 3); % x, y, z
-				if strcmp(obj.Scenario, 'pedestrian')
-					obj.randomWalkPedestrian();
-				elseif strcmp(obj.Scenario, 'pedestrian-indoor')
-					obj.randomWalkPedestrianIndoor();
-				end
+			% Create vector of trajectory with length(rounds)
+			obj.Trajectory = zeros(obj.Rounds, 3); % x, y, z
+			if strcmp(obj.Scenario, 'pedestrian')
+				obj.randomWalkPedestrian();
+			elseif strcmp(obj.Scenario, 'pedestrian-indoor')
+				obj.randomWalkPedestrianIndoor();
+			end
 		end
-
+		
 		function obj = randomWalkPedestrianIndoor(obj)
 			% .. todo:: Create distribution of movement and still states
 			% .. todo:: Add turning inside building, turning is currently only done if the building boundaries are exceeded.
@@ -117,146 +117,146 @@ classdef Mobility < handle
 			
 			% Pick random direction
 			currentDirection = randi([1,4]);
-	
-      nextState = 'moving';
+			
+			nextState = 'moving';
 			for round = 2:obj.Rounds
 				
 				state = nextState;
 				switch state
 					case 'moving'
-							oldPos = obj.Trajectory(round-1,1:2);
-							newPos = obj.movement(currentDirection, oldPos);
-							
-							% check if the new position extends the boundaries of the
-							% building
-							changeDirection = false;
-							if newPos(1) <= xBoundaries(1)
-								changeDirection = true;
-								possibleDirections = [1, 3, 4];
-								currentDirection = possibleDirections(randi(length(possibleDirections)));
-							elseif newPos(1) >= xBoundaries(2)
-								changeDirection = true;
-								possibleDirections = [1, 2, 3];
-								currentDirection = possibleDirections(randi(length(possibleDirections)));
-							end
-							
-							if newPos(2) <= yBoundaries(1)
-								changeDirection = true;								
-								possibleDirections = [1, 2, 4];
-								currentDirection = possibleDirections(randi(length(possibleDirections)));
-							elseif newPos(2) >= yBoundaries(2)
-								changeDirection = true;
-								possibleDirections = [2, 3, 4];
-								currentDirection = possibleDirections(randi(length(possibleDirections)));
-							end
-							
-							% If we change direction the new movement is not valid, thus we keep the old
-							% position
-							if changeDirection
-								newPos = oldPos;
-							end
-							
-							% Update position
-							obj.Trajectory(round,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
+						oldPos = obj.Trajectory(round-1,1:2);
+						newPos = obj.movement(currentDirection, oldPos);
 						
-			end
-		
-
+						% check if the new position extends the boundaries of the
+						% building
+						changeDirection = false;
+						if newPos(1) <= xBoundaries(1)
+							changeDirection = true;
+							possibleDirections = [1, 3, 4];
+							currentDirection = possibleDirections(randi(length(possibleDirections)));
+						elseif newPos(1) >= xBoundaries(2)
+							changeDirection = true;
+							possibleDirections = [1, 2, 3];
+							currentDirection = possibleDirections(randi(length(possibleDirections)));
+						end
+						
+						if newPos(2) <= yBoundaries(1)
+							changeDirection = true;
+							possibleDirections = [1, 2, 4];
+							currentDirection = possibleDirections(randi(length(possibleDirections)));
+						elseif newPos(2) >= yBoundaries(2)
+							changeDirection = true;
+							possibleDirections = [2, 3, 4];
+							currentDirection = possibleDirections(randi(length(possibleDirections)));
+						end
+						
+						% If we change direction the new movement is not valid, thus we keep the old
+						% position
+						if changeDirection
+							newPos = oldPos;
+						end
+						
+						% Update position
+						obj.Trajectory(round,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
+						
+				end
+				
+				
 			end
 		end
 		
 		function obj = randomWalkPedestrian(obj)
-			% Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk. 
+			% Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk.
 			% Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in :meth:`Mobility.setParameters`
 			rng(obj.Seed);
 			[start, startSide] = obj.getRandomBuilding();
 			startPos = zeros(1,2);
 			[startPos(1), startPos(2)] = obj.getExitPoint(start, startSide);
-
+			
 			
 			% User height is assumed constant.
 			obj.Trajectory(:,3) = ones(obj.Rounds,1)*obj.pedestrianHeight;
 			
 			% Add starting position to trajectory
 			obj.Trajectory(1,1:2) = startPos;
-
+			
 			% Given the starting side, chose a random direction
 			% e.g. if starting side of the building is north or south, user can only
 			% move west or east.
 			nextState = 'moving';
 			stateVar = obj.initializeStateVars(start, startSide);
 			for round = 2:obj.Rounds
-					state = nextState;
-					
-					switch state
-						case 'moving'
-							% Reset state variables
-							stateVar.turnOrCross = false;
-							stateVar.turn = false;
-							stateVar.cross = false;
-							
+				state = nextState;
+				
+				switch state
+					case 'moving'
+						% Reset state variables
+						stateVar.turnOrCross = false;
+						stateVar.turn = false;
+						stateVar.cross = false;
+						
+						oldPos = obj.Trajectory(round-1,1:2);
+						newPos = obj.movement(stateVar.currentDirection, oldPos);
+						
+						% Check to see if the movement causes a turn or cross. However, if we just turned or cross the check is skipped.
+						if ~stateVar.justTurnedOrCrossed
+							stateVar.turnOrCross = obj.checkTurnOrCross(stateVar, newPos);
+						end
+						
+						% If we decide to turn or cross, execute logic.
+						if stateVar.turnOrCross
+							[stateVar.turn, stateVar.cross, stateVar.currentDirection] = obj.decideTurnOrCross(stateVar, newPos);
+							if stateVar.turn
+								obj.Trajectory(round,1:2) = oldPos;
+								nextState = 'turning';
+							elseif stateVar.cross
+								obj.Trajectory(round,1:2) = oldPos;
+								nextState = 'crossing';
+							end
+						else
+							obj.Trajectory(round,1:2) = newPos;
+						end
+						stateVar.justTurnedOrCrossed = false;
+						
+					case 'turning'
+						if stateVar.timeLeftForTurning > 0
+							stateVar.timeLeftForTurning = stateVar.timeLeftForTurning - obj.TimeStep;
+							obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
+						else
+							% Turning corner
 							oldPos = obj.Trajectory(round-1,1:2);
 							newPos = obj.movement(stateVar.currentDirection, oldPos);
-							
-							% Check to see if the movement causes a turn or cross. However, if we just turned or cross the check is skipped.
-							if ~stateVar.justTurnedOrCrossed
-								stateVar.turnOrCross = obj.checkTurnOrCross(stateVar, newPos);
+							obj.Trajectory(round,1:2) = newPos;
+							stateVar.turningDistance = stateVar.turningDistance - obj.distanceMoved;
+							if stateVar.turningDistance <= 0
+								stateVar = obj.setTurnedStateVars(stateVar, newPos);
+								nextState = 'moving';
 							end
 							
-							% If we decide to turn or cross, execute logic.
-							if stateVar.turnOrCross
-								[stateVar.turn, stateVar.cross, stateVar.currentDirection] = obj.decideTurnOrCross(stateVar, newPos);
-								if stateVar.turn
-									obj.Trajectory(round,1:2) = oldPos;
-									nextState = 'turning';
-								elseif stateVar.cross
-									obj.Trajectory(round,1:2) = oldPos;
-									nextState = 'crossing';
-								end
-							else
-								obj.Trajectory(round,1:2) = newPos;
-							end
-							stateVar.justTurnedOrCrossed = false;
+						end
 						
-						case 'turning'
-							if stateVar.timeLeftForTurning > 0
-								stateVar.timeLeftForTurning = stateVar.timeLeftForTurning - obj.TimeStep;
-								obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
-							else
-								% Turning corner
-								oldPos = obj.Trajectory(round-1,1:2);
-								newPos = obj.movement(stateVar.currentDirection, oldPos);
-								obj.Trajectory(round,1:2) = newPos;
-								stateVar.turningDistance = stateVar.turningDistance - obj.distanceMoved;
-								if stateVar.turningDistance <= 0
-									stateVar = obj.setTurnedStateVars(stateVar, newPos);
-									nextState = 'moving';
-								end
-	
+					case 'crossing'
+						if stateVar.timeLeftForCrossing > 0
+							stateVar.timeLeftForCrossing = stateVar.timeLeftForCrossing - obj.TimeStep;
+							obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
+						else
+							% Crossing street
+							oldPos = obj.Trajectory(round-1,1:2);
+							newPos = obj.movement(stateVar.currentDirection, oldPos);
+							stateVar.crossingDistance = stateVar.crossingDistance - obj.distanceMoved;
+							streetIsCrossed = obj.checkStreetIsCrossed(stateVar);
+							obj.Trajectory(round,1:2) = newPos;
+							if streetIsCrossed
+								stateVar = obj.setCrossedStateVars(stateVar, newPos);
+								nextState = 'moving';
 							end
 							
-						case 'crossing'
-							if stateVar.timeLeftForCrossing > 0
-							 stateVar.timeLeftForCrossing = stateVar.timeLeftForCrossing - obj.TimeStep;
-							 obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
-							else
-								% Crossing street
-								oldPos = obj.Trajectory(round-1,1:2);
-								newPos = obj.movement(stateVar.currentDirection, oldPos);
-								stateVar.crossingDistance = stateVar.crossingDistance - obj.distanceMoved;
-								streetIsCrossed = obj.checkStreetIsCrossed(stateVar);
-								obj.Trajectory(round,1:2) = newPos;
-								if streetIsCrossed
-										stateVar = obj.setCrossedStateVars(stateVar, newPos);
-										nextState = 'moving';
-								end
-								
-							end
-
-					end
+						end
+						
+				end
 			end
 		end
-
+		
 		function stateVar = initializeStateVars(obj, start, startSide)
 			stateVar = struct();
 			stateVar.timeLeftForCrossing = obj.pedestrianCrossingPause;
@@ -279,7 +279,7 @@ classdef Mobility < handle
 			stateVar.timeLeftForCrossing = obj.pedestrianCrossingPause;
 			stateVar.justTurnedOrCrossed = true;
 		end
-
+		
 		function stateVar = setTurnedStateVars(obj, stateVar, newPos)
 			stateVar.justTurnedOrCrossed = true;
 			stateVar.currentSide = obj.getBuildingSide(stateVar, newPos);
@@ -292,8 +292,8 @@ classdef Mobility < handle
 			%
 			% * Road width = 10m
 			% * Lane width = Road width / 3
-			% * Wall distance = 1m 
-			% 
+			% * Wall distance = 1m
+			%
 			% For the scenario of **pedestrian** the parameters are given as
 			%
 			% * pedestrianTurnPause = 0.02 s
@@ -318,7 +318,7 @@ classdef Mobility < handle
 			end
 			
 			obj.distanceMoved = obj.TimeStep * obj.movementSpeed;
-
+			
 			% Set indoor boolean
 			if strcmp(obj.Scenario,'pedestrian-indoor')
 				obj.Indoor = 1;
@@ -385,7 +385,7 @@ classdef Mobility < handle
 			else
 				direction = obj.northSouth(randi(2));
 			end
-
+			
 		end
 		
 		function side = getBuildingSide(obj, stateVar, newPos)
@@ -401,75 +401,75 @@ classdef Mobility < handle
 		end
 		
 		function [turn, cross, directionNew] = decideTurnOrCross(obj, stateVar, newPos)
-				% Pick new direction, not possible to go back.
-				possibledirections = [];
-				if any(ismember(obj.northSouth, stateVar.currentDirection))
-					possibledirections = [possibledirections stateVar.currentDirection];
-					possibledirections = [possibledirections obj.westEast];
-				else
-					possibledirections = [possibledirections stateVar.currentDirection];
-					possibledirections = [possibledirections obj.northSouth];
-				end
-
-				% Checking the current position against the building grid to ensure we're not moving beyond.
-				if round(newPos(2),5) > round(max(obj.buildingFootprints(:,4)),5)
-					% Remove 1 from possible directions
-					possibledirections = possibledirections(possibledirections ~= 1);
-				elseif round(newPos(1),5) < round(min(obj.buildingFootprints(:,1)),5)
-					% Remove 2 from possible directions
-					possibledirections = possibledirections(possibledirections ~= 2);
-				elseif round(newPos(2),5) < round(min(obj.buildingFootprints(:,2)),5)
-					% Remove 3 from possible directions
-					possibledirections = possibledirections(possibledirections ~= 3);
-				elseif round(newPos(1),5) > round(max(obj.buildingFootprints(:,3)),5)
-					% Remove 4 from possible directions
-					possibledirections = possibledirections(possibledirections ~= 4);
-				end
-
-				directionNew = possibledirections(randi(length(possibledirections)));
-				turn = false;
-				cross = false;
-				if (stateVar.currentSide == 1) && (directionNew == 3)
-					turn = true;
-				elseif (stateVar.currentSide == 3) && (directionNew == 1)
-					turn = true;
-				elseif (stateVar.currentSide == 2) && (directionNew == 4)
-					turn = true;
-				elseif (stateVar.currentSide == 4) && (directionNew == 2)
-					turn = true;
-				else 
-					cross = true;
-				end
+			% Pick new direction, not possible to go back.
+			possibledirections = [];
+			if any(ismember(obj.northSouth, stateVar.currentDirection))
+				possibledirections = [possibledirections stateVar.currentDirection];
+				possibledirections = [possibledirections obj.westEast];
+			else
+				possibledirections = [possibledirections stateVar.currentDirection];
+				possibledirections = [possibledirections obj.northSouth];
+			end
+			
+			% Checking the current position against the building grid to ensure we're not moving beyond.
+			if round(newPos(2),5) > round(max(obj.buildingFootprints(:,4)),5)
+				% Remove 1 from possible directions
+				possibledirections = possibledirections(possibledirections ~= 1);
+			elseif round(newPos(1),5) < round(min(obj.buildingFootprints(:,1)),5)
+				% Remove 2 from possible directions
+				possibledirections = possibledirections(possibledirections ~= 2);
+			elseif round(newPos(2),5) < round(min(obj.buildingFootprints(:,2)),5)
+				% Remove 3 from possible directions
+				possibledirections = possibledirections(possibledirections ~= 3);
+			elseif round(newPos(1),5) > round(max(obj.buildingFootprints(:,3)),5)
+				% Remove 4 from possible directions
+				possibledirections = possibledirections(possibledirections ~= 4);
+			end
+			
+			directionNew = possibledirections(randi(length(possibledirections)));
+			turn = false;
+			cross = false;
+			if (stateVar.currentSide == 1) && (directionNew == 3)
+				turn = true;
+			elseif (stateVar.currentSide == 3) && (directionNew == 1)
+				turn = true;
+			elseif (stateVar.currentSide == 2) && (directionNew == 4)
+				turn = true;
+			elseif (stateVar.currentSide == 4) && (directionNew == 2)
+				turn = true;
+			else
+				cross = true;
+			end
 		end
 		
 		function [turnOrCross] = checkTurnOrCross(obj, stateVar, newPos)
-				turnOrCross = false;
-				if (stateVar.currentDirection == 1) && (round(newPos(2),5) > round(stateVar.currentBuilding(4),5)+obj.wallDistance)
-						turnOrCross = true;
-					elseif (stateVar.currentDirection == 2) && (round(newPos(1),5) < round(stateVar.currentBuilding(1),5)-obj.wallDistance)
-						turnOrCross = true;
-					elseif (stateVar.currentDirection == 3) && (round(newPos(2),5) < round(stateVar.currentBuilding(2),5)-obj.wallDistance)
-						turnOrCross = true;
-					elseif (stateVar.currentDirection == 4) && (round(newPos(1),5) > round(stateVar.currentBuilding(3),5)+obj.wallDistance)
-						turnOrCross = true;
-				end
+			turnOrCross = false;
+			if (stateVar.currentDirection == 1) && (round(newPos(2),5) > round(stateVar.currentBuilding(4),5)+obj.wallDistance)
+				turnOrCross = true;
+			elseif (stateVar.currentDirection == 2) && (round(newPos(1),5) < round(stateVar.currentBuilding(1),5)-obj.wallDistance)
+				turnOrCross = true;
+			elseif (stateVar.currentDirection == 3) && (round(newPos(2),5) < round(stateVar.currentBuilding(2),5)-obj.wallDistance)
+				turnOrCross = true;
+			elseif (stateVar.currentDirection == 4) && (round(newPos(1),5) > round(stateVar.currentBuilding(3),5)+obj.wallDistance)
+				turnOrCross = true;
+			end
 			
 		end
 		
 		function newPos = movement(obj, direction, oldPos)
-					 if direction == 1
-						% If we move north, only y change
-						newPos = [oldPos(1), oldPos(2)+obj.distanceMoved];
-					elseif direction == 2
-						% if we move west, only x change
-						newPos = [oldPos(1)-obj.distanceMoved, oldPos(2)];
-					elseif direction == 3
-						% If we move south, only y change
-						newPos = [oldPos(1), oldPos(2)-obj.distanceMoved];
-					else
-						% If we move east, only x change
-						newPos = [oldPos(1)+obj.distanceMoved, oldPos(2)];
-					end
+			if direction == 1
+				% If we move north, only y change
+				newPos = [oldPos(1), oldPos(2)+obj.distanceMoved];
+			elseif direction == 2
+				% if we move west, only x change
+				newPos = [oldPos(1)-obj.distanceMoved, oldPos(2)];
+			elseif direction == 3
+				% If we move south, only y change
+				newPos = [oldPos(1), oldPos(2)-obj.distanceMoved];
+			else
+				% If we move east, only x change
+				newPos = [oldPos(1)+obj.distanceMoved, oldPos(2)];
+			end
 		end
 		
 		function [x, y] = getExitPoint(obj, building, Side)
@@ -478,31 +478,24 @@ classdef Mobility < handle
 			sides(:, 1) = [building(3), building(4),  building(1), building(4)];
 			sides(:, 2) = [building(1), building(4),  building(1), building(2)];
 			sides(:, 3) = [building(1), building(2),  building(3), building(2)];
-			sides(:, 4) = [building(3), building(2),  building(3), building(4)]; 
-
+			sides(:, 4) = [building(3), building(2),  building(3), building(4)];
+			
 			% median point of the building side
 			x = (sides(1, Side) + sides(3, Side)) / 2;
 			y = (sides(2, Side) + sides(4, Side)) / 2;
-
+			
 			% add distance given the chosen side
 			if Side == 1
-					y = y + obj.wallDistance;
+				y = y + obj.wallDistance;
 			elseif Side == 2
-					x = x - obj.wallDistance;
+				x = x - obj.wallDistance;
 			elseif Side == 3
-					y = y - obj.wallDistance;
+				y = y - obj.wallDistance;
 			elseif Side == 4
-					x = x + obj.wallDistance;
+				x = x + obj.wallDistance;
 			end
 		end
-
-			
-			
-			
-		end
-
-
-
-
+	
+	end
 end
 

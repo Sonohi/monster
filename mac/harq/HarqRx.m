@@ -19,14 +19,14 @@ classdef HarqRx
 
 	methods
 		% Constructor
-		function obj = HarqRx(timeNow, Param)
+		function obj = HarqRx(timeNow, Config)
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
-			obj = createProcesses(obj, Param, timeNow);
+			obj = createProcesses(obj, Config, timeNow);
 		end
 
 		% Handle the reception of a TB
-		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Param, timeNow)
+		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Config, timeNow)
 			obj.processes(iProc).copiesReceived = obj.processes(iProc).copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly so no need to proceed further
@@ -60,10 +60,10 @@ classdef HarqRx
 	end
 
 	methods (Access = private)
-		function obj = createProcesses(obj, Param, timeNow)
+		function obj = createProcesses(obj, Config, timeNow)
 			% TODO check if pre-allocation can be removed or better the entire
 			% function
-			for iProc = 1:Param.harq.proc
+			for iProc = 1:Config.Harq.processes
 				obj.processes(iProc).procId = iProc - 1;
 			end
 		end

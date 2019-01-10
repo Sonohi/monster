@@ -57,12 +57,13 @@ classdef MonsterConfig < handle
 
 		% Properties related to the traffic
 		Traffic = struct('primary', 'webBrowsing', 'secondary', 'videoStreaming', 'mix', 0.5,... 
-			'arrivalDistribution', 'Poisson', 'poissonLambda', 5, 'uniformRange', [6, 10], 'static', 0 );
+			'arrivalDistribution', 'Poisson', 'poissonLambda', 5, 'uniformRange', [6, 10], 'static', 0 ); 
 
 		% Properties related to the physical layer
 		Phy = struct('uplinkFrequency', 1747.5, 'downlinkFrequency', 1842.5,...
 			'pucchFormat', 2, 'prachInterval', 10, 'prbSymbols', 160, 'prbResourceElements', 168, ...
-			'maxTbSize', 97896, 'maxCwdSize', 10e5);
+			'maxTbSize', 97896, 'maxCwdSize', 10e5, 'mcsTable', [0,1,3,4,6,7,9,11,13,15,20,21,22,24,26,28]',
+			'modOrdTable', [2,2,2,2,2,2,4,4,4,6,6,6,6,6,6]);
 
 		% Properties related to the channel
 		Channel = struct('uplinkMode', 'B2B', 'downlinkMode', '3GPP38901', 'fadingActive', true,...

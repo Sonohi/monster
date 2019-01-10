@@ -87,8 +87,8 @@ classdef EvolvedNodeB
 			obj.SwitchCount = 0;
 			obj.DlFreq = Config.Phy.downlinkFrequency;
 			if Config.Harq.active
-				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Config, cellId, 1:Config.Ue.number, 0));
-				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Config, cellId, 1:Config.Ue.number, 0));
+				obj.Mac = struct('HarqTxProcesses', HarqTx(0, cellId, 1:Config.Ue.number, Config));
+				obj.Rlc = struct('ArqTxBuffers', ArqTx(0, cellId, 1:Config.Ue.number, COnfig);
 			end
 			obj.Tx = enbTransmitterModule(obj, Config);
 			obj.Rx = enbReceiverModule(obj, Config);
