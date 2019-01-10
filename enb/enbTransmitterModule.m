@@ -18,10 +18,21 @@ classdef enbTransmitterModule
   
   methods
     % Constructor
-    function obj = enbTransmitterModule(enb, Param)
-      obj.TxPwdBm = 10*log10(enb.Pmax)+30;
-      obj.Gain = Param.eNBGain;
-      obj.NoiseFigure = Param.eNBNoiseFigure;
+    function obj = enbTransmitterModule(enb, Config)
+			obj.TxPwdBm = 10*log10(enb.Pmax)+30;
+			switch enb.BsClass
+				case 'macro'
+					obj.Gain = Config.MacroEnb.antennaGain;
+					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
+				case 'micro'
+					obj.Gain = Config.MicroEnb.antennaGain;
+					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
+				case 'pico'
+					obj.Gain = Config.PicoEnb.antennaGain;
+					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
+				otherwise
+					monsterLog(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
+			end
 			obj.NDLRB = enb.NDLRB;
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
 			obj.Waveform = zeros(Nfft, 1);

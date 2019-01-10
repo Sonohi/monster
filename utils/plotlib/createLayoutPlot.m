@@ -1,4 +1,4 @@
-function Config = createLayoutPlot(Config)
+function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
 	fig = figure('Name','Layout','Position',[100, 100, 1000, 1000]);
 	layout_axes = axes('parent', fig);
 	%Find simulation area
@@ -33,6 +33,6 @@ function Config = createLayoutPlot(Config)
 	set(layout_axes,'YTickLabel',[]);
 	set(layout_axes,'Box','on');
 	hold(layout_axes,'on');
-	Config.Plot.LayoutFigure = fig;
-	Config.Plot.LayoutAxes = findall(fig,'type','axes');
+	LayoutFigure = fig;
+	LayoutAxes = findall(fig,'type','axes');
 end

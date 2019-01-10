@@ -25,7 +25,7 @@ classdef MonsterConfig < handle
 		% Parameters related to simulation run time
 		Runtime = struct('totalRounds', 1000, 'remainingRounds', 1000, 'currentRound', 0, 'currentTime', 0,...
 			'remainingTime', 1, 'realTimeElaspsed', 0, 'realTimeRemaining', 1000,...
-			'reInstall', 0);
+			'reInstall', 0, 'seed', 126);
 		
 		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
 			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName', '');  %Using the ":" gives an error. Using "," does not
@@ -97,6 +97,7 @@ classdef MonsterConfig < handle
 			obj.Runtime.remainingRounds = Param.schRounds;
 			obj.Runtime.remainingTime = Param.schRounds*10e-3;
 			obj.Runtime.reInstall = Param.reset;
+			obj.Runtime.seed = Param.seed;
 			
 			% Logs
 			obj.Logs.logToFile = Param.logToFile;
@@ -225,13 +226,8 @@ classdef MonsterConfig < handle
 
 			% PLOT
 			if Param.draw
-				Param = createLayoutPlot(Param);
-				obj.Plot.LayoutFigure = Param.LayoutFigure;
-				obj.Plot.LayoutAxes = Param.LayoutAxes;
-
-				Param = createPHYplot(Param);
-				obj.Plot.PHYFigure = Param.PHYFigure;
-				obj.Plot.PHYAxes = Param.PHYAxes;
+				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
+				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
 			
 

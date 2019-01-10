@@ -8,8 +8,17 @@ classdef enbReceiverModule
 	
 	methods
 		
-		function obj = enbReceiverModule(Param)
-			obj.NoiseFigure = Param.eNBNoiseFigure;
+		function obj = enbReceiverModule(enb, Config)
+			switch enb.BsClass
+				case 'macro'
+					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
+				case 'micro'
+					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
+				case 'pico'
+					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
+				otherwise
+					monsterLog(sprintf('(ENODEB RECEIVER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
+			end
 		end
 		
 		function obj = set.Waveform(obj,Sig)

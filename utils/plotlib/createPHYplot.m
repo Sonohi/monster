@@ -1,4 +1,4 @@
-function Config = createPHYplot(Config)
+function [PHYFigure, PHYAxes] = createPHYplot(Config)
 	% This function creates the main figure used for PHY visualization
 	% Tags are used to identify the plots.
 	fig = figure('Name','PHY','Position',[100, 100, 1000, 1000]);
@@ -35,6 +35,6 @@ function Config = createPHYplot(Config)
 	%set(phy_axes,'YTickLabel',[]);
 	%set(phy_axes,'Box','on');
 	%hold(phy_axes,'on');
-	Config.Plot.PHYFigure = fig;
-	Config.Plot.PHYAxes = findall(fig,'type','axes');
+	PHYFigure = fig;
+	PHYAxes = findall(fig,'type','axes');
 end

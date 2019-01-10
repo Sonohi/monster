@@ -43,22 +43,22 @@ classdef EvolvedNodeB
 	
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Param, BsClass, cellId)
+		function obj = EvolvedNodeB(Config, BsClass, cellId)
 			switch BsClass
 				case 'macro'
-					obj.NDLRB = Param.numSubFramesMacro;
+					obj.NDLRB = Config.MacroEnb.subframes;
 					obj.Pmax = 20; % W
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
 				case 'micro'
-					obj.NDLRB = Param.numSubFramesMicro;
+					obj.NDLRB = Config.MicroEnb.subframes;
 					obj.Pmax = 6.3; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 				case 'pico'
-					obj.NDLRB = Param.numSubFramesPico;
+					obj.NDLRB = Config.PicoEnb.subframes;
 					obj.Pmax = 0.13; % W
 					obj.P0 = 6.8; % W
 					obj.DeltaP = 4.0;
@@ -66,13 +66,13 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
-			obj.Seed = cellId*Param.seed;
+			obj.Seed = cellId*Config.Runtime.seed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
-			obj.TotSubframes = Param.schRounds;
+			obj.TotSubframes = Config.Runtime.totalRounds;
 			obj.NSubframe = 0;
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
@@ -82,18 +82,18 @@ classdef EvolvedNodeB
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.PowerState = 1;
-			obj.Neighbours = zeros(1, Param.numEnodeBs);
+			obj.Neighbours = zeros(1, Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number - 1);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
-			obj.DlFreq = Param.dlFreq;
-			if Param.rtxOn
-				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+			obj.DlFreq = Config.Phy.downlinkFrequency;
+			if Config.Harq.active
+				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Config, cellId, 1:Config.Ue.number, 0));
+				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Config, cellId, 1:Config.Ue.number, 0));
 			end
-			obj.Tx = enbTransmitterModule(obj, Param);
-			obj.Rx = enbReceiverModule(Param);
-			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
-			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
+			obj.Tx = enbTransmitterModule(obj, Config);
+			obj.Rx = enbReceiverModule(obj, Config);
+			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
@@ -113,8 +113,8 @@ classdef EvolvedNodeB
 		end
 		
 		% reset users
-		function obj = resetUsers(obj, Param)
-			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		function obj = resetUsers(obj, Config)
+			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 		
 		% reset schedule
@@ -139,12 +139,12 @@ classdef EvolvedNodeB
 		end
 		
 		% create list of neighbours
-		function obj = setNeighbours(obj, Stations, Param)
+		function obj = setNeighbours(obj, Stations, Config)
 			% the macro eNodeB has neighbours all the micro
 			if strcmp(obj.BsClass,'macro')
-				obj.Neighbours(1:Param.numMicro + Param.numPico) = find([Stations.NCellID] ~= obj.NCellID);
+				obj.Neighbours(1:Config.MicroEnb.number + Config.PicoEnb.number) = find([Stations.NCellID] ~= obj.NCellID);
 				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
-				% in a circle of radius Param.nboRadius
+				% in a circle of radius Config.Son.neighbourRadius
 			else
 				for iStation = 1:length(Stations)
 					if strcmp(Stations(iStation).BsClass, 'macro')
@@ -155,7 +155,7 @@ classdef EvolvedNodeB
 						pos = obj.Position(1:2);
 						nboPos = Stations(iStation).Position(1:2);
 						dist = pdist(cat(1, pos, nboPos));
-						if dist <= Param.nboRadius
+						if dist <= Config.Son.neighbourRadius
 							ix = find(not(obj.Neighbours), 1 );
 							obj.Neighbours(ix) = Stations(iStation).NCellID;
 						end
@@ -211,7 +211,7 @@ classdef EvolvedNodeB
 					case 3
 						% eNodeB already in underload
 						obj.HystCount = obj.HystCount + 1;
-						if obj.HystCount >= Param.tHyst/10^-3
+						if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 							% the underload has exceeded the hysteresis timer, so start switching
 							obj.PowerState = 4;
 							obj.SwitchCount = 1;
@@ -250,17 +250,17 @@ classdef EvolvedNodeB
 		end
 		
 		% set uplink static scheduling
-		function obj = setScheduleUL(obj, Param)
+		function obj = setScheduleUL(obj, Config)
 			% Check the number of users associated with the eNodeB and initialise to all
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
 			if ~isempty(associatedUEs)
-				prbQuota = floor(Param.numSubFramesUE/length(associatedUEs));
+				prbQuota = floor(Config.Ue.subframes/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
 					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
 					prbQuota = 6;
-					ueMax = floor(Param.numSubFramesUE/prbQuota);
+					ueMax = floor(Config.Ue.subframes/prbQuota);
 					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
 					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
 					iDiff = 0;
@@ -291,7 +291,7 @@ classdef EvolvedNodeB
 					% In this case, all connected UEs can be scheduled, so RR can be reset
 					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 				end
-				prbAvailable = Param.numSubFramesUE;
+				prbAvailable = Config.Ue.subframes;
 				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
 				for iUser = 1:length(associatedUEs)
 					if prbAvailable >= prbQuota
@@ -300,7 +300,7 @@ classdef EvolvedNodeB
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						monsterLog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'INFO');
+						monsterLog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
 						break;
 					end
 				end
@@ -456,9 +456,9 @@ classdef EvolvedNodeB
 				% If empty, no uplink UE data has been received in this round and skip
 				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
 					cqi = decodeCqi(obj.Rx.UeData(iUser).PUCCH);
-					ueEnodeBIX = find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
-					if ~isempty(ueEnodeBIX)
-						obj.Users(ueEnodeBIX).CQI = cqi;
+					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
+					if ~isempty(ueEnodeBIx)
+						obj.Users(ueEnodeBIx).CQI = cqi;
 					end
 
 					if Config.Harq.active
@@ -487,10 +487,6 @@ classdef EvolvedNodeB
 				end
 			end
 		end
-
-		
-
-
 
 	end
 end
