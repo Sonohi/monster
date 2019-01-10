@@ -10,9 +10,9 @@ classdef ueTransmitterModule
 	
 	methods
 		
-		function obj = ueTransmitterModule(Param, ueObj)
-			obj.PUCCH.Format = Param.pucchFormat;
-			obj.PRACH.Interval = Param.PRACHInterval;
+		function obj = ueTransmitterModule(ueObj, Config)
+			obj.PUCCH.Format = Config.Phy.pucchFormat;
+			obj.PRACH.Interval = Config.Phy.prachInterval;
 			obj.PRACH.Format = 0;          % PRACH format: TS36.104, Table 8.4.2.1-1, CP length of 0.10 ms, typical cell range of 15km
 			obj.PRACH.SeqIdx = 22;         % Logical sequence index: TS36.141, Table A.6-1
 			obj.PRACH.CyclicShiftIdx = 1;  % Cyclic shift index: TS36.141, Table A.6-1
@@ -32,7 +32,7 @@ classdef ueTransmitterModule
 			obj.Waveform = ltePRACH(ueObj, obj.PRACH);
 		end
 		
-		function [obj, reportHarqBit] = mapGridAndModulate(obj, ueObj, Param)
+		function [obj, reportHarqBit] = mapGridAndModulate(obj, ueObj, Config)
 			% Check if upllink needs to consist of PRACH
 			% TODO: changes to sequence and preambleidx given unique user ids
 			%       if mod(ueObj.NSubframe, obj.PRACH.Interval) == 0
@@ -50,10 +50,10 @@ classdef ueTransmitterModule
 			% We need to check whether HARQ feedback has to be sent or not
 			cqiBits = de2bi(ueObj.Rx.CQI, 4, 'left-msb')';
 			zeroPad = zeros(11,1);
-			if Param.rtxOn && isempty(ueObj.Rx.TransportBlock) || ~Param.rtxOn
+			if Config.Harq.active && isempty(ueObj.Rx.TransportBlock) || ~Config.Harq.active
 				reportHarqBit = 0;
 				harqBits = int8(zeros(4,1));
-			elseif Param.rtxOn
+			elseif Config.Harq.active
 				reportHarqBit = 1;
 				harqAck = ueObj.Mac.HarqReport.ack;
 				harqPid = ueObj.Mac.HarqReport.pid;

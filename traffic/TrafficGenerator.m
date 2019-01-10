@@ -18,12 +18,12 @@ classdef TrafficGenerator
 	end
 	
 	methods
-		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Param, id)
+		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Config, id)
 			obj.id = id;
 			obj.TrafficType = trafficModel;
 			switch trafficModel
 				case 'videoStreaming'
-					if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Param.reset)
+					if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Config.Runtime.reInstall)
 						obj.TrafficSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 					else
 						traffic = load('traffic/videoStreaming.mat');
@@ -31,7 +31,7 @@ classdef TrafficGenerator
 						clear traffic
 					end
 				case 'webBrowsing'
-					if (exist('traffic/webBrowsing.mat', 'file') ~= 2 || Param.reset)
+					if (exist('traffic/webBrowsing.mat', 'file') ~= 2 || Config.Runtime.reInstall)
 						obj.TrafficSource = loadWebBrowsingTraffic('traffic/webBrowsing.csv');
 					else
 						traffic = load('traffic/webBrowsing.mat');
@@ -39,7 +39,7 @@ classdef TrafficGenerator
 						clear traffic
 					end
 				case 'fullBuffer'
-					if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Param.reset)
+					if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Config.Runtime.reInstall)
 						obj.TrafficSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 					else
 						traffic = load('traffic/fullBuffer.mat');
@@ -49,30 +49,29 @@ classdef TrafficGenerator
 				otherwise
 					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported traffic model','ERR');
 			end
-			obj.ArrivalMode = Param.ueArrivalDistribution;
+			obj.ArrivalMode = Config.Traffic.arrivalDistribution;
 			obj.AssociatedUeIds = AssociatedUeIds;
-			obj.ArrivalTimes = obj.setArrivalTimes(Param);
+			obj.ArrivalTimes = obj.setArrivalTimes(Config);
 		end
 		
-		function ArrivalTimes = setArrivalTimes(obj, Param)
+		function ArrivalTimes = setArrivalTimes(obj, Config)
 			% Set arrival times is used to set the starting times for the associated UEs
 			%
-			% :Param.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
-			% :Param.uniformLower: lower limit of the Uniform process, used if the arrival process is Uniform
-			% :Param.uniformUpper: upper limit of the Uniform process, used if the arrival process is Uniform
-			% :Param.staticStart: static start time if the arrival process is static
-			rng(Param.seed);
+			% :Config.Traffic.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
+			% :Config.Traffic.uniformRange: range of the Uniform process, used if the arrival process is Uniform
+]			% :Config.Traffic.static: static start time if the arrival process is static
+			rng(Config.Runtime.seed);
 			switch obj.ArrivalMode
 				case 'Poisson'
 					for i = 1:length(obj.AssociatedUeIds)
-						tStart(i,1) = random('Poisson', Param.poissonLambda);
+						tStart(i,1) = random('Poisson', Config.Traffic.poissonLambda);
 					end
 				case 'Uniform'
 					for i = 1:length(obj.AssociatedUeIds)
-						tStart(i,1) = random('Uniform', Param.uniformLower, Param.uniformUpper);
+						tStart(i,1) = random('Uniform', Config.Traffic.uniformRange(1), Config.Traffic.uniformRange(2));
 					end
 				case 'Static'
-					tStart(1:length(obj.AssociatedUeIds), 1) = Param.staticStart;
+					tStart(1:length(obj.AssociatedUeIds), 1) = Config.Traffic.static;
 				otherwise
 					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode','ERR');
 					tStart = [];
@@ -97,9 +96,9 @@ classdef TrafficGenerator
 		function newQueue = updateTransmissionQueue(obj, User, simTime)
 			% Update transmission queue is used to update the data in the queue for a specific user
 			%
-			% :param User: User is the UE
-			% :type User: :class:`ue.UserEquipment`
-			% :param simTime: is the current simulation time
+			% :obj: TrafficGenerator instance
+			% :User: UserEquipment instance
+			% :simTime: Double current simulation time in seconds
 			
 			% By default the queue is not updated
 			newQueue = User.Queue;

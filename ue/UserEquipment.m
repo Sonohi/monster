@@ -42,11 +42,11 @@ classdef UserEquipment
 	
 	methods
 		% Constructor
-		function obj = UserEquipment(Param, userId)
+		function obj = UserEquipment(Config, userId)
 			obj.NCellID = userId;
-			obj.Seed = userId*Param.seed;
+			obj.Seed = userId*Config.Runtime.seed;
 			obj.ENodeBID = -1;
-			obj.NULRB = Param.numSubFramesUE;
+			obj.NULRB = Config.Ue.subframes;
 			obj.RNTI = 1;
 			obj.DuplexMode = 'FDD';
 			obj.CyclicPrefixUL = 'Normal';
@@ -60,23 +60,25 @@ classdef UserEquipment
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = MMobility(Param.mobilityScenario, 1, Param.mobilitySeed * userId, Param);
+			obj.Mobility = MMobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
 			obj.Position = obj.Mobility.Trajectory(1,:);
-			if Param.draw
-				obj.plotUEinScenario(Param);
+			if Config.SimulationPlot.runtimePlot
+				obj.plotUEinScenario(Config);
 			end
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Rx = ueReceiverModule(Param, obj);
-			obj.Tx = ueTransmitterModule(Param, obj);
+			obj.Rx = ueReceiverModule(obj, Config);
+			obj.Tx = ueTransmitterModule(obj, Config);
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			if Param.rtxOn
-				obj.Mac = struct('HarqRxProcesses', HarqRx(Param, 0), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
-				obj.Rlc = struct('ArqRxBuffer', ArqRx(Param, 0));
+			if Config.Harq.Active
+				obj.Mac = struct('HarqRxProcesses', HarqRx(0, Config), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
+			end
+			if Config.Arq.active 
+				obj.Rlc = struct('ArqRxBuffer', ArqRx(0, Config));
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
@@ -177,12 +179,12 @@ classdef UserEquipment
 			obj.Rx = obj.Rx.reset();
 		end
 		
-		function plotUEinScenario(obj, Param)
+		function plotUEinScenario(obj, Config)
 			x0 = obj.Position(1);
 			y0 = obj.Position(2);
 
 			% UE in initial position
-			plot(Param.LayoutAxes,x0, y0, ...
+			plot(Config.Plot.LayoutAxes,x0, y0, ...
 				'Marker', obj.PlotStyle.marker, ...
 				'MarkerFaceColor', obj.PlotStyle.colour, ...
 				'MarkerEdgeColor', obj.PlotStyle.edgeColour, ...
@@ -190,7 +192,7 @@ classdef UserEquipment
 				'DisplayName', strcat('UE ', num2str(obj.NCellID)));
 
 			% Trajectory
-			plot(Param.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
+			plot(Config.Plot.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
 				'Color', obj.PlotStyle.colour, ...
 				'LineStyle', '--', ...
 				'LineWidth', obj.PlotStyle.lineWidth,...
@@ -308,7 +310,7 @@ classdef UserEquipment
 				% Log block reception stats
 				obj.Rx = obj.Rx.logBlockReception(obj);
 			else
-				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) Not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.Rx = obj.Rx.logNotDemodulated();
 				obj.Rx.CQI = 3;
 				continue;
@@ -354,9 +356,6 @@ classdef UserEquipment
 				end
 			end
 		end
-
-
-		
 		
 	end	
 end

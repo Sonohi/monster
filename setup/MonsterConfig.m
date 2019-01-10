@@ -46,7 +46,7 @@ classdef MonsterConfig < handle
 		Ue = struct('number', 1, 'subframes', 25, 'height', 1.5, 'noiseFigure', 7, 'antennaGain', 0);
 
 		% Properties related to mobility
-		Mobility = struct('scenario', 'pedestrian', 'step', 0.01);
+		Mobility = struct('scenario', 'pedestrian', 'step', 0.01, 'seed', 19);
 
 		% Properties related to handover
 		Handover = struct('x2Timer', 0.01);
@@ -148,6 +148,7 @@ classdef MonsterConfig < handle
 
 			% Mobility
 			obj.Mobility.scenario = Param.mobilityScenario;
+			obj.Mobility.seed = Param.mobilitySeed;
 			obj.Mobility.step = Param.mobilityStep;
 
 			% Handover

@@ -19,7 +19,7 @@ classdef HarqRx
 
 	methods
 		% Constructor
-		function obj = HarqRx(Param, timeNow)
+		function obj = HarqRx(timeNow, Param)
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
 			obj = createProcesses(obj, Param, timeNow);

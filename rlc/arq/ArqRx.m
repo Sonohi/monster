@@ -15,7 +15,7 @@ classdef ArqRx
 
 	methods
 		% Constructor
-		function obj = ArqRx(Param, timeNow)
+		function obj = ArqRx(timeNow, Param)
 			obj.sqnExpected = 0;
 			obj.sqnReceived = 0;
 			obj.sqnNext = 1;

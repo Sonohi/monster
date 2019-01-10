@@ -11,7 +11,7 @@ classdef ueReceiverModule
 		SNR;
 		SNRdB;
 		Waveform;
-        WaveformInfo;
+  	WaveformInfo;
 		RxPwdBm; % Wideband
 		IntSigLoss;
 		Subframe;
@@ -35,13 +35,13 @@ classdef ueReceiverModule
 	
 	methods
 		
-		function obj = ueReceiverModule(Param, ueObj)
+		function obj = ueReceiverModule(ueObj, Config)
       obj.Offset = 0;
-			obj.NoiseFigure = Param.ueNoiseFigure;
+			obj.NoiseFigure = Config.Ue.noiseFigure;
 			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
-			for iStation = 1:Param.numEnodeBs
+			for iStation = 1:Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number
 				cellstring = char(strcat("NCellID",int2str(iStation)));
 				obj.HistoryStats.(cellstring) = struct('SINRdB',[],'SNRdB',[],'RxPwdBm',[]);
 			end

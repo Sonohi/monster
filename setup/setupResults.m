@@ -10,7 +10,6 @@ function Results = setupResults (Config)
 	monsterLog('(SETUP - setupResults) setting up results structure', 'NFO');
 	% TODO check whether we need to differentiate cases with thr parameters
 	Results = MetricRecorder(Config);
-	
-	
+
 end
 	
