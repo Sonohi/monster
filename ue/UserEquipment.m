@@ -60,7 +60,7 @@ classdef UserEquipment
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = MMobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
+			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
 			obj.Position = obj.Mobility.Trajectory(1,:);
 			if Config.SimulationPlot.runtimePlot
 				obj.plotUEinScenario(Config);

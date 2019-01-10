@@ -1,4 +1,4 @@
-classdef MMobility < handle
+classdef Mobility < handle
 	% Directions defined as:
 	% 
 	% * 1 = N
@@ -37,7 +37,7 @@ classdef MMobility < handle
 	end
 
 	methods
-		function obj = MMobility(scenario, velocity, seed, Param)
+		function obj = Mobility(scenario, velocity, seed, Config)
 			% Constructor
 			if ~any(strcmp(scenario, obj.supportedScenarios))
 				monsterLog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
@@ -47,11 +47,11 @@ classdef MMobility < handle
 			obj.Scenario = scenario;
 			obj.Velocity = velocity;
 			obj.Seed = seed;
-			obj.Rounds = Param.schRounds;
-			obj.buildingFootprints = Param.buildings;
+			obj.Rounds = Config.Runtime.totalRounds;
+			obj.buildingFootprints = Config.Terrain.buildings;
 			
 			% Produce parameters and compute movement.
-			obj.setParameters(Param);
+			obj.setParameters(Config);
 			obj.createTrajectory();
 		end
 		
@@ -167,7 +167,7 @@ classdef MMobility < handle
 		
 		function obj = randomWalkPedestrian(obj)
 			% Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk. 
-			% Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in :meth:`MMobility.setParameters`
+			% Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in :meth:`Mobility.setParameters`
 			rng(obj.Seed);
 			[start, startSide] = obj.getRandomBuilding();
 			startPos = zeros(1,2);
@@ -287,7 +287,7 @@ classdef MMobility < handle
 			stateVar.turningDistance = obj.turningDistance;
 		end
 		
-		function obj = setParameters(obj, Param)
+		function obj = setParameters(obj, Config)
 			% Sets parameters for mobility, default values are given as
 			%
 			% * Road width = 10m
@@ -305,7 +305,7 @@ classdef MMobility < handle
 			obj.laneWidth = obj.roadWidth / 3;
 			obj.wallDistance = 1;
 			obj.movementSpeed = obj.Velocity; % [m/s]
-			obj.pedestrianHeight = Param.ueHeight;
+			obj.pedestrianHeight = Config.Ue.height;
 			if strcmp(obj.Scenario, 'pedestrian')
 				% TODO: randomize wait times between appropriate numbers.
 				obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
