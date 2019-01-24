@@ -1,4 +1,4 @@
-classdef BaseCell < handle
+classdef BaseCell < matlab.mixin.Copyable
 	
 	%Properties
 	properties

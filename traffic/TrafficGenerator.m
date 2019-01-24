@@ -1,4 +1,4 @@
-classdef TrafficGenerator
+classdef TrafficGenerator < matlab.mixin.Copyable
 	% This class is used to handle the generation of the traffic in the network
 	% A TrafficGenerator object is created for each type of traffic profile used in the simulation
 	% A traffic profile is made of:

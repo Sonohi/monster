@@ -1,4 +1,4 @@
-classdef Mobility < handle
+classdef Mobility < matlab.mixin.Copyable
 	% Directions defined as:
 	%
 	% * 1 = N

@@ -3,7 +3,7 @@
 %		0 means idle, 1 means in use, 2 means awaiting retransmission slot, 3 means retransmitting
 % 	4 means retransmission failure
 
-classdef HarqTx
+classdef HarqTx < matlab.mixin.Copyable
 	properties
 		txId;
 		rxId;

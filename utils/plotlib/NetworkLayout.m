@@ -1,4 +1,4 @@
-classdef NetworkLayout < handle
+classdef NetworkLayout < matlab.mixin.Copyable
 	%This is the class defining the layout for macro cells
 	
 	properties
@@ -23,8 +23,8 @@ classdef NetworkLayout < handle
 			obj.generateCells(Config);
 			obj.findMicroCoordinates(Config);
 			obj.findPicoCoordinates(Config);
-			obj.NumMicro = length(obj.MicroCoordinates(:,1))
-			obj.NumPico = length(obj.PicoCoordinates(:,1))
+			obj.NumMicro = length(obj.MicroCoordinates(:,1));
+			obj.NumPico = length(obj.PicoCoordinates(:,1));
 		end
 		
 		function draweNBs(obj, Config)
@@ -122,7 +122,6 @@ classdef NetworkLayout < handle
 				set(f, 'AlphaData', alpha);
 				drawnow
 				
-				
 			end
 
 			function drawUes(obj, Users, Config)
@@ -151,7 +150,7 @@ classdef NetworkLayout < handle
 						'LineStyle', '--', ...
 						'LineWidth', Users(iUser).PlotStyle.lineWidth,...
 						'DisplayName', strcat('UE ', num2str(Users(iUser).NCellID), ' trajectory'));
-					drawnow()
+					drawnow();
 				end
 
 				% Toggle the legend

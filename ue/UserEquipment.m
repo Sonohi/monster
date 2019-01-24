@@ -1,6 +1,6 @@
 %   USER EQUIPMENT defines a value class for creating and working with UEs
 
-classdef UserEquipment
+classdef UserEquipment < matlab.mixin.Copyable
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
 		NCellID;
@@ -95,7 +95,7 @@ classdef UserEquipment
 			obj.Scheduled = status;
 		end
 
-		function obj = set.TrafficStartTime(obj, tStart)
+		function obj = setTrafficStartTime(obj, tStart)
 			% Used to set the starting time for requesting traffic
 			obj.TrafficStartTime = tStart;
 		end
@@ -189,17 +189,15 @@ classdef UserEquipment
 
 			% Find the schedule of this UE in the eNodeB
 			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
-			qsz = obj.Queue.Size
-			numPrb = length(ueScheduleIndexes)
-			if numPrb > 0 && qsz > 0:
+			numPrb = length(ueScheduleIndexes);
+			if numPrb > 0 && obj.Queue.Size > 0
 				% Get the scheduling slots assigned to this UE and the averages
 				ueSchedule = enb.ScheduleDL(ueScheduleIndexes);
 				avMcs = round(sum([ueSchedule.Mcs])/numPrb);
-				avMord = round(sum([ueSchedule.ModOrd])/numPrb);
 
 				% the TB is created of a size that matches the allocation that the 
 				% PDSCH symbols will have on the grid and the rate matching for the CWD
-				[~, mod, ~] = lteMCS(avMCS);
+				[~, mod, ~] = lteMCS(avMcs);
 				enb.Tx.PDSCH.Modulation = mod;
 				enb.Tx.PDSCH.PRBSet = (ueScheduleIndexes - 1).';	
 				[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
@@ -207,23 +205,22 @@ classdef UserEquipment
 				% the redundacy version (RV) is defaulted to 0
 				TbInfo.rv = 0;
 				% Finally, we need to calculate the TB size given the scheduling
-				TbInfo.tbSize = lteTBS(numPRB, avMCS);
+				TbInfo.tbSize = lteTBS(numPRB, avMcs);
 
 				% Encode the SQN and the HARQ process ID into the TB if retransmissions are on
 				% Use the first 13 bits for that. 
 				% The first 3 are the HARQ PID, the other 10 are the SQN.
-				newTb = false;
 				if Config.Harq.active
 					% get the SQN: start by searching whether this is a TB 
 					% that is already being transmitted and is already in the RLC buffer
-					iArqBuf = find([Station.Rlc.ArqTxBuffers.rxId] == USer.NCellID);
-					[Station.Rlc.ArqTxBuffers(iUser), sqnDec] = getNextSqn(Station.Rlc.ArqTxBuffers(iArqBuf));
+					iArqBuf = find([enb.Rlc.ArqTxBuffers.rxId] == USer.NCellID);
+					[enb.Rlc.ArqTxBuffers(iUser), sqnDec] = getNextSqn(enb.Rlc.ArqTxBuffers(iArqBuf));
 					sqnBin = de2bi(sqnDec, 10, 'left-msb')';
 
 					% get the HARQ PID: find the index of the process
-					iHarqProc = find([Station.Mac.HarqTxProcesses.rxId] == User.NCellID);
+					iHarqProc = find([enb.Mac.HarqTxProcesses.rxId] == User.NCellID);
 					% Find pid
-					[Station.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(Station.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
+					[enb.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(enb.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
 					harqPidBin = de2bi(harqPidDec, 3, 'left-msb')';
 	
 					% Create the control bits sequence 
@@ -232,17 +229,17 @@ classdef UserEquipment
 					tb = cat(1, ctrlBits, tbPayload);
 					if newTb
 						% Set TB in the ARQ buffer
-						Station.Rlc.ArqTxBuffers(iArqBuf) = Station.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, timeNow, tb);	
+						enb.Rlc.ArqTxBuffers(iArqBuf) = enb.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, timeNow, tb);	
 
 						% Set TB in the HARQ process
-						Station.Mac.HarqTxProcesses(iHarqProc) = Station.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, timeNow, tb);	
+						enb.Mac.HarqTxProcesses(iHarqProc) = enb.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, timeNow, tb);	
 					end
 				else
 					tb = randi([0 1], TbInfo.tbSize, 1);
 				end
-
-
-
+				% Set the TB and the info in the UE
+				obj.TransportBlock = tb;
+				obj.TransportBlockInfo = TbInfo;
 			else
 				% UE not scheduled or has nothing to send in the transmission queue
 				obj.TransportBlock = [];
@@ -279,8 +276,7 @@ classdef UserEquipment
 
 			% If the UE is not scheduled, reset the metrics for the round
 			if length(ueScheduleIndexes) <= 0
-				obj.Rx = obj.Rx.logNotScheduled()
-				continue;
+				obj.Rx = obj.Rx.logNotScheduled();
 			end
 
 			% Try to demodulate
@@ -303,7 +299,6 @@ classdef UserEquipment
 				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.Rx = obj.Rx.logNotDemodulated();
 				obj.Rx.CQI = 3;
-				continue;
 			end					
 		end
 

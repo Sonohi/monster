@@ -1,4 +1,4 @@
-classdef UESummaryPlot < handle
+classdef UESummaryPlot < matlab.mixin.Copyable
 	properties
 		title = 'UE statistics';
 		position = [100, 100, 1000, 1000];

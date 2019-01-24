@@ -1,6 +1,6 @@
 %   ARQ RX defines a value class for a reordering buffer for ARQ receiver
 
-classdef ArqRx
+classdef ArqRx < matlab.mixin.Copyable
 	properties
 		sqnExpected;
 		sqnReceived;

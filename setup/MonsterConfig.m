@@ -1,4 +1,4 @@
-classdef MonsterConfig < handle
+classdef MonsterConfig < matlab.mixin.Copyable
 	% This class provides a support utility for the simulation configuration
 	% During simulation runtime, the modules access the sim config via an object of this class
 	% An instance of the class MonsterConfig has the following properties:
@@ -22,110 +22,219 @@ classdef MonsterConfig < handle
  	% :Arq: (struct) configuration for the ARQ protocol (e.g activation, etc.)
 
 	properties 
-		% Parameters related to simulation run time
-		Runtime = struct('totalRounds', 1000, 'remainingRounds', 1000, 'currentRound', 0, 'currentTime', 0,...
-			'remainingTime', 1, 'realTimeElaspsed', 0, 'realTimeRemaining', 1000,...
-			'reInstall', 0, 'seed', 126);
-		
-		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
-			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName', '');
-
-		% Properties related to drawing and plotting
-		SimulationPlot = struct('runtimePlot', 0, 'generateCoverageMap', 0, 'generateHeatMap', 0, ...
-			'heatMapType', 'perStation', 'heatMapRes', 10);
-
-		% Properties related to the configuration of eNodeBs
-		MacroEnb = struct('number', 1, 'subframes', 50, 'height', 35, 'positioning', 'centre',...
-			'noiseFigure', 7, 'antennaGain', 0);
-		MicroEnb = struct('number', 1, 'subframes', 25, 'height', 25, 'positioning', 'hexagonal',...
-			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
-		PicoEnb = struct('number', 1, 'subframes', 6, 'height', 5, 'positioning', 'uniform', ...
-			'radius', 200, 'noiseFigure', 7, 'antennaGain', 0);
-
-		% Properties related to the configuration of UEs
-		Ue = struct('number', 1, 'subframes', 25, 'height', 1.5, 'noiseFigure', 7, 'antennaGain', 0);
-
-		% Properties related to mobility
-		Mobility = struct('scenario', 'pedestrian', 'step', 0.01, 'seed', 19);
-
-		% Properties related to handover
-		Handover = struct('x2Timer', 0.01);
-
-		% Properties related to terrain and scenario 
-		Terrain = struct('buildingsFile', 'mobility/buildings.txt', 'heightRange', [20,50], ...
-			'buildings', [],'area', []);
-
-		% Properties related to the traffic
-		Traffic = struct('primary', 'webBrowsing', 'secondary', 'videoStreaming', 'mix', 0.5,... 
-			'arrivalDistribution', 'Poisson', 'poissonLambda', 5, 'uniformRange', [6, 10], 'static', 0 ); 
-
-		% Properties related to the physical layer
-		Phy = struct('uplinkFrequency', 1747.5, 'downlinkFrequency', 1842.5,...
-			'pucchFormat', 2, 'prachInterval', 10, 'prbSymbols', 160, 'prbResourceElements', 168, ...
-			'maxTbSize', 97896, 'maxCwdSize', 10e5, 'mcsTable', [0,1,3,4,6,7,9,11,13,15,20,21,22,24,26,28]',
-			'modOrdTable', [2,2,2,2,2,2,4,4,4,6,6,6,6,6,6]);
-
-		% Properties related to the channel
-		Channel = struct('uplinkMode', 'B2B', 'downlinkMode', '3GPP38901', 'fadingActive', true,...
-			'interferenceActive', true, 'shadowingActive', true, 'losMethod', '3GPP38901-probability', ...
-			'region', struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi'));
-
-		% Properties related to scheduling
-		Scheduling = struct('type', 'roundRobin', 'refreshAssociationTimer', 0.01, 'icScheme', 'none', ...
-			'absMask', [1,0,1,0,0,0,0,0,0,0]);
-
-		% Properties related to SON and power saving
-		Son = struct('neighbourRadius', 100, 'hysteresisTimer', 0.001, 'switchTimer', 0.001, ...
-			'utilisationRange', [1,100], 'utilLow', 1, 'utilHigh', 100, 'powerScale', 1);
-
-		% Properties related to HARQ
-		Harq = struct('active', true, 'maxRetransmissions', 3, 'redundacyVersion', [1, 3, 2], ...
-			'processes', 8, 'timeout', 3);
-
-		% Properties related to ARQ
-		Arq = struct('active', true, 'maxRetransmissions', 1, 'maxBufferSize', 1024, 'timeout', 20);
-
-		% Properties related to plotting
-		Plot = struct('Layout', '','LayoutFigure','','LayoutAxes', axes, 'PHYFigure', '', 'PHYAxes', axes);
-
+		Runtime = struct();
+		Logs = struct();
+		SimulationPlot = struct();
+		MacroEnb = struct();
+		MicroEnb = struct();
+		PicoEnb = struct();
+		Ue = struct();
+		Mobility = struct();
+		Handover = struct();
+		Terrain = struct();
+		Traffic = struct();
+		Phy = struct();
+		Channel = struct();
+		Scheduling = struct();
+		Son = struct();
+		Harq = struct();
+		Arq = struct();
+		Plot = struct();
 	end
 
 	methods
 		function obj = MonsterConfig()
-			% MonsterConfig constructor sets some additional runtime parameters
+			% MonsterConfig constructor sets the simulation configuration
 			% 
+			% MonsterConfig instance
+			%
 
-			% Runtime
-			obj.Runtime.remainingTime = obj.Runtime.totalRounds*10e-3;
-			
-			% Logs
-			dateStr = datestr(datetime, obj.Logs.dateFormat);
-			obj.Logs.defaultLogName = strcat(obj.Logs.logPath, dateStr);
+			% Parameters related to simulation run time
+			Runtime = struct();
+			Runtime.totalRounds = 1000;
+			Runtime.remainingRounds = 1000;
+			Runtime.currentRound = 0;
+			Runtime.currentTime = 0;
+			Runtime.remainingTime = Runtime.totalRounds*10e-3;
+			Runtime.realTimeElaspsed = 0;
+			Runtime.realTimeRemaining = 1000;
+			Runtime.seed = 126;
+			obj.Runtime = Runtime;
+
+			% Logs configuration
+			Logs = struct();
+			Logs.logToFile = 0;
+			Logs.dateFormat = 'yyyy-mm-dd_HH.MM.SS';
+			Logs.logLevel = 'NFO';
+			Logs.logPath = 'logs/';
+			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			obj.Logs = Logs;
+
+			% Properties related to drawing and plotting
+			SimulationPlot = struct();
+			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.generateCoverageMap = 0;
+			SimulationPlot.generateHeatMap = 0;
+			SimulationPlot.heatMapType = 'perStation';
+			SimulationPlot.heatMapRes = 10;
+			obj.SimulationPlot = SimulationPlot;
+
+			% Properties related to the configuration of eNodeBs
+			MacroEnb = struct();
+			MacroEnb.number = 1;
+			MacroEnb.subframes = 50;
+			MacroEnb.height = 35;
+			MacroEnb.positioning = 'centre';
+			MacroEnb.radius = 250;
+			MacroEnb.noiseFigure = 7;
+			MacroEnb.antennaGain = 0;
+			obj.MacroEnb = MacroEnb;
+
+			MicroEnb = struct();
+			MicroEnb.number = 1;
+			MicroEnb.subframes = 25;
+			MicroEnb.height = 25;
+			MicroEnb.positioning = 'hexagonal';
+			MicroEnb.radius = 200;
+			MicroEnb.noiseFigure = 7;
+			MicroEnb.antennaGain = 0;
+			obj.MicroEnb = MicroEnb;
+
+			PicoEnb = struct();
+			PicoEnb.number = 1;
+			PicoEnb.subframes = 6;
+			PicoEnb.height = 5;
+			PicoEnb.positioning = 'uniform';
+			PicoEnb.radius = 200;
+			PicoEnb.noiseFigure = 7;
+			PicoEnb.antennaGain = 0;
+			obj.PicoEnb = PicoEnb;
+
+			% Properties related to the configuration of UEs
+			Ue = struct();
+			Ue.number = 1;
+			Ue.subframes = 25;
+			Ue.height = 1.5;
+			Ue.noiseFigure = 7;
+			Ue.antennaGain = 0;
+			obj.Ue = Ue;
+
+			% Properties related to mobility
+			Mobility = struct();
+			Mobility.scenario = 'pedestrian';
+			Mobility.step = 0.01;
+			Mobility.seed = 19;
+			obj.Mobility = Mobility;
+
+			% Properties related to handover
+			Handover = struct();
+			Handover.x2Timer = 0.01;
+			obj.Handover = Handover;
+
+			% Properties related to terrain and scenario 
+			Terrain = struct();
+			Terrain.buildingsFile = 'mobility/buildings.txt';
+			Terrain.heightRange = [20,50];
+			Terrain.buildings = load(Terrain.buildingsFile);
+			Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
+			Terrain.area = [...
+				min(Terrain.buildings(:, 1)), ...
+				min(Terrain.buildings(:, 2)), ...
+				max(Terrain.buildings(:, 3)), ...
+				max(Terrain.buildings(:, 4))];
+			obj.Terrain = Terrain;
+
+			% Properties related to the traffic
+			Traffic = struct();
+			Traffic.primary = 'webBrowsing';
+			Traffic.secondary = 'videoStreaming';
+			Traffic.mix = 0.5;
+			Traffic.arrivalDistribution = 'Poisson';
+			Traffic.poissonLambda = 5;
+			Traffic.uniformRange = [6, 10];
+			Traffic.static = 0; 
+			obj.Traffic = Traffic;
+
+			% Properties related to the physical layer
+			Phy = struct();
+			Phy.uplinkFrequency = 1747.5;
+			Phy.downlinkFrequency = 1842.5;
+			Phy.pucchFormat = 2;
+			Phy.prachInterval = 10;
+			Phy.prbSymbols = 160;
+			Phy.prbResourceElements = 168;
+			Phy.maxTbSize = 97896;
+			Phy.maxCwdSize = 10e5;
+			Phy.mcsTable = [0,1,3,4,6,7,9,11,13,15,20,21,22,24,26,28]';
+			Phy.modOrdTable = [2,2,2,2,2,2,4,4,4,6,6,6,6,6,6];
+			obj.Phy = Phy;
+
+			% Properties related to the channel
+			Channel = struct();
+			Channel.uplinkMode = 'B2B';
+			Channel.downlinkMode = '3GPP38901';
+			Channel.fadingActive = true;
+			Channel.interferenceActive = true;
+			Channel.shadowingActive = true;
+			Channel.losMethod = '3GPP38901-probability';
+			Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
+			obj.Channel = Channel;
+
+			% Properties related to scheduling
+			Scheduling = struct();
+			Scheduling.type = 'roundRobin';
+			Scheduling.refreshAssociationTimer = 0.01;
+			Scheduling.icScheme = 'none';
+			Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
+			obj.Scheduling = Scheduling;
+
+			% Properties related to SON and power saving
+			Son = struct();
+			Son.neighbourRadius = 100;
+			Son.hysteresisTimer = 0.001;
+			Son.switchTimer = 0.001;
+			Son.utilisationRange = 1:100;
+			Son.utilLow = Son.utilisationRange(1);
+			Son.utilHigh = Son.utilisationRange(end);
+			Son.powerScale = 1;
+			obj.Son = Son;
+
+			% Properties related to HARQ
+			Harq = struct();
+			Harq.active = true;
+			Harq.maxRetransmissions = 3;
+			Harq.redundacyVersion = [1, 3, 2];
+			Harq.processes = 8;
+			Harq.timeout = 3;
+			obj.Harq = Harq;
+
+			% Properties related to ARQ
+			Arq = struct();
+			Arq.active = true;
+			Arq.maxRetransmissions = 1;
+			Arq.maxBufferSize = 1024;
+			Arq.timeout = 20;
+			obj.Arq = Arq;
+
+			% Properties related to plotting
+			Plot = struct();
+			Plot.Layout = '';
+			Plot.LayoutFigure = '';
+			Plot.LayoutAxes = axes;
+			Plot.PHYFigure = '';
+			Plot.PHYAxes = axes;
+			obj.Plot = Plot;
 
 			% Check the number of macros and throw an error if set to an unsupported number
 			assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-
-			% Terrain
-			obj.Terrain.buildings = load(obj.Terrain.buildingsFile);
-			obj.Terrain.buildings(:,5) = randi([obj.Terrain.heightRange],[1 length(obj.Terrain.buildings(:,1))]);
-			obj.Terrain.area = [...
-				min(obj.Terrain.buildings(:, 1)), ...
-				min(obj.Terrain.buildings(:, 2)), ...
-				max(obj.Terrain.buildings(:, 3)), ...
-				max(obj.Terrain.buildings(:, 4))];
-			
-			% Traffic
+			% Check traffic configuration
 			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
-
-			% SON
-			obj.Son.utilLow = obj.Son.utilisationRange(1);
-			obj.Son.utilHigh = obj.Son.utilisationRange;			
 
 			% Plot
 			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
 			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
 			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
-			if obj.SimulationPlot.runtimePlot
+			if SimulationPlot.runtimePlot
 				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end

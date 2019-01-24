@@ -16,10 +16,6 @@ clearvars;
 clc;
 close all;
 
-% Install directories structure
-monsterLog('(SETUP) installing folder structure', 'NFO');
-install(1);
-
 % Create a simulation config object
 monsterLog('(SETUP) generating simulation configuration', 'NFO');
 Config = MonsterConfig();
@@ -46,6 +42,6 @@ monsterLog('(SETUP) setting up simulation traffic', 'NFO');
 
 % Setup results
 monsterLog('(SETUP) setting up simulation metrics recorder', 'NFO');
-Results = setupResults(Config)
+Results = setupResults(Config);
 	
 end

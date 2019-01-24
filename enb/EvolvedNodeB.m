@@ -1,4 +1,4 @@
-classdef EvolvedNodeB
+classdef EvolvedNodeB < matlab.mixin.Copyable
 	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties
 		NCellID;
@@ -88,7 +88,7 @@ classdef EvolvedNodeB
 			obj.DlFreq = Config.Phy.downlinkFrequency;
 			if Config.Harq.active
 				obj.Mac = struct('HarqTxProcesses', HarqTx(0, cellId, 1:Config.Ue.number, Config));
-				obj.Rlc = struct('ArqTxBuffers', ArqTx(cellId, 1:Config.Ue.number);
+				obj.Rlc = struct('ArqTxBuffers', ArqTx(cellId, 1:Config.Ue.number));
 			end
 			obj.Tx = enbTransmitterModule(obj, Config);
 			obj.Rx = enbReceiverModule(obj, Config);
@@ -97,16 +97,16 @@ classdef EvolvedNodeB
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
-    end
+		end
 		
-    function TxPw = getTransmissionPower(obj)
-      % TODO: Move this to TransmitterModule?
-      % Function computes transmission power based on NDLRB
-      % Return power per subcarrier. (OFDM symbol)
-      total_power = obj.Pmax;
-      TxPw = total_power/(12*obj.NDLRB);
-    end
-    
+		function TxPw = getTransmissionPower(obj)
+			% TODO: Move this to TransmitterModule?
+			% Function computes transmission power based on NDLRB
+			% Return power per subcarrier. (OFDM symbol)
+			total_power = obj.Pmax;
+			TxPw = total_power/(12*obj.NDLRB);
+		end
+		
 		% Position eNodeB
 		function obj = setPosition(obj, pos)
 			obj.Position = pos;
@@ -167,12 +167,12 @@ classdef EvolvedNodeB
 		
 		function obj = evaluatePowerState(obj, Config, Stations)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
-			% 
+			%
 			% :obj: EvolvedNodeB instance
 			% :Config: MonsterConfig instance
 			% :Stations: Array<EvolvedNodeB> instances in case neighbours are needed
-			% 
-
+			%
+			
 			% overload
 			if obj.Utilisation > Config.Son.utilHigh && Config.Son.utilHigh ~= 100
 				obj.PowerState = 2;
@@ -201,7 +201,7 @@ classdef EvolvedNodeB
 					end
 				end
 				
-			% underload, shutdown, inactive or boot
+				% underload, shutdown, inactive or boot
 			elseif obj.Utilisation < Config.Son.utilLow && Config.Son.utilLow ~= 1
 				switch obj.PowerState
 					case 1
@@ -234,7 +234,7 @@ classdef EvolvedNodeB
 						end
 				end
 				
-			% normal operative range
+				% normal operative range
 			else
 				obj.PowerState = 1;
 				obj.HystCount = 0;
@@ -307,7 +307,7 @@ classdef EvolvedNodeB
 				obj.ScheduleUL = scheduledUEs;
 			end
 		end
-
+		
 		% used to calculate the power in based on the BS class
 		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
 			% The output power over the air depends on the utilisation, if energy saving is enabled
@@ -316,12 +316,12 @@ classdef EvolvedNodeB
 			else
 				Pout = obj.Pmax;
 			end
-
+			
 			% Now check power state of the eNodeB
 			if obj.PowerState == 1 || obj.PowerState == 2 || obj.PowerState == 3
 				% active, overload and underload state
 				obj.PowerIn = obj.CellRefP*obj.P0 + obj.DeltaP*Pout;
-			else 
+			else
 				% shutodwn, inactive and boot
 				obj.PowerIn = obj.Psleep;
 			end
@@ -343,34 +343,34 @@ classdef EvolvedNodeB
 			obj.Rx = obj.Rx.reset();
 			
 		end
-
+		
 		function obj = evaluateScheduling(obj, Users)
 			% evaluateScheduling sets the ShouldSchedule flag depending on attached UEs and their queues
-			% 
+			%
 			% :obj: EvolvedNodeB instance
 			% :Users: Array<UserEquipment> instances
-			% 
-
+			%
+			
 			schFlag = false;
-			if ~isempty(find([obj.Users.UeId] ~= -1)) 
+			if ~isempty(find([obj.Users.UeId] ~= -1, 1))
 				% There are users connected, filter them from the Users list and check the queue
-				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));			
+				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
 				if any([enbUsers.Queue.Size])
 					% Now check the power status of the eNodeB
-					if ~isempty(find([1, 2, 3] == obj.PowerState))
+					if ~isempty(find([1, 2, 3] == obj.PowerState, 1))
 						% Normal, underload and overload => the eNodeB can schedule
-						schFlag = true; 
-					elseif ~isempty(find([4, 6] == obj.PowerState))
+						schFlag = true;
+					elseif ~isempty(find([4, 6] == obj.PowerState, 1))
 						% The eNodeB is shutting down or booting up => the eNodeB cannot schedule
 						schFlag = false;
 					elseif enb.PowerState == 5
-						% The eNodeB is inactive, but should be restarted 
+						% The eNodeB is inactive, but should be restarted
 						obj.PowerState = 6;
 						obj.SwitchCount = 0;
 					end
 				end
 			end
-
+			
 			% Finally, assign the result of the scheduling check to the object property
 			obj.ShouldSchedule = schFlag;
 		end
@@ -381,7 +381,7 @@ classdef EvolvedNodeB
 			% :obj: EvolvedNodeB instance
 			% :Users: Array<UserEquipment> instances
 			% :Config: MonsterConfig instance
-
+			
 			if obj.ShouldSchedule
 				[obj, Users] = schedule(obj, Users, Config)
 				% Check utilisation
@@ -391,93 +391,94 @@ classdef EvolvedNodeB
 				if isempty(obj.Utilisation)
 					obj.Utilisation = 0;
 				end
-			else	
+			else
 				obj.Utilisation = 0;
-			end				
+			end
 		end
 		
 		function obj = uplinkReception(obj, Users, timeNow, ChannelEstimator)
 			% uplinkReception performs uplink demodulation and decoding
-			% 
+			%
 			% :obj: EvolvedNodeB instance
 			% :Users: Array<UserEquipment> UEs instances
 			% :timeNow: Float current simulation time in seconds
 			% :ChannelEstimator: Struct Channel.Estimator property
-			% 
-
+			%
+			
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
 				monsterLog(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
-				continue;
+			else
+				% TODO revise upon merging with uplink_ch branch
+				
+				% IDs of users and their position in the Users struct correspond
+				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
+				scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
+				enbUsers = Users(scheduledUEsIds);
+				
+				% Parse received waveform
+				obj.Rx = obj.Rx.parseWaveform(obj);
+				
+				% Demodulate received waveforms
+				enb.Rx = obj.Rx.demodulateWaveforms(enbUsers);
+				
+				% Estimate Channel
+				obj.Rx = obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
+				
+				% Equalise
+				obj.Rx = obj.Rx.equaliseSubframes(enbUsers);
+				
+				% Estimate PUCCH (Main UL control channel) for UEs
+				obj.Rx = obj.Rx.estimatePucch(obj, enbUsers, timeNow);
+				
+				% Estimate PUSCH (Main UL control channel) for UEs
+				obj.Rx = obj.Rx.estimatePusch(obj, enbUsers, timeNow);
 			end
-
-			% TODO revise upon merging with uplink_ch branch
-
-			% IDs of users and their position in the Users struct correspond
-			scheduledUEsIndexes = find([obj.ScheduleUL] ~= -1);
-			scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
-			enbUsers = Users(scheduledUEsIds);
 			
-			% Parse received waveform
-			obj.Rx = obj.Rx.parseWaveform(obj);
 			
-			% Demodulate received waveforms
-			enb.Rx = obj.Rx.demodulateWaveforms(enbUsers);
-			
-			% Estimate Channel
-			obj.Rx = obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
-			
-			% Equalise
-			obj.Rx = obj.Rx.equaliseSubframes(enbUsers);
-			
-			% Estimate PUCCH (Main UL control channel) for UEs
-			obj.Rx = obj.Rx.estimatePucch(obj, enbUsers, timeNow);
-			
-			% Estimate PUSCH (Main UL control channel) for UEs
-			obj.Rx = obj.Rx.estimatePusch(obj, enbUsers, timeNow);		
 		end
-
+		
 		function obj = uplinkDataDecoding(obj, Users, Config)
 			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
-			% 
+			%
 			% :obj: EvolvedNodeB instance
 			% :Users: Array<UserEquipment> UEs instances
 			% :Config: MonsterConfig instance
 			%
 			
 			% TODO revise upon merging with uplink_ch branch
-
+			
 			% Filter UEs linked to this eNodeB
 			timeNow = Config.Runtime.currentTime;
 			ueGroup = find([Users.ENodeBID] == enb.NCellID);
 			enbUsers = Users(ueGroup);
-
+			
 			for iUser = 1:length(obj.Rx.UeData)
 				% If empty, no uplink UE data has been received in this round and skip
 				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
-					cqiBits = obj.Rx.UeData(iUser).PUCCH)(12:16,1);
+					cqiBits = obj.Rx.UeData(iUser).PUCCH(12:16,1);
 					cqi = bi2de(cqiBits', 'left-msb');
 					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
 					if ~isempty(ueEnodeBIx)
 						obj.Users(ueEnodeBIx).CQI = cqi;
 					end
-
+					
 					if Config.Harq.active
 						% Decode HARQ feedback
 						[harqPid, harqAck] = obj.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(obj.Rx.UeData(iUser).PUCCH);
-
+						
 						if ~isempty(harqPid)
 							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config);
-
+							
 							% Contact ARQ based on the feedback
 							if Config.Arq.active && ~isempty(sqn)
 								arqIndex = find([obj.Rlc.ArqTxBuffers.rxId] == obj.Rx.UeData(iUser).UeId);
-
+								
 								if state == 0
-									% The process has been acknowledged 
+									% The process has been acknowledged
 									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Config);
 								elseif state == 4
-									% The process has failed 
+									% The process has failed
 									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Config);
 								else
 									% No action to be taken by ARQ
@@ -488,6 +489,6 @@ classdef EvolvedNodeB
 				end
 			end
 		end
-
+		
 	end
 end

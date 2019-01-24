@@ -1,4 +1,4 @@
-classdef ENBsummaryPlot < handle
+classdef ENBsummaryPlot < matlab.mixin.Copyable
 	properties
 		title = 'eNB statistics';
 		position = [100, 100, 1000, 1000];

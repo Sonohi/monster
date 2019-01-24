@@ -1,4 +1,4 @@
-classdef Monster < handle
+classdef Monster < matlab.mixin.Copyable
 	% This class provides the main logic for a simulation
 	% An instance of the class Monster has the following properties
 	% 
@@ -120,7 +120,7 @@ classdef Monster < handle
 			%
 
 			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
-			arrayfun(@(x, y)x.reset(y), obj.Stations, obj.Config.Runtime.currentRound + 1);
+			arrayfun(@(x)x.reset(obj.Config.Runtime.currentRound + 1), obj.Stations);
 
 			monsterLog('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
 			arrayfun(@(x)x.reset(), obj.Users);		
@@ -133,9 +133,9 @@ classdef Monster < handle
 		function obj = moveUsers(obj)
 			% moveUsers performs UE movements at the beginning of each round
 			%
-			% :obj: Monster instance
+			% :obj: Monster instanceo
 
-			arrayfun(@(x, y)x.move(y), obj.Users, obj.Config.Runtime.currentRound);
+			arrayfun(@(x)x.move(obj.Config.Runtime.currentRound), obj.Users);
 		end
 
 		function obj = associateUsers(obj)
@@ -168,13 +168,14 @@ classdef Monster < handle
 			%
 			
 			% Set the ShouldSchedule flag for all the eNodeBs 
-			arrayfun(@(x, y)x.evaluateScheduling(y), obj.Stations, obj.Users);
+			arrayfun(@(x)x.evaluateScheduling(obj.Users), obj.Stations);
 
 			% Now call the schedule method on the eNodeBs
-			arrayfun(@(x, y, z)x.downlinkSchedule(y, z), obj.Stations, obj.Users, obj.Config);
+			arrayfun(@(x)x.downlinkSchedule(obj.Users, obj.Config), obj.Stations);
 
 			% Finally, evaluate the power state for the eNodeBs
-			arrayfun(@(x, y, z)x.evaluatePowerState(y, z), obj.Stations, obj.Config, obj.Stations)
+			% TODO revise for multiple macro eNodeBs
+			% arrayfun(@(x)x.evaluatePowerState(obj.Config, obj.Stations), obj.Stations)
 		end
 
 		function obj = setupEnbTransmitters(obj)
@@ -184,13 +185,13 @@ classdef Monster < handle
 			%
 			
 			% Create the transport blocks for all the UEs
-			arrayfun(@(x, y, z)x.generateTransportBlock(y, z), obj.Users, obj.Stations, Config);
+			arrayfun(@(x)x.generateTransportBlock(obj.Stations, obj.Config), obj.Users);
 
 			% Create the codewords for all the UEs
 			arrayfun(@(x)x.generateCodeword(), obj.Users);
 
 			% Create the symbols for all the UEs' codewords at the eNodeBs
-			arrayfun(@(x, y)x.generateSymbols(y), obj.Stations, obj.Users);
+			arrayfun(@(x)x.generateSymbols(obj.Users), obj.Stations);
 
 			% Finally modulate the waveform for all the eNodeBs
 			arrayfun(@(x)x.modulateTxWaveform(), obj.Stations);
@@ -213,7 +214,7 @@ classdef Monster < handle
 			% :obj: Monster instance
 			%
 			
-			arrayfun(@(x, y, z)x.downlinkReception(y, z), obj.Users, obj.Stations, obj.Channel.Estimator);
+			arrayfun(@(x)x.downlinkReception(obj.Stations, obj.Channel.Estimator), obj.Users);
 
 		end
 
@@ -223,7 +224,7 @@ classdef Monster < handle
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x, y, z)x.downlinkDataDecoding(y, z), obj.Users, obj.Stations, obj.Config)
+			arrayfun(@(x)x.downlinkDataDecoding(obj.Config), obj.Users)
 		end
 
 		function obj = setupUeTransmitters(obj)
@@ -253,7 +254,7 @@ classdef Monster < handle
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x, y, z, k)x.uplinkReception(y,z,k), obj.Stations, obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator);			
+			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), obj.Stations);			
 		
 		end 
 
@@ -263,12 +264,8 @@ classdef Monster < handle
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x,y,z)x.uplinkDataDecoding(y,z), obj.Stations, obj.Users, obj.Config);
+			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), obj.Stations);
 		
 		end
-
-
-
-
 	end
 end

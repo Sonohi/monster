@@ -1,8 +1,8 @@
 % Main entry point for MONSTER
 
-% Add log and setup folder to path
-addpath('logs');
-addpath('setup');
+% Disable cast to struct warnings
+w = warning ('off','all');
+
 monsterLog('(MAIN) initialising simulation', 'NFO');
 
 % Run setup function and get a configuration object

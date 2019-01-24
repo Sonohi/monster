@@ -17,11 +17,11 @@ function Stations = setupStations (Config)
 
 	% Setup micro
 	monsterLog('(SETUP - setupStations) setting up micro eNodeBs', 'NFO');
-	rangeA = Config.MacroEnb.number + 1
+	rangeA = Config.MacroEnb.number + 1;
 	rangeB = Config.MicroEnb.number + Config.MacroEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'micro', rangeA:rangeB);
 	Stations(rangeA:rangeB).Position = [...
-		Config.Plot.Layout.Cells{1}.MicroPos(rangeA:rangeB,:), Config.MicroEnb.height];
+		Config.Plot.Layout.Cells{1}.MicroPos(1:Config.MicroEnb.number,:), Config.MicroEnb.height];
 
 	% Setup pico
 	monsterLog('(SETUP - setupStations) creating pico', 'NFO');
@@ -29,10 +29,11 @@ function Stations = setupStations (Config)
 	rangeB = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'pico', rangeA:rangeB);
 	Stations(rangeA:rangeB).Position = [...
-		Config.Plot.Layout.Cells{1}.PicoPos(rangeA:rangeB,:), Config.PicoEnb.height];
+		Config.Plot.Layout.Cells{1}.PicoPos(1:Config.PicoEnb.number,:), Config.PicoEnb.height];
 
 	% Setup neighbour relationships
-	monsterLog('(SETUP - setupStations) setting up eNodeBs neighbours', 'NFO');
-	arrayfun(@(x, y, z)x.setNeighbours(y, z), Stations, Stations, Config);
+	% TODO revise with multiple macro base stations
+	% monsterLog('(SETUP - setupStations) setting up eNodeBs neighbours', 'NFO');
+	% arrayfun(@(x)x.setNeighbours(Stations, Config), Stations);
 end
 	

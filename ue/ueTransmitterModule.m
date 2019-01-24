@@ -1,4 +1,4 @@
-classdef ueTransmitterModule
+classdef ueTransmitterModule < matlab.mixin.Copyable
 	properties
 		PRACH;
 		PRACHInfo;

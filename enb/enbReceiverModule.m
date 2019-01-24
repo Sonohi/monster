@@ -1,4 +1,4 @@
-classdef enbReceiverModule
+classdef enbReceiverModule < matlab.mixin.Copyable
 	properties
 		NoiseFigure;
 		Waveform;

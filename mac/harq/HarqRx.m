@@ -3,7 +3,7 @@
 % 	it assumes value 0 for a default state that corresponds to an unused or successful process
 % 	and value 1 for a process awaiting retransmission copies
 
-classdef HarqRx
+classdef HarqRx < matlab.mixin.Copyable
 	properties
 		bitsSize;
 		tbSize;

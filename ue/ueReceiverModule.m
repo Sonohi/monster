@@ -1,4 +1,4 @@
-classdef ueReceiverModule
+classdef ueReceiverModule < matlab.mixin.Copyable
 	properties
 		NoiseFigure;
 		EstChannelGrid;

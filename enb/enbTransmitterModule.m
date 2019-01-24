@@ -1,4 +1,4 @@
-classdef enbTransmitterModule
+classdef enbTransmitterModule < matlab.mixin.Copyable
   properties
     Waveform;
     WaveformInfo;

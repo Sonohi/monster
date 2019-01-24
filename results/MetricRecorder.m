@@ -1,4 +1,4 @@
-classdef MetricRecorder
+classdef MetricRecorder < matlab.mixin.Copyable
 	% This is class is used for defining and recording statistics in the network
 	properties
 		infoUtilLo;
