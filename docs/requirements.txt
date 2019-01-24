@@ -13,12 +13,12 @@ packaging==17.1
 Pygments==2.2.0
 pyparsing==2.2.0
 pytz==2018.4
-requests==2.18.4
+requests==2.20.0
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==1.7.2
 sphinx-rtd-theme==0.3.0
 sphinxcontrib-matlabdomain==0.3.0
 sphinxcontrib-websupport==1.0.1
-urllib3==1.22
+urllib3==1.23
 wincertstore==0.2

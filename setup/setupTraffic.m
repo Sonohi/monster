@@ -33,9 +33,8 @@ function [Traffic, Users] = setupTraffic (Users, Config)
 	
 	% Assign a start time for the traffic to each UE based on the traffic generator
 	for iUser = 1: length(Users)
-		index = trafficGenAllocation(iUser);
 		Users(iUser).Traffic.generatorId = trafficGenAllocation(iUser);
-		Users(iUser).Traffic.startTime = Traffic(trafficGenAllocation(iUser)).getStartingTime(Users(iUser).NCellID)
+		Users(iUser).Traffic.startTime = Traffic(trafficGenAllocation(iUser)).getStartingTime(Users(iUser).NCellID);
 	end
 	
 end

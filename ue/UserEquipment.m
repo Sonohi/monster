@@ -71,7 +71,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Codeword = [];
 			obj.TransportBlock = [];
 			obj.TransportBlockInfo = [];
-			if Config.Harq.Active
+			if Config.Harq.active
 				obj.Mac = struct('HarqRxProcesses', HarqRx(0, Config), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
 			end
 			if Config.Arq.active 
@@ -302,11 +302,10 @@ classdef UserEquipment < matlab.mixin.Copyable
 			end					
 		end
 
-		function obj = downlinkDataDecoding(obj, Stations, Config)
+		function obj = downlinkDataDecoding(obj, Config)
 			% downlinkDataDecoding performs the decoding of the demodulated waveform
 			% 
 			% :obj: UserEquipment instance
-			% :Stations: Array<EvolvedNodeB> instances
 			% :Config: MonsterConfig instance
 			%
 

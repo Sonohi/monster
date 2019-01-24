@@ -19,11 +19,11 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 	
 	methods
 		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Config, id)
-			obj.id = id;
+			obj.Id = id;
 			obj.TrafficType = trafficModel;
 			switch trafficModel
 				case 'videoStreaming'
-					if (exist('traffic/videoStreaming.mat', 'file') ~= 2 || Config.Runtime.reInstall)
+					if exist('traffic/videoStreaming.mat', 'file') ~= 2
 						obj.TrafficSource = loadVideoStreamingTraffic('traffic/videoStreaming.csv', true);
 					else
 						traffic = load('traffic/videoStreaming.mat');
@@ -31,7 +31,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 						clear traffic
 					end
 				case 'webBrowsing'
-					if (exist('traffic/webBrowsing.mat', 'file') ~= 2 || Config.Runtime.reInstall)
+					if exist('traffic/webBrowsing.mat', 'file') ~= 2
 						obj.TrafficSource = loadWebBrowsingTraffic('traffic/webBrowsing.csv');
 					else
 						traffic = load('traffic/webBrowsing.mat');
@@ -39,7 +39,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 						clear traffic
 					end
 				case 'fullBuffer'
-					if (exist('traffic/fullBuffer.mat', 'file') ~= 2 || Config.Runtime.reInstall)
+					if exist('traffic/fullBuffer.mat', 'file') ~= 2
 						obj.TrafficSource = loadFullBufferTraffic('traffic/fullBuffer.csv');
 					else
 						traffic = load('traffic/fullBuffer.mat');
@@ -58,8 +58,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			% Set arrival times is used to set the starting times for the associated UEs
 			%
 			% :Config.Traffic.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
-			% :Config.Traffic.uniformRange: range of the Uniform process, used if the arrival process is Uniform
-]			% :Config.Traffic.static: static start time if the arrival process is static
+			% :Config.Traffic.uniformRange: range of the Uniform process, used if the arrival process is Uniform			% :Config.Traffic.static: static start time if the arrival process is static
 			rng(Config.Runtime.seed);
 			switch obj.ArrivalMode
 				case 'Poisson'

@@ -24,7 +24,7 @@ function Stations = setupStations (Config)
 		Config.Plot.Layout.Cells{1}.MicroPos(1:Config.MicroEnb.number,:), Config.MicroEnb.height];
 
 	% Setup pico
-	monsterLog('(SETUP - setupStations) creating pico', 'NFO');
+	monsterLog('(SETUP - setupStations) setting up pico eNodeBs', 'NFO');
 	rangeA = Config.MacroEnb.number + Config.MicroEnb.number + 1;
 	rangeB = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
 	Stations(rangeA:rangeB) = EvolvedNodeB(Config, 'pico', rangeA:rangeB);

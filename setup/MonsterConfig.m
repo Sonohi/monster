@@ -72,7 +72,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.runtimePlot = 1;
 			SimulationPlot.generateCoverageMap = 0;
 			SimulationPlot.generateHeatMap = 0;
 			SimulationPlot.heatMapType = 'perStation';

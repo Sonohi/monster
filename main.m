@@ -20,8 +20,8 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 	Simulation.setupRound(iRound);
 
 	monsterLog(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
-		Simulation.Config.Runtime.currentRound, obj.Config.Runtime.currentTime, ...
-		obj.Config.Runtime.remainingTime ), 'NFO');	
+		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
+		Simulation.Config.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
 

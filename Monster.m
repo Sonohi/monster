@@ -156,7 +156,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			for iUser = 1: obj.Config.Ue.number
-				UeTrafficGenerator = find([obj.Traffic.id] == obj.Users(iUser).Traffic.generatorId);
+				UeTrafficGenerator = find([obj.Traffic.Id] == obj.Users(iUser).Traffic.generatorId);
 				obj.Users(iUser).Queue = UeTrafficGenerator.updateTransmissionQueue(obj.Users(iUser), obj.Config.Runtime.currentTime);
 			end
 		end
