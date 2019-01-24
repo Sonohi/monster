@@ -124,6 +124,39 @@ classdef NetworkLayout < handle
 				
 				
 			end
+
+			function drawUes(obj, Users, Config)
+				% drawUes plots the Users in the plot layout
+				%
+				% :obj: NetworkLayout instance
+				%	:Users: Array<UserEquipment> instances
+				% :Config: MonsterConfig instance
+				%
+
+				for iUser = 1:length(Users)
+					x0 = Users(iUser).Position(1);
+					y0 = Users(iUser).Position(2);
+
+					% UE in initial position
+					plot(Config.Plot.LayoutAxes,x0, y0, ...
+						'Marker', Users(iUser).PlotStyle.marker, ...
+						'MarkerFaceColor', Users(iUser).PlotStyle.colour, ...
+						'MarkerEdgeColor', Users(iUser).PlotStyle.edgeColour, ...
+						'MarkerSize',  Users(iUser).PlotStyle.markerSize, ...
+						'DisplayName', strcat('UE ', num2str(Users(iUser).NCellID)));
+
+					% Trajectory
+					plot(Config.Plot.LayoutAxes,Users(iUser).Mobility.Trajectory(:,1), Users(iUser).Mobility.Trajectory(:,2), ...
+						'Color', Users(iUser).PlotStyle.colour, ...
+						'LineStyle', '--', ...
+						'LineWidth', Users(iUser).PlotStyle.lineWidth,...
+						'DisplayName', strcat('UE ', num2str(Users(iUser).NCellID), ' trajectory'));
+					drawnow()
+				end
+
+				% Toggle the legend
+				legend('Location','northeastoutside')
+			end
 		end
 	end
 	

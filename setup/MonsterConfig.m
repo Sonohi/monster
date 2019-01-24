@@ -28,7 +28,7 @@ classdef MonsterConfig < handle
 			'reInstall', 0, 'seed', 126);
 		
 		Logs = struct('logToFile', 0, 'dateFormat', 'yyyy-mm-dd_HH.MM.SS', ...
-			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName', '');  %Using the ":" gives an error. Using "," does not
+			'logLevel', 'NFO', 'logPath', 'logs/', 'defaultLogName', '');
 
 		% Properties related to drawing and plotting
 		SimulationPlot = struct('runtimePlot', 0, 'generateCoverageMap', 0, 'generateHeatMap', 0, ...
@@ -86,79 +86,27 @@ classdef MonsterConfig < handle
 		Arq = struct('active', true, 'maxRetransmissions', 1, 'maxBufferSize', 1024, 'timeout', 20);
 
 		% Properties related to plotting
-		Plot = struct('LayoutFigure','','LayoutAxes', axes, 'PHYFigure', '', 'PHYAxes', axes);
+		Plot = struct('Layout', '','LayoutFigure','','LayoutAxes', axes, 'PHYFigure', '', 'PHYAxes', axes);
 
 	end
 
 	methods
-		function obj = MonsterConfig(Param)
-			% The constructor replaces the default values of the class with those in the Param structure
+		function obj = MonsterConfig()
+			% MonsterConfig constructor sets some additional runtime parameters
+			% 
+
 			% Runtime
-			obj.Runtime.totalRounds = Param.schRounds;
-			obj.Runtime.remainingRounds = Param.schRounds;
-			obj.Runtime.remainingTime = Param.schRounds*10e-3;
-			obj.Runtime.reInstall = Param.reset;
-			obj.Runtime.seed = Param.seed;
+			obj.Runtime.remainingTime = obj.Runtime.totalRounds*10e-3;
 			
 			% Logs
-			obj.Logs.logToFile = Param.logToFile;
 			dateStr = datestr(datetime, obj.Logs.dateFormat);
 			obj.Logs.defaultLogName = strcat(obj.Logs.logPath, dateStr);
 
-			% Simulation plotting
-			obj.SimulationPlot.runtimePlot = Param.draw;
-			obj.SimulationPlot.generateCoverageMap = Param.channel.computeCoverage;
-			obj.SimulationPlot.generateHeatMap = Param.generateHeatMap;
-			obj.SimulationPlot.heatMapType = Param.heatMapType;
-			obj.SimulationPlot.heatMapRes = Param.heatMapRes;
-
-			% Macro eNodeBs
 			% Check the number of macros and throw an error if set to an unsupported number
-			assert(Param.numMacro == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-			obj.MacroEnb.number = Param.numMacro;
-			obj.MacroEnb.subframes = Param.numSubFramesMacro;
-			obj.MacroEnb.height = Param.macroHeight;
-			obj.MacroEnb.noiseFigure = Param.eNBNoiseFigure;
-			obj.MacroEnb.antennaGain = Param.eNBGain;
-			obj.MacroEnb.radius = Param.macroRadius;   %Radius used by NetworkLayout
-
-			% Micro eNodeBs
-			obj.MicroEnb.number = Param.numMicro;
-			obj.MicroEnb.subframes = Param.numSubFramesMicro;
-			obj.MicroEnb.height = Param.microHeight;
-			obj.MicroEnb.noiseFigure = Param.eNBNoiseFigure;
-			obj.MicroEnb.antennaGain = Param.eNBGain;
-			obj.MicroEnb.positioning = Param.microPos;
-			obj.MicroEnb.radius = Param.microUniformRadius;
-
-			% Pico eNodeBs
-			obj.PicoEnb.number = Param.numPico;
-			obj.PicoEnb.subframes = Param.numSubFramesPico;
-			obj.PicoEnb.height = Param.picoHeight;
-			obj.PicoEnb.noiseFigure = Param.eNBNoiseFigure;
-			obj.PicoEnb.antennaGain = Param.eNBGain;
-			obj.PicoEnb.positioning = Param.picoPos;
-			obj.PicoEnb.radius = Param.picoUniformRadius;
-			
-			% UEs
-			obj.Ue.number = Param.numUsers;
-			obj.Ue.subframes = Param.numSubFramesUE;
-			obj.Ue.height = Param.ueHeight;
-			obj.Ue.noiseFigure = Param.ueNoiseFigure;
-			obj.Ue.antennaGain = Param.ueGain;
-
-			% Mobility
-			obj.Mobility.scenario = Param.mobilityScenario;
-			obj.Mobility.seed = Param.mobilitySeed;
-			obj.Mobility.step = Param.mobilityStep;
-
-			% Handover
-			obj.Handover.x2Timer = Param.handoverTimer;
+			assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
 
 			% Terrain
-			obj.Terrain.buildingsFile = Param.buildings;
-			obj.Terrain.heightRange = Param.buildingHeight;
-			obj.Terrain.buildings = Param.buildings %load(obj.Terrain.buildingsFile);
+			obj.Terrain.buildings = load(obj.Terrain.buildingsFile);
 			obj.Terrain.buildings(:,5) = randi([obj.Terrain.heightRange],[1 length(obj.Terrain.buildings(:,1))]);
 			obj.Terrain.area = [...
 				min(obj.Terrain.buildings(:, 1)), ...
@@ -167,71 +115,20 @@ classdef MonsterConfig < handle
 				max(obj.Terrain.buildings(:, 4))];
 			
 			% Traffic
-			obj.Traffic.primary = Param.primaryTrafficModel;
-			obj.Traffic.secondary = Param.secondaryTrafficModel;
-			assert(Param.trafficMix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
-			obj.Traffic.mix = Param.trafficMix;
-			obj.Traffic.arrivalDistribution = Param.ueArrivalDistribution;
-			obj.Traffic.poissonLambda = Param.poissonLambda;
-			obj.Traffic.uniformRange = [Param.uniformLower, Param.uniformUpper];
-			obj.Traffic.static = Param.staticStart;
-
-			% Phy
-			obj.Phy.uplinkFrequency = Param.ulFreq;
-			obj.Phy.downlinkFrequency = Param.dlFreq;
-			obj.Phy.pucchFormat = Param.pucchFormat;
-			obj.Phy.prachInterval = Param.PRACHInterval;
-			obj.Phy.prbSymbols = Param.prbSym;
-			obj.Phy.prbResourceElements = Param.prbRe;
-			obj.Phy.maxTbSize = Param.maxTbSize;
-			obj.Phy.maxCwdSize = Param.maxCwdSize;
-
-			% Channel
-			obj.Channel.uplinkMode = Param.channel.modeUL;
-			obj.Channel.downlinkMode = Param.channel.modeDL;
-			obj.Channel.fadingActive = Param.channel.enableFading;
-			obj.Channel.interferenceActive = Param.channel.enableInterference;
-			obj.Channel.shadowingActive = Param.channel.enableShadowing;
-			obj.Channel.losMethod = Param.channel.LOSMethod;
-			obj.Channel.region.type = Param.channel.region;
-			obj.Channel.region.macroScenario = Param.channel.region.macroScenario;
-			obj.Channel.region.microScenario = Param.channel.region.microScenario;
-			obj.Channel.region.picoScenario = Param.channel.region.picoScenario;
-			
-			% Scheduling
-			obj.Scheduling.type = Param.scheduling;
-			obj.Scheduling.refreshAssociationTimer = Param.refreshAssociationTimer;
-			obj.Scheduling.icScheme = Param.icScheme;
-			obj.Scheduling.absMask = Param.absMask;
+			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
 
 			% SON
-			obj.Son.neighbourRadius = Param.nboRadius;
-			obj.Son.hysteresisTimer = Param.tHyst;
-			obj.Son.switchTimer = Param.tSwitch;
-			obj.Son.utilisationRange = [Param.utilLoThr, Param.utilHiThr];
 			obj.Son.utilLow = obj.Son.utilisationRange(1);
-			obj.Son.utilHigh = obj.Son.utilisationRange
-			obj.Son.powerScale = Param.otaPowerScale;
-			
-			% HARQ 
-			obj.Harq.active = Param.rtxOn;
-			obj.Harq.maxRetransmissions = Param.harq.rtxMax;
-			obj.Harq.redundacyVersion = Param.harq.rv;
-			obj.Harq.processes = Param.harq.proc;
-			obj.Harq.timeout = Param.harq.tout;
+			obj.Son.utilHigh = obj.Son.utilisationRange;			
 
-			% ARQ
-			obj.Arq.active = Param.rtxOn;
-			obj.Arq.maxRetransmissions = Param.arq.rtxMax;
-			obj.Arq.maxBufferSize = Param.arq.maxBufferSize;
-			obj.Arq.timeout = Param.arq.bufferFlusTimer;			
-
-			% PLOT
-			if Param.draw
+			% Plot
+			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
+			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
+			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
+			if obj.SimulationPlot.runtimePlot
 				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
-			
 
 		end
 

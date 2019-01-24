@@ -16,20 +16,13 @@ clearvars;
 clc;
 close all;
 
-% Load parameters structure
-if exist('SimulationParameters.mat', 'file') == 2
-	load('SimulationParameters.mat');
-else
-	SimulationParameters;
-end
-
 % Install directories structure
 monsterLog('(SETUP) installing folder structure', 'NFO');
-install(Param.reset);
+install(1);
 
 % Create a simulation config object
 monsterLog('(SETUP) generating simulation configuration', 'NFO');
-Config = MonsterConfig(Param);
+Config = MonsterConfig();
 
 % Configure logs
 setpref('monsterLog', 'logToFile', Config.Logs.logToFile);

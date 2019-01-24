@@ -1,15 +1,14 @@
-function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Param, timeNow)
-
-%   REFRESH USERS ASSOCIATION links UEs to a eNodeB
-%
-%   Function fingerprint
-%   Users   		->  array of UEs
-%   Stations		->  array of eNodeBs
-%		Param				->	the simulation parameters 
-% 	timeNow			->	the current simulation time
-%
-%   Users   		->  updated array of UEs
-%   Stations		->  updated array of eNodeBs
+function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Config)
+	% refreshUsersAssociation links UEs to a eNodeB
+	%
+	% :Users: Array<UserEquipment> instances
+	% :Stations: Array<EvolvedNodeB> instances
+	% :Channel: Channel instance
+	% :Config: MonsterConfig instance
+	%
+	% :Users: Array<UserEquipment> instances with associated eNodeBs
+	% :Stations: Array<EvolvedNodeB> instances with associated UEs
+	%
 
 	% Create a local copy
 	StationsC = Stations;
@@ -18,7 +17,7 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 		StationsC(iStation).Tx.Waveform = StationsC(iStation).Tx.Frame;
 		StationsC(iStation).Tx.WaveformInfo = StationsC(iStation).Tx.FrameInfo;
 		StationsC(iStation).Tx.ReGrid = StationsC(iStation).Tx.FrameGrid;
-		StationsC(iStation).Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		StationsC(iStation).Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 	end
 	
 	
@@ -42,7 +41,7 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 			Users(iUser).ENodeBID = targetEnbID;
 		else
 			% Call the handler for the handover that will take care of processing the change
-			[Users(iUser), Stations] = handleHangover(Users(iUser), Stations, targetEnbID, Param, timeNow);
+			[Users(iUser), Stations] = handleHangover(Users(iUser), Stations, targetEnbID, Config);
 		end
 	end
 	
@@ -51,7 +50,7 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, P
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
 	for iStation = 1:length(Stations)
 		Stations(iStation) = Stations(iStation).resetScheduleUL();
-		Stations(iStation) = Stations(iStation).setScheduleUL(Param);
+		Stations(iStation) = Stations(iStation).setScheduleUL(Config);
 	end
 	for iUser = 1:length(Users)
 		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);

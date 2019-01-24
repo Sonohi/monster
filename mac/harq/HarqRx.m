@@ -3,7 +3,6 @@
 % 	it assumes value 0 for a default state that corresponds to an unused or successful process
 % 	and value 1 for a process awaiting retransmission copies
 
-
 classdef HarqRx
 	properties
 		bitsSize;
@@ -73,6 +72,20 @@ classdef HarqRx
 			obj.processes(iProc).state = 0;
 			obj.processes(iProc).copiesReceived = 0;
 			obj.processes(iProc).timeStart = -1;
+		end
+
+		function num = estimateCrcCopies(crc)
+			% estimateCrcCopies provides the number of retransmissions needed based on the CRC
+			% 
+			% :crc: the CRC value
+			%
+			% :num: integer number of packet copies estimated
+			% 
+
+			% TODO method stub, returns always 2
+
+			num = 2; 
+
 		end
 	
 	end

@@ -15,7 +15,7 @@ classdef ArqRx
 
 	methods
 		% Constructor
-		function obj = ArqRx(timeNow, Param)
+		function obj = ArqRx()
 			obj.sqnExpected = 0;
 			obj.sqnReceived = 0;
 			obj.sqnNext = 1;
@@ -60,9 +60,9 @@ classdef ArqRx
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
-		function obj = flush(timeNow, Param)
+		function obj = flush(timeNow, Config)
 			for iTb = length(1:obj.tbBuffer)
-				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
+				if timeNow - obj.tbBuffer(iTb).timeStart > Config.Arq.timeout/1000
 					obj = pop(iTb);
 				end
 			end

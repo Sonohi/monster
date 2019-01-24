@@ -88,7 +88,7 @@ classdef EvolvedNodeB
 			obj.DlFreq = Config.Phy.downlinkFrequency;
 			if Config.Harq.active
 				obj.Mac = struct('HarqTxProcesses', HarqTx(0, cellId, 1:Config.Ue.number, Config));
-				obj.Rlc = struct('ArqTxBuffers', ArqTx(0, cellId, 1:Config.Ue.number, COnfig);
+				obj.Rlc = struct('ArqTxBuffers', ArqTx(cellId, 1:Config.Ue.number);
 			end
 			obj.Tx = enbTransmitterModule(obj, Config);
 			obj.Rx = enbReceiverModule(obj, Config);
@@ -455,7 +455,8 @@ classdef EvolvedNodeB
 			for iUser = 1:length(obj.Rx.UeData)
 				% If empty, no uplink UE data has been received in this round and skip
 				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
-					cqi = decodeCqi(obj.Rx.UeData(iUser).PUCCH);
+					cqiBits = obj.Rx.UeData(iUser).PUCCH)(12:16,1);
+					cqi = bi2de(cqiBits', 'left-msb');
 					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
 					if ~isempty(ueEnodeBIx)
 						obj.Users(ueEnodeBIx).CQI = cqi;

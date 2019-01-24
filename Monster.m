@@ -33,6 +33,14 @@ classdef Monster < handle
 			obj.Channel = Channel;
 			obj.Traffic = Traffic;		
 			obj.Results = Results;
+
+			if Config.SimulationPlot.runtimePlot
+				% Draw the eNodeBs
+				obj.Config.Plot.Layout.draweNBs(Config);
+				% Draw the UEs
+				obj.Config.Plot.Layout.drawUes(obj.Users, Config);
+			end
+	
 		end
 
 		function obj = setupRound(obj, iRound)

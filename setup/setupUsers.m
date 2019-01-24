@@ -11,10 +11,5 @@ function Users = setupUsers (Config)
 	rangeA = 1;
 	rangeB = Config.Ue.number;
 	Users(rangeA:rangeB) = UserEquipment(Config, rangeA:rangeB);
-	
-	if Config.SimulationPlot.runtimePlot
-		legend('Location','northeastoutside')
-	end
-	
 end
 	

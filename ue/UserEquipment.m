@@ -62,9 +62,6 @@ classdef UserEquipment
 				'lineWidth', 2);
 			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
 			obj.Position = obj.Mobility.Trajectory(1,:);
-			if Config.SimulationPlot.runtimePlot
-				obj.plotUEinScenario(Config);
-			end
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
@@ -78,7 +75,7 @@ classdef UserEquipment
 				obj.Mac = struct('HarqRxProcesses', HarqRx(0, Config), 'HarqReport', struct('pid', [0 0 0], 'ack', -1));
 			end
 			if Config.Arq.active 
-				obj.Rlc = struct('ArqRxBuffer', ArqRx(0, Config));
+				obj.Rlc = struct('ArqRxBuffer', ArqRx());
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
 			obj.Pmax = 10; %10dBm
@@ -178,27 +175,6 @@ classdef UserEquipment
 			obj.Tx = obj.Tx.reset();
 			obj.Rx = obj.Rx.reset();
 		end
-		
-		function plotUEinScenario(obj, Config)
-			x0 = obj.Position(1);
-			y0 = obj.Position(2);
-
-			% UE in initial position
-			plot(Config.Plot.LayoutAxes,x0, y0, ...
-				'Marker', obj.PlotStyle.marker, ...
-				'MarkerFaceColor', obj.PlotStyle.colour, ...
-				'MarkerEdgeColor', obj.PlotStyle.edgeColour, ...
-				'MarkerSize',  obj.PlotStyle.markerSize, ...
-				'DisplayName', strcat('UE ', num2str(obj.NCellID)));
-
-			% Trajectory
-			plot(Config.Plot.LayoutAxes,obj.Mobility.Trajectory(:,1), obj.Mobility.Trajectory(:,2), ...
-				'Color', obj.PlotStyle.colour, ...
-				'LineStyle', '--', ...
-				'LineWidth', obj.PlotStyle.lineWidth,...
-				'DisplayName', strcat('UE ', num2str(obj.NCellID), ' trajectory'));
-			drawnow()
-		end
 
 		function obj = generateTransportBlock(obj, Stations, Config)
 			% generateTransportBlock is used to create a TB with dummy data for the UE
@@ -238,14 +214,28 @@ classdef UserEquipment
 				% The first 3 are the HARQ PID, the other 10 are the SQN.
 				newTb = false;
 				if Config.Harq.active
-					[Station, sqn] = getSqn(Station, User.NCellID, 'outFormat', 'b');
-					[Station, harqPid, newTb] = getHarqPid(Station, User, sqn, 'outFormat', 'b', 'inFormat', 'b');
-					ctrlBits = cat(1, harqPid, sqn);
+					% get the SQN: start by searching whether this is a TB 
+					% that is already being transmitted and is already in the RLC buffer
+					iArqBuf = find([Station.Rlc.ArqTxBuffers.rxId] == USer.NCellID);
+					[Station.Rlc.ArqTxBuffers(iUser), sqnDec] = getNextSqn(Station.Rlc.ArqTxBuffers(iArqBuf));
+					sqnBin = de2bi(sqnDec, 10, 'left-msb')';
+
+					% get the HARQ PID: find the index of the process
+					iHarqProc = find([Station.Mac.HarqTxProcesses.rxId] == User.NCellID);
+					% Find pid
+					[Station.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(Station.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
+					harqPidBin = de2bi(harqPidDec, 3, 'left-msb')';
+	
+					% Create the control bits sequence 
+					ctrlBits = cat(1, harqPidBin, sqnBin);
 					tbPayload = randi([0 1], TbInfo.tbSize - length(ctrlBits), 1);
 					tb = cat(1, ctrlBits, tbPayload);
 					if newTb
-						Station = setArqTb(Station, User, sqn, timeNow, tb);
-						Station = setHarqTb(Station, User, harqPid, timeNow, tb);
+						% Set TB in the ARQ buffer
+						Station.Rlc.ArqTxBuffers(iArqBuf) = Station.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, timeNow, tb);	
+
+						% Set TB in the HARQ process
+						Station.Mac.HarqTxProcesses(iHarqProc) = Station.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, timeNow, tb);	
 					end
 				else
 					tb = randi([0 1], TbInfo.tbSize, 1);
@@ -336,7 +326,7 @@ classdef UserEquipment
 
 				if ~isempty(iProc)
 					% Handle HARQ TB reception
-					[obj.Mac.HarqRxProcesses, state] = obj.Mac.HarqRxProcesses.handleTbReception(iProc,obj.Rx.TransportBlock, obj.Rx.Crc, Config, Config.Runtime.currentTime);
+					[obj.Mac.HarqRxProcesses, state] = obj.Mac.HarqRxProcesses.handleTbReception(iProc,obj.Rx.TransportBlock, obj.Rx.Crc, Config.Runtime.currentTime);
 
 					% Depending on the state the process is, contact ARQ
 					if state == 0
