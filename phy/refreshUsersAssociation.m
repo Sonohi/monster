@@ -20,7 +20,6 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 		StationsC(iStation).Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 	end
 	
-	
 	% Now loop the users to get the association based on the signal attenuation
 	for iUser = 1:length(Users)
 		% Get the ID of the eNodeB this UE has the best signal to 
@@ -45,8 +44,6 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 		end
 	end
 	
-	
-
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
 	for iStation = 1:length(Stations)
 		Stations(iStation) = Stations(iStation).resetScheduleUL();

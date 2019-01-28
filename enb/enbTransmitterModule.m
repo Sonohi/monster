@@ -13,23 +13,38 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
     NDLRB;
     Gain;
     PssRef;
-    SssRef;
+		SssRef;
+		Enb;
+		Freq;
+		Ref = struct('ReGrid',[], 'Waveform',[], 'WaveformInfo',[])
+		AntennaArray;
+		AntennaType; 
   end
   
   methods
-    % Constructor
-    function obj = enbTransmitterModule(enb, Config)
+		function obj = enbTransmitterModule(enb, Config)
+			% enbTransmitterModule
+			%
+			% :param enb:
+			% :param Config:
+			% :returns obj:
+			%
+
+			obj.Enb = enb;
 			obj.TxPwdBm = 10*log10(enb.Pmax)+30;
 			switch enb.BsClass
 				case 'macro'
 					obj.Gain = Config.MacroEnb.antennaGain;
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
+					obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType);
 				case 'micro'
 					obj.Gain = Config.MicroEnb.antennaGain;
 					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
+					obj.AntennaArray = AntennaArray(Config.MicroEnb.antennaType);
 				case 'pico'
 					obj.Gain = Config.PicoEnb.antennaGain;
 					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
+					obj.AntennaArray = AntennaArray(Config.PicoEnb.antennaType);
 				otherwise
 					monsterLog(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
@@ -40,6 +55,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj = resetResourceGrid(obj, enb);
 			obj = initPDSCH(obj, enb.NDLRB);
 			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
+			obj.Freq = Config.Phy.downlinkFrequency;
     end
     
     function EIRPSubcarrier = getEIRPSubcarrier(obj)

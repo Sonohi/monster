@@ -88,6 +88,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MacroEnb.radius = 250;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
+			MacroEnb.antennaType = 'omni';
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
@@ -98,6 +99,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.radius = 200;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
+			MicroEnb.antennaType = 'omni';
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
@@ -108,6 +110,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			PicoEnb.radius = 200;
 			PicoEnb.noiseFigure = 7;
 			PicoEnb.antennaGain = 0;
+			PicoEnb.antennaType = 'omni';
 			obj.PicoEnb = PicoEnb;
 
 			% Properties related to the configuration of UEs
