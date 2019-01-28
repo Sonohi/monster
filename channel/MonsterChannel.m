@@ -9,8 +9,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		enableShadowing;
 		enableReciprocity;
 		LOSMethod;
-		simulationRound;
-		simulationTime;
+		simulationRound = 0;
+		simulationTime = 0;
 		extraSamplesArea = 1200;
 	end
 	
@@ -32,7 +32,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
 			obj.BuildingFootprints = Config.Terrain.buildings;
 			obj.LOSMethod = Config.Channel.losMethod;
-			obj.setupChannel(Stations, Users)
+			obj.setupChannel(Stations, Users);
 		end
 		
 		function setupChannel(obj, Stations, Users)
@@ -229,7 +229,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + obj.extraSamplesArea;
 		end
 		
-		function setupRound(simRound, simTime)
+		function setupRound(obj, simRound, simTime)
 			% setupRound updates the time properties of the channel for the time evolution
 			%
 			% :param simRound: Integer - current simulation round 
@@ -237,7 +237,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 
 			obj.simulationRound = simRound;
-			obj.simulationTime = simTIme;
+			obj.simulationTime = simTime;
 		end
 		
 		
