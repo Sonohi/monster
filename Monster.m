@@ -50,10 +50,14 @@ classdef Monster < matlab.mixin.Copyable
 			% :iRound: Integer that represents the new simulation round
 			%
 
+			% Update Config property
 			obj.Config.Runtime.currentRound = iRound;
 			obj.Config.Runtime.currentTime = iRound*10e-3;  
 			obj.Config.Runtime.remainingTime = (obj.Config.Runtime.totalRounds - obj.Config.Runtime.currentRound)*10e-3;
 			obj.Config.Runtime.remainingRounds = obj.Config.Runtime.totalRounds - obj.Config.Runtime.currentRound - 1;
+			% Update Channel property
+			obj.Channel.setupRound(obj.Config.Runtime.currentRound, obj.Config.Runtime.currentTime);
+		
 		end
 
 		function obj = run(obj)

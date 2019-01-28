@@ -10,7 +10,7 @@ function Channel = setupChannel (Stations, Users, Config)
 	% :Channel: (ChBulk_v2) simulation channel class instance
 
 	monsterLog('(SETUP - setupChannel) setting up Channel', 'NFO');
-	Channel = ChBulk_v2(Stations, Users, Config);
+	Channel = MonsterChannel(Stations, Users, Config);
 	
 end
 	

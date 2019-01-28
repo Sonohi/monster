@@ -34,9 +34,7 @@ Users = setupUsers(Config);
 
 % Setup channel
 monsterLog('(SETUP) setting up simulation channel', 'NFO');
-% TODO needs update with merging of ul_channel branch
-%Channel = setupChannel(Stations, Users, Config);
-Channel = [];
+Channel = setupChannel(Stations, Users, Config);
 
 % Setup traffic
 monsterLog('(SETUP) setting up simulation traffic', 'NFO');

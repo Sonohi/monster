@@ -171,11 +171,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the channel
 			Channel = struct();
-			Channel.uplinkMode = 'B2B';
-			Channel.downlinkMode = '3GPP38901';
+			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
-			Channel.interferenceActive = true;
+			Channel.interferenceType = 'Full' 
 			Channel.shadowingActive = true;
+			Channel.reciprocityActive = true;
+			Channel.perfectSynchronization = true;
 			Channel.losMethod = '3GPP38901-probability';
 			Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
 			obj.Channel = Channel;
