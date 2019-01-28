@@ -22,7 +22,7 @@ classdef AntennaArray < handle
 						switch type
 							case '3GPP38901'
 								obj.config3gpp38901()
-							case 'Omni'
+							case 'omni'
 								obj.configOmniDirectional()
 						end
 						
@@ -131,10 +131,10 @@ classdef AntennaArray < handle
 					switch obj.Type
 						case '3GPP38901'
 							antennaGains = obj.compute3GPPAntennaGains(TxPosition, RxPosition);
-						case 'Omni'
+						case 'omni'
 							antennaGains = {0}; %Ideal antenna pattern in all directions
 						otherwise
-							sonohilog(sprintf('Antenna Type %s not known', obj.Type),'ERR')
+							monsterLog(sprintf('Antenna Type %s not known', obj.Type),'ERR','MonsterAntenna:UnknownType')
 					end
 					
 				end

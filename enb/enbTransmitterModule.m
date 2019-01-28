@@ -69,8 +69,10 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       EIRP = 10^((obj.getEIRPdBm())/10)/1000;
     end
     
-    function EIRPdBm = getEIRPdBm(obj)
-      EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure;
+		function EIRPdBm = getEIRPdBm(obj, TxPosition, RxPosition)
+			% TODO: finalize antenna mapping and get gain from the correct panel/element
+			AntennaGains = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
+      EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure - AntennaGains{1};
     end
     
     % Setters

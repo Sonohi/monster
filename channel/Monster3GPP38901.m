@@ -241,6 +241,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				stationStr = sprintf('stationNCellID%i',station.NCellID);
 				list.(stationStr).receivedPowerdBm = obj.computeLinkBudget(station, User, Mode);
 				list.(stationStr).receivedPowerWatt = 10^((list.(stationStr).receivedPowerdBm-30)/10);
+				list.(stationStr).NCellID = station.NCellID;
 			end
 			
 		end

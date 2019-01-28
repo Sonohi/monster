@@ -228,6 +228,43 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
 			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + obj.extraSamplesArea;
 		end
+
+		function list = getENBPowerList(obj, User, Stations, Mode)
+			% getCellPowerList
+			%
+			% Returns list of received power to each station
+			% :obj: MonsterChannel instance
+			% :User: :UserEquipment:
+			% :Stations: [:EvolvedNodeB]:
+			% :Mode: 'downlink' or 'uplink'
+			%
+
+			if isa(obj.ChannelModel, 'Monster3GPP38901')
+				list = obj.ChannelModel.listCellPower(User, Stations, Mode);
+			end
+		end
+
+		function eNBID = getENB(obj, User, Stations, Mode)
+			% getENB
+			%
+			% Returns ID of eNB with highest received power
+			% :obj: MonsterChannel instance
+			% :User: :UserEquipment:
+			% :Stations: [:EvolvedNodeB:]
+			% :Mode: 'downlink' or 'uplink'
+			%
+			
+			% get list of enb and received power to user
+			list = obj.getENBPowerList(User, Stations, Mode);
+
+			% Loop through data structure and find station with heighest received power
+			fields = fieldnames(list);
+			receivedPowerStructure = cellfun(@(x) getfield(list,x), fields);
+			stationIds = [receivedPowerStructure.NCellID];
+			[~, idx] = max([receivedPowerStructure.receivedPowerdBm]);
+			eNBID = stationIds(idx);
+
+		end
 		
 		function setupRound(obj, simRound, simTime)
 			% setupRound updates the time properties of the channel for the time evolution

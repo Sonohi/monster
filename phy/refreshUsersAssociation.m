@@ -11,7 +11,7 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 	%
 
 	% Create a local copy
-	StationsC = Stations;
+	StationsC = copy(Stations);
 	%Set the stored dummy frame as current waveform
 	for iStation = 1:length(Stations)
 		StationsC(iStation).Tx.Waveform = StationsC(iStation).Tx.Frame;
@@ -22,8 +22,10 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 	
 	% Now loop the users to get the association based on the signal attenuation
 	for iUser = 1:length(Users)
+		
+			
 		% Get the ID of the eNodeB this UE has the best signal to 
-		targetEnbID = Channel.getAssociation(StationsC,Users(iUser));
+		targetEnbID = Channel.getENB(Users(iUser), StationsC, 'downlink');
 
 		% Check if this UE is initialised already to a valid eNodeB. If not, don't perform HO, but simply associate
 		if Users(iUser).ENodeBID == -1
