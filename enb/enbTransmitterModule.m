@@ -51,12 +51,32 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.NDLRB = enb.NDLRB;
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
 			obj.Waveform = zeros(Nfft, 1);
-			obj = setBCH(obj, enb);
-			obj = resetResourceGrid(obj, enb);
-			obj = initPDSCH(obj, enb.NDLRB);
-			[obj.Frame, obj.FrameInfo, obj.FrameGrid] = generateDummyFrame(enb);
+			obj.setBCH();
+			obj.resetResourceGrid();
+			obj.initPDSCH();
 			obj.Freq = Config.Phy.downlinkFrequency;
-    end
+		end
+		
+		function obj = createReferenceSubframe(obj)
+			enb = struct(obj.Enb);
+			
+			% Reference
+			grid = lteResourceGrid(enb);
+			grid(lteCellRSIndices(enb)) = lteCellRS(enb);
+			
+			% Synchronization
+			grid(ltePSSIndices(enb)) = ltePSS(enb);
+			grid(lteSSSIndices(enb)) = lteSSS(enb);
+			
+			obj.Ref.ReGrid = grid;
+			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
+		end
+		
+		function obj = assignReferenceSubframe(obj)
+			obj.Waveform = obj.Ref.Waveform;
+			obj.ReGrid = obj.Ref.ReGrid;
+			obj.WaveformInfo = obj.Ref.WaveformInfo;
+		end
     
     function EIRPSubcarrier = getEIRPSubcarrier(obj)
       % Returns EIRP per subcarrier in Watts
@@ -75,50 +95,18 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure - AntennaGains{1};
     end
     
-    % Setters
-    % set Frame
-    function obj = set.Frame(obj, frm)
-      obj.Frame = frm;
-    end
-    
-    % set FrameInfo
-    function obj = set.FrameInfo(obj, info)
-      obj.FrameInfo = info;
-    end
-    
-    % set FrameGrid
-    function obj = set.FrameGrid(obj, grid)
-      obj.FrameGrid = grid;
-    end
-    
-    % set Waveform
-    function obj = set.Waveform(obj, wfm)
-      obj.Waveform = wfm;
-    end
-    
-    % set WaveformInfo
-    function obj = set.WaveformInfo(obj, info)
-      obj.WaveformInfo = info;
-    end
-    
-    % set ReGrid
-    function obj = set.ReGrid(obj, grid)
-      obj.ReGrid = grid;
-    end
-    
     % Methods
     % set BCH
-    function obj = setBCH(obj, enbObj)
-      enb = cast2Struct(enbObj);
+    function obj = setBCH(obj)
+      enb = struct(obj.Enb);
       mib = lteMIB(enb);
       bchCoded = lteBCH(enb, mib);
       obj.PBCH = struct('bch', bchCoded, 'unit', 1);
     end
     
     % Set default subframe resource grid
-    function obj = resetResourceGrid(obj, enbObj)
-      enb = cast2Struct(enbObj);
-      tx = cast2Struct(obj);
+    function obj = resetResourceGrid(obj)
+      enb = struct(obj.Enb);
       % Create empty grid
       regrid = lteDLResourceGrid(enb);
       
@@ -147,62 +135,61 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       regrid(indPcfich) = pcfich;
       
       % every 10 ms we need to broadcast a unit of the BCH
-      if (mod(enb.NSubframe, 10) == 0 && tx.PBCH.unit <= 4)
-        fullPbch = ltePBCH(enb,tx.PBCH.bch);
+      if (mod(enb.NSubframe, 10) == 0 && obj.PBCH.unit <= 4)
+        fullPbch = ltePBCH(enb,obj.PBCH.bch);
         indPbch = ltePBCHIndices(enb);
         
         % find which portion of the PBCH we need to send in this frame and insert
-        a = (tx.PBCH.unit - 1) * length(indPbch) + 1;
-        b = tx.PBCH.unit * length(indPbch);
+        a = (obj.PBCH.unit - 1) * length(indPbch) + 1;
+        b = obj.PBCH.unit * length(indPbch);
         pbch = fullPbch(a:b, 1);
         regrid(indPbch) = pbch;
         
         % finally update the unit counter
-        tx.PBCH.unit = tx.PBCH.unit + 1;
+        obj.PBCH.unit = obj.PBCH.unit + 1;
       end
       
       % Write back into the objects
-      obj.PBCH = tx.PBCH;
+      obj.PBCH = obj.PBCH;
       obj.ReGrid = regrid;
     end
     
-    % cast object to struct
-    function txStruct = cast2Struct(obj)
-      txStruct = struct(obj);
-    end
-    
     % Reset transmitter
-    function obj = reset(obj, enbObj, nextSchRound)
+    function obj = reset(obj, nextSchRound)
       % every 40 ms the cell has to broadcast its identity with the BCH
       % check if we need to regenerate that
       if mod(nextSchRound, 40) == 0
-        obj = obj.setBCH(enbObj);
+        obj.setBCH();
       end
       
       % Reset the grid and put in the grid RS, PSS and SSS
-      obj = obj.resetResourceGrid(enbObj);
+      obj.resetResourceGrid();
       
       % Reset the waveform and the grid transmitted
       obj.Waveform = [];
       obj.WaveformInfo = [];
     end
     
-    % modulate TX waveform
-    function obj = modulateTxWaveform(obj, enbObj)
-      enb = cast2Struct(enbObj);
-      tx = cast2Struct(obj);
+		function obj = modulateTxWaveform(obj)
+			% modulateTxWaveform
+			%
+			% :param obj: enbTransmitterModule instance
+			% :returns obj: enbTransmitterModule instance
+			%
+
+      enb = struct(obj.Enb);
       % Add PDCCH and generate a random codeword to emulate the control info carried
       pdcchParam = ltePDCCHInfo(enb);
       ctrl = randi([0,1],pdcchParam.MTot,1);
       [pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
       indPdcch = ltePDCCHIndices(enb);
-      tx.ReGrid(indPdcch) = pdcchSym;
+      obj.ReGrid(indPdcch) = pdcchSym;
       % Assume lossless transmitter
-      [obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, tx.ReGrid);
+      [obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);
       % set in the WaveformInfo the percentage of OFDM symbols used for this subframe
       % for power scaling
-      used = length(find(abs(tx.ReGrid) ~= 0));
-      obj.WaveformInfo.OfdmEnergyScale = used/numel(tx.ReGrid);
+      used = length(find(abs(obj.ReGrid) ~= 0));
+      obj.WaveformInfo.OfdmEnergyScale = used/numel(obj.ReGrid);
     end
     
     function obj = computeReferenceWaveform(obj, pss, indPss, sss, indSss, enb)
@@ -217,8 +204,16 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       end
     end
     
-    % insert PDSCH symbols in grid at correct indexes
-    function obj = setPDSCHGrid(obj, enb, syms)
+    
+		function obj = setPDSCHGrid(obj, syms)
+			% setPDSCHGrid insert PDSCH symbols in grid at correct indexes
+			% 
+			% :param obj: enbTransmitterModule instance
+			% :param syms: Array of complex symbols
+			% :returns: enbTransmitterModule instance
+			%
+
+			enb = struct(obj.Enb);
       regrid = obj.ReGrid;
       
       % get PDSCH indexes
@@ -233,7 +228,6 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       
       % Set back in object
       obj.ReGrid = regrid;
-      
     end
   end
   
@@ -242,7 +236,8 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
     %
     % TM1 is used (1 antenna) thus Rho is 0 dB, if MIMO change to 3 dB
     % See 36.213 5.2
-    function obj = initPDSCH(obj, NDLRB)
+		function obj = initPDSCH(obj)
+			NDLRB = obj.Enb.NDLRB;
       ch = struct(...
         'TxScheme', 'Port0',...
         'Modulation', {'QPSK'},...

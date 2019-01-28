@@ -19,8 +19,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 	methods
 		function obj = Monster3GPP38901(MonsterChannel, Stations)
 			obj.Channel = MonsterChannel;
-			obj.setupStationConfigs(Stations)
-			obj.createSpatialMaps()
+			obj.setupStationConfigs(Stations);
+			obj.createSpatialMaps();
 			obj.LinkConditions.downlink = [];
 			obj.LinkConditions.uplink = [];
 		end

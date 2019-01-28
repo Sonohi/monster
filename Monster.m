@@ -76,7 +76,7 @@ classdef Monster < matlab.mixin.Copyable
 			obj.updateUsersQueues();
 
 			monsterLog('(MONSTER - run) downlink UE scheduling', 'NFO');
-			obj.schedule()
+			obj.schedule();
 
 			monsterLog('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'NFO');
 			obj.setupEnbTransmitters();
@@ -160,7 +160,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			for iUser = 1: obj.Config.Ue.number
-				UeTrafficGenerator = find([obj.Traffic.Id] == obj.Users(iUser).Traffic.generatorId);
+				UeTrafficGenerator = obj.Traffic([obj.Traffic.Id] == obj.Users(iUser).Traffic.generatorId);
 				obj.Users(iUser).Queue = UeTrafficGenerator.updateTransmissionQueue(obj.Users(iUser), obj.Config.Runtime.currentTime);
 			end
 		end
@@ -198,7 +198,7 @@ classdef Monster < matlab.mixin.Copyable
 			arrayfun(@(x)x.generateSymbols(obj.Users), obj.Stations);
 
 			% Finally modulate the waveform for all the eNodeBs
-			arrayfun(@(x)x.modulateTxWaveform(), obj.Stations);
+			arrayfun(@(x)x.modulateTxWaveform(), [obj.Stations.Tx]);
 
 		end
 
@@ -208,7 +208,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 			
-			[obj.Stations, obj.Users] = obj.Channel.traverse(obj.Stations, obj.Users, 'downlink');
+			obj.Channel.traverse(obj.Stations, obj.Users, 'downlink');
 
 		end
 
@@ -218,7 +218,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 			
-			arrayfun(@(x)x.downlinkReception(obj.Stations, obj.Channel.Estimator), obj.Users);
+			arrayfun(@(x)x.downlinkReception(obj.Stations, obj.Channel.Estimator.Downlink), obj.Users);
 
 		end
 
@@ -228,7 +228,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x)x.downlinkDataDecoding(obj.Config), obj.Users)
+			arrayfun(@(x)x.downlinkDataDecoding(obj.Config), obj.Users);
 		end
 
 		function obj = setupUeTransmitters(obj)
@@ -248,7 +248,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 
 			obj.Channel = obj.Channel.setupChannelUL(obj.Stations, obj.Users);
-			[obj.Stations, obj.Users] = obj.Channel.traverse(obj.Stations, obj.Users,'uplink');
+			obj.Channel.traverse(obj.Stations, obj.Users,'uplink');
 		
 		end
 

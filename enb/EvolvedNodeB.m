@@ -98,6 +98,11 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
 		end
+
+		function s = struct(obj)
+			% Overwrites struct on object. Used primarly for lte Library methods of Matlab.
+			s = struct('NDLRB', obj.NDLRB, 'CellRefP', obj.CellRefP, 'NCellID', obj.NCellID, 'NSubframe', obj.NSubframe, 'CFI', obj.CFI, 'Ng', obj.Ng);
+		end
 		
 		function TxPw = getTransmissionPower(obj)
 			% TODO: Move this to TransmitterModule?
@@ -133,7 +138,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function [indPdsch, info] = getPDSCHindicies(obj)
-			enb = cast2Struct(obj);
+			enb = struct(obj);
 			% get PDSCH indexes
 			[indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 		end
@@ -164,6 +169,59 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			end
 		end
 		
+		function obj = generateSymbols(obj, ue)
+			% generateSymbols 
+			%
+			% :param obj: EvolvedNodeB instance
+			% :param ue: UserEquipment instance
+			% :returns obj: EvolvedNodeB instance
+			%
+			
+			% Check for empty codewords
+			if ~isempty(ue.Codeword)
+				% find all the PRBs assigned to this UE to find the most conservative MCS (min)
+				sch = obj.ScheduleDL;
+				ixPRBs = find([sch.UeId] == ue.NCellID);
+				listMCS = [sch(ixPRBs).Mcs];
+
+				% get the correct Parameters for this UE
+				[~, mod, ~] = lteMCS(min(listMCS));
+
+				% get the codeword
+				cwd = ue.Codeword;
+
+				% setup the PDSCH for this UE
+				obj.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
+				obj.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+
+				% Get info and indexes
+				[pdschIxs, SymInfo] = ltePDSCHIndices(struct(obj), obj.Tx.PDSCH, obj.Tx.PDSCH.PRBSet);
+				
+				if length(cwd) ~= SymInfo.G
+					% In this case seomthing went wrong with the rate maching and in the
+					% creation of the codeword, so we need to flag it
+					monsterLog('(EVOLVED NODE B - generateSymbols) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+				end
+
+				% error handling for symbol creation
+				try
+					sym = ltePDSCH(struct(obj), obj.Tx.PDSCH, cwd);
+				catch ME
+					fSpec = '(EVOLVED NODE B - generateSymbols) generation failed for codeword with length %i\n';
+					s=sprintf(fSpec, length(cwd));
+					monsterLog(s,'WRN')
+					sym = [];
+				end
+				
+				SymInfo.symSize = length(sym);
+				SymInfo.pdschIxs = pdschIxs;
+				SymInfo.indexes = ixPRBs;
+				ue.SymbolsInfo = SymInfo;
+
+				% Set the symbols into the grid of the eNodeB
+				obj.Tx.setPDSCHGrid(sym);		
+			end
+		end
 		
 		function obj = evaluatePowerState(obj, Config, Stations)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
@@ -241,12 +299,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.SwitchCount = 0;
 				
 			end
-			
-		end
-		
-		% cast object to struct
-		function enbStruct = cast2Struct(obj)
-			enbStruct = struct(obj);
 		end
 		
 		% set uplink static scheduling
@@ -337,10 +389,10 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj = obj.resetScheduleDL();
 			
 			% Reset the transmitter
-			obj.Tx = obj.Tx.reset(obj, nextSchRound);
+			obj.Tx.reset(nextSchRound);
 			
 			% Reset the receiver
-			obj.Rx = obj.Rx.reset();
+			obj.Rx.reset();
 			
 		end
 		

@@ -19,6 +19,14 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 	
 	methods
 		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Config, id)
+			% TrafficGenerator
+			%
+			% :param trafficModel:
+			% :param AssociatedUeIds:
+			% :param Config:
+			% :param id:
+			%
+
 			obj.Id = id;
 			obj.TrafficType = trafficModel;
 			switch trafficModel
@@ -103,7 +111,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			newQueue = User.Queue;
 			
 			% First, check whether the arrival time of this UE allows it to start
-			if User.TrafficStartTime <= simTime
+			if User.Traffic.startTime <= simTime
 				% first off check the id/index of the next packet to be put into the queue
 				pktIx = User.Queue.Pkt;
 				if pktIx >= length(obj.TrafficSource)

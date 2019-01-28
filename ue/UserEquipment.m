@@ -81,77 +81,15 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Pmax = 10; %10dBm
     end
 		
-		% Change queue
-		function obj = set.Queue(obj, queue)
-			obj.Queue = queue;
+		function s = struct(obj)
+			% Struct needed for MATLAB LTE Library functions.
+			s = struct('NCellID', obj.NCellID, 'NULRB', obj.NULRB, 'NSubframe', obj.NSubframe, 'NFrame', obj.NFrame, 'RNTI', obj.RNTI);
 		end
-		
+
 		function obj = move(obj, round)
 			obj.Position(1:3) = obj.Mobility.Trajectory(round+1,:);
 		end
-		
-		% toggle scheduled
-		function obj = setScheduled(obj, status)
-			obj.Scheduled = status;
-		end
-
-		function obj = setTrafficStartTime(obj, tStart)
-			% Used to set the starting time for requesting traffic
-			obj.TrafficStartTime = tStart;
-		end
-		
-		% set TransportBlock
-		function obj = set.TransportBlock(obj, tb)
-			obj.TransportBlock = tb;
-		end
-		
-		% set TransportBlockInfo
-		function obj = set.TransportBlockInfo(obj, info)
-			obj.TransportBlockInfo = info;
-		end
-		
-		% Create codeword
-		function obj = createCodeword(obj)
-			% perform CRC encoding with 24A poly
-			encTB = lteCRCEncode(obj.TransportBlock, '24A');
-
-			% create code block segments
-			cbs = lteCodeBlockSegment(encTB);
-
-			% turbo-encoding of cbs
-			turboEncCbs = lteTurboEncode(cbs);
-
-			% finally rate match and return codeword
-			cwd = lteRateMatchTurbo(turboEncCbs, obj.TransportBlockInfo.rateMatch, obj.TransportBlockInfo.rv);
-
-			obj.Codeword = cwd;
-		end
-				
-		% set SymbolsInfo
-		function obj = set.SymbolsInfo(obj, info)
-			obj.SymbolsInfo = info;
-		end
-		
-		% set NSubframe
-		function obj = set.NSubframe(obj, num)
-			obj.NSubframe = num;
-		end
-		
-		% set NFrame
-		function obj = set.NFrame(obj, num)
-			obj.NFrame = num;
-		end
-		
-		% set NULRB
-		function obj = set.NULRB(obj, num)
-			obj.NULRB = num;
-		end
-		
-		% cast object to struct
-		function objstruct = cast2Struct(obj)
-			objstruct = struct(obj);
-		end
-		
+			
 		% Find indexes in the serving eNodeB for the UL scheduling
 		function obj = setSchedulingSlots(obj, Station)
 			obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
@@ -162,30 +100,18 @@ classdef UserEquipment < matlab.mixin.Copyable
 		function obj = resetHarqReport(obj)
 			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
 		end
-		
-		%Reset properties that change every round
-		function obj = reset(obj)
-			obj.Scheduled = false;
-			obj.Symbols = [];
-			obj.SymbolsInfo = [];
-			obj.Codeword = [];
-			obj.CodewordInfo = [];
-			obj.TransportBlock = [];
-			obj.TransportBlockInfo = [];
-			obj.Tx = obj.Tx.reset();
-			obj.Rx = obj.Rx.reset();
-		end
 
 		function obj = generateTransportBlock(obj, Stations, Config)
 			% generateTransportBlock is used to create a TB with dummy data for the UE
 			%
-			% :obj: UserEquipment instance
-			% :Stations: Array<EvolvedNodeB> instances
-			% :Config: MonsterConfig instance
+			% :param obj: UserEquipment instance
+			% :param Stations: Array<EvolvedNodeB> instances
+			% :param Config: MonsterConfig instance
+			% :returns obj: UserEquipment instance
 			%
 
 			% Get the current serving station for this UE
-			enb = Stations([Stations.NCellID] == user.ENodeBID);
+			enb = Stations([Stations.NCellID] == obj.ENodeBID);
 
 			% Find the schedule of this UE in the eNodeB
 			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
@@ -245,8 +171,31 @@ classdef UserEquipment < matlab.mixin.Copyable
 				obj.TransportBlock = [];
 				obj.TransportBlockInfo = [];
 			end
+		end
 
-		
+		function obj = generateCodeword(obj)
+			% generateCodeword creates a codeword from a TB
+			% 
+			% :param obj: UserEquipment instance
+			% :returns obj: UserEquipment instance
+			%
+			if ~isempty(obj.TransportBlock)
+				% perform CRC encoding with 24A poly
+				encTB = lteCRCEncode(obj.TransportBlock, '24A');
+
+				% create code block segments
+				cbs = lteCodeBlockSegment(encTB);
+
+				% turbo-encoding of cbs
+				turboEncCbs = lteTurboEncode(cbs);
+
+				% finally rate match and return codeword
+				cwd = lteRateMatchTurbo(turboEncCbs, obj.TransportBlockInfo.rateMatch, obj.TransportBlockInfo.rv);
+
+				obj.Codeword = cwd;
+			else
+				obj.Codeword = [];
+			end
 		end
 
 		function obj = downlinkReception(obj, Stations, ChannelEstimator)
@@ -258,7 +207,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			%
 
 			% Get the current serving station for this UE
-			enb = Stations([Stations.NCellID] == user.ENodeBID);
+			enb = Stations([Stations.NCellID] == obj.ENodeBID);
 			% Find the schedule of this UE in the eNodeB
 			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
 			
@@ -280,21 +229,21 @@ classdef UserEquipment < matlab.mixin.Copyable
 			end
 
 			% Try to demodulate
-			[demodBool, obj.Rx] = obj.Rx.demodulateWaveform(enb);
+			obj.Rx.demodulateWaveform(enb);
 			% demodulate received waveform, if it returns 1 (true) then demodulated
-			if demodBool
+			if obj.Rx.Demod
 				% Estimate Channel
-				obj.Rx = obj.Rx.estimateChannel(enb, ChannelEstimator);
+				obj.Rx.estimateChannel(enb, ChannelEstimator);
 				% Equalize signal
-				obj.Rx = obj.Rx.equaliseSubframe();
+				obj.Rx.equaliseSubframe();
 				% Estimate PDSCH (main data channel)
-				obj.Rx = obj.Rx.estimatePdsch(obj, enb);
+				obj.Rx.estimatePdsch(obj, enb);
 				% calculate EVM
-				obj.Rx = obj.Rx.calculateEvm(enb);
+				obj.Rx.calculateEvm(enb);
 				% Calculate the CQI to use
-				obj.Rx = obj.Rx.selectCqi(enb);
+				obj.Rx.selectCqi(enb);
 				% Log block reception stats
-				obj.Rx = obj.Rx.logBlockReception(obj);
+				obj.Rx.logBlockReception(obj);
 			else
 				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.Rx = obj.Rx.logNotDemodulated();
@@ -339,6 +288,24 @@ classdef UserEquipment < matlab.mixin.Copyable
 					end
 				end
 			end
+		end
+
+		function obj = reset(obj)
+			% reset is used to clean up the instance before another round
+			%
+			% :param obj: UserEquipment instance
+			% :returns obj: UserEquipment instance
+			%
+			
+			obj.Scheduled = false;
+			obj.Symbols = [];
+			obj.SymbolsInfo = [];
+			obj.Codeword = [];
+			obj.CodewordInfo = [];
+			obj.TransportBlock = [];
+			obj.TransportBlockInfo = [];
+			obj.Tx = obj.Tx.reset();
+			obj.Rx = obj.Rx.reset();
 		end
 		
 	end	

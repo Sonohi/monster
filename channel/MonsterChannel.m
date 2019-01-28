@@ -12,6 +12,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		simulationRound = 0;
 		simulationTime = 0;
 		extraSamplesArea = 1200;
+		Estimator = struct();
 	end
 	
 	methods
@@ -33,6 +34,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.BuildingFootprints = Config.Terrain.buildings;
 			obj.LOSMethod = Config.Channel.losMethod;
 			obj.setupChannel(Stations, Users);
+			obj.createChannelEstimator();
 		end
 		
 		function setupChannel(obj, Stations, Users)
@@ -47,8 +49,26 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				case '3GPP38901'
 					obj.ChannelModel = Monster3GPP38901(obj, Stations);
 				case 'Quadriga'
-					obj.setupQuadrigaLayout(Stations, Users)
+					obj.setupQuadrigaLayout(Stations, Users);
 			end
+		end
+
+		function createChannelEstimator(obj)
+			dl.PilotAverage = 'UserDefined';    % Type of pilot symbol averaging
+			dl.FreqWindow = 31;                 % Frequency window size
+			dl.TimeWindow = 23;                 % Time window size
+			dl.InterpType = 'Cubic';            % 2D interpolation type
+			dl.InterpWindow = 'Centered';       % Interpolation window type
+			dl.InterpWinSize = 1;               % Interpolation window size
+
+			ul.PilotAverage = 'UserDefined';    % Type of pilot averaging
+			ul.FreqWindow = 13;                 % Frequency averaging windows in REs
+			ul.TimeWindow = 1;                  % Time averaging windows in REs
+			ul.InterpType = 'cubic';            % Interpolation type
+			ul.Reference = 'Antennas';          % Reference for channel estimation
+
+			obj.Estimator.Downlink = dl;
+			obj.Estimator.Uplink = ul;
 		end
 		
 		function traverse(obj, Stations, Users, Mode)
@@ -65,23 +85,23 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 
 			if ~strcmp(Mode,'downlink') && ~strcmp(Mode,'uplink')
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode')
+				monsterLog('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode');
 			end
 			
 			if any(~isa(Stations, 'EvolvedNodeB'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongStationClass')
+				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongStationClass');
 			end
 			
 			if any(~isa(Users, 'UserEquipment'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass')
+				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
 			end
 			
 			% Filter stations and users
-			[stations,users] = obj.getAssociated(Stations,Users);
+			[stations,~] = obj.getAssociated(Stations,Users);
 			
 			% Propagate waveforms
 			if ~isempty(stations)
-				obj.callChannelModel(Stations, Users, Mode)
+				obj.callChannelModel(Stations, Users, Mode);
 			else
 				monsterLog('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
@@ -98,7 +118,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 
 			if isa(obj.ChannelModel, 'Monster3GPP38901')
-				obj.ChannelModel.propagateWaveforms(Stations, Users, Mode)
+				obj.ChannelModel.propagateWaveforms(Stations, Users, Mode);
 			end
 		end
 		
@@ -263,7 +283,6 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			stationIds = [receivedPowerStructure.NCellID];
 			[~, idx] = max([receivedPowerStructure.receivedPowerdBm]);
 			eNBID = stationIds(idx);
-
 		end
 		
 		function setupRound(obj, simRound, simTime)
