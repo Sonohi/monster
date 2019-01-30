@@ -222,6 +222,16 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.Tx.setPDSCHGrid(sym);		
 			end
 		end
+
+		function userIds = getUserIDsScheduledDL(obj)
+			userIds = unique([obj.ScheduleDL]);
+		end
+
+
+				
+		function userIds = getUserIDsScheduledUL(obj)
+			userIds = unique([obj.ScheduleUL]);
+		end
 		
 		function obj = evaluatePowerState(obj, Config, Stations)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state

@@ -288,19 +288,15 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :returns receivedPowerWatt:
 			% 
 			% Matrix edition: Create 2d an 3d distances from sampleGrid.
-			%
-			d2=zeros(length(sampleGrid(1,:)),length(sampleGrid(2,:)));
-			d3=zeros(length(sampleGrid(1,:)),length(sampleGrid(2,:)));
-			EIRPdBm = zeros(length(sampleGrid(1,:)),length(sampleGrid(2,:)));
-			for i=1:length(sampleGrid(1,:))
-				for j=1:length(sampleGrid(2,:))
-					d2(i,j) = obj.Channel.getDistance(Station.Position(1:2),[sampleGrid(1,i) sampleGrid(2,j)]);
-					d3(i,j) = obj.Channel.getDistance(Station.Position,[sampleGrid(1,i) sampleGrid(2,j) User.Position(3)]);
-					EIRPdBm(i,j) = Station.Tx.getEIRPdBm(Station.Position, [sampleGrid(1,i) sampleGrid(2,j)]);
-				end
-			end
-			%distance2d =  obj.Channel.getDistance(TxNode.Position(1:2),RxNode.Position(1:2));
-			%distance3d = obj.Channel.getDistance(TxNode.Position,RxNode.Position);
+			% TODO: reformat this function to work with computeLinkBudget
+			
+
+			
+			[X, Y] = meshgrid(sampleGrid(1,:), sampleGrid(2,:));
+			d2 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:2),[x y]), X, Y);
+			d3 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:3),[x y User.Position(3)]), X, Y);
+			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), X, Y);
+
 
 			switch mode
 				case 'downlink'
@@ -317,7 +313,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					
 					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
 			end
-			receivedPowerWatt = 10^((receivedPower-30)/10);
+			receivedPowerWatt = 10^((receivedPower-30)./10);
 		end
 		
 
@@ -332,7 +328,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :param d3:
 			% :returns lossdB:
 			%
-
+			% TODO: refactorize the functionality of this with computePathLoss
 			f = Freq/10e2; % Frequency in GHz
 			hBs = TxNode.Position(3);
 			hUt = RxNode.Position(3);
@@ -354,12 +350,14 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			%end
 
 			try
-				lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-			catch ME
-				if strcmp(ME.identifier,'Pathloss3GPP:Range')
-						d2(d2<10) = 10;
-						lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-				end
+					lossdB = arrayfun(@(x,y,z) loss3gpp38901(areatype, x, y, f, hBs, hUt, avgBuilding, avgStreetWidth, z),d2, d3, LOS);
+				catch ME
+					if strcmp(ME.identifier,'Pathloss3GPP:Range')
+							d2(d2<10) = 10;
+							lossdB = arrayfun(@(x,y,z) loss3gpp38901(areatype, x, y, f, hBs, hUt, avgBuilding, avgStreetWidth, z),d2, d3, LOS);
+					else
+						monsterLog('A pathloss calculation failed','ERR')
+					end
 			end
 
 			%TODO: make this part matrix compatible
@@ -588,11 +586,11 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% 
 
 			if isempty(TxNode.Tx.Waveform)
-				sonohilog('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
+				monsterLog('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
 			end
 			
 			if isempty(TxNode.Tx.WaveformInfo)
-				sonohilog('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
+				monsterLog('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
 			end
 			
 			obj.TempSignalVariables.RxWaveform = TxNode.Tx.Waveform;

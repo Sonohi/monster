@@ -3,14 +3,19 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		PRACH;
 		PRACHInfo;
 		Waveform;
+		WaveformInfo;
 		ReGrid;
 		PUCCH;
 		PUSCH;
+		Freq; % Operating frequency.
+		TxPwdBm = 23; % Transmission power (Power class)
+		Gain = 4; % Antenna gain
 	end
 	
 	methods
 		
 		function obj = ueTransmitterModule(ueObj, Config)
+			obj.Freq = Config.Phy.uplinkFrequency;
 			obj.PUCCH.Format = Config.Phy.pucchFormat;
 			obj.PRACH.Interval = Config.Phy.prachInterval;
 			obj.PRACH.Format = 0;          % PRACH format: TS36.104, Table 8.4.2.1-1, CP length of 0.10 ms, typical cell range of 15km
@@ -30,6 +35,12 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		function obj = setPRACH(obj, ueObj, NSubframe)
 			obj.PRACH.TimingOffset = obj.PRACHInfo.BaseOffset + NSubframe/10.0;
 			obj.Waveform = ltePRACH(ueObj, obj.PRACH);
+		end
+
+		function EIRPdBm = getEIRPdBm(obj)
+			% Returns EIRP
+			EIRPdBm = obj.TxPwdBm + obj.Gain;
+
 		end
 		
 		function [obj, reportHarqBit] = mapGridAndModulate(obj, ueObj, Config)
@@ -81,7 +92,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			reGrid = lteULResourceGrid(ueObj);
 			reGrid(obj.PUCCH.Indices) = obj.PUCCH.Symbols;
 			obj.ReGrid = reGrid;
-			obj.Waveform = lteSCFDMAModulate(ueObj,obj.ReGrid);
+			[obj.Waveform, obj.WaveformInfo] = lteSCFDMAModulate(ueObj,obj.ReGrid);
 			
 			
 			%         %% Configure PUSCH

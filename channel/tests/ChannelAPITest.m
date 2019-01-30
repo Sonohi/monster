@@ -8,7 +8,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			ChannelNoSF
 			ChannelNoSFModel
 			ChannelNoInterference
-			Param
+			Config
 			Stations
 			Users
 			SFplot
@@ -19,29 +19,33 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 		
 			function createChannel(testCase)
 
-				load('ChTestParam.mat','Param');
-				Stations = createBaseStations(Param);
-				Users = createUsers(Param);
-				testCase.Param = Param;
+
+				[Config, Stations, ~, Channel, Traffic, Results] = setup();
+				Config.Ue.number = 5;
+				Users = setupUsers(Config);
+				testCase.Config = Config;
 				testCase.Stations = Stations;
 				testCase.Users = Users;
-				testCase.Channel = MonsterChannel(Stations, Users, Param);
+				testCase.Channel = Channel;
 				testCase.ChannelModel = testCase.Channel.ChannelModel;
 				testCase.SFplot = testCase.ChannelModel.plotSFMap(Stations(1));
 				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Stations, testCase.Users(1), 30);
 				
 				
 				% Channel with no shadowing
-				Param.channel.enableShadowing = 0;
-				Param.channel.LOSMethod = 'NLOS';
-				testCase.ChannelNoSF = MonsterChannel(Stations, Users, Param);
+				noShadowingConfig = copy(Config);
+				noShadowingConfig.Channel.shadowingActive = 0;
+				noShadowingConfig.Channel.losMethod = 'NLOS';
+				testCase.ChannelNoSF = MonsterChannel(Stations, Users, noShadowingConfig);
 				testCase.ChannelNoSFModel = testCase.ChannelNoSF.ChannelModel;
 				%testCase.SINRplot = testCase.ChannelNoSF.plotSINR(testCase.Stations, testCase.Users(1), 30);
 
 				% Channel with no interference
-				Param.channel.enableShadowing = 1;
-				Param.channel.InterferenceType = 'None';
-				testCase.ChannelNoInterference = MonsterChannel(Stations, Users, Param);
+				noInterferenceConfig = copy(Config);
+				noInterferenceConfig.Channel.interferenceType = 'None';
+				%Param.channel.enableShadowing = 1;
+				%Param.channel.InterferenceType = 'None';
+				testCase.ChannelNoInterference = MonsterChannel(Stations, Users, noInterferenceConfig);
 
 			end
 			
@@ -77,12 +81,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				end
 
 				function testChannelModel(testCase)
-					switch testCase.Param.channel.mode
-						case '3GPP38901'
-							testCase.verifyTrue(isa(testCase.ChannelModel,'Monster3GPP38901'))
-						case 'Quadriga'
-							testCase.verifyTrue(isa(testCase.ChannelModel,'MonsterQuadriga'))
-						end
+						testCase.verifyTrue(isa(testCase.ChannelModel,'Monster3GPP38901'))
 				end
 				
 				function testSetup3GPPStationConfigs(testCase)
@@ -207,8 +206,8 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
-					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Param);
-					testCase.Stations(1).setScheduleUL(testCase.Param);
+					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Config);
+					testCase.Stations(1).setScheduleUL(testCase.Config);
 					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveformInfo))
@@ -289,8 +288,8 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
-					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Param);
-					testCase.Stations(1).setScheduleUL(testCase.Param);
+					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Config);
+					testCase.Stations(1).setScheduleUL(testCase.Config);
 					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
 					
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink{1,1}))
