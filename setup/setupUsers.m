@@ -8,8 +8,7 @@ function Users = setupUsers (Config)
 	% :Users: (Array<UserEquipment>) simulation UEs class instances
 
 	monsterLog('(SETUP - setupUsers) setting up UEs', 'NFO');
-	rangeA = 1;
-	rangeB = Config.Ue.number;
-	Users(rangeA:rangeB) = UserEquipment(Config, rangeA:rangeB);
+	numUsers = Config.Ue.number;
+	Users = arrayfun(@(x) UserEquipment(Config, x), 1:numUsers);
 end
 	

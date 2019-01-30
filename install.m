@@ -33,7 +33,7 @@ if ~MONSTER || reInstallFlag
 
 	addpath(root);
 	
-	dirs = {'utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'power', 'results', 'rlc', ...
+	dirs = {'examples','utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'power', 'results', 'rlc', ...
 		'setup', 'traffic', 'ue', 'validator', 'app', 'logs', 'batches'};
 	
 	for i=1:numel(dirs)
