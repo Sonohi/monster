@@ -5,9 +5,9 @@ classdef AntennaArray < handle
         Panels;
         ElementsPerPanel
         Polarizations;
-        Bearing;
+        Bearing = 0;
         Tilt;
-				Type; % 3GPP38901, Omni
+				Type; % 3GPP38901, Omni, Vivaldi
     end
     
     properties (Access = private)
@@ -16,7 +16,7 @@ classdef AntennaArray < handle
     end
     
     methods
-        function obj = AntennaArray(type)
+        function obj = AntennaArray(type, varargin)
 
 						obj.Type = type;
 						switch type
@@ -24,10 +24,16 @@ classdef AntennaArray < handle
 								obj.config3gpp38901()
 							case 'omni'
 								obj.configOmniDirectional()
+							case 'vivaldi'
+								obj.configVivaldi(varargin{1})
 						end
 						
 
 
+				end
+				
+				function configVivaldi(obj, varargin)
+					obj.Panels{1} = VivaldiAntenna(varargin{1});
 				end
 				
 				function configOmniDirectional(obj)
@@ -126,6 +132,16 @@ classdef AntennaArray < handle
 			
 					
 				end
+				function antennaGain = computeVivaldiAntennaGains(obj, TxPosition, RxPosition)
+						% Get azimuth angle using atan2
+						AzimuthAngle = obj.getAzimuthAngle(TxPosition, RxPosition);
+						
+						antennaGain = obj.Panels{1}.get3DGain([], AzimuthAngle);
+						
+
+
+				end
+
 				
 				function antennaGains = getAntennaGains(obj, TxPosition, RxPosition)
 					switch obj.Type
@@ -133,6 +149,8 @@ classdef AntennaArray < handle
 							antennaGains = obj.compute3GPPAntennaGains(TxPosition, RxPosition);
 						case 'omni'
 							antennaGains = {0}; %Ideal antenna pattern in all directions
+						case 'vivaldi'
+							antennaGains = obj.computeVivaldiAntennaGains(TxPosition, RxPosition);
 						otherwise
 							monsterLog(sprintf('Antenna Type %s not known', obj.Type),'ERR','MonsterAntenna:UnknownType')
 					end
