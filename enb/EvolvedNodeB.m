@@ -97,6 +97,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
+			% Should look up position based on class here, not outside
+			
 		end
 
 		function s = struct(obj)

@@ -19,16 +19,22 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 		
 			function createChannel(testCase)
 
-
-				[Config, Stations, ~, Channel, Traffic, Results] = setup();
+				Config = MonsterConfig();
+				Config.SimulationPlot.runtimePlot = 0;
 				Config.Ue.number = 5;
+				
+				Config.setupNetworkLayout();
+				Stations = setupStations(Config);
 				Users = setupUsers(Config);
+				Channel = setupChannel(Stations, Users, Config);
+				[Traffic, Users] = setupTraffic(Users, Config);
+				
 				testCase.Config = Config;
 				testCase.Stations = Stations;
 				testCase.Users = Users;
-				testCase.Channel = Channel;
+				testCase.Channel = MonsterChannel(Stations, Users, Config);
 				testCase.ChannelModel = testCase.Channel.ChannelModel;
-				testCase.SFplot = testCase.ChannelModel.plotSFMap(Stations(1));
+				%testCase.SFplot = testCase.ChannelModel.plotSFMap(Stations(1));
 				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Stations, testCase.Users(1), 30);
 				
 				

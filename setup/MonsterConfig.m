@@ -72,7 +72,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 1;
+			SimulationPlot.runtimePlot = 0;
 			SimulationPlot.generateCoverageMap = 0;
 			SimulationPlot.generateHeatMap = 0;
 			SimulationPlot.heatMapType = 'perStation';
@@ -81,7 +81,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.number = 1;
+			MacroEnb.number = 5;
 			MacroEnb.subframes = 50;
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -92,7 +92,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.number = 0;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -103,7 +103,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 1;
+			PicoEnb.number = 0;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -222,27 +222,39 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to plotting
 			Plot = struct();
-			Plot.Layout = '';
-			Plot.LayoutFigure = '';
-			Plot.LayoutAxes = axes;
-			Plot.PHYFigure = '';
-			Plot.PHYAxes = axes;
+			if obj.SimulationPlot.runtimePlot
+				Plot.Layout = '';
+				Plot.LayoutFigure = '';
+				Plot.LayoutAxes = axes;
+				Plot.PHYFigure = '';
+				Plot.PHYAxes = axes;
+			end
 			obj.Plot = Plot;
 
 			% Check the number of macros and throw an error if set to an unsupported number
-			assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
+			%assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
 			% Check traffic configuration
 			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
 
 			% Plot
-			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
-			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
-			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
 			if SimulationPlot.runtimePlot
 				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
 
+		end
+
+		function setupNetworkLayout(obj)
+				% Setup the layout given the config
+				%
+				% Syntax: Config.setupNetworkLayout()
+				% Parameters:
+				% :obj: (MonsterConfig) simulation config class instance
+				%	Sets:
+				% :obj.Plot.Layout: (<NetworkLayout>) network layout class instance
+			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
+			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
+			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
 		end
 
 		function storeConfig(obj, logName)

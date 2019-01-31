@@ -20,9 +20,15 @@ close all;
 monsterLog('(SETUP) generating simulation configuration', 'NFO');
 Config = MonsterConfig();
 
+
+
 % Configure logs
 setpref('monsterLog', 'logToFile', Config.Logs.logToFile);
 setpref('monsterLog', 'logFile', Config.Logs.defaultLogName);
+
+% Create network layout
+monsterLog('(SETUP) setting up network layout', 'NFO');
+Config.setupNetworkLayout()
 
 % Setup eNodeBs
 monsterLog('(SETUP) setting up simulation eNodeBs', 'NFO');

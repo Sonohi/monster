@@ -143,30 +143,10 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :returns thermalNoise: 
 			%
 
-			[thermalLossdBm, thermalNoise] = obj.thermalLoss();
+			[thermalLossdBm, thermalNoise] = thermalLoss(obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxWaveformInfo.SamplingRate);
 			rxNoiseFloor = thermalLossdBm;
 			SNRdB = obj.TempSignalVariables.RxPower-rxNoiseFloor;
 			SNR = 10.^((SNRdB)./10);
-		end
-
-		function [SNR, SINR] = getSNRandSINR(obj, Stations, station, user)
-			% Used for obtaining a SINR estimation of a given position
-			%
-			% :param obj:
-			% :param Stations:
-			% :param station:
-			% :param user:
-			% :returns SNR:
-			% :returns SINR:
-			%
-
-			obj.TempSignalVariables.RxWaveform = station.Tx.Waveform; % Temp variable for BW indication
-			obj.TempSignalVariables.RxWaveformInfo = station.Tx.WaveformInfo; % Temp variable for BW indication
-			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(station, user, 'downlink');
-			obj.TempSignalVariables.RxPower = receivedPower;
-			[SNR, ~, noisePower] = obj.computeSNR();
-			SINR = obj.computeSINR(station, user, Stations, receivedPowerWatt, noisePower, 'downlink');
-			obj.clearTempVariables();
 		end
 
 
@@ -219,7 +199,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					intPower = intPower + listCellPower.(intStations{intStation}).receivedPowerWatt;
 				end
 
-				SINR = receivedPowerWatt / (intPower + noisePower);
+				SINR = obj.Channel.calculateSINR(receivedPowerWatt, intPower, noisePower);
 			else
 				SINR = obj.TempSignalVariables.RxSNR;
 			end
@@ -350,11 +330,12 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			%end
 
 			try
-					lossdB = arrayfun(@(x,y,z) loss3gpp38901(areatype, x, y, f, hBs, hUt, avgBuilding, avgStreetWidth, z),d2, d3, LOS);
+					lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 				catch ME
 					if strcmp(ME.identifier,'Pathloss3GPP:Range')
+							
 							d2(d2<10) = 10;
-							lossdB = arrayfun(@(x,y,z) loss3gpp38901(areatype, x, y, f, hBs, hUt, avgBuilding, avgStreetWidth, z),d2, d3, LOS);
+							lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 					else
 						monsterLog('A pathloss calculation failed','ERR')
 					end
@@ -796,22 +777,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 		end
 
-		function [lossdBm, thermalNoise] = thermalLoss(obj)
-			% Compute thermal loss based on bandwidth, at T = 290 K.
-			% Worst case given by the number of resource blocks. Bandwidth is
-			% given based on the waveform. Computed using matlabs :obj:`obw`
-			%
-			% :param obj:
-			% :returns lossdBm:
-			% :returns thermalNoise:
-			%
 
-			bw = obw(obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxWaveformInfo.SamplingRate);
-			T = 290;
-			k = physconst('Boltzmann');
-			thermalNoise = k*T*bw;
-			lossdBm = 10*log10(thermalNoise*1000);
-		end
 	end
 	
 	methods (Static)
