@@ -236,8 +236,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			% 
-
-			%% TODO this has to be revised upon merging of the uplink_ch branch
+			arrayfun(@(x)x.setupTransmission(), [obj.Users.Tx])
 		
 		end
 
@@ -246,8 +245,6 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			% 
-
-			obj.Channel = obj.Channel.setupChannelUL(obj.Stations, obj.Users);
 			obj.Channel.traverse(obj.Stations, obj.Users,'uplink');
 		
 		end
