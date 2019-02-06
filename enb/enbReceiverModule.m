@@ -53,26 +53,30 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 
 		function createReceivedSignal(obj)
 			uniqueUes = obj.enbObj.getUserIDsScheduledUL();
-
-			% Check length of each received signal
-			for iUser = 1:length(uniqueUes)
-				ueId = uniqueUes(iUser);
-				waveformLengths(iUser) =  length(obj.ReceivedSignals{ueId}.Waveform);
-			end
 			
-			% This will break with MIMO
-			obj.Waveform = zeros(max(waveformLengths),1);
+			if ~isempty(uniqueUes)
+				
+				% Check length of each received signal
+				for iUser = 1:length(uniqueUes)
+					ueId = uniqueUes(iUser);
+					waveformLengths(iUser) =  length(obj.ReceivedSignals{ueId}.Waveform);
+				end
 
-			for iUser = 1:length(uniqueUes)
-				ueId = uniqueUes(iUser);
-				% Add waveform with corresponding power
-				obj.Waveforms(iUser,:) = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
+				% This will break with MIMO
+
+				obj.Waveform = zeros(max(waveformLengths),1);
+
+				for iUser = 1:length(uniqueUes)
+					ueId = uniqueUes(iUser);
+					% Add waveform with corresponding power
+					obj.Waveforms(iUser,:) = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
+				end
+
+				% Create finalized waveform
+				obj.Waveform = sum(obj.Waveforms, 1).';
+
+				% Waveform is transposed due to the SCFDMA demodulator requiring a column vector.
 			end
-			
-			% Create finalized waveform
-			obj.Waveform = sum(obj.Waveforms, 1).';
-
-			% Waveform is transposed due to the SCFDMA demodulator requiring a column vector.
 		end
 
 		function obj = set.UeData(obj,UeData)
@@ -95,7 +99,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = demodulateWaveforms(obj, ueObjs)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = struct(ueObjs(iUser));
 				
 				testSubframe = lteSCFDMADemodulate(ue, obj.UeData(localIndex).Waveform);
 				
@@ -113,10 +117,10 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = estimateChannels(obj, ueObjs, cec)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
-						lteULChannelEstimate(ue, cec, obj.UeData(localIndex).Subframe);
+						lteULChannelEstimate(struct(ue), cec, obj.UeData(localIndex).Subframe);
 				end
 			end
 		end
@@ -124,7 +128,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = equaliseSubframes(obj, ueObjs)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					obj.UeData(localIndex).EqSubframe = lteEqualizeMMSE(obj.UeData(localIndex).Subframe,...
 						obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst);
@@ -135,17 +139,17 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = estimatePucch(obj, enbObj, ueObjs, timeNow)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				
 				switch ue.Tx.PUCCH.Format
 					case 1
-						obj.UeData(localIndex).PUCCH = ltePUCCH1Decode(ue, ue.Tx.PUCCH, 0, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH1Decode(struct(ue), ue.Tx.PUCCH, 0, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 					case 2
-						obj.UeData(localIndex).PUCCH = ltePUCCH2Decode(ue, ue.Tx.PUCCH, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH2Decode(struct(ue), ue.Tx.PUCCH, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 					case 3
-						obj.UeData(localIndex).PUCCH = ltePUCCH3Decode(ue, ue.Tx.PUCCH, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH3Decode(struct(ue), ue.Tx.PUCCH, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 				end
 				
@@ -166,7 +170,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = estimatePusch(obj, enbObj, ueObjs, timeNow)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					
 				end

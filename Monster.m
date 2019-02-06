@@ -99,8 +99,9 @@ classdef Monster < matlab.mixin.Copyable
 			monsterLog('(MONSTER - run) uplink eNodeB reception', 'NFO');
 			obj.uplinkEnbReception();
 
-			monsterLog('(MONSTER - run) uplink eNodeB data decoding', 'NFO');
-			obj.uplinkEnbDataDecoding();
+			% TODO: no data is actually being sent
+			%monsterLog('(MONSTER - run) uplink eNodeB data decoding', 'NFO');
+			%obj.uplinkEnbDataDecoding();
 		end
 
 		function obj = collectResults(obj)
@@ -236,7 +237,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			% 
-			arrayfun(@(x)x.setupTransmission(), [obj.Users.Tx])
+			arrayfun(@(x)x.setupTransmission(), [obj.Users.Tx]);
 		
 		end
 
@@ -254,7 +255,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			%
-
+			arrayfun(@(x)x.createReceivedSignal(), [obj.Stations.Rx]);
 			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), obj.Stations);			
 		
 		end 

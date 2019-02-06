@@ -40,7 +40,7 @@ elseif (strcmp(Config.Scheduling.icScheme, 'fullReuseABS'))
 	end
 end
 
-switch Config.Scheduling..type
+switch Config.Scheduling.type
 	case 'roundRobin'
 		
 		maxRounds = sz;

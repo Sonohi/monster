@@ -447,7 +447,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :Config: MonsterConfig instance
 			
 			if obj.ShouldSchedule
-				[obj, Users] = schedule(obj, Users, Config)
+				[obj, Users] = schedule(obj, Users, Config);
 				% Check utilisation
 				sch = find([obj.ScheduleDL.UeId] ~= -1);
 				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.ScheduleDL]);
@@ -481,22 +481,22 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				enbUsers = Users(scheduledUEsIds);
 				
 				% Parse received waveform
-				obj.Rx = obj.Rx.parseWaveform(obj);
+				obj.Rx.parseWaveform(obj);
 				
 				% Demodulate received waveforms
-				enb.Rx = obj.Rx.demodulateWaveforms(enbUsers);
+				obj.Rx.demodulateWaveforms(enbUsers);
 				
 				% Estimate Channel
-				obj.Rx = obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
+				obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
 				
 				% Equalise
-				obj.Rx = obj.Rx.equaliseSubframes(enbUsers);
+				obj.Rx.equaliseSubframes(enbUsers);
 				
 				% Estimate PUCCH (Main UL control channel) for UEs
-				obj.Rx = obj.Rx.estimatePucch(obj, enbUsers, timeNow);
+				obj.Rx.estimatePucch(obj, enbUsers, timeNow);
 				
 				% Estimate PUSCH (Main UL control channel) for UEs
-				obj.Rx = obj.Rx.estimatePusch(obj, enbUsers, timeNow);
+				%obj.Rx.estimatePusch(obj, enbUsers, timeNow);
 			end
 			
 			
