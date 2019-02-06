@@ -33,6 +33,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		HistoryStats;
 		SINRS;
 		Demod;
+		AntennaArray;
 	end
 
 	properties (Access = private)
@@ -48,8 +49,17 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
+			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, Config.Phy.downlinkFrequency*10e5);
+			obj.AntennaArray.Bearing = -10;
 		end
 		
+		function loss = getLoss(obj, TxPosition, RxPosition)
+			% Get loss of receiver module by combining noise figure with gain from antenna element
+			% In the case of an ideal omni directional (isotropic) antenna the loss is equal to the noise figure
+			AntennaGain = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
+			loss = obj.NoiseFigure + AntennaGain{1};
+		end
+
 		function oldValues = getFromHistory(obj, field, stationID)
 			stationfield = strcat('NCellID',int2str(stationID));
 			path = {'HistoryStats', stationfield, field};

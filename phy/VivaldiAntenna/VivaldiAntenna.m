@@ -23,16 +23,25 @@ methods
 			fileName = sprintf('RadiationPattern%iMHz.csv', FrequencyMHz);
 
 		else
-			warning('Assigned frequency offset from available radiation patterns. Selecting the one closest.')
+			
 			FrequencyMHz = currentPatterns(idx) * 10e-7;
+			warning(sprintf('Assigned frequency offset from available radiation patterns. Selecting the one closest. %i',FrequencyMHz))
 			fileName = sprintf('RadiationPattern%iMHz.csv', FrequencyMHz);
 		end
 		
 		obj.Pattern = importPattern(fileName);
-
+		obj.Pattern(1,1) = 360;
+		obj.Pattern = circshift(obj.Pattern,-1);
 	end
 	
 	function plotPattern(obj)
+		
+		figure
+		plot(obj.Pattern(:,1), obj.Pattern(:,2))
+		
+	end
+	
+	function plotPattern3D(obj)
 		az = obj.Pattern(:,1);
 		el = -90:5:90;
 
@@ -52,10 +61,11 @@ methods
 		% phi = Azimuth
 		%
 		% Elevation pattern is currently unknown, thus it is kept ideal (e.g. azimuth gain)
-		az = obj.Pattern(:,1)-180;
-		gainPattern = obj.Pattern(:,2);
-		[x, index] = unique(az); 
-		gain = interp1(x, gainPattern(index), phi);
+		
+		az = [obj.Pattern(:,1)-180, obj.Pattern(:,2)];
+		%gainPattern = obj.Pattern(:,2);
+		%[x, index] = unique(az); 
+		gain = interp1(az(:,1), az(:,2), phi);
 
 
 	end

@@ -85,7 +85,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MacroEnb.subframes = 50;
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
-			MacroEnb.radius = 250;
+			MacroEnb.radius = 1000;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
 			MacroEnb.antennaType = 'omni';
@@ -120,6 +120,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;
 			Ue.antennaGain = 0;
+			Ue.antennaType = 'omni';
 			obj.Ue = Ue;
 
 			% Properties related to mobility

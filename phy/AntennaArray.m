@@ -150,7 +150,7 @@ classdef AntennaArray < handle
 						case 'omni'
 							antennaGains = {0}; %Ideal antenna pattern in all directions
 						case 'vivaldi'
-							antennaGains = obj.computeVivaldiAntennaGains(TxPosition, RxPosition);
+							antennaGains = {obj.computeVivaldiAntennaGains(TxPosition, RxPosition)};
 						otherwise
 							monsterLog(sprintf('Antenna Type %s not known', obj.Type),'ERR','MonsterAntenna:UnknownType')
 					end

@@ -247,7 +247,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				case 'downlink'
 					lossdB = obj.computePathLoss(Station, User, Station.Tx.Freq);
 					EIRPdBm = Station.Tx.getEIRPdBm(Station.Position, User.Position);
-					receivedPower = EIRPdBm-lossdB-User.Rx.NoiseFigure; %dBm
+					receivedPower = EIRPdBm-lossdB+User.Rx.getLoss(Station.Position, User.Position); %dBm
 				case 'uplink'
 					lossdB = obj.computePathLoss(Station, User, User.Tx.Freq);
 					EIRPdBm = User.Tx.getEIRPdBm;
@@ -276,7 +276,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			d2 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:2),[x y]), X, Y);
 			d3 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:3),[x y User.Position(3)]), X, Y);
 			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), X, Y);
-
+			DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Station.Position, [x y]), X, Y);
 
 			switch mode
 				case 'downlink'
@@ -285,7 +285,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					%TODO: make Station.Tx.getEIRPdBm produce matrix output instead of work around
 					%Work around found above in double for loop
 
-					receivedPower = EIRPdBm-lossdB-User.Rx.NoiseFigure; %dBm
+					receivedPower = EIRPdBm-lossdB-DownlinkUeLoss; %dBm
 				case 'uplink'
 					lossdB = obj.computePathLossMatrix(Station, User, User.Tx.Freq, d2, d3);
 					
