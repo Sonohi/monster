@@ -9,8 +9,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
     FrameInfo;
     FrameGrid;
     TxPwdBm;
-    NoiseFigure;
-    NDLRB;
+		NoiseFigure;
     Gain;
     PssRef;
 		SssRef;
@@ -48,10 +47,10 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				otherwise
 					monsterLog(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
-			obj.NDLRB = enb.NDLRB;
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
 			obj.Waveform = zeros(Nfft, 1);
 			obj.setBCH();
+			%obj.createReferenceSubframe();
 			obj.resetResourceGrid();
 			obj.initPDSCH();
 			obj.Freq = Config.Phy.downlinkFrequency;
@@ -67,6 +66,9 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Synchronization
 			grid(ltePSSIndices(enb)) = ltePSS(enb);
 			grid(lteSSSIndices(enb)) = lteSSS(enb);
+
+			% Cell Reference
+      grid(lteCellRSIndices(enb, 0)) = lteCellRS(enb, 0);
 			
 			obj.Ref.ReGrid = grid;
 			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
@@ -77,19 +79,20 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.ReGrid = obj.Ref.ReGrid;
 			obj.WaveformInfo = obj.Ref.WaveformInfo;
 		end
-    
-    function EIRPSubcarrier = getEIRPSubcarrier(obj)
-      % Returns EIRP per subcarrier in Watts
-      EIRPSubcarrier = obj.getEIRP()/size(obj.ReGrid,1);
-		end
-		
-    
+  
     function EIRP = getEIRP(obj)
       % Returns EIRP in Watts
       EIRP = 10^((obj.getEIRPdBm())/10)/1000;
     end
     
 		function EIRPdBm = getEIRPdBm(obj, TxPosition, RxPosition)
+			% Get EIRP of the transmitter module
+			% It is a function of Transmission Power, Gain, Noise Figure and Antenna Gain
+			% Transmission power is determined by the class of the eNB.
+			% Gain is a figure to adjust the total EIRP
+			% Noise figure is to account for cable loss and so on.
+			% Antenna gain is the gain of the antenna element
+			%
 			% TODO: finalize antenna mapping and get gain from the correct panel/element
 			AntennaGains = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
       EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure - AntennaGains{1};
@@ -105,7 +108,8 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
     end
     
     % Set default subframe resource grid
-    function obj = resetResourceGrid(obj)
+		function obj = resetResourceGrid(obj)
+			% TODO: replace this function with the use of createReferenceSubframe and assignReferenceSubframe
       enb = struct(obj.Enb);
       % Create empty grid
       regrid = lteDLResourceGrid(enb);

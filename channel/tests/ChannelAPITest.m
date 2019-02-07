@@ -212,7 +212,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
-					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Config);
+					testCase.Users(1).Tx.setupTransmission();
 					testCase.Stations(1).setScheduleUL(testCase.Config);
 					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
@@ -294,7 +294,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
-					testCase.Users(1).Tx = testCase.Users(1).Tx.mapGridAndModulate(testCase.Users(1), testCase.Config);
+					testCase.Users(1).Tx.setupTransmission();
 					testCase.Stations(1).setScheduleUL(testCase.Config);
 					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
 					
