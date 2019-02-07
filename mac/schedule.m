@@ -113,7 +113,8 @@ switch Config.Scheduling.type
 					end
 					
 					prbsAv = prbsAv - prbsSch;
-					Users(iCurrUe) = setScheduled(Users(iCurrUe), true);
+					% Set the scheduled flag in the UE
+					Users(iCurrUe).Scheduled = true;
 					if rtxSchedulingFlag
 						switch rtxInfo.proto
 							case 1

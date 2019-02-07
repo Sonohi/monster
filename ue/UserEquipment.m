@@ -126,12 +126,12 @@ classdef UserEquipment < matlab.mixin.Copyable
 				[~, mod, ~] = lteMCS(avMcs);
 				enb.Tx.PDSCH.Modulation = mod;
 				enb.Tx.PDSCH.PRBSet = (ueScheduleIndexes - 1).';	
-				[~,info] = ltePDSCHIndices(enb,enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+				[~,info] = ltePDSCHIndices(struct(enb),enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 				TbInfo.rateMatch = info.G;
 				% the redundacy version (RV) is defaulted to 0
 				TbInfo.rv = 0;
 				% Finally, we need to calculate the TB size given the scheduling
-				TbInfo.tbSize = lteTBS(numPRB, avMcs);
+				TbInfo.tbSize = lteTBS(numPrb, avMcs);
 
 				% Encode the SQN and the HARQ process ID into the TB if retransmissions are on
 				% Use the first 13 bits for that. 
@@ -139,12 +139,12 @@ classdef UserEquipment < matlab.mixin.Copyable
 				if Config.Harq.active
 					% get the SQN: start by searching whether this is a TB 
 					% that is already being transmitted and is already in the RLC buffer
-					iArqBuf = find([enb.Rlc.ArqTxBuffers.rxId] == USer.NCellID);
-					[enb.Rlc.ArqTxBuffers(iUser), sqnDec] = getNextSqn(enb.Rlc.ArqTxBuffers(iArqBuf));
+					iArqBuf = find([enb.Rlc.ArqTxBuffers.rxId] == obj.NCellID);
+					[enb.Rlc.ArqTxBuffers(iArqBuf), sqnDec] = getNextSqn(enb.Rlc.ArqTxBuffers(iArqBuf));
 					sqnBin = de2bi(sqnDec, 10, 'left-msb')';
 
 					% get the HARQ PID: find the index of the process
-					iHarqProc = find([enb.Mac.HarqTxProcesses.rxId] == User.NCellID);
+					iHarqProc = find([enb.Mac.HarqTxProcesses.rxId] == obj.NCellID);
 					% Find pid
 					[enb.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(enb.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
 					harqPidBin = de2bi(harqPidDec, 3, 'left-msb')';
@@ -155,10 +155,10 @@ classdef UserEquipment < matlab.mixin.Copyable
 					tb = cat(1, ctrlBits, tbPayload);
 					if newTb
 						% Set TB in the ARQ buffer
-						enb.Rlc.ArqTxBuffers(iArqBuf) = enb.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, timeNow, tb);	
+						enb.Rlc.ArqTxBuffers(iArqBuf) = enb.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, Config.Runtime.currentTime, tb);	
 
 						% Set TB in the HARQ process
-						enb.Mac.HarqTxProcesses(iHarqProc) = enb.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, timeNow, tb);	
+						enb.Mac.HarqTxProcesses(iHarqProc) = enb.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, Config.Runtime.currentTime, tb);	
 					end
 				else
 					tb = randi([0 1], TbInfo.tbSize, 1);

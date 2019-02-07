@@ -51,13 +51,14 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			Runtime.totalRounds = 1000;
-			Runtime.remainingRounds = 1000;
+			numRounds = 100;
+			Runtime.totalRounds = numRounds;
+			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
 			Runtime.currentTime = 0;
 			Runtime.remainingTime = Runtime.totalRounds*10e-3;
 			Runtime.realTimeElaspsed = 0;
-			Runtime.realTimeRemaining = 1000;
+			Runtime.realTimeRemaining = numRounds * 10;
 			Runtime.seed = 126;
 			obj.Runtime = Runtime;
 
