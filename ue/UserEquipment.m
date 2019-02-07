@@ -16,7 +16,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
 		PlotStyle;
-		Scheduled;
+		Scheduled = struct('DL', false, 'UL', false);
 		Sinr;
 		TLast; % timestamp of the latest movement done by the UE
 		Trajectory;
@@ -54,7 +54,6 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.NFrame = 0;
 			obj.NTxAnts = 1;
 			obj.Queue = struct('Size', 0, 'Time', 0, 'Pkt', 1);
-			obj.Scheduled = false;
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
 				'edgeColour', [0.1 0.1 0.1], ...
@@ -94,6 +93,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 		function obj = setSchedulingSlots(obj, Station)
 			obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
 			obj.NULRB = length(obj.SchedulingSlots);
+			obj.Scheduled.UL = obj.NULRB ~= 0;
 		end
 		
 		% Reset the HARQ report
@@ -297,7 +297,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			% :returns obj: UserEquipment instance
 			%
 			
-			obj.Scheduled = false;
+			obj.Scheduled = struct('DL', false, 'UL', false);;
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];

@@ -55,17 +55,20 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 4. Modulate resource grid into waveform
 			%
 			% Returns updated :obj.ReGrid:, :obj.Waveform:, :obj.WaveformInfo:
+			
+			% Check whether this UE is scheduled in the UL
+			if obj.UeObj.Scheduled.UL
+				% Setup the dimensions for transmission
+				obj.setupResourceGrid();
 
-			% Setup the dimensions for transmission
-			obj.setupResourceGrid();
+				% Setup the control signals
+				obj.setupControlSignals();
 
-			% Setup the control signals
-			obj.setupControlSignals();
+				% TODO: add actual data here
 
-			% TODO: add actual data here
-
-			% Modulate the resource grid
-			obj.modulateResourceGrid();
+				% Modulate the resource grid
+				obj.modulateResourceGrid();
+			end
 		end
 
 		function obj = setupResourceGrid(obj)
@@ -74,7 +77,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			%
 			% returns :obj.ReGrid: 
 			if ~isempty(obj.ReGrid)
-				MonsterLog('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
+				monsterLog('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
 			end
 
 			obj.ReGrid = lteULResourceGrid(struct(obj.UeObj));

@@ -12,7 +12,7 @@ Channel = Channel.resetChannel;
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);
-ue.Scheduled = 1;
+ue.Scheduled = struct('DL', true, 'UL', false);
 
 % cluster the grid based on the chosen resoultion
 % get grid dimensions

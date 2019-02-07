@@ -454,9 +454,9 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
-		function Pairing = getPairing(Stations)
+		function Pairing = getPairing(Stations, type)
 			% Output: [Nlinks x 2] sized vector with pairings
-			% where Nlinks is equal to the total number of scheduled users
+			% where Nlinks is equal to the total number of associated users
 			% for Input Stations.
 			% E.g. Pairing(1,:) = All station ID's
 			% E.g. Pairing(2,:) = All user ID's
@@ -466,8 +466,16 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			
 			nlink=1;
 			for i = 1:length(Stations)
-				schedule = [Stations(i).Users];
-				users = extractUniqueIds([schedule.UeId]);
+				
+				switch type
+					case 'downlink'
+						association = [Stations(i).Users];
+						users = extractUniqueIds([association.UeId]);
+					case 'uplink'	
+						scheduledUL = Stations(i).getUserIDsScheduledUL;
+						users = scheduledUL;
+				end
+				
 				for ii = 1:length(users)
 					Pairing(:,nlink) = [Stations(i).NCellID; users(ii)]; %#ok
 					nlink = nlink+1;

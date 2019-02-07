@@ -84,7 +84,7 @@ switch Config.Scheduling.type
 			end
 			
 			% Boolean flags for scheduling for readability
-			schedulingFlag = ~Users(iCurrUe).Scheduled;
+			schedulingFlag = ~Users(iCurrUe).Scheduled.DL;
 			noRtxSchedulingFlag = Users(iCurrUe).Queue.Size > 0 && (~Config.Harq.active || ...
 				(Config.Harq.active && rtxInfo.proto == 0));
 			rtxSchedulingFlag = Config.Harq.active && rtxInfo.proto ~= 0;
@@ -114,7 +114,7 @@ switch Config.Scheduling.type
 					
 					prbsAv = prbsAv - prbsSch;
 					% Set the scheduled flag in the UE
-					Users(iCurrUe).Scheduled = true;
+					Users(iCurrUe).Scheduled.DL = true;
 					if rtxSchedulingFlag
 						switch rtxInfo.proto
 							case 1

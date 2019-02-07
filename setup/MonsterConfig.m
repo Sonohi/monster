@@ -93,7 +93,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 0;
+			MicroEnb.number = 3;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -104,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 0;
+			PicoEnb.number = 2;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -116,7 +116,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 1;
+			Ue.number = 10;
 			Ue.subframes = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;
