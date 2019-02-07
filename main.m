@@ -5,14 +5,13 @@ w = warning ('off','all');
 
 monsterLog('(MAIN) initialising simulation', 'NFO');
 
-% Run setup function and get a configuration object
-monsterLog('(MAIN) running simulation setup', 'NFO');
-[Config, Stations, Users, Channel, Traffic, Results] = setup();
-monsterLog('(MAIN) simulation setup completed', 'NFO');
+% Create a simulation config object
+monsterLog('(MAIN) generating simulation configuration', 'NFO');
+Config = MonsterConfig();
 
 % Create a simuation object
 monsterLog('(MAIN) creating main simulation instance', 'NFO');
-Simulation = Monster(Config, Stations, Users, Channel, Traffic, Results);
+Simulation = Monster(Config);
 monsterLog('(MAIN) main simulation instance created', 'NFO');
 
 % Main simulation loop
@@ -34,6 +33,10 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 
 	Simulation.clean();
 
-	monsterLog('(MAIN) cleaned parameters for next round', 'NFO');
+	if iRound ~= Config.Runtime.totalRounds - 1
+		monsterLog('(MAIN) cleaned parameters for next round', 'NFO');
+	else
+		monsterLog('(MAIN) simulation completed', 'NFO');
+	end
 end
 

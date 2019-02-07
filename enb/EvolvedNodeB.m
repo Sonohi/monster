@@ -87,8 +87,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.SwitchCount = 0;
 			obj.DlFreq = Config.Phy.downlinkFrequency;
 			if Config.Harq.active
-				obj.Mac = struct('HarqTxProcesses', HarqTx(0, cellId, 1:Config.Ue.number, Config));
-				obj.Rlc = struct('ArqTxBuffers', ArqTx(cellId, 1:Config.Ue.number));
+				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
+				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
 			obj.Tx = enbTransmitterModule(obj, Config);
 			obj.Rx = enbReceiverModule(obj, Config);
@@ -100,10 +100,19 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Should look up position based on class here, not outside
 			
 		end
-
+		
 		function s = struct(obj)
 			% Overwrites struct on object. Used primarly for lte Library methods of Matlab.
-			s = struct('NDLRB', obj.NDLRB, 'CellRefP', obj.CellRefP, 'NCellID', obj.NCellID, 'NSubframe', obj.NSubframe, 'CFI', obj.CFI, 'Ng', obj.Ng);
+			s = struct();
+			s.NDLRB = obj.NDLRB;
+			s.CellRefP = obj.CellRefP;
+			s.NCellID = obj.NCellID;
+			s.NSubframe = obj.NSubframe;
+			s.CFI = obj.CFI;
+			s.Ng = obj.Ng;
+			s.CyclicPrefix = obj.CyclicPrefix;
+			s.PHICHDuration = obj.PHICHDuration;
+			s.DuplexMode = obj.DuplexMode;
 		end
 		
 		function TxPw = getTransmissionPower(obj)
@@ -112,11 +121,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Return power per subcarrier. (OFDM symbol)
 			total_power = obj.Pmax;
 			TxPw = total_power/(12*obj.NDLRB);
-		end
-		
-		% Position eNodeB
-		function obj = setPosition(obj, pos)
-			obj.Position = pos;
 		end
 		
 		% reset users
@@ -132,11 +136,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		
 		function obj = resetScheduleUL(obj)
 			obj.ScheduleUL = [];
-		end
-		
-		% set subframe number
-		function obj = set.NSubframe(obj, num)
-			obj.NSubframe = num;
 		end
 		
 		function [indPdsch, info] = getPDSCHindicies(obj)
@@ -171,66 +170,78 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = generateSymbols(obj, ue)
-			% generateSymbols 
+		function obj = generateSymbols(obj, Users)
+			% generateSymbols
 			%
 			% :param obj: EvolvedNodeB instance
-			% :param ue: UserEquipment instance
+			% :param Users: UserEquipment instances
 			% :returns obj: EvolvedNodeB instance
 			%
 			
-			% Check for empty codewords
-			if ~isempty(ue.Codeword)
-				% find all the PRBs assigned to this UE to find the most conservative MCS (min)
-				sch = obj.ScheduleDL;
-				ixPRBs = find([sch.UeId] == ue.NCellID);
-				listMCS = [sch(ixPRBs).Mcs];
-
-				% get the correct Parameters for this UE
-				[~, mod, ~] = lteMCS(min(listMCS));
-
-				% get the codeword
-				cwd = ue.Codeword;
-
-				% setup the PDSCH for this UE
-				obj.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
-				obj.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
-
-				% Get info and indexes
-				[pdschIxs, SymInfo] = ltePDSCHIndices(struct(obj), obj.Tx.PDSCH, obj.Tx.PDSCH.PRBSet);
-				
-				if length(cwd) ~= SymInfo.G
-					% In this case seomthing went wrong with the rate maching and in the
-					% creation of the codeword, so we need to flag it
-					monsterLog('(EVOLVED NODE B - generateSymbols) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+			% Filter the overall list of Users and only take those associated
+			% with this eNodeB
+			enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
+			for iUser = 1:length(enbUsers)
+				ue = enbUsers(iUser);
+				% Check for empty codewords
+				if ~isempty(ue.Codeword)
+					% find all the PRBs assigned to this UE to find the most conservative MCS (min)
+					sch = obj.ScheduleDL;
+					ixPRBs = find([sch.UeId] == ue.NCellID);
+					if ~isempty(ixPRBs)
+						listMCS = [sch(ixPRBs).Mcs];
+						
+						% get the correct Parameters for this UE
+						[~, mod, ~] = lteMCS(min(listMCS));
+						
+						% get the codeword
+						cwd = ue.Codeword;
+						
+						% setup the PDSCH for this UE
+						obj.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
+						obj.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+						
+						% Get info and indexes
+						[pdschIxs, SymInfo] = ltePDSCHIndices(struct(obj), obj.Tx.PDSCH, obj.Tx.PDSCH.PRBSet);
+						
+						if length(cwd) ~= SymInfo.G
+							% In this case seomthing went wrong with the rate maching and in the
+							% creation of the codeword, so we need to flag it
+							monsterLog('(EVOLVED NODE B - generateSymbols) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+						end
+						
+						% error handling for symbol creation
+						try
+							sym = ltePDSCH(struct(obj), obj.Tx.PDSCH, cwd);
+						catch ME
+							fSpec = '(EVOLVED NODE B - generateSymbols) generation failed for codeword with length %i\n';
+							s=sprintf(fSpec, length(cwd));
+							monsterLog(s,'WRN')
+							sym = [];
+						end
+						
+						SymInfo.symSize = length(sym);
+						SymInfo.pdschIxs = pdschIxs;
+						SymInfo.indexes = ixPRBs;
+						ue.SymbolsInfo = SymInfo;
+						
+						% Set the symbols into the grid of the eNodeB
+						obj.Tx.setPDSCHGrid(sym);
+					else
+						SymInfo = struct();
+						SymInfo.symSize = 0;
+						SymInfo.pdschIxs = [];
+						SymInfo.indexes = [];
+						ue.SymbolsInfo = SymInfo;
+					end
 				end
-
-				% error handling for symbol creation
-				try
-					sym = ltePDSCH(struct(obj), obj.Tx.PDSCH, cwd);
-				catch ME
-					fSpec = '(EVOLVED NODE B - generateSymbols) generation failed for codeword with length %i\n';
-					s=sprintf(fSpec, length(cwd));
-					monsterLog(s,'WRN')
-					sym = [];
-				end
-				
-				SymInfo.symSize = length(sym);
-				SymInfo.pdschIxs = pdschIxs;
-				SymInfo.indexes = ixPRBs;
-				ue.SymbolsInfo = SymInfo;
-
-				% Set the symbols into the grid of the eNodeB
-				obj.Tx.setPDSCHGrid(sym);		
 			end
 		end
-
+		
 		function userIds = getUserIDsScheduledDL(obj)
 			userIds = unique([obj.ScheduleDL]);
 		end
-
-
-				
+		
 		function userIds = getUserIDsScheduledUL(obj)
 			userIds = unique([obj.ScheduleUL]);
 		end
@@ -419,7 +430,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			if ~isempty(find([obj.Users.UeId] ~= -1, 1))
 				% There are users connected, filter them from the Users list and check the queue
 				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
-				if any([enbUsers.Queue.Size])
+				usersQueues = [enbUsers.Queue];
+				if any([usersQueues.Size])
 					% Now check the power status of the eNodeB
 					if ~isempty(find([1, 2, 3] == obj.PowerState, 1))
 						% Normal, underload and overload => the eNodeB can schedule
@@ -472,9 +484,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
 				monsterLog(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
-			else
-				% TODO revise upon merging with uplink_ch branch
-				
+			else				
 				% IDs of users and their position in the Users struct correspond
 				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
 				scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
@@ -509,8 +519,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :Users: Array<UserEquipment> UEs instances
 			% :Config: MonsterConfig instance
 			%
-			
-			% TODO revise upon merging with uplink_ch branch
 			
 			% Filter UEs linked to this eNodeB
 			timeNow = Config.Runtime.currentTime;

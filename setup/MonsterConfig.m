@@ -51,13 +51,14 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			Runtime.totalRounds = 1000;
-			Runtime.remainingRounds = 1000;
+			numRounds = 100;
+			Runtime.totalRounds = numRounds;
+			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
 			Runtime.currentTime = 0;
 			Runtime.remainingTime = Runtime.totalRounds*10e-3;
 			Runtime.realTimeElaspsed = 0;
-			Runtime.realTimeRemaining = 1000;
+			Runtime.realTimeRemaining = numRounds * 10;
 			Runtime.seed = 126;
 			obj.Runtime = Runtime;
 
@@ -92,7 +93,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 0;
+			MicroEnb.number = 3;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -103,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 0;
+			PicoEnb.number = 2;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -115,7 +116,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 1;
+			Ue.number = 10;
 			Ue.subframes = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;

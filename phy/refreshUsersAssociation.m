@@ -37,8 +37,8 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 	
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
 	for iStation = 1:length(Stations)
-		Stations(iStation) = Stations(iStation).resetScheduleUL();
-		Stations(iStation) = Stations(iStation).setScheduleUL(Config);
+		Stations(iStation).resetScheduleUL();
+		Stations(iStation).setScheduleUL(Config);
 	end
 	for iUser = 1:length(Users)
 		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);

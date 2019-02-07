@@ -18,7 +18,7 @@ classdef Monster < matlab.mixin.Copyable
 	end
 
 	methods 
-		function obj = Monster(Config, Stations, Users, Channel, Traffic, Results)
+		function obj = Monster(Config)
 			% Monster constructor 
 			%
 			% :Config: MonsterConfig instance
@@ -27,22 +27,63 @@ classdef Monster < matlab.mixin.Copyable
 			% :Channel: SonohiChannel instance
 			% :Traffic: TrafficGenerator instance
 			% :Results: MetricRecorder instance
+
+			monsterLog('(MONSTER) setting up simulation', 'NFO');
+			obj.setupSimulation(Config);
+			monsterLog('(MONSTER) simulation setup completed', 'NFO');
+
+			if obj.Config.SimulationPlot.runtimePlot
+				% Draw the eNodeBs
+				obj.Config.Plot.Layout.draweNBs(obj.Config);
+				% Draw the UEs
+				obj.Config.Plot.Layout.drawUes(obj.Users, obj.Config);
+			end
+		end
+
+		function obj = setupSimulation(obj, Config)
+			% setupSimulation calls the initialisation functions for the simulation properties
+			% 
+			% :param obj: Monster instance
+			% :returns obj: initialised Monster instance
+			%
+			
+			% Configure logs
+			setpref('monsterLog', 'logToFile', Config.Logs.logToFile);
+			setpref('monsterLog', 'logFile', Config.Logs.defaultLogName);
+
+			% Create network layout
+			monsterLog('(MONSTER - setupSimulation) setting up network layout', 'NFO');
+			Config.setupNetworkLayout()
+
+			% Setup eNodeBs
+			monsterLog('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'NFO');
+			Stations = setupStations(Config);
+
+			% Setup UEs
+			monsterLog('(MONSTER - setupSimulation) setting up simulation UEs', 'NFO');
+			Users = setupUsers(Config);
+
+			% Setup channel
+			monsterLog('(MONSTER - setupSimulation) setting up simulation channel', 'NFO');
+			Channel = setupChannel(Stations, Users, Config);
+
+			% Setup traffic
+			monsterLog('(MONSTER - setupSimulation) setting up simulation traffic', 'NFO');
+			[Traffic, Users] = setupTraffic(Users, Config);
+
+			% Setup results
+			monsterLog('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'NFO');
+			Results = setupResults(Config);
+
+			% Assign the properties to the Monster object
 			obj.Config = Config;
 			obj.Stations = Stations;
 			obj.Users = Users;
 			obj.Channel = Channel;
-			obj.Traffic = Traffic;		
-			obj.Results = Results;
-
-			if Config.SimulationPlot.runtimePlot
-				% Draw the eNodeBs
-				obj.Config.Plot.Layout.draweNBs(Config);
-				% Draw the UEs
-				obj.Config.Plot.Layout.drawUes(obj.Users, Config);
-			end
-	
+			obj.Traffic = Traffic;
+			obj.Results = Results;			
 		end
-
+		
 		function obj = setupRound(obj, iRound)
 			% setupRound configures the simulation runtime parameters prior the start of a round
 			%

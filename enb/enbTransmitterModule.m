@@ -216,22 +216,16 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% :param syms: Array of complex symbols
 			% :returns: enbTransmitterModule instance
 			%
-
-			enb = struct(obj.Enb);
-      regrid = obj.ReGrid;
-      
+			
       % get PDSCH indexes
-      [indPdsch, pdschInfo] = ltePDSCHIndices(enb, obj.PDSCH, obj.PDSCH.PRBSet);
+      [indPdsch, pdschInfo] = ltePDSCHIndices(struct(obj), obj.PDSCH, obj.PDSCH.PRBSet);
       
       % pad for unused subcarriers
       padding(1:length(indPdsch) - length(syms), 1) = 0;
       syms = cat(1, syms, padding);
       
       % insert symbols into grid
-      regrid(indPdsch) = syms;
-      
-      % Set back in object
-      obj.ReGrid = regrid;
+      obj.ReGrid(indPdsch) = syms;
     end
   end
   
