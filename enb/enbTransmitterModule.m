@@ -218,7 +218,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			%
 			
       % get PDSCH indexes
-      [indPdsch, pdschInfo] = ltePDSCHIndices(struct(obj), obj.PDSCH, obj.PDSCH.PRBSet);
+      [indPdsch, pdschInfo] = ltePDSCHIndices(struct(obj.Enb), obj.PDSCH, obj.PDSCH.PRBSet);
       
       % pad for unused subcarriers
       padding(1:length(indPdsch) - length(syms), 1) = 0;

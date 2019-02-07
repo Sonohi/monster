@@ -13,12 +13,7 @@ Config.Channel.shadowingActive = 0;
 Config.Channel.losMethod = 'NLOS';
 
 %% Setup objects
-Config.setupNetworkLayout();
-Stations = setupStations(Config);
-Users = setupUsers(Config);
-Channel = setupChannel(Stations, Users, Config);
-Channel.extraSamplesArea = 500;
-[Traffic, Users] = setupTraffic(Users, Config);
+simulation = Monster(Config);
 
 %% Inspect Layout
-H = Channel.plotSINR(Stations, Users(1), 10);
+H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 10);
