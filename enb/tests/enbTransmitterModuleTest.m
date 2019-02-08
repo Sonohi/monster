@@ -17,6 +17,12 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 		end
 	end
 
+	methods(TestMethodTeardown)
+		function resetTransmitters(testCase)
+			arrayfun(@(x) x.reset(), [testCase.TxModule]);
+		end
+	end
+	
 	methods (Test)
 
 		function testConstructor(testCase)
@@ -36,6 +42,17 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 			end
 		end
 		
+		function testSetupGrid(testCase)
+			arrayfun(@(x) x.setupGrid(1), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(isempty(x.Waveform)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(isempty(x.WaveformInfo)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(~isempty(x.ReGrid)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(~isempty(x.PBCH)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(~isempty(x.Ref.Waveform)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(~isempty(x.Ref.WaveformInfo)), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(~isempty(x.Ref.ReGrid)), testCase.TxModule);
+		end
+		
 		function testCreateReferenceSubframe(testCase)
 			arrayfun(@(x) testCase.verifyTrue(isempty(x.Ref.Waveform)), testCase.TxModule);
 			arrayfun(@(x) testCase.verifyTrue(isempty(x.Ref.WaveformInfo)), testCase.TxModule);
@@ -47,7 +64,7 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 		end
 		
 		function testAssignReferenceSubframe(testCase)
-			arrayfun(@(x) testCase.verifyTrue(all(x.Waveform) == 0), testCase.TxModule);
+			arrayfun(@(x) testCase.verifyTrue(isempty(x.Waveform)), testCase.TxModule);
 			arrayfun(@(x) testCase.verifyTrue(isempty(x.WaveformInfo)), testCase.TxModule);
 			arrayfun(@(x) x.createReferenceSubframe(), testCase.TxModule);
 			arrayfun(@(x) x.assignReferenceSubframe(), testCase.TxModule);

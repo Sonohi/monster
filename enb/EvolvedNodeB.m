@@ -412,7 +412,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj = obj.resetScheduleDL();
 			
 			% Reset the transmitter
-			obj.Tx.reset(nextSchRound);
+			obj.Tx.reset();
 			
 			% Reset the receiver
 			obj.Rx.reset();

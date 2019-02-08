@@ -225,8 +225,8 @@ classdef ueReceiverModule < matlab.mixin.Copyable
     function obj = computeOffset(obj, enbObj)
       % Compute offset based on PSS and SSS. Done every 0 and 5th subframe.
       if enbObj.NSubframe == 0 || enbObj.NSubframe == 5
-        pssCorr = finddelay(enbObj.Tx.PssRef,obj.Waveform);
-        sssCorr = finddelay(enbObj.Tx.SssRef,obj.Waveform);
+        pssCorr = finddelay(enbObj.Tx.Ref.PSSWaveform,obj.Waveform);
+        sssCorr = finddelay(enbObj.Tx.Ref.SSSWaveform,obj.Waveform);
         offset_ = min(pssCorr,sssCorr);
         obj.Offset = offset_;
       end

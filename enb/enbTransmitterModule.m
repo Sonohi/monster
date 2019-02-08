@@ -1,22 +1,28 @@
 classdef enbTransmitterModule < matlab.mixin.Copyable
   properties
+    % Parent eNB object
+    Enb;
+    
+    % Structure containing necessary reference signals/grids
+    Ref;
+
+    % Resource Grid to be modulated
+    ReGrid;
+
+    % Modulated waveform and waveform info. Used for transmission
     Waveform;
     WaveformInfo;
-    ReGrid;
+
+    % Control channels
     PDSCH;
     PBCH;
-    Frame;
-    FrameInfo;
-    FrameGrid;
+
+    % Physical properties
     TxPwdBm;
 		NoiseFigure;
     Gain;
-    PssRef;
-		SssRef;
-		Enb;
-		Freq;
-		Ref = struct('ReGrid',[], 'Waveform',[], 'WaveformInfo',[])
-		AntennaArray;
+    Freq;
+    AntennaArray;
 		AntennaType; 
   end
   
@@ -49,32 +55,98 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			end
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
 			obj.Waveform = zeros(Nfft, 1);
-			obj.setBCH();
-			%obj.createReferenceSubframe();
-			obj.resetResourceGrid();
+      obj.resetReference();
+      obj.resetResourceGrid();
+      obj.setupGrid(0);
 			obj.initPDSCH();
 			obj.Freq = Config.Phy.downlinkFrequency;
 		end
-		
-		function obj = createReferenceSubframe(obj)
-			enb = struct(obj.Enb);
-			
-			% Reference
+    
+    function setupGrid(obj, schRound)
+      % Setup grid using the following procedure
+      % 1. Every 40ms the BCH is needed.
+      % 2. Reset previous grid and the content
+      % 3. Set the resource grid for the current round with necessary reference signals.
+      %
+      % The call of this function enables use of adding Codewords and modulating the final waveform
+      obj.reset();
+
+      if mod(schRound, 40) == 0
+        obj.setBCH();
+      end
+
+      % Set the grid and put in the grid RS, PSS and SSS
+      obj.setResourceGrid();
+
+    end
+
+    function obj = reset(obj)    
+      % Clear reference and resource grid
+      obj.resetReference();
+      obj.resetResourceGrid();
+      
+      % Reset the waveform and the grid transmitted
+      obj.Waveform = [];
+      obj.WaveformInfo = [];
+    end
+
+		function obj = resetResourceGrid(obj)
+			obj.ReGrid = [];
+    end
+
+    function resetReference(obj)
+      obj.Ref = struct('ReGrid',[], 'Waveform',[], 'WaveformInfo',[],'PSSInd',[],'PSS', [],'SSS', [],'SSSInd',[],'PSSWaveform',[], 'SSSWaveform',[]);
+    end
+    
+    function grid = getEmptyResourceGrid(obj)
+      % Returns an empty resource grid based on the eNB parameters.
+      %
+      % Returns :grid: NxM Matrix
+      enb = struct(obj.Enb);
 			grid = lteResourceGrid(enb);
-			grid(lteCellRSIndices(enb)) = lteCellRS(enb);
+    end
+		
+    function createReferenceSubframe(obj)
+      % Create reference subframe
+      % Consists of the following pilot signals
+      % PSS
+      % SSS
+      % CellRS
+      % TODO: SRS (missing)
+      % 
+      % Returns a constructed :obj.Ref:
+      grid = obj.getEmptyResourceGrid();
 			
+			enb = struct(obj.Enb);
+
 			% Synchronization
-			grid(ltePSSIndices(enb)) = ltePSS(enb);
-			grid(lteSSSIndices(enb)) = lteSSS(enb);
+      PSS = ltePSS(enb);
+      PSSInd = ltePSSIndices(enb);
+      grid(PSSInd) = PSS;
+
+      SSS = lteSSS(enb);
+      SSSInd = lteSSSIndices(enb);
+			grid(SSSInd) = SSS;
 
 			% Cell Reference
       grid(lteCellRSIndices(enb, 0)) = lteCellRS(enb, 0);
-			
-			obj.Ref.ReGrid = grid;
-			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
+      
+      % Assign grid
+      obj.Ref.ReGrid = grid;
+
+      obj.Ref.PSS = PSS;
+      obj.Ref.PSSInd = PSSInd;
+      obj.Ref.SSS = SSS;
+      obj.Ref.SSSInd = SSSInd;
+
+      [obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
+      
 		end
 		
-		function obj = assignReferenceSubframe(obj)
+    function obj = assignReferenceSubframe(obj)
+      % Assign reference signals to current grid and waveform.
+      %
+      % Returns obj.Waveform, obj.ReGrid and obj.WaveformInfo;
 			obj.Waveform = obj.Ref.Waveform;
 			obj.ReGrid = obj.Ref.ReGrid;
 			obj.WaveformInfo = obj.Ref.WaveformInfo;
@@ -107,25 +179,17 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       obj.PBCH = struct('bch', bchCoded, 'unit', 1);
     end
     
-    % Set default subframe resource grid
-		function obj = resetResourceGrid(obj)
-			% TODO: replace this function with the use of createReferenceSubframe and assignReferenceSubframe
-      enb = struct(obj.Enb);
-      % Create empty grid
-      regrid = lteDLResourceGrid(enb);
-      
-      % Reference signals
-      indRs = lteCellRSIndices(enb, 0);
-      rs = lteCellRS(enb, 0);
-      
-      % Synchronization signals
-      indPss = ltePSSIndices(enb);
-      pss = ltePSS(enb);
-      indSss = lteSSSIndices(enb);
-      sss = lteSSS(enb);
-      
+		function obj = setResourceGrid(obj)
+      % Setup resource grid with reference signals and control signals
+      %
+      % Returns the setup of :obj.ReGrid: and :obj.PBCH:
+			enb = struct(obj.Enb);
+			
+      obj.createReferenceSubframe();
+      grid = obj.Ref.ReGrid;
+    
       % Compute reference waveform of synchronization signals, used to compute offset
-      obj = obj.computeReferenceWaveform(pss, indPss, sss, indSss, enb);
+      obj = obj.computeReferenceWaveform();
       
       % Channel format indicator
       cfi = lteCFI(enb);
@@ -133,10 +197,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       pcfich = ltePCFICH(enb, cfi);
       
       % % put signals into the grid
-      regrid(indRs) = rs;
-      regrid(indPss) = pss;
-      regrid(indSss) = sss;
-      regrid(indPcfich) = pcfich;
+      grid(indPcfich) = pcfich;
       
       % every 10 ms we need to broadcast a unit of the BCH
       if (mod(enb.NSubframe, 10) == 0 && obj.PBCH.unit <= 4)
@@ -155,24 +216,9 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       
       % Write back into the objects
       obj.PBCH = obj.PBCH;
-      obj.ReGrid = regrid;
+      obj.ReGrid = grid;
     end
-    
-    % Reset transmitter
-    function obj = reset(obj, nextSchRound)
-      % every 40 ms the cell has to broadcast its identity with the BCH
-      % check if we need to regenerate that
-      if mod(nextSchRound, 40) == 0
-        obj.setBCH();
-      end
-      
-      % Reset the grid and put in the grid RS, PSS and SSS
-      obj.resetResourceGrid();
-      
-      % Reset the waveform and the grid transmitted
-      obj.Waveform = [];
-      obj.WaveformInfo = [];
-    end
+  
     
 		function obj = modulateTxWaveform(obj)
 			% modulateTxWaveform
@@ -196,15 +242,15 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
       obj.WaveformInfo.OfdmEnergyScale = used/numel(obj.ReGrid);
     end
     
-    function obj = computeReferenceWaveform(obj, pss, indPss, sss, indSss, enb)
+    function obj = computeReferenceWaveform(obj)
       % Compute and store reference waveforms of PSS and SSS, generated every 0th and 5th subframe
-      if enb.NSubframe == 0 || enb.NSubframe == 5
-        pssGrid=lteDLResourceGrid(enb); % Empty grid for just the PSS symbols
-        pssGrid(indPss)=pss;
-        obj.PssRef = lteOFDMModulate(enb,pssGrid);
-        sssGrid=lteDLResourceGrid(enb); % Empty grid for just the PSS symbols
-        sssGrid(indSss)=sss;
-        obj.SssRef = lteOFDMModulate(enb,sssGrid);
+      if obj.Enb.NSubframe == 0 || obj.Enb.NSubframe == 5
+        pssGrid = obj.getEmptyResourceGrid();
+        pssGrid(obj.Ref.PSSInd) = obj.Ref.PSS;
+        obj.Ref.PSSWaveform = lteOFDMModulate(struct(obj.Enb),pssGrid);
+        sssGrid = obj.getEmptyResourceGrid();
+        sssGrid(obj.Ref.SSSInd)=obj.Ref.SSS;
+        obj.Ref.SSSWaveform = lteOFDMModulate(struct(obj.Enb),sssGrid);
       end
     end
     

@@ -239,6 +239,9 @@ classdef Monster < matlab.mixin.Copyable
 			% Create the symbols for all the UEs' codewords at the eNodeBs
 			arrayfun(@(x)x.generateSymbols(obj.Users), obj.Stations);
 
+			% Setup the reference signals at the eNB transmitters 
+			arrayfun(@(x)x.setupGrid(obj.Config.Runtime.currentRound), [obj.Stations.Tx]);
+			
 			% Finally modulate the waveform for all the eNodeBs
 			arrayfun(@(x)x.modulateTxWaveform(), [obj.Stations.Tx]);
 
