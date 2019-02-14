@@ -25,7 +25,7 @@ classdef HarqRx < matlab.mixin.Copyable
 		end
 
 		% Handle the reception of a TB
-		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Config, timeNow)
+		function [obj, state] = handleTbReception(obj, iProc, tb, crc, timeNow)
 			obj.processes(iProc).copiesReceived = obj.processes(iProc).copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly so no need to proceed further
@@ -42,7 +42,7 @@ classdef HarqRx < matlab.mixin.Copyable
 			else
 				% in this last case, we are starting a retransmission session 
 				% so we need to know how many copies will be needed 
-				obj.processes(iProc).copiesNeeded = estimateCrcCopies(crc);
+				obj.processes(iProc).copiesNeeded = obj.estimateCrcCopies(crc);
 				obj.processes(iProc).state = 1;
 				obj.processes(iProc).tb = tb;
 				obj.processes(iProc).timeStart = timeNow;
@@ -74,7 +74,7 @@ classdef HarqRx < matlab.mixin.Copyable
 			obj.processes(iProc).timeStart = -1;
 		end
 
-		function num = estimateCrcCopies(crc)
+		function num = estimateCrcCopies(obj, crc)
 			% estimateCrcCopies provides the number of retransmissions needed based on the CRC
 			% 
 			% :crc: the CRC value

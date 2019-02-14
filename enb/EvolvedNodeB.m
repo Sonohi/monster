@@ -197,12 +197,14 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						% get the codeword
 						cwd = ue.Codeword;
 						
-						% setup the PDSCH for this UE
-						obj.Tx.PDSCH.Modulation = mod;	% conservative modulation choice from above
-						obj.Tx.PDSCH.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+						% setup the PDSCH for this UE with a local copy for mutation
+						enb = struct(obj);
+						pdsch = obj.Tx.PDSCH;
+						pdsch.Modulation = mod;	% conservative modulation choice from above
+						pdsch.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
 						
 						% Get info and indexes
-						[pdschIxs, SymInfo] = ltePDSCHIndices(struct(obj), obj.Tx.PDSCH, obj.Tx.PDSCH.PRBSet);
+						[pdschIxs, SymInfo] = ltePDSCHIndices(enb, pdsch, pdsch.PRBSet);
 						
 						if length(cwd) ~= SymInfo.G
 							% In this case seomthing went wrong with the rate maching and in the
@@ -212,7 +214,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						
 						% error handling for symbol creation
 						try
-							sym = ltePDSCH(struct(obj), obj.Tx.PDSCH, cwd);
+							sym = ltePDSCH(enb, pdsch, cwd);
 						catch ME
 							fSpec = '(EVOLVED NODE B - generateSymbols) generation failed for codeword with length %i\n';
 							s=sprintf(fSpec, length(cwd));
@@ -225,7 +227,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						SymInfo.indexes = ixPRBs;
 						ue.SymbolsInfo = SymInfo;
 						
-						% Set the symbols into the grid of the eNodeB
+						% Set the symbols into the grid of the eNodeB in the main object to preserve it at function exit
 						obj.Tx.setPDSCHGrid(sym);
 					else
 						SymInfo = struct();

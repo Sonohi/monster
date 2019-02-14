@@ -111,22 +111,26 @@ classdef UserEquipment < matlab.mixin.Copyable
 			%
 
 			% Get the current serving station for this UE
-			enb = Stations([Stations.NCellID] == obj.ENodeBID);
+			enbObjHandle = Stations([Stations.NCellID] == obj.ENodeBID);
+
+			% Convert the relevant attributes to struct to allow local modification of fields
+			enb = struct(enbObjHandle);
+			pdsch = enbObjHandle.Tx.PDSCH;
 
 			% Find the schedule of this UE in the eNodeB
-			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
+			ueScheduleIndexes = find([enbObjHandle.ScheduleDL.UeId] == obj.NCellID);
 			numPrb = length(ueScheduleIndexes);
 			if numPrb > 0 && obj.Queue.Size > 0
 				% Get the scheduling slots assigned to this UE and the averages
-				ueSchedule = enb.ScheduleDL(ueScheduleIndexes);
+				ueSchedule = enbObjHandle.ScheduleDL(ueScheduleIndexes);
 				avMcs = round(sum([ueSchedule.Mcs])/numPrb);
 
 				% the TB is created of a size that matches the allocation that the 
 				% PDSCH symbols will have on the grid and the rate matching for the CWD
 				[~, mod, ~] = lteMCS(avMcs);
-				enb.Tx.PDSCH.Modulation = mod;
-				enb.Tx.PDSCH.PRBSet = (ueScheduleIndexes - 1).';	
-				[~,info] = ltePDSCHIndices(struct(enb),enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+				pdsch.Modulation = mod;
+				pdsch.PRBSet = (ueScheduleIndexes - 1).';	
+				[~,info] = ltePDSCHIndices(enb, pdsch, pdsch.PRBSet);
 				TbInfo.rateMatch = info.G;
 				% the redundacy version (RV) is defaulted to 0
 				TbInfo.rv = 0;
@@ -139,14 +143,15 @@ classdef UserEquipment < matlab.mixin.Copyable
 				if Config.Harq.active
 					% get the SQN: start by searching whether this is a TB 
 					% that is already being transmitted and is already in the RLC buffer
-					iArqBuf = find([enb.Rlc.ArqTxBuffers.rxId] == obj.NCellID);
-					[enb.Rlc.ArqTxBuffers(iArqBuf), sqnDec] = getNextSqn(enb.Rlc.ArqTxBuffers(iArqBuf));
+					% perform this on the handle as the values need to be updated in the main object
+					iArqBuf = find([enbObjHandle.Rlc.ArqTxBuffers.rxId] == obj.NCellID);
+					[enbObjHandle.Rlc.ArqTxBuffers(iArqBuf), sqnDec] = getNextSqn(enbObjHandle.Rlc.ArqTxBuffers(iArqBuf));
 					sqnBin = de2bi(sqnDec, 10, 'left-msb')';
 
 					% get the HARQ PID: find the index of the process
-					iHarqProc = find([enb.Mac.HarqTxProcesses.rxId] == obj.NCellID);
+					iHarqProc = find([enbObjHandle.Mac.HarqTxProcesses.rxId] == obj.NCellID);
 					% Find pid
-					[enb.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(enb.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
+					[enbObjHandle.Mac.HarqTxProcesses(iHarqProc), harqPidDec, newTb] = findProcess(enbObjHandle.Mac.HarqTxProcesses(iHarqProc), sqnDec);	
 					harqPidBin = de2bi(harqPidDec, 3, 'left-msb')';
 	
 					% Create the control bits sequence 
@@ -155,10 +160,10 @@ classdef UserEquipment < matlab.mixin.Copyable
 					tb = cat(1, ctrlBits, tbPayload);
 					if newTb
 						% Set TB in the ARQ buffer
-						enb.Rlc.ArqTxBuffers(iArqBuf) = enb.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, Config.Runtime.currentTime, tb);	
+						enbObjHandle.Rlc.ArqTxBuffers(iArqBuf) = enbObjHandle.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, Config.Runtime.currentTime, tb);	
 
 						% Set TB in the HARQ process
-						enb.Mac.HarqTxProcesses(iHarqProc) = enb.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, Config.Runtime.currentTime, tb);	
+						enbObjHandle.Mac.HarqTxProcesses(iHarqProc) = enbObjHandle.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, Config.Runtime.currentTime, tb);	
 					end
 				else
 					tb = randi([0 1], TbInfo.tbSize, 1);

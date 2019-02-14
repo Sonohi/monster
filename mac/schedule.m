@@ -13,8 +13,9 @@ function [Station, Users] = schedule(Station, Users, Config)
 sz = length(extractUniqueIds([Station.Users.UeId]));
 
 % calculate number of available RBs available in the subframe for the PDSCH
-res = length(find(abs(Station.Tx.ReGrid) == 0));
-prbsAv = floor(res/Config.Phy.prbResourceElements);
+%res = length(find(abs(Station.Tx.ReGrid) == 0));
+%prbsAv = floor(res/Config.Phy.prbResourceElements);
+prbsAv = Station.NDLRB;
 
 % get ABS info
 % current subframe
