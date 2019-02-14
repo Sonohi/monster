@@ -140,12 +140,16 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
 		
-		function obj = estimatePdsch(obj, ue, enb)
+		function obj = estimatePdsch(obj, ue, enbObjHandle)
 			% first get the PRBs that where used for the UE with this receiver
-			obj.SchIndexes = find([enb.ScheduleDL.UeId] == ue.NCellID);
+			obj.SchIndexes = find([enbObjHandle.ScheduleDL.UeId] == ue.NCellID);
 			if ~isempty(obj.SchIndexes)
 				% Store the full PRB set for extraction
-				fullPrbSet = enb.Tx.PDSCH.PRBSet;
+				fullPrbSet = enbObjHandle.Tx.PDSCH.PRBSet;
+				
+				% Create local copy for modifications
+				enb = struct(enbObjHandle);
+				pdschConfig = enbObjHandle.Tx.PDSCH;
 				
 				% To find which received PDSCH symbols belong to this UE, we need to
 				% compute indexes for all other UEs allocated in this eNodeB, except
@@ -158,12 +162,12 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 					for iUser = 1:length(uniqueIds)
 						if uniqueIds(iUser) ~= ue.NCellID
 							% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
-							prbIndices = find([enb.ScheduleDL.UeId] == uniqueIds(iUser));
+							prbIndices = find([enbObjHandle.ScheduleDL.UeId] == uniqueIds(iUser));
 							if prbIndices(1) < obj.SchIndexes(1)
-								[~, mod, ~] = lteMCS(enb.ScheduleDL(prbIndices(1)).Mcs);
-								enb.Tx.PDSCH.Modulation = mod;
-								enb.Tx.PDSCH.PRBSet = (prbIndices - 1).';
-								uePdschIndices = ltePDSCHIndices(struct(enb), enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+								[~, mod, ~] = lteMCS(enbObjHandle.ScheduleDL(prbIndices(1)).Mcs);
+								pdschConfig.Modulation = mod;
+								pdschConfig.PRBSet = (prbIndices - 1).';
+								uePdschIndices = ltePDSCHIndices(enb, pdschConfig, pdschConfig.PRBSet);
 								offset = offset + length(uePdschIndices);
 							end
 						end
@@ -171,13 +175,13 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				end
 				
 				% Set the parameters of the PDSCH to those of the current UE
-				[~, mod, ~] = lteMCS(enb.ScheduleDL(obj.SchIndexes(1)).Mcs);
-				enb.Tx.PDSCH.Modulation = mod;
-				enb.Tx.PDSCH.PRBSet = (obj.SchIndexes - 1).';
+				[~, mod, ~] = lteMCS(enbObjHandle.ScheduleDL(obj.SchIndexes(1)).Mcs);
+				pdschConfig.Modulation = mod;
+				pdschConfig.PRBSet = (obj.SchIndexes - 1).';
 				
 				% Now get all the PDSCH indexes and symbols out of the received grid
 				% TODO for some reasons the built-in functions only work properly with the whole PDSCH
-				fullPdschIndices = ltePDSCHIndices(struct(enb), enb.Tx.PDSCH, fullPrbSet);
+				fullPdschIndices = ltePDSCHIndices(enb, pdschConfig, fullPrbSet);
 				[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, obj.EqSubframe);
 				
 				% Filter out the PDSCH symbols and bits that are meant for this receiver.
@@ -186,7 +190,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				uePdschRx = fullPdschRx(offset:offset + length(uePdschIndices) - 1);
 				
 				% Decode PDSCH
-				[ueDlsch, uePdsch] = ltePDSCHDecode(struct(enb), enb.Tx.PDSCH, uePdschRx);
+				[ueDlsch, uePdsch] = ltePDSCHDecode(enb, pdschConfig, uePdschRx);
 				uePdsch = uePdsch{1};
 				ueDlsch = ueDlsch{1};
 				
@@ -194,7 +198,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				% cases convert it
 				obj.PDSCH = uePdsch;
 				% Decode DL-SCH
-				[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(struct(enb), enb.Tx.PDSCH, ue.TransportBlockInfo.tbSize, ueDlsch);
+				[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, pdschConfig, ue.TransportBlockInfo.tbSize, ueDlsch);
 			end
 		end
 		

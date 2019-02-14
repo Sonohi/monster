@@ -101,8 +101,8 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
 		end
 
-		function obj = generateTransportBlock(obj, Stations, Config)
-			% generateTransportBlock is used to create a TB with dummy data for the UE
+		function obj = generateTransportBlockDL(obj, Stations, Config)
+			% generateTransportBlockDL is used to create a TB with dummy data for the UE
 			%
 			% :param obj: UserEquipment instance
 			% :param Stations: Array<EvolvedNodeB> instances
@@ -178,8 +178,8 @@ classdef UserEquipment < matlab.mixin.Copyable
 			end
 		end
 
-		function obj = generateCodeword(obj)
-			% generateCodeword creates a codeword from a TB
+		function obj = generateCodewordDL(obj)
+			% generateCodewordDL creates a codeword from a TB
 			% 
 			% :param obj: UserEquipment instance
 			% :returns obj: UserEquipment instance

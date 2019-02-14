@@ -12,9 +12,7 @@ function [Station, Users] = schedule(Station, Users, Config)
 % Set a flag for the overall number of valid UE attached
 sz = length(extractUniqueIds([Station.Users.UeId]));
 
-% calculate number of available RBs available in the subframe for the PDSCH
-%res = length(find(abs(Station.Tx.ReGrid) == 0));
-%prbsAv = floor(res/Config.Phy.prbResourceElements);
+% Set initially the number of available PRBs to the entire set
 prbsAv = Station.NDLRB;
 
 % get ABS info

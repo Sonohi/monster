@@ -228,7 +228,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						ue.SymbolsInfo = SymInfo;
 						
 						% Set the symbols into the grid of the eNodeB in the main object to preserve it at function exit
-						obj.Tx.setPDSCHGrid(sym);
+						obj.Tx.setPDSCHGrid(sym, pdschIxs);
 					else
 						SymInfo = struct();
 						SymInfo.symSize = 0;

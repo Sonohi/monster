@@ -231,10 +231,10 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			
 			% Create the transport blocks for all the UEs
-			arrayfun(@(x)x.generateTransportBlock(obj.Stations, obj.Config), obj.Users);
+			arrayfun(@(x)x.generateTransportBlockDL(obj.Stations, obj.Config), obj.Users);
 
 			% Create the codewords for all the UEs
-			arrayfun(@(x)x.generateCodeword(), obj.Users);
+			arrayfun(@(x)x.generateCodewordDL(), obj.Users);
 
 			% Create the symbols for all the UEs' codewords at the eNodeBs
 			arrayfun(@(x)x.generateSymbols(obj.Users), obj.Stations);
