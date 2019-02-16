@@ -36,27 +36,30 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 		end
 
 		function testDemodulation(testCase)
-			% Setup up reference waveform to transmit
+		
+
+			% Schedule user for downlink transmission
 			testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
 			testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
-						
-			% Create the transport blocks for all the UEs
-			arrayfun(@(x)x.generateTransportBlockDL(testCase.Stations, testCase.Config), testCase.Users);
-
-			% Create the codewords for all the UEs
-			arrayfun(@(x)x.generateCodewordDL(), testCase.Users);
-
-			% Setup the reference signals at the eNB transmitters 
-			arrayfun(@(x)x.setupGrid(testCase.Config.Runtime.currentRound), [testCase.Stations.Tx]);
 			
-			
-			% Create the symbols for all the UEs' codewords at the eNodeBs
-			arrayfun(@(x)x.generateSymbols(testCase.Users), testCase.Stations);
+			% Setup transport block downlink
+			testCase.Users(1).generateTransportBlockDL(testCase.Stations, testCase.Config)
 
-			
-			% Finally modulate the waveform for all the eNodeBs
-			arrayfun(@(x)x.modulateTxWaveform(), [testCase.Stations.Tx]);
+			% Setup codewords
+			testCase.Users(1).generateCodewordDL();
 
+			% Setup up reference grid
+			testCase.Stations(1).Tx.setupGrid();
+
+			% Create Symbols
+			testCase.Stations(1).generateSymbols();
+
+			% Create waveform
+			testCase.Stations(1).Tx.modulateTxWaveform();
+			
+			% Set waveform in Rx module
+			
+			% Demodulate and verify reference signals + data
 		end
 	
 		
