@@ -5,6 +5,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 		TxModule;
 		RxModule;
 		Stations;
+		Channel;
 		Users;
 	end
 
@@ -19,7 +20,8 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Users = setupUsers(testCase.Config);
 			testCase.RxModule = [testCase.Users.Rx];
 			testCase.TxModule = [testCase.Stations.Tx];
-
+			testCase.Channel = setupChannel(testCase.Stations, testCase.Users, testCase.Config);
+				
 		end
 	end
 
@@ -49,17 +51,22 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Users(1).generateCodewordDL();
 
 			% Setup up reference grid
-			testCase.Stations(1).Tx.setupGrid();
+			testCase.Stations(1).Tx.setupGrid(0);
 
 			% Create Symbols
-			testCase.Stations(1).generateSymbols();
+			testCase.Stations(1).generateSymbols(testCase.Users);
 
 			% Create waveform
 			testCase.Stations(1).Tx.modulateTxWaveform();
 			
 			% Set waveform in Rx module
+			testCase.Users(1).Rx.Waveform = testCase.Stations(1).Tx.Waveform;
+			testCase.Users(1).Rx.WaveformInfo = testCase.Stations(1).Tx.WaveformInfo;
+			testCase.Users(1).Rx.RxPwdBm = -30;
 			
 			% Demodulate and verify reference signals + data
+			testCase.Users(1).Rx.receiveDownlink(testCase.Stations(1), testCase.Channel.Estimator.Downlink)
+		W
 		end
 	
 		
