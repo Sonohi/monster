@@ -21,6 +21,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				Config = MonsterConfig();
 				Config.SimulationPlot.runtimePlot = 0;
+				Config.MacroEnb.number = 5;
 				Config.Ue.number = 5;
 				
 				Config.setupNetworkLayout();

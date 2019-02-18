@@ -28,7 +28,40 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 	methods(TestMethodTeardown)
 		function resetTransmitters(testCase)
 			arrayfun(@(x) x.reset(), [testCase.TxModule]);
+			arrayfun(@(x) x.reset(), [testCase.RxModule]);
 		end
+	end
+	
+	methods(TestMethodSetup)
+		function setDownlinkWaveform(testCase)
+					
+
+			% Schedule user for downlink transmission
+			testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+			testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+			
+			% Setup transport block downlink
+			testCase.Users(1).generateTransportBlockDL(testCase.Stations, testCase.Config);
+
+			% Setup codewords
+			testCase.Users(1).generateCodewordDL();
+
+			% Setup up reference grid
+			testCase.Stations(1).Tx.setupGrid(0);
+
+			% Create Symbols
+			testCase.Stations(1).generateSymbols(testCase.Users);
+
+			% Create waveform
+			testCase.Stations(1).Tx.modulateTxWaveform();
+			
+			% Set waveform in Rx module
+			testCase.Users(1).Rx.Waveform = testCase.Stations(1).Tx.Waveform;
+			testCase.Users(1).Rx.WaveformInfo = testCase.Stations(1).Tx.WaveformInfo;
+			testCase.Users(1).Rx.RxPwdBm = -30;
+			
+		end
+		
 	end
 	
 	methods (Test)
@@ -37,47 +70,59 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.verifyTrue(isa(testCase.RxModule, 'ueReceiverModule'));
 		end
 
-		function testDemodulation(testCase)
-            
-            
-			% Schedule user for downlink transmission
-			testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-			testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
-
-			testCase.Stations(1).ScheduleDL(1).UeId = testCase.Users(1).NCellID;
-			testCase.Stations(1).ScheduleDL(1).Mcs = 4;
-            %testCase.Stations(1).evaluateScheduling(testCase.Users);
-            %testCase.Stations(1).downlinkSchedule(testCase.Users, testCase.Config);
-            
-	
-			% Setup up reference grid
-			testCase.Stations(1).Tx.setupGrid(0);
-            %testCase.Stations(1).Tx.setPRBSSequence(ue);
-
-			% Create waveform
-			testCase.Stations(1).Tx.modulateTxWaveform();
-
-			
-			% Set waveform in Rx module
-			testCase.Users(1).Rx.Waveform = testCase.Stations(1).Tx.Waveform;
-			testCase.Users(1).Rx.WaveformInfo = testCase.Stations(1).Tx.WaveformInfo;
-			testCase.Users(1).Rx.RxPwdBm = -30;
-			
+		function testDemodulation(testCase)			
 			% Demodulate and verify reference signals + data
-			testCase.Users(1).Rx.receiveDownlink(testCase.Stations(1), testCase.Channel.Estimator.Downlink)
-	
-            % Check demodulation is possible
-			testCase.verifyTrue(testCase.Users(1).Rx.Demod==1)
-			
-            % Check the subframes are within reasonable distance of each other
-            diffSubframesTxRx = sum(testCase.Users(1).Rx.EqSubframe - testCase.Stations(1).Tx.ReGrid);
-            testCase.verifyFalse(any(diffSubframesTxRx > 10e-14))
-           
-            % Check Tx bits corresponds to Rx bits
-            
-            
+			testCase.Users(1).Rx.demodulateWaveform(testCase.Stations(1));
+			testCase.verifyEqual(testCase.Users(1).Rx.Demod,1);
+			diffSubframe = sum(abs(testCase.Stations(1).Tx.ReGrid - testCase.Users(1).Rx.Subframe));
+			testCase.verifyFalse(any(diffSubframe > 10e-12));
 		end
-	
+		
+		function testDemodulateError(testCase)
+			% No waveform set
+			testCase.Users(1).Rx.reset();
+			testCase.verifyError(@() testCase.Users(1).Rx.demodulateWaveform(testCase.Stations(1)),'MonsterUeReceiverModule:EmptyWaveform');
+		end
+		
+		function testOffsetComputation(testCase)
+			% Add some arbitary offset to the waveform
+			offset = 15;
+			testCase.Users(1).Rx.Waveform = circshift(testCase.Users(1).Rx.Waveform,offset);
+			testCase.Users(1).Rx.applyOffset(testCase.Stations(1));
+			testCase.verifyEqual(testCase.Users(1).Rx.Offset, offset);
+		end
+		
+		function testChannelEstimator(testCase)
+
+			% No waveform demodulated
+			testCase.verifyError(@() testCase.Users(1).Rx.estimateChannel(testCase.Stations(1), testCase.Channel.Estimator.Downlink),'MonsterUeReceiverModule:EmptySubframe')
+			
+			% Waveform demodulated
+			testCase.Users(1).Rx.applyOffset(testCase.Stations(1));
+			testCase.Users(1).Rx.demodulateWaveform(testCase.Stations(1))
+			testCase.Users(1).Rx.estimateChannel(testCase.Stations(1), testCase.Channel.Estimator.Downlink);
+			testCase.verifyTrue(~isempty(testCase.Users(1).Rx.EstChannelGrid));
+			testCase.verifyTrue(~isempty(testCase.Users(1).Rx.NoiseEst));
+		end
+
+		function testEqualizer(testCase)
+
+			% No subframe available
+			testCase.verifyError(@() testCase.Users(1).Rx.equaliseSubframe(),'MonsterUeReceiverModule:EmptySubframe');
+
+			% Demodulate but do not estimate the channel
+			testCase.Users(1).Rx.demodulateWaveform(testCase.Stations(1));
+			testCase.verifyError(@() testCase.Users(1).Rx.equaliseSubframe(),'MonsterUeReceiverModule:EmptyChannelEstimation');
+
+			% Estimate channel
+			testCase.Users(1).Rx.estimateChannel(testCase.Stations(1), testCase.Channel.Estimator.Downlink);
+			testCase.Users(1).Rx.equaliseSubframe();
+			testCase.verifyTrue(~isempty(testCase.Users(1).Rx.EqSubframe))
+
+
+		end
+		
+
 		
 	end
 

@@ -138,7 +138,15 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function demodulateWaveform(obj,enbObj)
-			% TODO: validate that a waveform exist.
+			% Demodulate waveform and store extracted subframe.
+			% 
+			% ueReceiverModule
+			% EvolvedNodeB
+			% sets obj.Subframe and obj.Demod
+			if isempty(obj.Waveform)
+				monsterLog('No waveform detected.', 'ERR', 'MonsterUeReceiverModule:EmptyWaveform')
+			end
+
 			enb = struct(enbObj);
 			Subframe = lteOFDMDemodulate(enb, obj.Waveform); %#ok
 			
@@ -149,15 +157,34 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				obj.Demod = 1;
 			end
 		end
+
+		function validateSubframe(obj)
+			% Validator for subframe
+			if isempty(obj.Subframe)
+				monsterLog('Empty subframe in receiver module. Did it demodulate?','ERR','MonsterUeReceiverModule:EmptySubframe')
+			end	
+		end
 		
-		% estimate channel at the receiver
 		function obj = estimateChannel(obj, enbObj, cec)
+			% Estimate the channel matrix using a channel estimator and the enb structure
+			%
+			% Sets obj.EstChannelGrid (H matrix) and obj.NoiseEst (Noise power variance).
 			enb = struct(enbObj);
+			obj.validateSubframe()
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, obj.Subframe);
 		end
 		
-		% equalize at the receiver
+		
 		function obj = equaliseSubframe(obj)
+			% MMSE equalizer of subframe using channel estimation
+			%
+			% Uses obj.Subframe, obj.EstChannelGrid and obj.NoiseEst
+			% Sets obj.EqSubframe
+			obj.validateSubframe()
+			if isempty(obj.EstChannelGrid) || isempty(obj.NoiseEst)
+				monsterLog('Empty channel estimation and noise estimation.','ERR', 'MonsterUeReceiverModule:EmptyChannelEstimation')
+			end
+
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
 		
@@ -278,10 +305,15 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function obj = applyOffset(obj, enbObj)
+			% Applies and computes offset to the waveform property. Can use two different ways of offset calculation
+			% 1. Perfect timing estimate giving the NR toolbox and the pathgains/filters of the channel
+			% 2. Offset computation using xcorr and PSS/SSS signals
+			% 
+			% Updates obj.Waveform
 			if obj.PerfectSynchronization && ~isempty(obj.PathGains)
 				obj.Offset = nrPerfectTimingEstimate(obj.PathGains,obj.PathFilters);
 			else
-				obj.computeOffset(enbObj)
+				obj.computeOffset(enbObj);
 			end
 			obj.Waveform = obj.Waveform(obj.Offset+1:end);
 		end
