@@ -38,26 +38,25 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 		end
 
 		function testDemodulation(testCase)
-		
-
+            
+            
 			% Schedule user for downlink transmission
 			testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
 			testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
-			
-			% Setup transport block downlink
-			testCase.Users(1).generateTransportBlockDL(testCase.Stations, testCase.Config)
 
-			% Setup codewords
-			testCase.Users(1).generateCodewordDL();
-
+			testCase.Stations(1).ScheduleDL(1).UeId = testCase.Users(1).NCellID;
+			testCase.Stations(1).ScheduleDL(1).Mcs = 4;
+            %testCase.Stations(1).evaluateScheduling(testCase.Users);
+            %testCase.Stations(1).downlinkSchedule(testCase.Users, testCase.Config);
+            
+	
 			% Setup up reference grid
 			testCase.Stations(1).Tx.setupGrid(0);
-
-			% Create Symbols
-			testCase.Stations(1).generateSymbols(testCase.Users);
+            %testCase.Stations(1).Tx.setPRBSSequence(ue);
 
 			% Create waveform
 			testCase.Stations(1).Tx.modulateTxWaveform();
+
 			
 			% Set waveform in Rx module
 			testCase.Users(1).Rx.Waveform = testCase.Stations(1).Tx.Waveform;
@@ -66,7 +65,17 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			
 			% Demodulate and verify reference signals + data
 			testCase.Users(1).Rx.receiveDownlink(testCase.Stations(1), testCase.Channel.Estimator.Downlink)
-		W
+	
+            % Check demodulation is possible
+			testCase.verifyTrue(testCase.Users(1).Rx.Demod==1)
+			
+            % Check the subframes are within reasonable distance of each other
+            diffSubframesTxRx = sum(testCase.Users(1).Rx.EqSubframe - testCase.Stations(1).Tx.ReGrid);
+            testCase.verifyFalse(any(diffSubframesTxRx > 10e-14))
+           
+            % Check Tx bits corresponds to Rx bits
+            
+            
 		end
 	
 		

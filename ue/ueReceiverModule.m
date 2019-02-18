@@ -34,6 +34,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		SINRS;
 		Demod;
 		AntennaArray;
+		ueObj; % Parent UE handle
 	end
 
 	properties (Access = private)
@@ -43,14 +44,14 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 	methods
 		
 		function obj = ueReceiverModule(ueObj, Config)
-      obj.Offset = 0;
+			obj.Offset = 0;
+			obj.ueObj = ueObj;
 			obj.NoiseFigure = Config.Ue.noiseFigure;
 			obj.CQI = 3;
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
 			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, Config.Phy.downlinkFrequency*10e5);
-			obj.AntennaArray.Bearing = -10;
 		end
 		
 		function loss = getLoss(obj, TxPosition, RxPosition)
@@ -100,19 +101,39 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			
 			% Conduct reference measurements
 			obj.referenceMeasurements(enb);
+
+			% If UE is not scheduled reset the metrics for the round
+			if length(enb.getPRBSetDL(obj.ueObj)) <= 0
+				obj.logNotScheduled();
+			end
 			
 			% Demodulate waveform
 			obj.demodulateWaveform(enb);
 			
-			% Estimate the channel
-			obj.estimateChannel(enb, cec);
-			
-			% Apply equalization
-			obj.equaliseSubframe();
-			
-			% Select CQI
-			obj.selectCqi(enb);
-	
+			if obj.Demod 
+				% Estimate the channel
+				obj.estimateChannel(enb, cec);
+				
+				% Apply equalization
+				obj.equaliseSubframe();
+				
+				% Select CQI
+				obj.selectCqi(enb);
+
+				% Extract PDSCH
+				obj.estimatePdsch(obj.ueObj, enb);
+
+				% Calculate EVM
+				obj.calculateEvm(enb);
+
+				% Log block reception
+				obj.logBlockReception(obj.ueObj);
+			else
+				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				obj.logNotDemodulated();
+				obj.CQI = 3;
+
+			end
 			% TODO: Select PMI, RI
 		end
 		
@@ -142,7 +163,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		
 		function obj = estimatePdsch(obj, ue, enbObjHandle)
 			% first get the PRBs that where used for the UE with this receiver
-			obj.SchIndexes = find([enbObjHandle.ScheduleDL.UeId] == ue.NCellID);
+			obj.SchIndexes = enbObjHandle.getPRBSetDL(ue);
 			if ~isempty(obj.SchIndexes)
 				% Store the full PRB set for extraction
 				fullPrbSet = enbObjHandle.Tx.PDSCH.PRBSet;
@@ -175,7 +196,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				end
 				
 				% Set the parameters of the PDSCH to those of the current UE
-				[~, mod, ~] = lteMCS(enbObjHandle.ScheduleDL(obj.SchIndexes(1)).Mcs);
+				mod = enbObjHandle.getModulationDL(ue);
 				pdschConfig.Modulation = mod;
 				pdschConfig.PRBSet = (obj.SchIndexes - 1).';
 				

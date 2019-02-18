@@ -118,24 +118,22 @@ classdef UserEquipment < matlab.mixin.Copyable
 			pdsch = enbObjHandle.Tx.PDSCH;
 
 			% Find the schedule of this UE in the eNodeB
-			ueScheduleIndexes = find([enbObjHandle.ScheduleDL.UeId] == obj.NCellID);
+
+			ueScheduleIndexes = enbObjHandle.getPRBSetDL(obj);
+
 			numPrb = length(ueScheduleIndexes);
 			if numPrb > 0 && obj.Queue.Size > 0
-				% Get the scheduling slots assigned to this UE and the averages
-				ueSchedule = enbObjHandle.ScheduleDL(ueScheduleIndexes);
-				avMcs = round(sum([ueSchedule.Mcs])/numPrb);
 
 				% the TB is created of a size that matches the allocation that the 
-				% PDSCH symbols will have on the grid and the rate matching for the CWD
-				[~, mod, ~] = lteMCS(avMcs);
-				pdsch.Modulation = mod;
+				% PDSCH symbols will have on the grid and the rate matching for the CW
+				pdsch.Modulation = enbObjHandle.getModulationDL(obj);
 				pdsch.PRBSet = (ueScheduleIndexes - 1).';	
 				[~,info] = ltePDSCHIndices(enb, pdsch, pdsch.PRBSet);
 				TbInfo.rateMatch = info.G;
 				% the redundacy version (RV) is defaulted to 0
 				TbInfo.rv = 0;
 				% Finally, we need to calculate the TB size given the scheduling
-				TbInfo.tbSize = lteTBS(numPrb, avMcs);
+				TbInfo.tbSize = lteTBS(numPrb, enbObjHandle.getMCSDL(obj));
 
 				% Encode the SQN and the HARQ process ID into the TB if retransmissions are on
 				% Use the first 13 bits for that. 
@@ -213,47 +211,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 
 			% Get the current serving station for this UE
 			enb = Stations([Stations.NCellID] == obj.ENodeBID);
-			% Find the schedule of this UE in the eNodeB
-			ueScheduleIndexes = find([enb.ScheduleDL.UeId] == obj.NCellID);
-			
-			% Compute offset based on synchronization signals.
-			obj.Rx = obj.Rx.computeOffset(enb);
-			% Apply Offset
-			if obj.Rx.Offset > length(obj.Rx.Waveform)
-				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) Offset for User %i out of bounds, not able to synchronize',obj.NCellID),'WRN')
-			else
-				obj.Rx.Waveform = obj.Rx.Waveform(1+abs(obj.Rx.Offset):end,:);
-			end
-
-			% Conduct reference measurements
-			obj.Rx = obj.Rx.referenceMeasurements(enb);
-
-			% If the UE is not scheduled, reset the metrics for the round
-			if length(ueScheduleIndexes) <= 0
-				obj.Rx = obj.Rx.logNotScheduled();
-			end
-
-			% Try to demodulate
-			obj.Rx.demodulateWaveform(enb);
-			% demodulate received waveform, if it returns 1 (true) then demodulated
-			if obj.Rx.Demod
-				% Estimate Channel
-				obj.Rx.estimateChannel(enb, ChannelEstimator);
-				% Equalize signal
-				obj.Rx.equaliseSubframe();
-				% Estimate PDSCH (main data channel)
-				obj.Rx.estimatePdsch(obj, enb);
-				% calculate EVM
-				obj.Rx.calculateEvm(enb);
-				% Calculate the CQI to use
-				obj.Rx.selectCqi(enb);
-				% Log block reception stats
-				obj.Rx.logBlockReception(obj);
-			else
-				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
-				obj.Rx = obj.Rx.logNotDemodulated();
-				obj.Rx.CQI = 3;
-			end					
+			obj.Rx.receiveDownlink(enb, ChannelEstimator);	
 		end
 
 		function obj = downlinkDataDecoding(obj, Config)

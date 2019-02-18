@@ -169,6 +169,31 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				end
 			end
 		end
+
+		function [minMCS, varargout] = getMCSDL(obj, ue)
+			% Get MCS in DL, returns minimum MCS and list of MCS.
+			%
+			% Returns minimum MCS 
+			% Optional: returns list of MCS
+			idxUE = obj.getPRBSetDL(ue);
+			listMCS = [obj.ScheduleDL(idxUE).Mcs];
+            minMCS = min(listMCS);
+            varargout{1} = listMCS;
+		end
+		
+		function mod = getModulationDL(obj, ue)
+			% Get modulation from lowest MCS given the DL schedule
+			%
+			% Returns modulation format
+			[~, mod, ~] = lteMCS(obj.getMCSDL(ue));
+		end
+        
+		function PRBSet = getPRBSetDL(obj, ue)
+			% Return list of PRBs assigned to a specific user
+			%
+			% Return PRB set of specific user
+            PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
+        end
 		
 		function obj = generateSymbols(obj, Users)
 			% generateSymbols
@@ -185,14 +210,13 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				ue = enbUsers(iUser);
 				% Check for empty codewords
 				if ~isempty(ue.Codeword)
-					% find all the PRBs assigned to this UE to find the most conservative MCS (min)
-					sch = obj.ScheduleDL;
-					ixPRBs = find([sch.UeId] == ue.NCellID);
+					% find all the PRBs assigned to this UE 
+					ixPRBs = obj.getPRBSetDL(ue);
 					if ~isempty(ixPRBs)
-						listMCS = [sch(ixPRBs).Mcs];
-						
 						% get the correct Parameters for this UE
-						[~, mod, ~] = lteMCS(min(listMCS));
+                        
+                        % find the most conservative modulation
+						mod = obj.getModulationDL(ue);
 						
 						% get the codeword
 						cwd = ue.Codeword;
