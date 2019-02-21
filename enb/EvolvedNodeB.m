@@ -192,7 +192,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Return list of PRBs assigned to a specific user
 			%
 			% Return PRB set of specific user
-    	PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
+            PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
 		end
 				
 		

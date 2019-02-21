@@ -31,6 +31,11 @@ classdef BaseCell < matlab.mixin.Copyable
 				otherwise
 					monsterLog('Unknown cell type selected.','ERR')
 			end
+			
 		end
+		
 	end
+	
+	
+	
 end

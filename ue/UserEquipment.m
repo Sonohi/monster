@@ -3,31 +3,17 @@
 classdef UserEquipment < matlab.mixin.Copyable
 	%   USER EQUIPMENT defines a value class for creating and working with UEs
 	properties
-		%Matlab tool box for LTE
-		RNTI;			%Radio network temporary identifier. Required for matlab LTE toolbox
-		DuplexMode; 	%Duplex mode, e.g. 'FDD' or 'TDD' (matlab LTE toolbox), when removed matalb chrashes
-		CyclicPrefixUL; %Cyclic Prefix (matlab LTE toolbox)
-
-		%Practical info about the UE
-		NCellID;		%ID number for the UE
-		NTxAnts;		%Number of transmission antennas
-		ENodeBID;		%Associated eNB
-		Position;		%Coordinates to the UE location
-		PLast; 			% indexes in trajectory vector of the latest position of the UE
-		TLast; 			% timestamp of the latest movement done by the UE
-		Trajectory;		%Movement track
-		Velocity;		%Speed fo the UE
-		Mobility;		%Mobility scenario
-
-		%Frames and subframes
-		NULRB;			%Something with subframes
-		NSubframe;		%
-		NFrame;			%
-		
-		%Draw and plot functions
-		PlotStyle;		%Style to control plot functions
-		
-		%Scheduling info
+		NCellID;
+		ENodeBID;
+		NULRB;
+		RNTI;
+		DuplexMode;
+		CyclicPrefixUL;
+		NSubframe;
+		NFrame;
+		NTxAnts;
+		Position;
+		PLast; % indexes in trajectory vector of the latest position of the UE
 		Queue;
 		PlotStyle;
 		Scheduled = struct('DL', false, 'UL', false);
@@ -36,11 +22,11 @@ classdef UserEquipment < matlab.mixin.Copyable
 		Trajectory;
 		Velocity;
 		RxAmpli;
-		Rx;				%Reciver module
-		Tx;				%Transmit module
-		Symbols;		%Symbols
-		SymbolsInfo;	%Info about symbols
-		Codeword;		
+		Rx;
+		Tx;
+		Symbols;
+		SymbolsInfo;
+		Codeword;
 		CodewordInfo;
 		TransportBlock;
 		TransportBlockInfo;
