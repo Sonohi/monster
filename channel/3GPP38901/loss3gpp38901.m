@@ -133,8 +133,8 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 				error('Pathloss3GPP:Range','2D distance(s) not within ranges of [10m, %i m] or [%i m, 5km]',floor(d_bp), floor(d_bp))
 			end
 			
-			PL_RMA_LOS = PL1;
-			PL_RMA_LOS(d_bp <= d_2d & d_2d <=5000) = 28+40*log10(d_3d(d_bp <= d_2d & d_2d <=5000)) + 20*log10(f_c)-9*log10((d_bp)^2+(h_bs-h_ut)^2);
+			PL_UMA_LOS = PL1;
+			PL_UMA_LOS(d_bp <= d_2d & d_2d <=5000) = 28+40*log10(d_3d(d_bp <= d_2d & d_2d <=5000)) + 20*log10(f_c)-9*log10((d_bp)^2+(h_bs-h_ut)^2);
 			
 			%if LOS
 			%	std_sf = 4;
@@ -154,10 +154,10 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 				error('2D distance not within ranges of [10m, 5km]')
 			end
 	
-			PL_RMA_NLOS = PL_RMA_LOS;
-			PL_RMA_NLOS(~LOS & d_2d >= 10 & d_2d <= 5000) = 13.54+39.08*log10(d_3d(~LOS & d_2d >= 10 & d_2d <= 5000) ) + 20*log10(f_c) - 0.6*(h_ut-1.5);
+			PL_UMA_NLOS = PL_UMA_LOS;
+			PL_UMA_NLOS(~LOS & d_2d >= 10 & d_2d <= 5000) = 13.54+39.08*log10(d_3d(~LOS & d_2d >= 10 & d_2d <= 5000) ) + 20*log10(f_c) - 0.6*(h_ut-1.5);
 	
-			lossdB = max(PL_RMA_LOS, PL_RMA_NLOS);
+			lossdB = max(PL_UMA_LOS, PL_UMA_NLOS);
 			
 			
 		case 'UMi'
@@ -184,7 +184,7 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 			end
 	
 			PL_UMI_LOS = PL1;		
-			PL_RMA_LOS(d_bp <= d_2d & d_2d <=5000) = 32.4+40*log10(d_3d(d_bp <= d_2d & d_2d <=5000) )+20*log10(f_c)-9.5*log10((d_bp)^2+(h_bs-h_ut)^2);
+			PL_UMI_LOS(d_bp <= d_2d & d_2d <=5000) = 32.4+40*log10(d_3d(d_bp <= d_2d & d_2d <=5000) )+20*log10(f_c)-9.5*log10((d_bp)^2+(h_bs-h_ut)^2);
 	
 			%if LOS
 			%	std_sf = 4;
@@ -199,10 +199,10 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 			%	end
 			%end
 	
-			PL_RMA_NLOS = PL_RMA_LOS;
-			PL_RMA_NLOS(~LOS & d_2d >= 10 & d_2d <= 5000) = 35.3*log10(d_3d(~LOS & d_2d >= 10 & d_2d <= 5000)) + 22.4 + 21.3*log10(f_c) - 0.3*(h_ut -1.5);
+			PL_UMI_NLOS = PL_UMI_LOS;
+			PL_UMI_NLOS(~LOS & d_2d >= 10 & d_2d <= 5000) = 35.3*log10(d_3d(~LOS & d_2d >= 10 & d_2d <= 5000)) + 22.4 + 21.3*log10(f_c) - 0.3*(h_ut -1.5);
 	
-			lossdB = max(PL_RMA_LOS, PL_RMA_NLOS);
+			lossdB = max(PL_UMI_LOS, PL_UMI_NLOS);
 	
 		otherwise
 			error('Scenario not recognized.')	
