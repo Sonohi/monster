@@ -37,7 +37,7 @@ for iCluster = 1:numClusters
 		% on the other hand, when ya reaches the top we are done and it should
 		% coincide with the nuber of Clusters
 		if ya >= ydim
-			sonohilog('You should have stopped clustering!!!!', 'WRN');
+			monsterLog('You should have stopped clustering!!!!', 'WRN');
 		end
 	end
 	xc = xa + Param.heatMapRes;
@@ -70,7 +70,7 @@ for iStation = 1:length(Stations)
 	Stations(iStation).Tx.ReGrid = Stations(iStation).Tx.FrameGrid;
 
 	for iCluster = 1:length(Clusters)
-		sonohilog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
+		monsterLog(sprintf('Generating heatmap, cluster %i/%i',iCluster,length(Clusters)),'NFO')
 		% make local copy
 		ueCopy = ue;
 		ueCopy.Position = [Clusters(iCluster).CC, Param.ueHeight];
@@ -79,12 +79,12 @@ for iStation = 1:length(Stations)
 			[~, ueCopy] = Channel.traverse(Stations(iStation),ueCopy,'downlink');
 			Clusters(iCluster).snrVals(iStation) = ueCopy.Rx.SNRdB;
 			Clusters(iCluster).rxPw(iStation) = ueCopy.Rx.RxPw;
-			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.Rx.SNRdB),...
+			monsterLog(sprintf('Saved SNR: %s dB, RxPw: %s dB',num2str(ueCopy.Rx.SNRdB),...
 				num2str(ueCopy.Rx.RxPw)),'NFO');
 		catch ME
 			Clusters(iCluster).snrVals(iStation) = NaN;
 			Clusters(iCluster).SINR(iStation) = NaN;
-			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
+			monsterLog(sprintf('Something went wrong... %s',ME.identifier),'NFO')
 		end
 
 

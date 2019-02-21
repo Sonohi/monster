@@ -1,6 +1,6 @@
 %   ARQ RX defines a value class for a reordering buffer for ARQ receiver
 
-classdef ArqRx
+classdef ArqRx < matlab.mixin.Copyable
 	properties
 		sqnExpected;
 		sqnReceived;
@@ -15,7 +15,7 @@ classdef ArqRx
 
 	methods
 		% Constructor
-		function obj = ArqRx(Param, timeNow)
+		function obj = ArqRx()
 			obj.sqnExpected = 0;
 			obj.sqnReceived = 0;
 			obj.sqnNext = 1;
@@ -49,7 +49,7 @@ classdef ArqRx
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-				sonohilog('ARQ received duplicate TB', 'NFO');
+				monsterLog('ARQ received duplicate TB', 'NFO');
 			end
 		end
 
@@ -60,9 +60,9 @@ classdef ArqRx
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
-		function obj = flush(timeNow, Param)
+		function obj = flush(timeNow, Config)
 			for iTb = length(1:obj.tbBuffer)
-				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
+				if timeNow - obj.tbBuffer(iTb).timeStart > Config.Arq.timeout/1000
 					obj = pop(iTb);
 				end
 			end

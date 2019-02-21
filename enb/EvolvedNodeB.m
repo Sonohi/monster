@@ -1,76 +1,64 @@
-classdef EvolvedNodeB
+classdef EvolvedNodeB < matlab.mixin.Copyable
 	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties
-		%Matlab tool box default cell wide properties
-		NDLRB;				%Number of DL Resource Blocks (matlab LTE toolbox)
-		CyclicPrefix;		%Cyclic Prefix (matlab LTE toolbox)
-		PHICHDuration;		%Physical Hybrid-ARQ Indicator Channel duration (matlab LTE toolbox)
-		DuplexMode;			%Duplex mode, e.g. 'FDD' or 'TDD' (matlab LTE toolbox)
-		CFI;				%Control Format Indicator, number of PDCCH(Physical Downlink Control Channel) symbols (matlab LTE toolbox)
-		Ng;					%Hybrid-ARQ Indicator Channel groups (matlab LTE toolbox)
-		CellRefP;			%Number of antenna ports (matlab LTE toolbox)
-		NCellID;			%Cell ID (matlab LTE toolbox)
-		NSubframe;			%Subframe number (matlab LTE toolbox)
-
-		%Practical information about the eNB
-		Position;			%Position of the eNB
-		BsClass;			%Base Station class
-		Neighbours;			%Neighbouring micro and pico stations, cant find neighbouring macro stations.
-		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1); 
-		
-		%Scheduling
-		TotSubframes;		%Scheduling rounds (subframes)
-		ScheduleDL;			% 
-		ScheduleUL;			% 
-		RoundRobinDLNext;	%
-		RoundRobinULNext;	%
-	
-		%Power related properties
-		PowerState;			%Power state, 1->active, 2->overload, 3->underload, 4->underload has exceeded the hysteresis timer, 5-> shutdown, 6-> boot.
-		Pmax;				%Power used when transmitting the most.
-		P0;					%Minimum power used when active
-		DeltaP;				%
-		Psleep;				%Power consumption when inactive
-		PowerIn;			%Current powerconsumption?
-
-		HystCount;			%Hysteresis counter
-		SwitchCount;		%Switch counter, controls when to switch on or off.
-
-		%Modules
-		Tx;					%Transmitter module
-		Rx;					%Reciever module
-		Mac;				%For Harq Tx Processes
-		Rlc;				%For Arq Tx Buffers
-
-		%Simulation specific properties
-		Seed;				%Random seed for simulation
-
-		%Other properties
-		DlFreq;				%Downlink carrier frequency in MHz
-		OCNG;				%Orthogonal Frequency Division Multiple Access Channel Noise Generator
-		Windowing;			%
-		AbsMask;			%Subframe mask
-		
+		NCellID;
+		DuplexMode;
+		Position;
+		NDLRB;
+		CellRefP;
+		CyclicPrefix;
+		CFI;
+		DlFreq;
+		PHICHDuration;
+		Ng;
+		TotSubframes;
+		OCNG;
+		Windowing;
+		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		ScheduleDL;
+		ScheduleUL;
+		RoundRobinDLNext;
+		RoundRobinULNext;
+		Channel;
+		NSubframe;
+		BsClass;
+		PowerState;
+		Neighbours;
+		HystCount;
+		SwitchCount;
+		Pmax;
+		P0;
+		DeltaP;
+		Psleep;
+		Tx;
+		Rx;
+		Mac;
+		Rlc;
+		Seed;
+		AbsMask;
+		PowerIn;
+		ShouldSchedule;
+		Utilisation;
 	end
 	
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Param, BsClass, cellId)
+		function obj = EvolvedNodeB(Config, BsClass, cellId)
 			switch BsClass
 				case 'macro'
-					obj.NDLRB = Param.numSubFramesMacro;
+					obj.NDLRB = Config.MacroEnb.subframes;
 					obj.Pmax = 20; % W
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
 				case 'micro'
-					obj.NDLRB = Param.numSubFramesMicro;
+					obj.NDLRB = Config.MicroEnb.subframes;
 					obj.Pmax = 6.3; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 				case 'pico'
-					obj.NDLRB = Param.numSubFramesPico;
+					obj.NDLRB = Config.PicoEnb.subframes;
 					obj.Pmax = 0.13; % W
 					obj.P0 = 6.8; % W
 					obj.DeltaP = 4.0;
@@ -78,13 +66,13 @@ classdef EvolvedNodeB
 			end
 			obj.BsClass = BsClass;
 			obj.NCellID = cellId;
-			obj.Seed = cellId*Param.seed; %generate a unique seed for each eNB
+			obj.Seed = cellId*Config.Runtime.seed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
-			obj.TotSubframes = Param.schRounds;
+			obj.TotSubframes = Config.Runtime.totalRounds;
 			obj.NSubframe = 0;
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
@@ -94,37 +82,50 @@ classdef EvolvedNodeB
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.PowerState = 1;
-			obj.Neighbours = zeros(1, Param.numEnodeBs);
+			obj.Neighbours = zeros(1, Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number - 1);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
-			obj.DlFreq = Param.dlFreq;
-			if Param.rtxOn
-				obj.Mac = struct('HarqTxProcesses', harqTxBulk(Param, cellId, 1:Param.numUsers, 0));
-				obj.Rlc = struct('ArqTxBuffers', arqTxBulk(Param, cellId, 1:Param.numUsers, 0));
+			obj.DlFreq = Config.Phy.downlinkFrequency;
+			if Config.Harq.active
+				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
+				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
-			obj.Tx = enbTransmitterModule(obj, Param);
-			obj.Rx = enbReceiverModule(Param);
-			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
-			obj.AbsMask = Param.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
+			obj.Tx = enbTransmitterModule(obj, Config);
+			obj.Rx = enbReceiverModule(obj, Config);
+			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
-    end
+			obj.ShouldSchedule = 0;
+			obj.Utilisation = 0;
+			% Should look up position based on class here, not outside
+			
+		end
 		
-    function TxPw = getTransmissionPower(obj)
-      % TODO: Move this to TransmitterModule?
-      % Function computes transmission power based on NDLRB
-      % Return power per subcarrier. (OFDM symbol)
-      total_power = obj.Pmax;
-      TxPw = total_power/(12*obj.NDLRB);
-    end
-    
-		% Position eNodeB
-		function obj = setPosition(obj, pos)
-			obj.Position = pos;
+		function s = struct(obj)
+			% Overwrites struct on object. Used primarly for lte Library methods of Matlab.
+			s = struct();
+			s.NDLRB = obj.NDLRB;
+			s.CellRefP = obj.CellRefP;
+			s.NCellID = obj.NCellID;
+			s.NSubframe = obj.NSubframe;
+			s.CFI = obj.CFI;
+			s.Ng = obj.Ng;
+			s.CyclicPrefix = obj.CyclicPrefix;
+			s.PHICHDuration = obj.PHICHDuration;
+			s.DuplexMode = obj.DuplexMode;
+		end
+		
+		function TxPw = getTransmissionPower(obj)
+			% TODO: Move this to TransmitterModule?
+			% Function computes transmission power based on NDLRB
+			% Return power per subcarrier. (OFDM symbol)
+			total_power = obj.Pmax;
+			TxPw = total_power/(12*obj.NDLRB);
 		end
 		
 		% reset users
-		function obj = resetUsers(obj, Param)
-			obj.Users(1:Param.numUsers) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		function obj = resetUsers(obj, Config)
+			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 		end
 		
 		% reset schedule
@@ -137,24 +138,19 @@ classdef EvolvedNodeB
 			obj.ScheduleUL = [];
 		end
 		
-		% set subframe number
-		function obj = set.NSubframe(obj, num)
-			obj.NSubframe = num;
-		end
-		
 		function [indPdsch, info] = getPDSCHindicies(obj)
-			enb = cast2Struct(obj);
+			enb = struct(obj);
 			% get PDSCH indexes
 			[indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
 		end
 		
 		% create list of neighbours
-		function obj = setNeighbours(obj, Stations, Param)
+		function obj = setNeighbours(obj, Stations, Config)
 			% the macro eNodeB has neighbours all the micro
 			if strcmp(obj.BsClass,'macro')
-				obj.Neighbours(1:Param.numMacro + Param.numMicro + Param.numPico-1) = find([Stations.NCellID] ~= obj.NCellID);
+				obj.Neighbours(1:Config.MicroEnb.number + Config.PicoEnb.number) = find([Stations.NCellID] ~= obj.NCellID);
 				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
-				% in a circle of radius Param.nboRadius
+				% in a circle of radius Config.Son.neighbourRadius
 			else
 				for iStation = 1:length(Stations)
 					if strcmp(Stations(iStation).BsClass, 'macro')
@@ -165,7 +161,7 @@ classdef EvolvedNodeB
 						pos = obj.Position(1:2);
 						nboPos = Stations(iStation).Position(1:2);
 						dist = pdist(cat(1, pos, nboPos));
-						if dist <= Param.nboRadius
+						if dist <= Config.Son.neighbourRadius
 							ix = find(not(obj.Neighbours), 1 );
 							obj.Neighbours(ix) = Stations(iStation).NCellID;
 						end
@@ -173,14 +169,123 @@ classdef EvolvedNodeB
 				end
 			end
 		end
+
+		function [minMCS, varargout] = getMCSDL(obj, ue)
+			% Get MCS in DL, returns minimum MCS and list of MCS.
+			%
+			% Returns minimum MCS 
+			% Optional: returns list of MCS
+			idxUE = obj.getPRBSetDL(ue);
+			listMCS = [obj.ScheduleDL(idxUE).Mcs];
+            minMCS = min(listMCS);
+            varargout{1} = listMCS;
+		end
 		
-		% check utilisation wrapper
-		function obj = evaluatePowerState(obj, util, Param, loThr, hiThr, Stations)
+		function mod = getModulationDL(obj, ue)
+			% Get modulation from lowest MCS given the DL schedule
+			%
+			% Returns modulation format
+			[~, mod, ~] = lteMCS(obj.getMCSDL(ue));
+		end
+        
+		function PRBSet = getPRBSetDL(obj, ue)
+			% Return list of PRBs assigned to a specific user
+			%
+			% Return PRB set of specific user
+    	PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
+		end
+				
+		
+		function obj = setupPdsch(obj, Users)
+			% setupPdsch
+			%
+			% :param obj: EvolvedNodeB instance
+			% :param Users: UserEquipment instances
+			% :returns obj: EvolvedNodeB instance
+			%
+			
+			% Filter the overall list of Users and only take those associated
+			% with this eNodeB
+			enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
+			for iUser = 1:length(enbUsers)
+				ue = enbUsers(iUser);
+				% Check for empty codewords
+				if ~isempty(ue.Codeword)
+					% find all the PRBs assigned to this UE 
+					ixPRBs = obj.getPRBSetDL(ue);
+					if ~isempty(ixPRBs)
+						% get the correct Parameters for this UE
+                        
+          	% find the most conservative modulation
+						mod = obj.getModulationDL(ue);
+						
+						% get the codeword
+						cwd = ue.Codeword;
+						
+						% setup the PDSCH for this UE with a local copy for mutation
+						enb = struct(obj);
+						pdsch = obj.Tx.PDSCH;
+						pdsch.Modulation = mod;	% conservative modulation choice from above
+						pdsch.PRBSet = (ixPRBs - 1).';	% set of assigned PRBs
+						
+						% Get info and indexes
+						[pdschIxs, SymInfo] = ltePDSCHIndices(enb, pdsch, pdsch.PRBSet);
+						
+						if length(cwd) ~= SymInfo.G
+							% In this case seomthing went wrong with the rate maching and in the
+							% creation of the codeword, so we need to flag it
+							monsterLog('(EVOLVED NODE B - setupPdsch) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+						end
+						
+						% error handling for symbol creation
+						try
+							sym = ltePDSCH(enb, pdsch, cwd);
+						catch ME
+							fSpec = '(EVOLVED NODE B - setupPdsch) generation failed for codeword with length %i\n';
+							s=sprintf(fSpec, length(cwd));
+							monsterLog(s,'WRN')
+							sym = [];
+						end
+						
+						SymInfo.symSize = length(sym);
+						SymInfo.pdschIxs = pdschIxs;
+						SymInfo.PRBSet = pdsch.PRBSet;
+						ue.SymbolsInfo = SymInfo;
+						
+						% Set the symbols into the grid of the eNodeB in the main object to preserve it at function exit
+						obj.Tx.setPDSCHGrid(sym, pdschIxs);
+					else
+						SymInfo = struct();
+						SymInfo.symSize = 0;
+						SymInfo.pdschIxs = [];
+						SymInfo.PRBSet = [];
+						ue.SymbolsInfo = SymInfo;
+					end
+				end
+			end
+		end
+		
+		function userIds = getUserIDsScheduledDL(obj)
+			userIds = unique([obj.ScheduleDL]);
+		end
+		
+		function userIds = getUserIDsScheduledUL(obj)
+			userIds = unique([obj.ScheduleUL]);
+		end
+		
+		function obj = evaluatePowerState(obj, Config, Stations)
+			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
+			%
+			% :obj: EvolvedNodeB instance
+			% :Config: MonsterConfig instance
+			% :Stations: Array<EvolvedNodeB> instances in case neighbours are needed
+			%
+			
 			% overload
-			if util > hiThr && hiThr ~= 100
+			if obj.Utilisation > Config.Son.utilHigh && Config.Son.utilHigh ~= 100
 				obj.PowerState = 2;
 				obj.HystCount = obj.HystCount + 1;
-				if obj.HystCount >= Param.tHyst/10^-3
+				if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
 					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
@@ -205,7 +310,7 @@ classdef EvolvedNodeB
 				end
 				
 				% underload, shutdown, inactive or boot
-			elseif util < loThr && loThr ~= 1
+			elseif obj.Utilisation < Config.Son.utilLow && Config.Son.utilLow ~= 1
 				switch obj.PowerState
 					case 1
 						% eNodeB active and going in underload for the first time
@@ -214,14 +319,14 @@ classdef EvolvedNodeB
 					case 3
 						% eNodeB already in underload
 						obj.HystCount = obj.HystCount + 1;
-						if obj.HystCount >= Param.tHyst/10^-3
+						if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 							% the underload has exceeded the hysteresis timer, so start switching
 							obj.PowerState = 4;
 							obj.SwitchCount = 1;
 						end
 					case 4
 						obj.SwitchCount = obj.SwitchCount + 1;
-						if obj.SwitchCount >= Param.tSwitch/10^-3
+						if obj.SwitchCount >= Config.Son.hysteresisTimer/10^-3
 							% the shutdown is completed
 							obj.PowerState = 5;
 							obj.SwitchCount = 0;
@@ -229,7 +334,7 @@ classdef EvolvedNodeB
 						end
 					case 6
 						obj.SwitchCount = obj.SwitchCount + 1;
-						if obj.SwitchCount >= Param.tSwitch/10^-3
+						if obj.SwitchCount >= Config.Son.switchTimer/10^-3
 							% the boot is completed
 							obj.PowerState = 1;
 							obj.SwitchCount = 0;
@@ -244,26 +349,20 @@ classdef EvolvedNodeB
 				obj.SwitchCount = 0;
 				
 			end
-			
-		end
-		
-		% cast object to struct
-		function enbStruct = cast2Struct(obj)
-			enbStruct = struct(obj);
 		end
 		
 		% set uplink static scheduling
-		function obj = setScheduleUL(obj, Param)
+		function obj = setScheduleUL(obj, Config)
 			% Check the number of users associated with the eNodeB and initialise to all
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
 			if ~isempty(associatedUEs)
-				prbQuota = floor(Param.numSubFramesUE/length(associatedUEs));
+				prbQuota = floor(Config.Ue.subframes/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
 					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
 					prbQuota = 6;
-					ueMax = floor(Param.numSubFramesUE/prbQuota);
+					ueMax = floor(Config.Ue.subframes/prbQuota);
 					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
 					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
 					iDiff = 0;
@@ -294,7 +393,7 @@ classdef EvolvedNodeB
 					% In this case, all connected UEs can be scheduled, so RR can be reset
 					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 				end
-				prbAvailable = Param.numSubFramesUE;
+				prbAvailable = Config.Ue.subframes;
 				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
 				for iUser = 1:length(associatedUEs)
 					if prbAvailable >= prbQuota
@@ -303,20 +402,14 @@ classdef EvolvedNodeB
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						sonohilog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'INFO');
+						monsterLog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
 						break;
 					end
 				end
 				obj.ScheduleUL = scheduledUEs;
 			end
 		end
-
-		% Used to initiate the reboot of an eNodeB by traffic demand
-		function obj = initiateBoot(obj)
-			obj.PowerState = 6;
-			obj.SwitchCount = 0;
-		end
-
+		
 		% used to calculate the power in based on the BS class
 		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
 			% The output power over the air depends on the utilisation, if energy saving is enabled
@@ -325,12 +418,12 @@ classdef EvolvedNodeB
 			else
 				Pout = obj.Pmax;
 			end
-
+			
 			% Now check power state of the eNodeB
 			if obj.PowerState == 1 || obj.PowerState == 2 || obj.PowerState == 3
 				% active, overload and underload state
 				obj.PowerIn = obj.CellRefP*obj.P0 + obj.DeltaP*Pout;
-			else 
+			else
 				% shutodwn, inactive and boot
 				obj.PowerIn = obj.Psleep;
 			end
@@ -346,13 +439,155 @@ classdef EvolvedNodeB
 			obj = obj.resetScheduleDL();
 			
 			% Reset the transmitter
-			obj.Tx = obj.Tx.reset(obj, nextSchRound);
+			obj.Tx.reset();
 			
 			% Reset the receiver
-			obj.Rx = obj.Rx.reset();
+			obj.Rx.reset();
 			
 		end
 		
+		function obj = evaluateScheduling(obj, Users)
+			% evaluateScheduling sets the ShouldSchedule flag depending on attached UEs and their queues
+			%
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> instances
+			%
+			
+			schFlag = false;
+			if ~isempty(find([obj.Users.UeId] ~= -1, 1))
+				% There are users connected, filter them from the Users list and check the queue
+				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
+				usersQueues = [enbUsers.Queue];
+				if any([usersQueues.Size])
+					% Now check the power status of the eNodeB
+					if ~isempty(find([1, 2, 3] == obj.PowerState, 1))
+						% Normal, underload and overload => the eNodeB can schedule
+						schFlag = true;
+					elseif ~isempty(find([4, 6] == obj.PowerState, 1))
+						% The eNodeB is shutting down or booting up => the eNodeB cannot schedule
+						schFlag = false;
+					elseif enb.PowerState == 5
+						% The eNodeB is inactive, but should be restarted
+						obj.PowerState = 6;
+						obj.SwitchCount = 0;
+					end
+				end
+			end
+			
+			% Finally, assign the result of the scheduling check to the object property
+			obj.ShouldSchedule = schFlag;
+		end
+		
+		function obj = downlinkSchedule(obj, Users, Config)
+			% downlinkSchedule is wrapper method for calling the scheduling function
+			%
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> instances
+			% :Config: MonsterConfig instance
+			
+			if obj.ShouldSchedule
+				[obj, Users] = schedule(obj, Users, Config);
+				% Check utilisation
+				sch = find([obj.ScheduleDL.UeId] ~= -1);
+				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.ScheduleDL]);
+				
+				if isempty(obj.Utilisation)
+					obj.Utilisation = 0;
+				end
+			else
+				obj.Utilisation = 0;
+			end
+		end
+		
+		function obj = uplinkReception(obj, Users, timeNow, ChannelEstimator)
+			% uplinkReception performs uplink demodulation and decoding
+			%
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> UEs instances
+			% :timeNow: Float current simulation time in seconds
+			% :ChannelEstimator: Struct Channel.Estimator property
+			%
+			
+			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
+			if isempty(obj.Rx.Waveform)
+				monsterLog(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
+			else				
+				% IDs of users and their position in the Users struct correspond
+				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
+				scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
+				enbUsers = Users(scheduledUEsIds);
+				
+				% Parse received waveform
+				obj.Rx.parseWaveform(obj);
+				
+				% Demodulate received waveforms
+				obj.Rx.demodulateWaveforms(enbUsers);
+				
+				% Estimate Channel
+				obj.Rx.estimateChannels(enbUsers, ChannelEstimator);
+				
+				% Equalise
+				obj.Rx.equaliseSubframes(enbUsers);
+				
+				% Estimate PUCCH (Main UL control channel) for UEs
+				obj.Rx.estimatePucch(obj, enbUsers, timeNow);
+				
+				% Estimate PUSCH (Main UL control channel) for UEs
+				%obj.Rx.estimatePusch(obj, enbUsers, timeNow);
+			end
+			
+			
+		end
+		
+		function obj = uplinkDataDecoding(obj, Users, Config)
+			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
+			%
+			% :obj: EvolvedNodeB instance
+			% :Users: Array<UserEquipment> UEs instances
+			% :Config: MonsterConfig instance
+			%
+			
+			% Filter UEs linked to this eNodeB
+			timeNow = Config.Runtime.currentTime;
+			ueGroup = find([Users.ENodeBID] == enb.NCellID);
+			enbUsers = Users(ueGroup);
+			
+			for iUser = 1:length(obj.Rx.UeData)
+				% If empty, no uplink UE data has been received in this round and skip
+				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
+					cqiBits = obj.Rx.UeData(iUser).PUCCH(12:16,1);
+					cqi = bi2de(cqiBits', 'left-msb');
+					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);
+					if ~isempty(ueEnodeBIx)
+						obj.Users(ueEnodeBIx).CQI = cqi;
+					end
+					
+					if Config.Harq.active
+						% Decode HARQ feedback
+						[harqPid, harqAck] = obj.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(obj.Rx.UeData(iUser).PUCCH);
+						
+						if ~isempty(harqPid)
+							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config);
+							
+							% Contact ARQ based on the feedback
+							if Config.Arq.active && ~isempty(sqn)
+								arqIndex = find([obj.Rlc.ArqTxBuffers.rxId] == obj.Rx.UeData(iUser).UeId);
+								
+								if state == 0
+									% The process has been acknowledged
+									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(1, sqn, timeNow, Config);
+								elseif state == 4
+									% The process has failed
+									obj.Rlc.ArqTxBuffers(arqIndex) = obj.Rlc.ArqTxBuffers(arqIndex).handleAck(0, sqn, timeNow, Config);
+								else
+									% No action to be taken by ARQ
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
 	end
-	
 end

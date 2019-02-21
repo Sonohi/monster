@@ -1,4 +1,4 @@
-classdef MetricRecorder
+classdef MetricRecorder < matlab.mixin.Copyable
 	% This is class is used for defining and recording statistics in the network
 	properties
 		infoUtilLo;
@@ -21,52 +21,53 @@ classdef MetricRecorder
 		rsrqdB;
 		rsrpdBm;
 		rssidBm;
-		Param;
+		Config;
 	end
 	
 	methods
 		% Constructor
-		function obj = MetricRecorder(Param, utilLo, utilHi)
+		function obj = MetricRecorder(Config)
 			% Store main config
-			obj.Param = Param;
+			obj.Config = Config;
 			% Store utilisation thresholds for information
-			obj.infoUtilLo = utilLo;
-			obj.infoUtilHi = utilHi;
+			obj.infoUtilLo = Config.Son.utilLow;
+			obj.infoUtilHi = Config.Son.utilHigh;
 			% Initialise for eNodeB
-			obj.util = zeros(Param.schRounds, Param.numEnodeBs);
-			obj.powerConsumed = zeros(Param.schRounds, Param.numEnodeBs);
-			temp(1:Param.schRounds, Param.numEnodeBs, 1:Param.numSubFramesMacro) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			numEnodeBs = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
+			obj.util = zeros(Config.Runtime.totalRounds, numEnodeBs);
+			obj.powerConsumed = zeros(Config.Runtime.totalRounds, numEnodeBs);
+			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.subframes) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
-			if Param.rtxOn
-				obj.harqRtx = zeros(Param.schRounds, Param.numEnodeBs);
-				obj.arqRtx = zeros(Param.schRounds, Param.numEnodeBs);
+			if Config.Harq.active
+				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
+				obj.arqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			end
-			obj.powerState = zeros(Param.schRounds, Param.numEnodeBs);
+			obj.powerState = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			
 			% Initialise for UE
-			obj.ber = zeros(Param.schRounds,Param.numUsers);
-			obj.snrdB = zeros(Param.schRounds,Param.numUsers);
-			obj.sinrdB = zeros(Param.schRounds,Param.numUsers);
-			obj.bler = zeros(Param.schRounds,Param.numUsers);
-			obj.cqi = zeros(Param.schRounds,Param.numUsers);
-			obj.preEvm = zeros(Param.schRounds,Param.numUsers);
-			obj.postEvm = zeros(Param.schRounds,Param.numUsers);
-			obj.throughput = zeros(Param.schRounds,Param.numUsers);
-			obj.receivedPowerdBm = zeros(Param.schRounds,Param.numUsers);
-			obj.rsrpdBm = zeros(Param.schRounds,Param.numUsers);
-			obj.rssidBm = zeros(Param.schRounds,Param.numUsers);
-			obj.rsrqdB = zeros(Param.schRounds,Param.numUsers);
+			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.sinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.cqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.postEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.throughput = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.receivedPowerdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.rsrpdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.rssidBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.rsrqdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, schRound, Param, utilLo)
+		function obj = recordEnbMetrics(obj, Stations, Config)
 			% Increment the scheduling round for Matlab's indexing
-			schRound = schRound + 1;
+			schRound = Config.Runtime.currentRound + 1;
 			obj = obj.recordUtil(Stations, schRound);
-			obj = obj.recordPower(Stations, schRound, Param.otaPowerScale, utilLo);
+			obj = obj.recordPower(Stations, schRound, Config.Son.powerScale, Config.Son.utilLow);
 			obj = obj.recordSchedule(Stations, schRound);
 			obj = obj.recordPowerState(Stations, schRound);
-			if Param.rtxOn
+			if Config.Harq.active
 				obj = obj.recordHarqRtx(Stations, schRound);
 				obj = obj.recordArqRtx(Stations, schRound);
 			end
@@ -92,7 +93,7 @@ classdef MetricRecorder
 					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo);
 					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
 				else
-					sonohilog('powerConsumed consumed cannot be recorded. Please call recordUtil first.','ERR')
+					monsterLog('(METRICS RECORDER - recordPower) metric cannot be recorded. Please call recordUtil first.','ERR')
 				end
 			end
 		end

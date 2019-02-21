@@ -3,7 +3,7 @@
 %		0 means idle, 1 means in use, 2 means awaiting retransmission slot, 3 means retransmitting
 % 	4 means retransmission failure
 
-classdef HarqTx
+classdef HarqTx < matlab.mixin.Copyable
 	properties
 		txId;
 		rxId;
@@ -22,12 +22,12 @@ classdef HarqTx
 
 	methods
 		% Constructor
-		function obj = HarqTx(Param, transmitter, receiver, timeNow)
+		function obj = HarqTx(timeNow, transmitter, receiver, Config)
 			obj.txId = transmitter;
 			obj.rxId = receiver;
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
-			obj = createProcesses(obj, Param, timeNow);
+			obj = createProcesses(obj, Config, timeNow);
 		end
 
 		% Returns a HARQ PID based on a SQN if the process exists
@@ -134,14 +134,14 @@ classdef HarqTx
 		end
 
 		% Handle the reception of a ACK/NACk
-		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Param)
+		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Config)
 			% find index
 			iProc = find([obj.processes.procId] == procId);
 			% Check it this is an outdated report 
 			if isempty(obj.processes(iProc).tb)
 				fSpec = 'Delayed ACK/NACK received at HARQ TX for process %i\n';
 				s=sprintf(fSpec, procId);
-    		sonohilog(s,'WRN');
+    		monsterLog(s,'WRN');
 				sqn = [];
 				state = [];
 			else
@@ -158,13 +158,13 @@ classdef HarqTx
 					obj.processes(iProc).state = 0;
 				else
 					% check whether the maximum number has been exceeded
-					if obj.processes(iProc).rtxCount > Param.harq.rtxMax
+					if obj.processes(iProc).rtxCount > Config.Harq.maxRetransmissions
 						% log failure (and notify RLC?)
 						obj.processes(iProc).state = 4;
 					else
 						% log rtx
 						obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
-						obj.processes(iProc).rv = Param.harq.rv(obj.processes(iProc).rtxCount);
+						obj.processes(iProc).rv = Config.Harq.redundacyVersion(obj.processes(iProc).rtxCount);
 						obj.processes(iProc).state = 2;
 						obj.processes(iProc).timeStart = timeNow;
 					end
@@ -179,7 +179,7 @@ classdef HarqTx
 			iProc = [obj.processes.procId] == procId;
 			% log failure
 			obj.processes(iProc).rtxCount = obj.processes(iProc).rtxCount + 1;
-			obj.processes(iProc).rv = Param.harq.rv(obj.processes(iProc).rtxCount);
+			obj.processes(iProc).rv = Config.Harq.redundacyVersion(obj.processes(iProc).rtxCount);
 			obj.processes(iProc).state = 2;
 			obj.processes(iProc).timeStart = timeNow;
 		end
@@ -202,10 +202,10 @@ classdef HarqTx
 	end
 
 	methods (Access = private)
-		function obj = createProcesses(obj, Param, timeNow)
+		function obj = createProcesses(obj, Config, timeNow)
 			% TODO check if pre-allocation can be removed or better the entire
 			% function
-			for iProc = 1:Param.harq.proc
+			for iProc = 1:Config.Harq.processes
 				obj.processes(iProc).procId = iProc - 1;
 			end
 		end

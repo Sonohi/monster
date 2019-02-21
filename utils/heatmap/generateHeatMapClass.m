@@ -12,7 +12,7 @@ Channel = Channel.resetChannel;
 
 % create a dummy UE that we move around in the grid for the heatMap
 ue = UserEquipment(Param, 99);
-ue.Scheduled = 1;
+ue.Scheduled = struct('DL', true, 'UL', false);
 
 % cluster the grid based on the chosen resoultion
 % get grid dimensions
@@ -35,7 +35,7 @@ for iCluster = 1:numClusters
 		% on the other hand, when ya reaches the top we are done and it should
 		% coincide with the nuber of Clusters
 		if ya >= ydim
-			sonohilog('You should have stopped clustering!!!!', 'WRN');
+			monsterLog('You should have stopped clustering!!!!', 'WRN');
 		end
 	end
 	xc = xa + Param.heatMapRes;
@@ -103,13 +103,13 @@ for model = 2:numel(Snames)
 			Clusters(iCluster).rxPw(model) = ueCopy.Rx.RxPwdBm;
 			Clusters(iCluster).SINR(model) = ueCopy.Rx.SINRdB;
 			Clusters(iCluster).intSigLoss(model) = ueCopy.Rx.IntSigLoss;
-			sonohilog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPwdBm),num2str(ueCopy.Rx.SINRdB)),'NFO');
+			monsterLog(sprintf('Saved SNR: %s dB, RxPw: %s dB, SINR: %s dB',num2str(ueCopy.Rx.SNRdB),num2str(ueCopy.Rx.RxPwdBm),num2str(ueCopy.Rx.SINRdB)),'NFO');
 % 		catch ME
 % 			Clusters(iCluster).snrVals(model) = NaN;
 % 			Clusters(iCluster).rxPw(model) = NaN;
 % 			Clusters(iCluster).SINR(model) = NaN;
 % 			Clusters(iCluster).intSigLoss(model) = NaN;
-% 			sonohilog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
+% 			monsterLog(sprintf('Something went wrong... %s',ME.identifier),'WRN')
 % 		end
 
 	end

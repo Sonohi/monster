@@ -3,7 +3,7 @@
 %		0 means idle, 1 means in use, 2 means awaiting retransmission slot, 3 means retransmitting
 % 	4 means retransmission failure
 
-classdef ArqTx
+classdef ArqTx < matlab.mixin.Copyable
 	properties
 		txId;
 		rxId;
@@ -20,7 +20,7 @@ classdef ArqTx
 
 	methods
 		% Constructor
-		function obj = ArqTx(Param, transmitter, receiver, timeNow)
+		function obj = ArqTx(transmitter, receiver)
 			obj.txId = transmitter;
 			obj.rxId = receiver;
 			obj.sqn = 0;
@@ -80,7 +80,7 @@ classdef ArqTx
 		end
 
 		% Handle the reception of an ACK
-		function obj = handleAck(obj, ack, sqn, timeNow, Param)
+		function obj = handleAck(obj, ack, sqn, timeNow, Config)
 			% find buffer index
 			bufferIndices = find([obj.tbBuffer.sqn] == sqn);
 			
@@ -92,7 +92,7 @@ classdef ArqTx
 						obj = obj.pop(iBuf);
 					else
 						% check whether the maximum number has been exceeded
-						if obj.tbBuffer(iBuf).rtxCount > Param.arq.rtxMax
+						if obj.tbBuffer(iBuf).rtxCount > Config.Arq.maxRetransmissions
 							obj.tbBuffer(iBuf).state = 4;
 						else
 							% log rtx
@@ -107,9 +107,9 @@ classdef ArqTx
 		end
 
 		% Method to flush TBs that have been in the buffer longer than the flush timer
-		function obj = flush(obj, timeNow, Param)
+		function obj = flush(obj, timeNow, Config)
 			for iBuf = length(1:obj.tbBuffer)
-				if timeNow - obj.tbBuffer(iTb).timeStart > Param.arq.bufferFlushTimer/1000
+				if timeNow - obj.tbBuffer(iTb).timeStart > Config.Arq.timeout/1000
 					obj = obj.pop(iBuf);
 				end
 			end

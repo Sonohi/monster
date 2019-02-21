@@ -3,8 +3,7 @@
 % 	it assumes value 0 for a default state that corresponds to an unused or successful process
 % 	and value 1 for a process awaiting retransmission copies
 
-
-classdef HarqRx
+classdef HarqRx < matlab.mixin.Copyable
 	properties
 		bitsSize;
 		tbSize;
@@ -19,14 +18,14 @@ classdef HarqRx
 
 	methods
 		% Constructor
-		function obj = HarqRx(Param, timeNow)
+		function obj = HarqRx(timeNow, Config)
 			obj.bitsSize = 0;
 			obj.tbSize = 0;
-			obj = createProcesses(obj, Param, timeNow);
+			obj = createProcesses(obj, Config, timeNow);
 		end
 
 		% Handle the reception of a TB
-		function [obj, state] = handleTbReception(obj, iProc, tb, crc, Param, timeNow)
+		function [obj, state] = handleTbReception(obj, iProc, tb, crc, timeNow)
 			obj.processes(iProc).copiesReceived = obj.processes(iProc).copiesReceived + 1;
 			if crc == 0
 				% All good, the TB can be decoded correctly so no need to proceed further
@@ -43,7 +42,7 @@ classdef HarqRx
 			else
 				% in this last case, we are starting a retransmission session 
 				% so we need to know how many copies will be needed 
-				obj.processes(iProc).copiesNeeded = estimateCrcCopies(crc);
+				obj.processes(iProc).copiesNeeded = obj.estimateCrcCopies(crc);
 				obj.processes(iProc).state = 1;
 				obj.processes(iProc).tb = tb;
 				obj.processes(iProc).timeStart = timeNow;
@@ -60,10 +59,10 @@ classdef HarqRx
 	end
 
 	methods (Access = private)
-		function obj = createProcesses(obj, Param, timeNow)
+		function obj = createProcesses(obj, Config, timeNow)
 			% TODO check if pre-allocation can be removed or better the entire
 			% function
-			for iProc = 1:Param.harq.proc
+			for iProc = 1:Config.Harq.processes
 				obj.processes(iProc).procId = iProc - 1;
 			end
 		end
@@ -73,6 +72,20 @@ classdef HarqRx
 			obj.processes(iProc).state = 0;
 			obj.processes(iProc).copiesReceived = 0;
 			obj.processes(iProc).timeStart = -1;
+		end
+
+		function num = estimateCrcCopies(obj, crc)
+			% estimateCrcCopies provides the number of retransmissions needed based on the CRC
+			% 
+			% :crc: the CRC value
+			%
+			% :num: integer number of packet copies estimated
+			% 
+
+			% TODO method stub, returns always 2
+
+			num = 2; 
+
 		end
 	
 	end

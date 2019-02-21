@@ -1,23 +1,82 @@
-classdef enbReceiverModule
+classdef enbReceiverModule < matlab.mixin.Copyable
 	properties
 		NoiseFigure;
-		Waveform;
 		UeData;
 		RxPwdBm;
+		ReceivedSignals; %Cells containing: waveform(s) from a user, and userID
+		Waveform;
+		Waveforms;
 	end
 	
+	properties (Access=private)
+		enbObj; % Parent object
+	end
+
 	methods
 		
-		function obj = enbReceiverModule(Param)
-			obj.NoiseFigure = Param.eNBNoiseFigure;
+		function obj = enbReceiverModule(enb, Config)
+			switch enb.BsClass
+				case 'macro'
+					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
+				case 'micro'
+					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
+				case 'pico'
+					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
+				otherwise
+					monsterLog(sprintf('(ENODEB RECEIVER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
+			end
+			obj.ReceivedSignals = cell(Config.Ue.number,1);
+			obj.enbObj = enb;
 		end
 		
-		function obj = set.Waveform(obj,Sig)
-			obj.Waveform = Sig;
+		function createRecievedSignalStruct(obj, id)
+			obj.ReceivedSignals{id} = struct('Waveform', [], 'WaveformInfo', [], 'RxPwdBm', [], 'SNR', [], 'PathFilters', [], 'PathGains', []);
 		end
-		
-		function obj = set.RxPwdBm(obj,RxPwdBm)
-			obj.RxPwdBm = RxPwdBm;
+
+		function foundSignals = anyReceivedSignals(obj)
+			numberOfUsers = length(obj.ReceivedSignals);
+			foundSignals = false;
+			for iUser = 1:numberOfUsers
+				if isempty(obj.ReceivedSignals{iUser})
+					continue
+				end
+				
+				if isempty(obj.ReceivedSignals{iUser}.Waveform)
+					continue
+				end
+				
+				foundSignals = true;
+						
+			end
+			
+		end
+
+		function createReceivedSignal(obj)
+			uniqueUes = obj.enbObj.getUserIDsScheduledUL();
+			
+			if ~isempty(uniqueUes)
+				
+				% Check length of each received signal
+				for iUser = 1:length(uniqueUes)
+					ueId = uniqueUes(iUser);
+					waveformLengths(iUser) =  length(obj.ReceivedSignals{ueId}.Waveform);
+				end
+
+				% This will break with MIMO
+
+				obj.Waveform = zeros(max(waveformLengths),1);
+
+				for iUser = 1:length(uniqueUes)
+					ueId = uniqueUes(iUser);
+					% Add waveform with corresponding power
+					obj.Waveforms(iUser,:) = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
+				end
+
+				% Create finalized waveform
+				obj.Waveform = sum(obj.Waveforms, 1).';
+
+				% Waveform is transposed due to the SCFDMA demodulator requiring a column vector.
+			end
 		end
 
 		function obj = set.UeData(obj,UeData)
@@ -26,22 +85,21 @@ classdef enbReceiverModule
 		
 		% Used to split the received waveform into the different portions of the different
 		% UEs scheduled in the UL
-		function obj = parseWaveform(obj, enbObj)
+		function parseWaveform(obj, enbObj)
 			uniqueUes = unique([enbObj.ScheduleUL]);
-			scFraction = length(obj.Waveform)/length(uniqueUes);
 			for iUser = 1:length(uniqueUes)
-				scStart = (iUser - 1)*scFraction ;
-				scEnd = scStart + scFraction;
-				obj.UeData(iUser).UeId = uniqueUes(iUser);
-				obj.UeData(iUser).Waveform = obj.Waveform(scStart + 1 : scEnd, 1);
+				ueId = uniqueUes(iUser);
+				obj.UeData(iUser).UeId = ueId;
+				obj.UeData(iUser).Waveform = obj.ReceivedSignals{ueId}.Waveform;
 			end
 		end
+		
 		
 		% Used to demodulate each single UE waveform separately
 		function obj = demodulateWaveforms(obj, ueObjs)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = struct(ueObjs(iUser));
 				
 				testSubframe = lteSCFDMADemodulate(ue, obj.UeData(localIndex).Waveform);
 				
@@ -59,10 +117,10 @@ classdef enbReceiverModule
 		function obj = estimateChannels(obj, ueObjs, cec)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
-						lteULChannelEstimate(ue, cec, obj.UeData(localIndex).Subframe);
+						lteULChannelEstimate(struct(ue), cec, obj.UeData(localIndex).Subframe);
 				end
 			end
 		end
@@ -70,7 +128,7 @@ classdef enbReceiverModule
 		function obj = equaliseSubframes(obj, ueObjs)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					obj.UeData(localIndex).EqSubframe = lteEqualizeMMSE(obj.UeData(localIndex).Subframe,...
 						obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst);
@@ -81,17 +139,17 @@ classdef enbReceiverModule
 		function obj = estimatePucch(obj, enbObj, ueObjs, timeNow)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				
 				switch ue.Tx.PUCCH.Format
 					case 1
-						obj.UeData(localIndex).PUCCH = ltePUCCH1Decode(ue, ue.Tx.PUCCH, 0, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH1Decode(struct(ue), ue.Tx.PUCCH, 0, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 					case 2
-						obj.UeData(localIndex).PUCCH = ltePUCCH2Decode(ue, ue.Tx.PUCCH, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH2Decode(struct(ue), ue.Tx.PUCCH, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 					case 3
-						obj.UeData(localIndex).PUCCH = ltePUCCH3Decode(ue, ue.Tx.PUCCH, ...
+						obj.UeData(localIndex).PUCCH = ltePUCCH3Decode(struct(ue), ue.Tx.PUCCH, ...
 							obj.UeData(localIndex).Subframe(ue.Tx.PUCCH.Indices));
 				end
 				
@@ -107,11 +165,12 @@ classdef enbReceiverModule
 				
 			end
 		end
+
 		
 		function obj = estimatePusch(obj, enbObj, ueObjs, timeNow)
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
-				ue = cast2Struct(ueObjs(iUser));
+				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					
 				end
