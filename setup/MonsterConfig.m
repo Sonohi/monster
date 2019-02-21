@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 100;
+			numRounds = 10000;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -93,7 +93,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 0;
+			MicroEnb.number = 1;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -104,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 0;
+			PicoEnb.number = 1;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -116,7 +116,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 1;
+			Ue.number = 10;
 			Ue.subframes = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;
@@ -151,7 +151,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the traffic
 			Traffic = struct();
-			Traffic.primary = 'fullBuffer';
+			Traffic.primary = 'videoStreaming';
 			Traffic.secondary = 'videoStreaming';
 			Traffic.mix = 0.5;
 			Traffic.arrivalDistribution = 'Poisson';

@@ -50,7 +50,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Stations(1).Tx.setupGrid(0);
 
 			% Create Symbols
-			testCase.Stations(1).generateSymbols(testCase.Users);
+			testCase.Stations(1).setupPdsch(testCase.Users);
 
 			% Create waveform
 			testCase.Stations(1).Tx.modulateTxWaveform();

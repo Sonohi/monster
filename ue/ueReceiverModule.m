@@ -121,15 +121,15 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				obj.selectCqi(enb);
 
 				% Extract PDSCH
-				obj.estimatePdsch(obj.ueObj, enb);
+				obj.estimatePdsch(enb);
 
 				% Calculate EVM
 				obj.calculateEvm(enb);
 
 				% Log block reception
-				obj.logBlockReception(obj.ueObj);
+				obj.logBlockReception();
 			else
-				monsterLog(sprintf('(USER EQUIPMENT - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				monsterLog(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.logNotDemodulated();
 				obj.CQI = 3;
 
@@ -138,13 +138,15 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function demodulateWaveform(obj,enbObj)
-			% Demodulate waveform and store extracted subframe.
+			% demodulateWaveform demodulates waveform and store extracted subframe.
 			% 
-			% ueReceiverModule
-			% EvolvedNodeB
-			% sets obj.Subframe and obj.Demod
+			% :param obj: ueReceiverModule instance
+			% :param enbObj: EvolvedNodeB instance
+			% :sets obj.Subframe, obj.Demod:
+			%
+
 			if isempty(obj.Waveform)
-				monsterLog('No waveform detected.', 'ERR', 'MonsterUeReceiverModule:EmptyWaveform')
+				monsterLog('(UE RECEIVER MODULE - demodulateWaveform) No waveform detected.', 'ERR', 'MonsterUeReceiverModule:EmptyWaveform')
 			end
 
 			enb = struct(enbObj);
@@ -159,7 +161,10 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		end
 
 		function validateSubframe(obj)
-			% Validator for subframe
+			% validateSubframe is a validator for the subframe
+			% 
+			% :param obj: ueReceiverModule instance
+			% 
 			if isempty(obj.Subframe)
 				monsterLog('Empty subframe in receiver module. Did it demodulate?','ERR','MonsterUeReceiverModule:EmptySubframe')
 			end	
@@ -176,7 +181,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		
 		
 		function obj = equaliseSubframe(obj)
-			% MMSE equalizer of subframe using channel estimation
+			% equaliseSubframe implements MMSE equalizer of subframe using channel estimation
 			%
 			% Uses obj.Subframe, obj.EstChannelGrid and obj.NoiseEst
 			% Sets obj.EqSubframe
@@ -188,65 +193,41 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
 		end
 		
-		function obj = estimatePdsch(obj, ue, enbObjHandle)
-			% first get the PRBs that where used for the UE with this receiver
-			obj.SchIndexes = enbObjHandle.getPRBSetDL(ue);
-			if ~isempty(obj.SchIndexes)
-				% Store the full PRB set for extraction
-				fullPrbSet = enbObjHandle.Tx.PDSCH.PRBSet;
-				
-				% Create local copy for modifications
-				enb = struct(enbObjHandle);
-				pdschConfig = enbObjHandle.Tx.PDSCH;
-				
-				% To find which received PDSCH symbols belong to this UE, we need to
-				% compute indexes for all other UEs allocated in this eNodeB, except
-				% when the UE we are dealing with is the first one in the order that
-				% does not have offset
-				offset = 1;
-				if obj.SchIndexes(1) ~= 1
-					% extract the unique UE IDs from the schedule
-					uniqueIds = extractUniqueIds([enb.ScheduleDL.UeId]);
-					for iUser = 1:length(uniqueIds)
-						if uniqueIds(iUser) ~= ue.NCellID
-							% get all the PRBs assigned to this UE and continue only if it's slotted before the current UE
-							prbIndices = find([enbObjHandle.ScheduleDL.UeId] == uniqueIds(iUser));
-							if prbIndices(1) < obj.SchIndexes(1)
-								[~, mod, ~] = lteMCS(enbObjHandle.ScheduleDL(prbIndices(1)).Mcs);
-								pdschConfig.Modulation = mod;
-								pdschConfig.PRBSet = (prbIndices - 1).';
-								uePdschIndices = ltePDSCHIndices(enb, pdschConfig, pdschConfig.PRBSet);
-								offset = offset + length(uePdschIndices);
-							end
-						end
-					end
+		function obj = estimatePdsch(obj, enbObjHandle)
+			% estimatePdsch extracts the received PDSCH symbols for this UE from the received subframe and decodes them
+			% 
+			% :param obj: ueReceiverModule instance
+			% :param enbObjHandle: EvolvedNodeB instance that the UE is associated to 
+			% :returns obj: ueReceiverModule updated instance
+
+			% Check that this UE had symbols created in this round
+			if ~isempty(obj.ueObj.SymbolsInfo)
+				uePrbSet = obj.ueObj.SymbolsInfo.PRBSet;
+				if ~isempty(uePrbSet)
+					% Cast the eNodeB object handle to struct for local usage
+					enb = struct(enbObjHandle);
+					
+					% Extract the PDSCH indices that this UE had allocated 
+					uePdschIndices = obj.ueObj.SymbolsInfo.pdschIxs;
+					% Extract the corresponding received PDSCH symbols from the equalised subframe
+					[uePdschRx, uePdschRxInfo] = lteExtractResources(uePdschIndices, obj.EqSubframe);
+
+					% Edit a local copy of the PDSCH configuration structure to decode the received symbols
+					pdschConfig = enbObjHandle.Tx.PDSCH;
+					mod = enbObjHandle.getModulationDL(obj.ueObj);
+					pdschConfig.Modulation = mod;
+					pdschConfig.PRBSet = uePrbSet;
+
+					% Decode the PDSCH symbols received for this UE
+					% The variables returned are cell arrays, so for the current 1 CW case select the first one
+					[ueDlsch, uePdsch] = ltePDSCHDecode(enb, pdschConfig, uePdschRx);
+					uePdsch = uePdsch{1};
+					ueDlsch = ueDlsch{1};
+
+					% Save the decoded PDSCH for this UE and decode also its DL-SCH 
+					obj.PDSCH = uePdsch;
+					[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, pdschConfig, obj.ueObj.TransportBlockInfo.tbSize, ueDlsch);
 				end
-				
-				% Set the parameters of the PDSCH to those of the current UE
-				mod = enbObjHandle.getModulationDL(ue);
-				pdschConfig.Modulation = mod;
-				pdschConfig.PRBSet = (obj.SchIndexes - 1).';
-				
-				% Now get all the PDSCH indexes and symbols out of the received grid
-				% TODO for some reasons the built-in functions only work properly with the whole PDSCH
-				fullPdschIndices = ltePDSCHIndices(enb, pdschConfig, fullPrbSet);
-				[fullPdschRx, ~] = lteExtractResources(fullPdschIndices, obj.EqSubframe);
-				
-				% Filter out the PDSCH symbols and bits that are meant for this receiver.
-				% The indices obtained with the function refer to positions in the main grid
-				uePdschIndices = ue.SymbolsInfo.pdschIxs;
-				uePdschRx = fullPdschRx(offset:offset + length(uePdschIndices) - 1);
-				
-				% Decode PDSCH
-				[ueDlsch, uePdsch] = ltePDSCHDecode(enb, pdschConfig, uePdschRx);
-				uePdsch = uePdsch{1};
-				ueDlsch = ueDlsch{1};
-				
-				% The decoded DL-SCH bits are always returned as a cell array, so for 1 CW
-				% cases convert it
-				obj.PDSCH = uePdsch;
-				% Decode DL-SCH
-				[obj.TransportBlock, obj.Crc] = lteDLSCHDecode(enb, pdschConfig, ue.TransportBlockInfo.tbSize, ueDlsch);
 			end
 		end
 		
@@ -318,9 +299,14 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.Waveform = obj.Waveform(obj.Offset+1:end);
 		end
 		
-		% Block reception
-		function obj  = logBlockReception(obj,ueObj)
-			if ~isempty(ueObj.TransportBlock)
+		function obj  = logBlockReception(obj)
+			% logBlockReception logs the reception status of the TB and its bits for stats recording
+			% 
+			% :param obj: ueReceiverModule instance
+			% :sets
+			%
+			
+			if ~isempty(obj.ueObj.TransportBlock)
 				% increase counters for BLER
 				if obj.Crc == 0
 					obj.Blocks.ok = 1;
@@ -331,8 +317,8 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				
 				%TB comparison and bit stats logging
 				% extract the original TB and cast it to uint
-				tbTx(1:ueObj.TransportBlockInfo.tbSize, 1) = ...
-					ueObj.TransportBlock(1:ueObj.TransportBlockInfo.tbSize, 1);
+				tbTx(1:obj.ueObj.TransportBlockInfo.tbSize, 1) = ...
+					obj.ueObj.TransportBlock(1:obj.ueObj.TransportBlockInfo.tbSize, 1);
 				tbRx = obj.TransportBlock;
 				
 				% Check sizes and log a warning if they don't match
@@ -344,7 +330,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 					errEx = 0;
 					tot = length(tbTx);
 				else
-					monsterLog('(ueReceiverModule - logBlockReception) TBs sizes mismatch', 'WRN');
+					monsterLog('(UE RECEIVER MODULE - logBlockReception) TBs sizes mismatch', 'WRN');
 					% In this case, we do the xor between the minimum common set of bits
 					if sizeCheck > 0
 						% the original TB was bigger than the received one, so test on the

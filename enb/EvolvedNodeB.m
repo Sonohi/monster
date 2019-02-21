@@ -193,10 +193,11 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			%
 			% Return PRB set of specific user
             PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
-        end
+		end
+				
 		
-		function obj = generateSymbols(obj, Users)
-			% generateSymbols
+		function obj = setupPdsch(obj, Users)
+			% setupPdsch
 			%
 			% :param obj: EvolvedNodeB instance
 			% :param Users: UserEquipment instances
@@ -215,7 +216,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					if ~isempty(ixPRBs)
 						% get the correct Parameters for this UE
                         
-                        % find the most conservative modulation
+          	% find the most conservative modulation
 						mod = obj.getModulationDL(ue);
 						
 						% get the codeword
@@ -233,14 +234,14 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						if length(cwd) ~= SymInfo.G
 							% In this case seomthing went wrong with the rate maching and in the
 							% creation of the codeword, so we need to flag it
-							monsterLog('(EVOLVED NODE B - generateSymbols) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+							monsterLog('(EVOLVED NODE B - setupPdsch) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
 						end
 						
 						% error handling for symbol creation
 						try
 							sym = ltePDSCH(enb, pdsch, cwd);
 						catch ME
-							fSpec = '(EVOLVED NODE B - generateSymbols) generation failed for codeword with length %i\n';
+							fSpec = '(EVOLVED NODE B - setupPdsch) generation failed for codeword with length %i\n';
 							s=sprintf(fSpec, length(cwd));
 							monsterLog(s,'WRN')
 							sym = [];
@@ -248,7 +249,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						
 						SymInfo.symSize = length(sym);
 						SymInfo.pdschIxs = pdschIxs;
-						SymInfo.indexes = ixPRBs;
+						SymInfo.PRBSet = pdsch.PRBSet;
 						ue.SymbolsInfo = SymInfo;
 						
 						% Set the symbols into the grid of the eNodeB in the main object to preserve it at function exit
@@ -257,7 +258,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						SymInfo = struct();
 						SymInfo.symSize = 0;
 						SymInfo.pdschIxs = [];
-						SymInfo.indexes = [];
+						SymInfo.PRBSet = [];
 						ue.SymbolsInfo = SymInfo;
 					end
 				end
