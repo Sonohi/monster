@@ -11,10 +11,10 @@ Config.MacroEnb.number = 1;
 Config.MicroEnb.number = 0;
 Config.PicoEnb.number = 0;
 Config.Channel.shadowingActive = 0;
-Config.Channel.losMethod = 'NLOS';
+Config.Channel.losMethod = '3GPP38901-probability';
 Config.Traffic.primary = 'fullBuffer';
 Config.Traffic.mix = 0;
-Config.Scheduling.absMask = [0,0,1,0,0,0,0,0,0,0];
+Config.Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
 Config.Channel.fadingActive = 0;
 Config.Channel.perfectSynchronization = true;
 
@@ -29,22 +29,43 @@ Channel = setupChannel(Station, User, Config);
 %Run for a number of rounds
 seed = 0; %set seed to reproduce simulations
 rng(seed);
-nRounds = 1e2; %number of SINR's to check.
-nMeasurements = 1e1;
-BER = zeros(1,nRounds);
-BLER = zeros(1,nRounds);
-BLERtemp = zeros(1,nMeasurements);
-SINRdB = linspace(-1,30,nRounds);
+nRounds = 1e1; %number of SINR's to check.
+nMeasurements = 1e2;
+BERtemp = zeros(1,nRounds);
+BER = zeros(1, nMeasurements);
+BLERtemp = zeros(1,nRounds);
+BLER = zeros(1,nMeasurements);
+SINRdB = linspace(-1,5,nMeasurements);
 SINR = 10.^((SINRdB)./10);
 
 Station.NSubframe = 1;
+%Generate traffic
+
+for iMeasurement = 1:nMeasurements
+    [Traffic, User] = setupTraffic(User, Config);
+    %Homemade traffic generation:
+    % Traffic = struct();
+    % Traffic.Id = 1;
+    % Traffic.Type='fullbuffer';
+    %TODO: make this the correct format
+    % Traffic.TrafficSource = ltePRBS(iMeasurement,600);%%Continure here???
+    % Traffic.ArrivalMode = Config.Traffic.arrivalDistribution;
+	% Traffic.AssociatedUeIds = AssociatedUeIds;
+	% Traffic.ArrivalTimes = Traffic.setArrivalTimes(Config);
+    % User.Traffic.generatorId = trafficGenAllocation(1);
+	% User.Traffic.startTime = Traffic(trafficGenAllocation(1)).getStartingTime(User.NCellID);
 for iRound = 1:nRounds
+    Config.Runtime.currentRound = iRound;
+    Config.Runtime.currentTime = iRound*10e-3;  
+    Config.Runtime.remainingTime = (Config.Runtime.totalRounds - Config.Runtime.currentRound)*10e-3;
+    Config.Runtime.remainingRounds = Config.Runtime.totalRounds - Config.Runtime.currentRound - 1;
+    % Update Channel property
+    Channel.setupRound(Config.Runtime.currentRound, Config.Runtime.currentTime);
 
     %Associate user
     [User Station] = refreshUsersAssociation(User, Station, Channel, Config);
 
-    %Generate traffic
-    [Traffic, User] = setupTraffic(User, Config);
+    
     UeTrafficGenerator = Traffic([Traffic.Id] == User.Traffic.generatorId);
 	User.Queue = UeTrafficGenerator.updateTransmissionQueue(User, iRound);
 
@@ -71,14 +92,14 @@ for iRound = 1:nRounds
     Nfft = 2^ceil(log2(12*Station.NDLRB/0.85));
     Channel.ChannelModel.TempSignalVariables.RxWaveformInfo.Nfft = Nfft;
     % set SINR
-    Channel.ChannelModel.TempSignalVariables.RxSINR = SINR(iRound);
+    Channel.ChannelModel.TempSignalVariables.RxSINR = SINR(iMeasurement);
     N0 = Channel.ChannelModel.computeSpectralNoiseDensity(Station, 'downlink');
     
     User.Rx.WaveformInfo = Station.Tx.WaveformInfo;
     User.Rx.RxPwdBm = -30;
-    %TODO: several rounds for each SINR
 
-    for iMeasurement = 1:nMeasurements
+
+    
         % Add AWGN
         noise = N0*complex(randn(size(Station.Tx.Waveform)), randn(size(Station.Tx.Waveform)));
         rxSig = Station.Tx.Waveform + noise;
@@ -93,16 +114,22 @@ for iRound = 1:nRounds
         User.downlinkDataDecoding(Config);
 
         %Find BLER
-        BLERtemp(iMeasurement) = User.Rx.Blocks.err;
-    end
+        BLERtemp(iRound) = User.Rx.Blocks.err;
+    
     %Compare the transmitted and original data to find errors
 
-    % tbRx = User.Rx.TransportBlock;
-    % tbTx = User.TransportBlock;
-    % if ~isempty(tbRx) && ~isempty(tbTx)
-    %     [diff, BER(iRound)] = biterr(tbRx, tbTx);
-    % end
-    BLER(iRound)=sum(BLERtemp)/nMeasurements;
+    tbRx = User.Rx.TransportBlock;
+    tbTx = User.TransportBlock;
+    if ~isempty(tbRx) && ~isempty(tbTx)
+         [diff, BER(iRound)] = biterr(tbRx, tbTx);
+    end
+    %TODO: Changin subframes gives offset error and crashes simulation. Fix that
+    Station.NSubframe = mod(iRound +1,10);
+    User.reset();
+end
+    BER(iMeasurement) = mean(BERtemp);
+    BLER(iMeasurement)=sum(BLERtemp)/nRounds;
+    
     %TODO: make actual usefull outputs
 end
 figure;

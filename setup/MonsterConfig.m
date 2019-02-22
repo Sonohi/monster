@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10000;
+			numRounds = 100;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -93,7 +93,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.number = 0;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -104,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 1;
+			PicoEnb.number = 0;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -116,7 +116,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 10;
+			Ue.number = 1;
 			Ue.subframes = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;
@@ -177,9 +177,9 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to the channel
 			Channel = struct();
 			Channel.mode = '3GPP38901';
-			Channel.fadingActive = true;
+			Channel.fadingActive = false;
 			Channel.interferenceType = 'Full';
-			Channel.shadowingActive = true;
+			Channel.shadowingActive = false;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
 			Channel.losMethod = '3GPP38901-probability';
