@@ -40,6 +40,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Harq = struct();
 		Arq = struct();
 		Plot = struct();
+		Scenario = struct();
 	end
 
 	methods
@@ -51,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10000;
+			numRounds = 100;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -70,6 +71,11 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Logs.logPath = 'logs/';
 			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
 			obj.Logs = Logs;
+
+			%Scenario properties
+			Scenario = struct();
+			Scenario.scenario = 'none';
+			obj.Scenario = Scenario;
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
