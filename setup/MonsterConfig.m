@@ -52,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 100;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -89,13 +89,14 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
 			MacroEnb.number = 1;
-			MacroEnb.subframes = 50;
+			MacroEnb.subframes = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
 			MacroEnb.radius = 1000;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
 			MacroEnb.antennaType = 'omni';
+			MacroEnb.Pmax = 20; % W
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
@@ -107,6 +108,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
 			MicroEnb.antennaType = 'omni';
+			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
@@ -128,6 +130,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.noiseFigure = 7;
 			Ue.antennaGain = 0;
 			Ue.antennaType = 'omni';
+			Ue.TxPwdBm = 23;
+			Ue.Pmax = 10;
 			obj.Ue = Ue;
 
 			% Properties related to mobility

@@ -47,13 +47,13 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			switch BsClass
 				case 'macro'
 					obj.NDLRB = Config.MacroEnb.subframes;
-					obj.Pmax = 20; % W
+					obj.Pmax = Config.MacroEnb.Pmax; % W
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
 				case 'micro'
 					obj.NDLRB = Config.MicroEnb.subframes;
-					obj.Pmax = 6.3; % W
+					obj.Pmax = Config.MicroEnb.Pmax; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W

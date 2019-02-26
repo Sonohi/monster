@@ -50,10 +50,14 @@ classdef Monster < matlab.mixin.Copyable
 			% Configure logs
 			setpref('monsterLog', 'logToFile', Config.Logs.logToFile);
 			setpref('monsterLog', 'logFile', Config.Logs.defaultLogName);
+            
+            % Adapt to current scenario
+            monsterLog('(MONSTER - setupSimulation) applying scnario parameters', 'NFO');
+            ApplyScenario(Config);
 
 			% Create network layout
 			monsterLog('(MONSTER - setupSimulation) setting up network layout', 'NFO');
-			Config.setupNetworkLayout()
+			Config.setupNetworkLayout();
 
 			% Setup eNodeBs
 			monsterLog('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'NFO');

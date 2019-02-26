@@ -8,7 +8,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		PUCCH;
 		PUSCH;
 		Freq; % Operating frequency.
-		TxPwdBm = 23; % Transmission power (Power class)
+		TxPwdBm; % Transmission power (Power class)
 		Gain = 4; % Antenna gain
 		UeObj;
 		HarqActive;
@@ -34,6 +34,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				'NLayers', 1);
 			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
+			obj.TxPwdBm = Config.Ue.TxPwdBm;
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)

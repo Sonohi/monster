@@ -77,7 +77,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 				obj.Rlc = struct('ArqRxBuffer', ArqRx());
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
-			obj.Pmax = 10; %10dBm
+			obj.Pmax = Config.Ue.Pmax;
     end
 		
 		function s = struct(obj)
