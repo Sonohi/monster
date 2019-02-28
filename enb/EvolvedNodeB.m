@@ -59,7 +59,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.Psleep = 39.0; % W
 				case 'pico'
 					obj.NDLRB = Config.PicoEnb.subframes;
-					obj.Pmax = 0.13; % W
+					obj.Pmax = Config.PicoEnb.Pmax;  % W
 					obj.P0 = 6.8; % W
 					obj.DeltaP = 4.0;
 					obj.Psleep = 4.3; % W

@@ -32,20 +32,6 @@ case '3GPP TR 38.901 UMa'
     %Fast fading is not modelled?
     %TODO: find out if fastfading and fading active is the same?
 
-case '3GPP TR 38.901 UMi' % from https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf Table 7.2-1, table 7.5-6 and table 7.8-1 on UMi
-    obj.Scenario = '3GPP TR 38.901 UMi';
-    %TODO: Make happen accordingly to scenario
-    %only microcells, but 3-sectorized 
-    Config.MacroEnb.radius = 1732;  % or 5000m
-    Config.MacroEnb.number = 0;
-    Config.MicroEnb.number = 0;
-    Config.PicoEnb.number = 0;
-    Config.MacroEnb.height= 35;
-    Config.Ue.number = 30 * Config.MacroEnb.number;
-    Config.Ue.height = 1.5;
-    %Carrier freq: up to 7 GHz
-    %uniformly distributed users
-    %50% indoor, 50% in car
 
 case 'ITU-R M2412-0 5.B.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.c Configuration A
     %For Spectral efficiency and mobility Evaluations.
@@ -57,7 +43,7 @@ case 'ITU-R M2412-0 5.B.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-RE
     Config.MacroEnb.height= 25;
     Config.MacroEnb.Pmax = 10^(41/10)/1e3; %41dBm converted to W
     Config.MacroEnb.subframes = 50; % 10MHz bandwidth
-    Config.Ue.TxPwdBm = 23; %dBm
+    %Ue Transmit power in dBm = 23. 
     %Percentage of high loss and low loss: 20/80 (high/low)
     Config.MacroEnb.radius = 200; %intersite distance in meters
     %Number of antenna elements per TRxP: up to 256 Tx/Rx
@@ -87,9 +73,9 @@ case 'ITU-R M2412-0 5.B.B' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-RE
     Config.Phy.downlinkFrequency = 30000; %MHz
     Config.MacroEnb.height= 25;
     Config.MacroEnb.Pmax = 10^(37/10)/1e3; %37dBm converted to W
-    %TODO: make 40MHz bandwisth possible
+    %TODO: make 40MHz bandwidth possible
     Config.MacroEnb.subframes = 100; % should be 200 corresponding to 40MHz bandwidth
-    Config.Ue.TxPwdBm = 23; %dBm
+    %Ue Transmit power in dBm = 23. 
     %Percentage of high loss and low loss: 20/80 (high/low)
     Config.MacroEnb.radius = 200; %intersite distance in meters
     %Number of antenna elements per TRxP: up to 256 Tx/Rx
@@ -147,7 +133,7 @@ case 'ITU-R M.2412-0 5.B.C' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-R
     Config.MicroEnb.subframes = 50 ; %50 subframes = 10MHz Bandwidth
     Config.MicroEnb.Pmax = 10^(30/10)/1e3; % 30 dBm converted to W
     %UE power class: 4 GHz: 23 dBm, 30 GHz: 23 dBm, e.i.r.p. should not exceed 43 dBm
-    Config.Ue.TxPwdBm = 23;
+    %Ue Transmit power in dBm = 23. 
     %Percentage of high and low loss building type: 20% high loss, 80% low loss
     %Number of antenna elements per TRxP: 256 Tx/Rx
     %Number of UE Antenna elements: 4 GHz: Up to 8 Tx/Rx, 30 GHz: Up to 32 Tx/Rx
@@ -173,7 +159,7 @@ case 'ITU-R M.2412-0 5.B.C' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-R
     %           30GHz -> 80MHz for TDD or 40MHz + 40MHz for FDD
     %UE density: 10 UEs per TRxP
 
-case 'Single Cell' % Deploys a single cell.
+case 'Single Cell' % Deploys a single cell for testing purposes.
     obj.Scenario = 'Single Cell';
     Config.MacroEnb.radius = 300;
     Config.MacroEnb.number = 1;
@@ -185,7 +171,7 @@ case 'Single Cell' % Deploys a single cell.
     Config.Traffic.primary = 'fullBuffer';
     Config.Traffic.mix = 0;
     %TODO: Add more specifics, to make sure, that no matter the Config, this allways works
-
+    
 otherwise
     obj.Scenario = 'None';
 

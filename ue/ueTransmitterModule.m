@@ -34,7 +34,8 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				'NLayers', 1);
 			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
-			obj.TxPwdBm = Config.Ue.TxPwdBm;
+			%TODO: make configureable
+			obj.TxPwdBm = 23;
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)

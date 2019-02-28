@@ -120,6 +120,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			PicoEnb.noiseFigure = 7;
 			PicoEnb.antennaGain = 0;
 			PicoEnb.antennaType = 'omni';
+			PicoEnb.Pmax =  0.13; %W
 			obj.PicoEnb = PicoEnb;
 
 			% Properties related to the configuration of UEs
@@ -130,8 +131,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.noiseFigure = 7;
 			Ue.antennaGain = 0;
 			Ue.antennaType = 'omni';
-			Ue.TxPwdBm = 23;
-			Ue.Pmax = 10;
 			obj.Ue = Ue;
 
 			% Properties related to mobility
