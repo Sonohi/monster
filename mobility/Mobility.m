@@ -33,7 +33,10 @@ classdef Mobility < matlab.mixin.Copyable
 		westEast = [2, 4];
 		northSouth = [1, 3];
 		avgfloorHeight = 3; % Roughly 3m
-		supportedScenarios = {'pedestrian', 'pedestrian-indoor'}
+		supportedScenarios = {'pedestrian', 'pedestrian-indoor', 'maritime'}
+		area;
+		seaDelta;
+		coast;
 	end
 	
 	methods
@@ -48,7 +51,11 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Velocity = velocity;
 			obj.Seed = seed;
 			obj.Rounds = Config.Runtime.totalRounds;
-			obj.buildingFootprints = Config.Terrain.buildings;
+			if strcmp(scenario, 'maritime')
+				obj.buildingFootprints = [];
+			else
+				obj.buildingFootprints = Config.Terrain.buildings;
+			end
 			
 			% Produce parameters and compute movement.
 			obj.setParameters(Config);
@@ -82,6 +89,8 @@ classdef Mobility < matlab.mixin.Copyable
 				obj.randomWalkPedestrian();
 			elseif strcmp(obj.Scenario, 'pedestrian-indoor')
 				obj.randomWalkPedestrianIndoor();
+			elseif strcmp(obj.Scenario, 'maritime')
+				obj.createMaritimeTrajectory();
 			end
 		end
 		
@@ -160,8 +169,6 @@ classdef Mobility < matlab.mixin.Copyable
 						obj.Trajectory(round,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
 						
 				end
-				
-				
 			end
 		end
 		
@@ -250,13 +257,31 @@ classdef Mobility < matlab.mixin.Copyable
 								stateVar = obj.setCrossedStateVars(stateVar, newPos);
 								nextState = 'moving';
 							end
-							
 						end
-						
 				end
 			end
 		end
 		
+		function obj = createMaritimeTrajectory(obj)
+			% createMaritimeTrajectory generates a maritime trajectory for the sea-based scenario
+			% 
+			% :param obj: Mobility Instance 
+			% :returns obj: Mobility instnace with updated trajectory property
+			%
+			
+			startX = obj.area(1) + obj.seaDelta(1);
+			startY = obj.area(2) + obj.seaDelta(2);
+			endX = obj.area(3) - obj.seaDelta(1);
+			endY = round(min(obj.coast.coastline(:,2)) - obj.seaDelta(2));
+			mapX = sort(startX + randperm(endX, 50));
+			mapY = sort(startY + randperm(round(endY), 50));
+			spreadX = linspace(startX, endX, obj.Rounds);
+			spreadY = interp1(mapX, mapY, spreadX, 'spline');
+			obj.Trajectory(:,1) = spreadX(1,:);
+			obj.Trajectory(:, 2) = spreadY(1,:);
+
+		end
+
 		function stateVar = initializeStateVars(obj, start, startSide)
 			stateVar = struct();
 			stateVar.timeLeftForCrossing = obj.pedestrianCrossingPause;
@@ -315,6 +340,10 @@ classdef Mobility < matlab.mixin.Copyable
 			elseif strcmp(obj.Scenario, 'pedestrian-indoor')
 				obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
 				obj.wallThickness = 0.3; %30cm of outer wall thickness
+			elseif strcmp(obj.Scenario, 'maritime')
+				obj.area = Config.Terrain.area;
+				obj.coast = Config.Terrain.coast;
+				obj.seaDelta = Config.Terrain.seaDelta;
 			end
 			
 			obj.distanceMoved = obj.TimeStep * obj.movementSpeed;

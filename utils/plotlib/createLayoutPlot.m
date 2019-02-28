@@ -2,9 +2,7 @@ function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
 	fig = figure('Name','Layout','Position',[100, 100, 1000, 1000]);
 	layout_axes = axes('parent', fig);
 	%Find simulation area
-	buildings = Config.Terrain.buildings;
-	area = [min(buildings(:, 1)), min(buildings(:, 2)), max(buildings(:, 3)), ...
-		max(buildings(:, 4))];
+	area = Config.Terrain.area;
 	xc = (area(3) - area(1))/2;
 	yc = (area(4) - area(2))/2;
 	maxRadius = max(area(3)/2,area(4)/2);

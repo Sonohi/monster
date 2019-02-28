@@ -73,7 +73,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.runtimePlot = 1;
 			SimulationPlot.generateCoverageMap = 0;
 			SimulationPlot.generateHeatMap = 0;
 			SimulationPlot.heatMapType = 'perStation';
@@ -126,7 +126,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to mobility
 			Mobility = struct();
-			Mobility.scenario = 'pedestrian';
+			Mobility.scenario = 'maritime'; % pedestrian | pedestrian-indoor | maritime
 			Mobility.step = 0.01;
 			Mobility.seed = 19;
 			obj.Mobility = Mobility;
@@ -136,17 +136,36 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Handover.x2Timer = 0.01;
 			obj.Handover = Handover;
 
-			% Properties related to terrain and scenario 
+			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
-			Terrain.buildingsFile = 'mobility/buildings.txt';
-			Terrain.heightRange = [20,50];
-			Terrain.buildings = load(Terrain.buildingsFile);
-			Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
-			Terrain.area = [...
-				min(Terrain.buildings(:, 1)), ...
-				min(Terrain.buildings(:, 2)), ...
-				max(Terrain.buildings(:, 3)), ...
-				max(Terrain.buildings(:, 4))];
+			Terrain.type = 'maritime'; % city | maritime
+			if strcmp(Terrain.type,'city')
+				% In the city scenario, a Manhattan city grid is generated based on a buildings file
+				Terrain.buildingsFile = 'mobility/buildings.txt';
+				Terrain.heightRange = [20,50];
+				Terrain.buildings = load(Terrain.buildingsFile);
+				Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
+				Terrain.area = [...
+					min(Terrain.buildings(:, 1)), ...
+					min(Terrain.buildings(:, 2)), ...
+					max(Terrain.buildings(:, 3)), ...
+					max(Terrain.buildings(:, 4))];
+			elseif strcmp(Terrain.type,'maritime')
+				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
+				Terrain.coast = struct('mean', 150, 'spread', 10, 'straightReach', 600, 'coastline', []);
+				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
+				% Compute the coastline
+				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
+				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
+				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
+				spreadY = interp1(coastX, coastY, spreadX, 'spline');
+				Terrain.coast.coastline(:,1) = spreadX(1,:);
+				Terrain.coast.coastline(:,2) = spreadY(1,:);				
+				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
+				Terrain.seaDelta = [20, 10]; % X and Y delta from the coast to the sea for the vessel trajectory
+			else
+				monsterLog('(MONSTER CONFIG - constructor) unsupported terrain scenario', 'ERR');
+			end
 			obj.Terrain = Terrain;
 
 			% Properties related to the traffic

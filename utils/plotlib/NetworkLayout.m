@@ -19,7 +19,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.Center = [xc yc];
 			obj.Radius = Config.MacroEnb.radius;
 			obj.NumMacro = Config.MacroEnb.number;
-			obj.computeMacroCoordinates();
+			obj.computeMacroCoordinates(Config);
 			obj.generateCells(Config);
 			obj.findMicroCoordinates(Config);
 			obj.findPicoCoordinates(Config);
@@ -161,72 +161,89 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	
 	methods (Access = private)
 		
-		function obj = computeMacroCoordinates(obj)
-			%Computes the center coordinates by walking in hexagons around the center
+		function obj = computeMacroCoordinates(obj, Config)
 			centers = zeros(obj.NumMacro,2);
-			steps = 1;
-			rings =1;
-			theta = 2/3*pi;
-			special = false;
-			specialTrack = false;
-			turn = true;
-			rho = pi/3;
-			stepTrack = 0;
-			%Two first coordinates are "special" cases and are done seperately.
-			centers(1,:) =obj.Center;
-			if obj.NumMacro > 1
-				centers(2,1) = obj.Center(1,1)+obj.Radius*cos(rho);
-				centers(2,2) = obj.Center(1,2)+obj.Radius*sin(rho);
-			end
-			%Rest of the coordinates follow the same pattern, but when going out one "ring" a special action are carried out.
-			for i=3:obj.NumMacro
-				if special
-					%Perform special action
-					centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
-					centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
-					stepTrack = stepTrack +1;
-					turn = false;
-					if stepTrack == rings-1
-						
-						turn = true;
-					end
-					if stepTrack == rings -1 && specialTrack
-						turn = true;
-						special = false;
-					end
-					if turn
-						theta =theta + pi/3;
-						stepTrack = 0;
-						specialTrack = true;
-						if special ==false
+			if strcmp(Config.Terrain.type,'city')
+				%Computes the center coordinates by walking in hexagons around the center
+				steps = 1;
+				rings =1;
+				theta = 2/3*pi;
+				special = false;
+				specialTrack = false;
+				turn = true;
+				rho = pi/3;
+				stepTrack = 0;
+				%Two first coordinates are "special" cases and are done seperately.
+				centers(1,:) =obj.Center;
+				if obj.NumMacro > 1
+					centers(2,1) = obj.Center(1,1)+obj.Radius*cos(rho);
+					centers(2,2) = obj.Center(1,2)+obj.Radius*sin(rho);
+				end
+				%Rest of the coordinates follow the same pattern, but when going out one "ring" a special action are carried out.
+				for i=3:obj.NumMacro
+					if special
+						%Perform special action
+						centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
+						centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
+						stepTrack = stepTrack +1;
+						turn = false;
+						if stepTrack == rings-1
+							
+							turn = true;
+						end
+						if stepTrack == rings -1 && specialTrack
+							turn = true;
+							special = false;
+						end
+						if turn
+							theta =theta + pi/3;
 							stepTrack = 0;
-							specialTrack = false;
+							specialTrack = true;
+							if special ==false
+								stepTrack = 0;
+								specialTrack = false;
+							end
+						end
+					else
+						%walk, then update
+						centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
+						centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
+						stepTrack = stepTrack +1;
+						turn = false;
+						if stepTrack == rings
+							turn = true;
+							stepTrack = 0;
+						end
+						if turn && steps <5
+							theta =theta + pi/3;
+							steps = steps +1;
+						elseif 5 <= steps
+							rings = rings +1;
+							steps = 1;
+							special = true;
+							stepTrack = 0;
+							turn = false;
 						end
 					end
-				else
-					%walk, then update
-					centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
-					centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
-					stepTrack = stepTrack +1;
-					turn = false;
-					if stepTrack == rings
-						turn = true;
-						stepTrack = 0;
-					end
-					if turn && steps <5
-						theta =theta + pi/3;
-						steps = steps +1;
-					elseif 5 <= steps
-						rings = rings +1;
-						steps = 1;
-						special = true;
-						stepTrack = 0;
-						turn = false;
-					end
 				end
+			elseif strcmp(Config.Terrain.type,'maritime')
+				% In this case, the macros are placed on the northern side of the coastline 
+				northCoastLimit = max(Config.Terrain.coast.coastline(:,2));
+				minY = northCoastLimit + Config.Terrain.inlandDelta(2);
+				maxY = Config.Terrain.area(4) - Config.Terrain.inlandDelta(2);
+				minX = Config.Terrain.area(1) + Config.Terrain.inlandDelta(1);
+				maxX = Config.Terrain.area(3) - Config.Terrain.inlandDelta(1);
+				macroX = linspace(minX, maxX, obj.NumMacro);
+				macroY = linspace(minY, maxY, obj.NumMacro);
+				centers(:,1) = macroX';
+				centers(:,2) = macroY';
+			else
+				monsterLog('(NETWORK LAYOUT - computeMacroCoordinates) unsupported terrain scenario', 'ERR');
 			end
+			% Set back in object			
 			obj.MacroCoordinates = centers;
 		end
+
 		%Generate Macrocell objects from MacroCoordinates
 		function obj = generateCells(obj,Config)
 			cells = cell(obj.NumMacro,1);
