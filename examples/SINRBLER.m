@@ -15,7 +15,7 @@ Config.Channel.losMethod = '3GPP38901-probability';
 Config.Traffic.primary = 'fullBuffer';
 Config.Traffic.mix = 0;
 Config.Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
-Config.Channel.fadingActive = 0;
+Config.Channel.fadingActive = true;
 Config.Channel.perfectSynchronization = true;
 
 Config.setupNetworkLayout();
@@ -27,21 +27,22 @@ User.Position = [190, 295,1.5];
 Channel = setupChannel(Station, User, Config);
 
 %Run for a number of rounds
-seed = 0; %set seed to reproduce simulations
-rng(seed);
-nRounds = 1e1; %number of SINR's to check.
+%seed = 0; %set seed to reproduce simulations
+%rng(seed);
+nRounds = 1e4; %number of SINR's to check.
 nMeasurements = 1e2;
 BERtemp = zeros(1,nRounds);
 BER = zeros(1, nMeasurements);
 BLERtemp = zeros(1,nRounds);
 BLER = zeros(1,nMeasurements);
-SINRdB = linspace(-1,5,nMeasurements);
+SINRdB = linspace(-2.5,-1,nMeasurements);
 SINR = 10.^((SINRdB)./10);
 
 Station.NSubframe = 1;
 %Generate traffic
 
 for iMeasurement = 1:nMeasurements
+    Config.Runtime.seed = iMeasurement;
     [Traffic, User] = setupTraffic(User, Config);
     %Homemade traffic generation:
     % Traffic = struct();
@@ -108,7 +109,35 @@ for iRound = 1:nRounds
         User.Rx.Waveform = rxSig;
 
         %Recieve downlink
-        User.downlinkReception(Station, Channel.Estimator.Downlink);
+        %User.downlinkReception(Station, Channel.Estimator.Downlink);
+        %Recieve downlink (skipped offset allways gives errors)
+        User.Rx.referenceMeasurements(Station);
+        User.Rx.demodulateWaveform(Station);
+        
+        if User.Rx.Demod 
+        % Estimate the channel
+        User.Rx.estimateChannel(Station, Channel.Estimator.Downlink);
+        
+        % Apply equalization
+        User.Rx.equaliseSubframe();
+        
+        % Select CQI
+        User.Rx.selectCqi(Station);
+
+        % Extract PDSCH
+        User.Rx.estimatePdsch(Station);
+
+        % Calculate EVM
+        User.Rx.calculateEvm(Station);
+
+        % Log block reception
+        User.Rx.logBlockReception();
+    else
+        %monsterLog(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',Station.NCellID, User.NCellID),'WRN');
+        User.Rx.logNotDemodulated();
+        User.Rx.CQI = 3;
+
+    end
 
         %Data decoding
         User.downlinkDataDecoding(Config);
@@ -121,18 +150,20 @@ for iRound = 1:nRounds
     tbRx = User.Rx.TransportBlock;
     tbTx = User.TransportBlock;
     if ~isempty(tbRx) && ~isempty(tbTx)
-         [diff, BER(iRound)] = biterr(tbRx, tbTx);
+         [diff, BERtemp(iRound)] = biterr(tbRx, tbTx);
     end
     %TODO: Changin subframes gives offset error and crashes simulation. Fix that
     Station.NSubframe = mod(iRound +1,10);
     User.reset();
 end
     BER(iMeasurement) = mean(BERtemp);
-    BLER(iMeasurement)=sum(BLERtemp)/nRounds;
+    BLER(iMeasurement)=mean(BLERtemp);
     
     %TODO: make actual usefull outputs
 end
 figure;
 semilogx(SINR,BLER);
 figure;
+xlabel('SNR [dB]');
+ylabel('BLER');
 semilogy(SINRdB,BLER);
