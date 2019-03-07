@@ -37,6 +37,7 @@ classdef Mobility < matlab.mixin.Copyable
 		area;
 		seaDelta;
 		coast;
+		shipHeight;
 	end
 	
 	methods
@@ -274,12 +275,13 @@ classdef Mobility < matlab.mixin.Copyable
 			endX = obj.area(3) - obj.seaDelta(1);
 			endY = round(min(obj.coast.coastline(:,2)) - obj.seaDelta(2));
 			mapX = sort(startX + randperm(endX, 50));
-			mapY = sort(startY + randperm(round(endY), 50));
+			mapY = sort(startY + randperm(round(endY - startY), 50));
 			spreadX = linspace(startX, endX, obj.Rounds);
 			spreadY = interp1(mapX, mapY, spreadX, 'spline');
 			obj.Trajectory(:,1) = spreadX(1,:);
 			obj.Trajectory(:, 2) = spreadY(1,:);
-
+			% Assume UE ship height constant (TODO can be varied for different martitime conditions)
+			obj.Trajectory(:,3) = ones(obj.Rounds,1)*obj.shipHeight;
 		end
 
 		function stateVar = initializeStateVars(obj, start, startSide)
@@ -331,6 +333,7 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.wallDistance = 1;
 			obj.movementSpeed = obj.Velocity; % [m/s]
 			obj.pedestrianHeight = Config.Ue.height;
+			obj.shipHeight = Config.Ue.height;
 			if strcmp(obj.Scenario, 'pedestrian')
 				% TODO: randomize wait times between appropriate numbers.
 				obj.pedestrianTurnPause = 0.02; % 20 ms of pause;

@@ -316,10 +316,15 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			areatype = obj.Channel.getAreaType(TxNode);
 			
 			shadowing = obj.Channel.enableShadowing;
-			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
-			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
+			% Check whether we have buildings in the scenario
+			if ~isempty(obj.Channel.BuildingFootprints)
+				avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
+				avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
+			else
+				avgBuilding = 0;
+				avgStreetWidth = 0;
+			end
 
-			
 			[LOS, prop] = obj.Channel.isLinkLOSMatrix(TxNode, RxNode, false, d2);
 			%TODO make LOS function work for spatialLOSstate
 			%if ~isnan(prop)
@@ -330,12 +335,11 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			%end
 
 			try
-					lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+				lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 				catch ME
 					if strcmp(ME.identifier,'Pathloss3GPP:Range')
-							
-							d2(d2<10) = 10;
-							lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+						d2(d2<10) = 10;
+						lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 					else
 						monsterLog('A pathloss calculation failed','ERR')
 					end
@@ -399,8 +403,15 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 			
 			shadowing = obj.Channel.enableShadowing;
-			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
-			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
+			% Check whether we have buildings in the scenario
+			if ~isempty(obj.Channel.BuildingFootprints)
+				avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
+				avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
+			else
+				avgBuilding = 0;
+				avgStreetWidth = 0;
+			end
+			
 			try
 				lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 			catch ME

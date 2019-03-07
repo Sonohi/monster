@@ -13,6 +13,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		simulationTime = 0;
 		extraSamplesArea = 1200;
 		Estimator = struct();
+		area;
 	end
 	
 	methods
@@ -31,8 +32,13 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.InterferenceType = Config.Channel.interferenceType;
 			obj.enableShadowing = Config.Channel.shadowingActive;
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
-			obj.BuildingFootprints = Config.Terrain.buildings;
 			obj.LOSMethod = Config.Channel.losMethod;
+			if strcmp(Config.Terrain.type, 'city')
+				obj.BuildingFootprints = Config.Terrain.buildings;
+			else 
+				obj.BuildingFootprints = [];
+			end
+			obj.area = Config.Terrain.area;
 			obj.setupChannel(Stations, Users);
 			obj.createChannelEstimator();
 		end
@@ -223,7 +229,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 			
 			% Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
-			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + obj.extraSamplesArea;
+			area = obj.area(3) - obj.area(1) + obj.extraSamplesArea;
 		end
 
 		function list = getENBPowerList(obj, User, Stations, Mode)

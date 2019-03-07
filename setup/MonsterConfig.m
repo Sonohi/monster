@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10000;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -82,7 +82,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.number = 1;
+			MacroEnb.number = 3;
 			MacroEnb.subframes = 50;
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -93,7 +93,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.number = 0;
 			MicroEnb.subframes = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -104,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MicroEnb = MicroEnb;
 
 			PicoEnb = struct();
-			PicoEnb.number = 1;
+			PicoEnb.number = 0;
 			PicoEnb.subframes = 6;
 			PicoEnb.height = 5;
 			PicoEnb.positioning = 'uniform';
@@ -116,9 +116,9 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 10;
+			Ue.number = 1;
 			Ue.subframes = 25;
-			Ue.height = 1.5;
+			Ue.height = 12;
 			Ue.noiseFigure = 7;
 			Ue.antennaGain = 0;
 			Ue.antennaType = 'omni';
@@ -152,7 +152,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 					max(Terrain.buildings(:, 4))];
 			elseif strcmp(Terrain.type,'maritime')
 				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
-				Terrain.coast = struct('mean', 150, 'spread', 10, 'straightReach', 600, 'coastline', []);
+				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
 				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
 				% Compute the coastline
 				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
@@ -162,7 +162,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Terrain.coast.coastline(:,1) = spreadX(1,:);
 				Terrain.coast.coastline(:,2) = spreadY(1,:);				
 				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
-				Terrain.seaDelta = [20, 10]; % X and Y delta from the coast to the sea for the vessel trajectory
+				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
 			else
 				monsterLog('(MONSTER CONFIG - constructor) unsupported terrain scenario', 'ERR');
 			end
@@ -170,7 +170,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the traffic
 			Traffic = struct();
-			Traffic.primary = 'videoStreaming';
+			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
 			Traffic.mix = 0.5;
 			Traffic.arrivalDistribution = 'Poisson';

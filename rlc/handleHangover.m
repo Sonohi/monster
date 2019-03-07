@@ -20,9 +20,9 @@ function [User, Stations] = handleHangover(User,Stations,targetEnbID, Config)
 			% in this case, we can initiate the HO procedure. This is the only case when we actually use the target eNodeB
 			User.Hangover.HoState = 1;
 			User.Hangover.TargetEnb = targetEnbID;
-			User.Hangover.HoStart = timeNow;
-			User.Hangover.HoComplete = timeNow + Config.Handover.x2Timer;
-		elseif User.Hangover.HoState == 1 && User.Hangover.HoComplete <= timeNow
+			User.Hangover.HoStart = Config.Runtime.currentTime;
+			User.Hangover.HoComplete = Config.Runtime.currentTime + Config.Handover.x2Timer;
+		elseif User.Hangover.HoState == 1 && User.Hangover.HoComplete <= Config.Runtime.currentTime
 			% perform hangover
 			% Get indices
 			iServingStation = find([Stations.NCellID] == User.ENodeBID);
