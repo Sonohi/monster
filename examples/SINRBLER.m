@@ -167,7 +167,7 @@ for iMCS=1:length(MCSlevels)
         semilogy(SINRdB,BLER);
         hold on;
         %Save to save time.
-        save(filestr,'SINRdB','BLER');
+        save(strcat('examples/resultsSINRBLER/',filestr),'SINRdB','BLER');
     else
 
         load(filestr);
