@@ -20,7 +20,7 @@ Config.MicroEnb.number = 0;
 Config.PicoEnb.number = 0;
 Config.Mobility.scenario = 'maritime'
 Config.Phy.uplinkFrequency = 1747.5;
-Config.Phy.downlinkFrequency = 1842.5;
+Config.Phy.downlinkFrequency = 2600;
 Config.Harq.active = false;
 Config.Arq.active = false;
 Config.Channel.shadowingActive = 0;
@@ -32,24 +32,24 @@ Simulation = Monster(Config);
 for iRound = 0:(Config.Runtime.totalRounds - 1)
 	Simulation.setupRound(iRound);
 
-	monsterLog(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
+	monsterLog(sprintf('(MARITIME SWEEP) simulation round %i, time elapsed %f s, time left %f s',...
 		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
 		Simulation.Config.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
 
-	monsterLog(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
+	monsterLog(sprintf('(MARITIME SWEEP) completed simulation round %i. %i rounds left' ,....
 		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
 
 	Simulation.collectResults();
 
-	monsterLog('(MAIN) collected simulation round results', 'NFO');
+	monsterLog('(MARITIME SWEEP) collected simulation round results', 'NFO');
 
 	Simulation.clean();
 
 	if iRound ~= Config.Runtime.totalRounds - 1
-		monsterLog('(MAIN) cleaned parameters for next round', 'NFO');
+		monsterLog('(MARITIME SWEEP) cleaned parameters for next round', 'NFO');
 	else
-		monsterLog('(MAIN) simulation completed', 'NFO');
+		monsterLog('(MARITIME SWEEP) simulation completed', 'NFO');
 	end
 end
