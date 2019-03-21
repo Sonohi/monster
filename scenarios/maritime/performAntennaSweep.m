@@ -30,84 +30,87 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 	% :returns sweepCompleted: boolean to control the sweep outer recursion
 
 	% Scan reachable eNodeBs at current rotation angle
-	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) scanning for nearby eNodeBs', 'NFO');
+	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) scanning for nearby eNodeBs using reference subframe', 'NFO');
 
-	% TODO remove placeholder and replace with reference subframe 
-	% run the reference for all stations
-	%	Station.Tx.createReferenceSubframe();
-	% Station.Tx.assignReferenceSubframe();
-	% Channel.traverse(Station,User,'downlink');
-	% user.Rx.SINR
-
-	scanResult()
+	% Find UE in main Simulation list and initialise scan result
+	user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
+	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'sinr', -realmax);
 
 	for iStation = 1:length(Simulation.Stations)
+		Simulation.Stations(iStation).Tx.createReferenceSubframe();
+		Simulation.Stations(iStation).Tx.assignReferenceSubframe();
+		Simulation.Channel.traverse(Simulation.Stations(iStation), user, 'downlink');
+		scanResult(iStation).eNodeBId = Simulation.Stations(iStation).NCellID;
+		scanResult(iStation).sinr = user.Rx.SINRdB;
 	end
-
-	scanResult = [...
-			struct('eNodeBId', 1, 'sinr', 30) ....
-			struct('eNodeBId', 2, 'sinr', 35)...
-	];
 
 	% Identify the eNodeB with the highest SINR
 	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results', 'NFO');
 	maxSinr = max([scanResult.sinr]);
 	targetEnbId = scanResult([scanResult.sinr] == maxSinr).eNodeBId;
 
-	% Check whether this eNodeB id is already in the sweep state
-	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) identified highest SINR, evaluating local state', 'NFO');
-	searchResult = find([ueSweep.eNodeBList.eNodeBId] == targetEnbId, 1);
-	if isempty(searchResult)
-		% This eNodeBId is not present in the list, add it
-		for iStation = 1:length(ueSweep.eNodeBList)
-			if ueSweep.eNodeBList(iStation).eNodeBId == 0
-				ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'sinr', maxSinr);
-				break;
+	
+	if targetEnbId ~= -1
+		% Check whether this eNodeB id is already in the sweep state
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) identified highest SINR, evaluating local state', 'NFO');
+		searchResult = find([ueSweep.eNodeBList.eNodeBId] == targetEnbId, 1);
+		if isempty(searchResult)
+			% This eNodeBId is not present in the list, add it
+			for iStation = 1:length(ueSweep.eNodeBList)
+				if ueSweep.eNodeBList(iStation).eNodeBId == 0
+					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'sinr', maxSinr);
+					break;
+				end
 			end
 		end
-	end
 
-	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) updated local state evaluating rotation,', 'NFO');
-	if ueSweep.currentAngle < ueSweep.maxAngle - ueSweep.rotationIncrement
-		% Sweep not completed, evaulate rotation
-		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating hysteresis for rotation', 'NFO');
-		if Simulation.Config.Runtime.currentTime - ueSweep.timeLastAssociation >= ueSweep.hysteresisTimer
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) rotating antenna', 'NFO');
-			ueSweep.currentAngle = ueSweep.currentAngle + ueSweep.rotationIncrement;
-			sweepCompleted = false;
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluation at current angle completed', 'NFO');
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) updated local state evaluating rotation,', 'NFO');
+		if ueSweep.currentAngle < ueSweep.maxAngle - ueSweep.rotationIncrement
+			% Sweep not completed, evaulate rotation
+			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating hysteresis for rotation', 'NFO');
+			if Simulation.Config.Runtime.currentTime - ueSweep.timeLastAssociation >= ueSweep.hysteresisTimer
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) rotating antenna', 'NFO');
+				ueSweep.currentAngle = ueSweep.currentAngle + ueSweep.rotationIncrement;
+				sweepCompleted = false;
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluation at current angle completed', 'NFO');
+			else
+				% TODO how to handle this case? The UE needs to "wait", evaluate whether the loop should be broken
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) unsupported case', 'ERR');
+			end
 		else
-			% TODO how to handle this case? The UE needs to "wait", evaluate whether the loop should be broken
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) unsupported case', 'ERR');
+			% Sweep completed, evaluate the local state
+			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for max SINR', 'NFO');
+			maxSinr = max([ueSweep.eNodeBList.sinr]);
+			maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.sinr] == maxSinr);
+			% The case with 2 associations having the same SINR is rare, check in any case
+			targetEnb = maxEnodeBs(1);
+			% Update the rotation parameters
+			angleMaxSinr = targetEnb.angle;
+			ueSweep.currentAngle = angleMaxSinr - ueSweep.rotationIncrement;
+			ueSweep.maxAngle = 2*ueSweep.rotationIncrement;
+			ueSweep.rotationIncrement = ueSweep.rotationIncrement/2;
+
+			% Evaluate the max angle and see whether we should stop the sweep
+			if ueSweep.maxAngle <= ueSweep.minAngle
+				sweepCompleted = true;
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) sweep completed, evaluating whether to re-associate', 'NFO');
+				if user.ENodeBID ~= targetEnb.eNodeBId
+					monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) associating with new target eNodeB', 'NFO');
+					% Call the handler for the handover that will take care of processing the change
+					[~, Simulation.Stations] = handleHangover(user, Simulation.Stations, targetEnb.eNodeBId, Simulation.Config);
+					ueSweep.timeLastAssociation = Simulation.Config.Runtime.currentTime;
+				end
+			else
+				% In this case the sweep is not completed, so we should return to the main loop 
+				% and repeat the search for a new sweep angle
+				sweepCompleted = false;
+			end
 		end
 	else
-		% Sweep completed, evaluate the local state
-		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for max SINR', 'NFO');
-		maxSinr = max([ueSweep.eNodeBList.sinr]);
-		maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.sinr] == maxSinr);
-		% The case with 2 associations having the same SINR is rare, check in any case
-		targetEnb = maxEnodeBs(1);
-		% Update the rotation parameters
-		angleMaxSinr = targetEnb.angle;
-		ueSweep.currentAngle = angleMaxSinr - ueSweep.rotationIncrement;
-		ueSweep.maxAngle = 2*ueSweep.rotationIncrement;
-		ueSweep.rotationIncrement = ueSweep.rotationIncrement/2;
-
-		% Evaluate the max angle and see whether we should stop the sweep
-		if ueSweep.maxAngle <= ueSweep.minAngle
-			sweepCompleted = true;
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) sweep completed, evaluating whether to re-associate', 'NFO');
-			% Find UE in main Simulation list
-			user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
-			if user.ENodeBID ~= targetEnb.eNodeBId
-				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) associating with new target eNodeB', 'NFO');
-				% Call the handler for the handover that will take care of processing the change
-				[~, Simulation.Stations] = handleHangover(user, Simulation.Stations, targetEnb.eNodeBId, Simulation.Config);
-			end
-		else
-			% In this case the sweep is not completed, so we should return to the main loop 
-			% and repeat the search for a new sweep angle
-			sweepCompleted = false;
-		end
+		% In this case, no eNodeB was found, exit 
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) no eNodeB found for search parameters', 'WRN');
+		% TODO, should the antenna be rotated in this case?
+		ueSweep.currentAngle = ueSweep.currentAngle + ueSweep.rotationIncrement;
+		sweepCompleted = false;
 	end
 end
