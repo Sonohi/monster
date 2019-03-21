@@ -2,11 +2,7 @@
 % Maritime sweep scenario
 %
 
-% Antenna sweep algorithm parameters
-hysteresisTimer = 0;
-rotationIncrement = 90;
-currentAngle = 0;
-maxAngle = 360;
+monsterLog('(MARITIME SWEEP) starting simulation', 'NFO');
 
 % Get configuration
 Config = MonsterConfig();
@@ -26,8 +22,15 @@ Config.Arq.active = false;
 Config.Channel.shadowingActive = 0;
 Config.Channel.losMethod = 'NLOS';
 
+monsterLog('(MARITIME SWEEP) simulation configuration generated', 'NFO');
+
 % Create a simulation object 
 Simulation = Monster(Config);
+
+% Create the maritime sweep specific data structure to store the state
+sweepParameters = generateSweepParameters(Simulation);
+
+monsterLog('(MARITIME SWEEP) sweep parameters initialised', 'NFO');
 
 for iRound = 0:(Config.Runtime.totalRounds - 1)
 	Simulation.setupRound(iRound);
@@ -37,6 +40,10 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 		Simulation.Config.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
+
+	% Perform sweep
+	monsterLog('(MARITIME SWEEP) simulation starting sweep algorithm', 'NFO');
+	sweepParameters = performAntennaSweep(Simulation, sweepParameters);
 
 	monsterLog(sprintf('(MARITIME SWEEP) completed simulation round %i. %i rounds left' ,....
 		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
