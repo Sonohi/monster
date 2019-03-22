@@ -31,6 +31,9 @@ case '3GPP TR 38.901 UMa'
     Config.Ue.noiseFigure = 9; %dB
     %Fast fading is not modelled?
     %TODO: find out if fastfading and fading active is the same?
+    %Antenna arrays are:
+    %   Ue: [1 1 1 1 2] (2 polarization)
+    %   BS: [1 2 4 4 2] Mg=1, Ng=2, M=N=4, P=2
 
 
 case 'ITU-R M2412-0 5.B.A' % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.c Configuration A
