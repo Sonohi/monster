@@ -112,6 +112,39 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				
 			end
 		end
+
+		function rxSig = addAWGNdl(obj, Station, User, SINR)
+			Mode = 'downlink';
+			obj.clearTempVariables();
+			obj.setWaveform(Station);
+
+			% Calculate recieved power between station and user
+			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Station, User, Mode);
+			obj.TempSignalVariables.RxPower = receivedPower;
+
+			% Set SINR 
+			obj.TempSignalVariables.RxSINR = SINR;
+			obj.TempSignalVariables.RxSINRdB = 10*log10(SINR);
+
+			% Compute N0
+			N0 = obj.computeSpectralNoiseDensity(Station, Mode);
+
+			% Add AWGN
+			noise = N0*complex(randn(size(obj.TempSignalVariables.RxWaveform)), randn(size(obj.TempSignalVariables.RxWaveform)));
+			rxSig = obj.TempSignalVariables.RxWaveform + noise;
+			obj.TempSignalVariables.RxWaveform = rxSig;
+
+			% Add fading
+			if obj.Channel.enableFading
+				obj.addFading(Station, User, Mode);
+			end
+
+			% Receive signal at Rx module
+			obj.setReceivedSignal(User);
+
+			% Store in channel variable
+			obj.storeLinkCondition(1, Mode)
+		end
 		
 		function N0 = computeSpectralNoiseDensity(obj, Station, Mode)
 			% Compute spectral noise density NO	

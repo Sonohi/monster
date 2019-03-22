@@ -1,4 +1,4 @@
-clear all
+%clear all
 %close all
 
 Config = MonsterConfig();
@@ -16,25 +16,29 @@ Config.Traffic.mix = 0;
 Config.Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
 Config.Channel.fadingActive = false;
 Config.Channel.perfectSynchronization = true;
+config.Runtime.totalRounds = 1;
 
 Config.setupNetworkLayout();
 %Create used objects
 Station = setupStations(Config);
+Station.Tx.PDSCH.CSIMode = 'PUCCH 1-1';
+Station.Tx.PDSCH.RVSeq = [0 0 1 2];
 User = setupUsers(Config);
 User.Position = [190, 295,1.5];
 
 Channel = setupChannel(Station, User, Config);
 
 %Choice of MCS and their SINR range of interrest [dB]
-MCSlevels=[1 3 4 6 7 9 11 13 15 26 28];
-SINRlevels=[-5 -3.5 -2.5 -1 0.2 1.7 4.2 6 7.1 17 16.8;-4 -2.5 -1.5 -0 1.2 2.7 5.2 7 8.1 19 17.8];
+MCSlevels=[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
+SINRlevels=[-5.2 -3.5 -2.5 -1 0.2 1.7 4.2 6 7.4 12 12.5 13 15 17.5 17;
+             -4 -2.25 -1.5 0.2 1.2 2.7 5.2 7 9.5 16 17 18 20 30 30];
 
 %Create a figure for plotting
 figure;
 hold on;
 
 %Run for a number of rounds
-nRounds = 1e3; 
+nRounds = 1e2; 
 nMeasurements = 10; %number of SINR's to check.
 BERtemp = zeros(1,nRounds);
 BER = zeros(1, nMeasurements);
@@ -60,55 +64,45 @@ for iMCS=1:length(MCSlevels)
                 Config.Runtime.currentTime = iRound*10e-3;  
                 Config.Runtime.remainingTime = (Config.Runtime.totalRounds - Config.Runtime.currentRound)*10e-3;
                 Config.Runtime.remainingRounds = Config.Runtime.totalRounds - Config.Runtime.currentRound - 1;
+                
                 % Update Channel property
                 Channel.setupRound(Config.Runtime.currentRound, Config.Runtime.currentTime);
 
-                %Associate user
+                %Associate user 
                 [User Station] = refreshUsersAssociation(User, Station, Channel, Config);
+
 
                 %Set MCS
                 for i=1:50
                     Station.ScheduleDL(i).Mcs = MCS;
                 end
                 
+                % updateUsersQueues
                 UeTrafficGenerator = Traffic([Traffic.Id] == User.Traffic.generatorId);
                 User.Queue = UeTrafficGenerator.updateTransmissionQueue(User, iRound);
 
-                %Schedule traffic
+                %schedule
                 Station.evaluateScheduling(User);
-
                 Station.downlinkSchedule(User, Config);
 
-
-                %Generate transportblocks
+                %setupEnbTransmitters
                 User.generateTransportBlockDL(Station, Config);
                 User.generateCodewordDL();    
-
-
-                Station.Tx.setupGrid(1);
-
+                Station.Tx.setupGrid(iRound);
                 Station.setupPdsch(User);
-
                 Station.Tx.modulateTxWaveform();
 
+                %downlinkTraverse
+                %Changes are made as this is where the noise is added
+
                 %Add noise to waveform depending on SINR
-                Nfft = 2^ceil(log2(12*Station.NDLRB/0.85));
-                Channel.ChannelModel.TempSignalVariables.RxWaveformInfo.Nfft = Nfft;
-                % set SINR
-                Channel.ChannelModel.TempSignalVariables.RxSINR = SINR(iMeasurement);
-                N0 = Channel.ChannelModel.computeSpectralNoiseDensity(Station, 'downlink');
+                Channel.ChannelModel.addAWGNdl(Station, User, SINR(iMeasurement));
 
-                User.Rx.WaveformInfo = Station.Tx.WaveformInfo;
-                User.Rx.RxPwdBm = -30;
-
-                % Add AWGN
-                noise = N0*complex(randn(size(Station.Tx.Waveform)), randn(size(Station.Tx.Waveform)));
-                rxSig = Station.Tx.Waveform + noise;
-
-                %copy waveform to Rx module
-                User.Rx.Waveform = rxSig;
-
-                %Recieve downlink
+                %downlinkUeReception
+                User.Rx.computeOffset(Station);
+                if User.Rx.Offset >=0
+                    User.Rx.applyOffset(Station); 
+                end
                 User.Rx.referenceMeasurements(Station);
                 User.Rx.demodulateWaveform(Station);
 
@@ -181,5 +175,10 @@ end
 xlabel('SNR [dB]');
 ylabel('BLER');
 %Add legend
-legend('QPSK, CQI=1, MCS=1', 'QPSK, CQI=2, MCS=3','QPSK, CQI=3, MCS=4','QPSK, CQI=4, MCS=6','QPSK, CQI=5, MCS=7','QPSK, CQI=6, MCS=9','16QAM, CQI=7, MCS=11','16QAM, CQI=8, MCS=13','16QAM, CQI=9, MCS=15','64QAM, CQI=14, MCS=26','64QAM, CQI=15, MCS=28','Location','northeastoutside');
+legend('QPSK, CQI=1, MCS=1', 'QPSK, CQI=2, MCS=3','QPSK, CQI=3, MCS=4',...
+        'QPSK, CQI=4, MCS=6','QPSK, CQI=5, MCS=7','QPSK, CQI=6, MCS=9',...
+        '16QAM, CQI=7, MCS=11','16QAM, CQI=8, MCS=13','16QAM, CQI=9, MCS=15',...
+        '64QAM, CQI=10, MCS=20,','64QAM, CQI=11, MCS=21',' 64QAM, CQI=12, MCS=22',...
+        '64QAM, CQI=13, MCS=24','64QAM, CQI=14, MCS=26','64QAM, CQI=15, MCS=28',...
+        'Location','northeastoutside');
 set(gca,'yscale','log');
