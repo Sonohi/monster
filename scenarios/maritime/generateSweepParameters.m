@@ -5,7 +5,7 @@ function sweepParameters = generateSweepParameters(Simulation, optimisationMetri
 	% :param optimisationMetric: string to choose over which metric the sweep should optimise
 	% :returns sweepParameters: sweep parameters for each UE
 
-	enbList(1:length(Simulation.Stations)) = struct('eNodeBId', 0, 'angle', 0, 'rxPowdBm', 0, 'sinr'); 
+	enbList(1:length(Simulation.Stations)) = struct('eNodeBId', 0, 'angle', 0, 'rxPowdBm', 0, 'sinr', 0); 
 
 	sweepParameters(1: length(Simulation.Users)) = struct(...
 		'ueId', 0,...

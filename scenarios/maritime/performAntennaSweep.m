@@ -38,9 +38,17 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax, 'sinr', -realmax);
 	% Check over which metric we need to perform the sweep
 	if strcmp(ueSweep.metric, 'sinr')
-		sinrList = Simulation.Channel.ChannelModel.getENBSINRList(user, Simulation.Stations, 'downlink');
+		sinrList = Simulation.Channel.getENBSINRList(user, Simulation.Stations, 'downlink');
+		for iSinr = 1:length(sinrList)
+			scanResult(iSinr).eNodeBId = Simulation.Stations(iSinr).NCellID;
+			scanResult(iSinr).sinr = sinrList(iSinr);
+		end
+		% Identify the eNodeB with the highest SINR
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results for highest SINR', 'NFO');
+		maxMetric = max([scanResult.sinr]);
+		targetEnbId = scanResult([scanResult.sinr] == maxMetric).eNodeBId;
 	elseif strcmp(ueSweep.metric, 'power')
-		powerList = Simulation.Channel.ChannelModel.getENBPowerList(user, Simulation.Stations, 'downlink');
+		powerList = Simulation.Channel.getENBPowerList(user, Simulation.Stations, 'downlink');
 		fieldsList = fieldnames(powerList);
 		for iField = 1:numel(fieldsList)
 			field = fieldsList{iField};
@@ -49,7 +57,7 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 			scanResult(iField).rxPowdBm = listItem.receivedPowerdBm;
 		end
 		% Identify the eNodeB with the highest received power
-		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results', 'NFO');
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results for highest rx power', 'NFO');
 		maxMetric = max([scanResult.rxPowdBm]);
 		targetEnbId = scanResult([scanResult.rxPowdBm] == maxMetric).eNodeBId;
 	else 
