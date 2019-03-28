@@ -205,6 +205,35 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 		end
 
+		function SINR = listSINR(obj, User, Stations, Mode)
+			% Get list of SINR for all stations, assuming they all interfere.
+			% TODO: Find interfering stations based on class
+			% 
+			% :param User: One user
+			% :param Stations: Multiple eNB's
+			% :param Mode: Mode of transmission.
+			% :returns SINR: List of SINR for each station
+
+			monsterLog('func listSINR: Interference is considered intra-class eNB stations','WRN')
+
+
+			% Get received power for each station
+			for iStation = 1:length(Stations)
+				station = Stations(iStation);
+				[~, receivedPower(iStation)] = obj.computeLinkBudget(station, User, Mode);
+			end
+
+			% Compute SINR from each station
+			for iStation = 1:length(Stations)
+				station = Stations(iStation);
+				stationPower = receivedPower(iStation);
+				interferingPower = sum(receivedPower(1:end ~= iStation));
+				[~, thermalNoise] = thermalLoss();
+				SINR(iStation) = 10*log10(obj.Channel.calculateSINR(stationPower, interferingPower, thermalNoise));
+			end
+
+		end
+
 		function list = listCellPower(obj, User, Stations, Mode)
 			% Get list of recieved power from all stations
 			%
