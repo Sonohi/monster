@@ -1,7 +1,8 @@
 %
 % Maritime sweep scenario
 %
-
+close all;
+clear all;
 monsterLog('(MARITIME SWEEP) starting simulation', 'NFO');
 
 % Get configuration
@@ -14,13 +15,15 @@ Config.Ue.antennaType = 'vivaldi';
 Config.MacroEnb.number = 3;
 Config.MicroEnb.number = 0;
 Config.PicoEnb.number = 0;
-Config.Mobility.scenario = 'maritime'
+Config.Mobility.scenario = 'maritime';
 Config.Phy.uplinkFrequency = 1747.5;
 Config.Phy.downlinkFrequency = 2600;
 Config.Harq.active = false;
 Config.Arq.active = false;
 Config.Channel.shadowingActive = 0;
 Config.Channel.losMethod = 'NLOS';
+Config.Traffic.arrivalDistribution = 'Static';
+Config.Traffic.static = Config.Runtime.totalRounds * 10e3; % No traffic
 
 monsterLog('(MARITIME SWEEP) simulation configuration generated', 'NFO');
 

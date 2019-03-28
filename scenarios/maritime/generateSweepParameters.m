@@ -4,7 +4,7 @@ function sweepParameters = generateSweepParameters(Simulation)
 	% :param Simulation: Monster instance
 	% :returns sweepParameters: sweep parameters for each UE
 
-	enbList(1:length(Simulation.Stations)) = struct('eNodeBId', 0, 'angle', 0, 'sinr', 0); 
+	enbList(1:length(Simulation.Stations)) = struct('eNodeBId', 0, 'angle', 0, 'rxPowdBm', 0); 
 
 	sweepParameters(1: length(Simulation.Users)) = struct(...
 		'ueId', 0,...

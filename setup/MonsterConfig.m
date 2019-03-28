@@ -168,12 +168,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			end
 			obj.Terrain = Terrain;
 
-			% Properties related to the traffic
+			% Properties related to the traffic 
+			% Traffic types: fullBuffer | videoStreaming | webBrowsing 
 			Traffic = struct();
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0.5;
-			Traffic.arrivalDistribution = 'Poisson';
+			Traffic.mix = 0;
+			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 

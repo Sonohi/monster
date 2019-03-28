@@ -9,9 +9,10 @@ function sweepParams = performAntennaSweep(Simulation, sweepParams)
 	% Loop on the users in the simulation and for each build a list
 	for iUser = 1:length(Simulation.Users)
 		sweepIndex = find([sweepParams.ueId] == Simulation.Users(iUser).NCellID);
+		ueSweep = sweepParams(sweepIndex);
 		sweepCompleted = false;
 		while ~sweepCompleted
-			[ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, sweepParams(sweepIndex));
+			[ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep);
 		end
 
 		% Once the sweep is completed, save the result in the return structure
@@ -34,20 +35,21 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 
 	% Find UE in main Simulation list and initialise scan result
 	user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
-	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'sinr', -realmax);
-
-	for iStation = 1:length(Simulation.Stations)
-		Simulation.Stations(iStation).Tx.createReferenceSubframe();
-		Simulation.Stations(iStation).Tx.assignReferenceSubframe();
-		Simulation.Channel.traverse(Simulation.Stations(iStation), user, 'downlink');
-		scanResult(iStation).eNodeBId = Simulation.Stations(iStation).NCellID;
-		scanResult(iStation).sinr = user.Rx.SINRdB;
+	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax);
+	powerList = Simulation.Channel.ChannelModel.listCellPower(user, Simulation.Stations, 'downlink');
+	
+	fieldsList = fieldnames(powerList);
+	for iField = 1:numel(fieldsList)
+		field = fieldsList{iField};
+		listItem = powerList.(field);
+		scanResult(iField).eNodeBId = listItem.NCellID;
+		scanResult(iField).rxPowdBm = listItem.receivedPowerdBm;
 	end
 
-	% Identify the eNodeB with the highest SINR
+	% Identify the eNodeB with the highest received power
 	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results', 'NFO');
-	maxSinr = max([scanResult.sinr]);
-	targetEnbId = scanResult([scanResult.sinr] == maxSinr).eNodeBId;
+	maxPower = max([scanResult.rxPowdBm]);
+	targetEnbId = scanResult([scanResult.rxPowdBm] == maxPower).eNodeBId;
 
 	
 	if targetEnbId ~= -1
@@ -58,7 +60,7 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 			% This eNodeBId is not present in the list, add it
 			for iStation = 1:length(ueSweep.eNodeBList)
 				if ueSweep.eNodeBList(iStation).eNodeBId == 0
-					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'sinr', maxSinr);
+					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxPower);
 					break;
 				end
 			end
@@ -79,14 +81,14 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 			end
 		else
 			% Sweep completed, evaluate the local state
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for max SINR', 'NFO');
-			maxSinr = max([ueSweep.eNodeBList.sinr]);
-			maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.sinr] == maxSinr);
+			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for max power', 'NFO');
+			maxPower = max([ueSweep.eNodeBList.rxPowdBm]);
+			maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.rxPowdBm] == maxPower);
 			% The case with 2 associations having the same SINR is rare, check in any case
 			targetEnb = maxEnodeBs(1);
 			% Update the rotation parameters
-			angleMaxSinr = targetEnb.angle;
-			ueSweep.currentAngle = angleMaxSinr - ueSweep.rotationIncrement;
+			angleMaxPower = targetEnb.angle;
+			ueSweep.currentAngle = angleMaxPower - ueSweep.rotationIncrement;
 			ueSweep.maxAngle = 2*ueSweep.rotationIncrement;
 			ueSweep.rotationIncrement = ueSweep.rotationIncrement/2;
 
