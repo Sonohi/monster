@@ -247,6 +247,22 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 		end
 
+
+		function list = getENBSINRList(obj, User, Stations, Mode)
+			% getENBSINRList
+			%
+			% Returns list of SINR for each station
+			% :obj: MonsterChannel instance
+			% :User: :UserEquipment:
+			% :Stations: [:EvolvedNodeB]:
+			% :Mode: 'downlink' or 'uplink'
+			%
+
+			if isa(obj.ChannelModel, 'Monster3GPP38901')
+				list = obj.ChannelModel.listSINR(User, Stations, Mode);
+			end
+		end
+
 		function eNBID = getENB(obj, User, Stations, Mode)
 			% getENB
 			%
