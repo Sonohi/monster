@@ -31,7 +31,8 @@ monsterLog('(MARITIME SWEEP) simulation configuration generated', 'NFO');
 Simulation = Monster(Config);
 
 % Create the maritime sweep specific data structure to store the state
-sweepParameters = generateSweepParameters(Simulation);
+% Choose on which metric to optimise teh sweep: power or sinr
+sweepParameters = generateSweepParameters(Simulation, 'sinr');
 
 monsterLog('(MARITIME SWEEP) sweep parameters initialised', 'NFO');
 

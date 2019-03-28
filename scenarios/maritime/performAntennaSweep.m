@@ -31,36 +31,40 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 	% :returns sweepCompleted: boolean to control the sweep outer recursion
 
 	% Scan reachable eNodeBs at current rotation angle
-	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) scanning for nearby eNodeBs using reference subframe', 'NFO');
+	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) scanning for nearby eNodeBs', 'NFO');
 
 	% Find UE in main Simulation list and initialise scan result
 	user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
-	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax);
-	powerList = Simulation.Channel.ChannelModel.listCellPower(user, Simulation.Stations, 'downlink');
-	
-	fieldsList = fieldnames(powerList);
-	for iField = 1:numel(fieldsList)
-		field = fieldsList{iField};
-		listItem = powerList.(field);
-		scanResult(iField).eNodeBId = listItem.NCellID;
-		scanResult(iField).rxPowdBm = listItem.receivedPowerdBm;
+	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax, 'sinr', -realmax);
+	% Check over which metric we need to perform the sweep
+	if strcmp(ueSweep.metric, 'sinr')
+		sinrList = Simulation.Channel.ChannelModel.getENBSINRList(user, Simulation.Stations, 'downlink');
+	elseif strcmp(ueSweep.metric, 'power')
+		powerList = Simulation.Channel.ChannelModel.getENBPowerList(user, Simulation.Stations, 'downlink');
+		fieldsList = fieldnames(powerList);
+		for iField = 1:numel(fieldsList)
+			field = fieldsList{iField};
+			listItem = powerList.(field);
+			scanResult(iField).eNodeBId = listItem.NCellID;
+			scanResult(iField).rxPowdBm = listItem.receivedPowerdBm;
+		end
+		% Identify the eNodeB with the highest received power
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results', 'NFO');
+		maxMetric = max([scanResult.rxPowdBm]);
+		targetEnbId = scanResult([scanResult.rxPowdBm] == maxMetric).eNodeBId;
+	else 
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) error, unsupported optimisation metric', 'ERR');
 	end
-
-	% Identify the eNodeB with the highest received power
-	monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) analysing scan results', 'NFO');
-	maxPower = max([scanResult.rxPowdBm]);
-	targetEnbId = scanResult([scanResult.rxPowdBm] == maxPower).eNodeBId;
-
 	
 	if targetEnbId ~= -1
 		% Check whether this eNodeB id is already in the sweep state
-		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) identified highest SINR, evaluating local state', 'NFO');
+		monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) identified best eNodeB, evaluating local state', 'NFO');
 		searchResult = find([ueSweep.eNodeBList.eNodeBId] == targetEnbId, 1);
 		if isempty(searchResult)
 			% This eNodeBId is not present in the list, add it
 			for iStation = 1:length(ueSweep.eNodeBList)
 				if ueSweep.eNodeBList(iStation).eNodeBId == 0
-					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxPower);
+					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxMetric, 'sinr', maxMetric);
 					break;
 				end
 			end
@@ -81,14 +85,22 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 			end
 		else
 			% Sweep completed, evaluate the local state
-			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for max power', 'NFO');
-			maxPower = max([ueSweep.eNodeBList.rxPowdBm]);
-			maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.rxPowdBm] == maxPower);
+			monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) evaluating local state for best eNodeB', 'NFO');
+			if strcmp(ueSweep.metric, 'sinr')
+				maxMetric = max([ueSweep.eNodeBList.sinr]);
+				maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.sinr] == maxMetric);
+			elseif strcmp(ueSweep.metric, 'power')
+				maxMetric = max([ueSweep.eNodeBList.rxPowdBm]);
+				maxEnodeBs = ueSweep.eNodeBList([ueSweep.eNodeBList.rxPowdBm] == maxMetric);
+			else
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) error, unsupported optimisation metric', 'ERR');
+			end
+			
 			% The case with 2 associations having the same SINR is rare, check in any case
 			targetEnb = maxEnodeBs(1);
 			% Update the rotation parameters
-			angleMaxPower = targetEnb.angle;
-			ueSweep.currentAngle = angleMaxPower - ueSweep.rotationIncrement;
+			angleMaxMetric = targetEnb.angle;
+			ueSweep.currentAngle = angleMaxMetric - ueSweep.rotationIncrement;
 			ueSweep.maxAngle = 2*ueSweep.rotationIncrement;
 			ueSweep.rotationIncrement = ueSweep.rotationIncrement/2;
 
