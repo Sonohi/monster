@@ -21,17 +21,17 @@ config.Runtime.totalRounds = 1;
 Config.setupNetworkLayout();
 %Create used objects
 Station = setupStations(Config);
-Station.Tx.PDSCH.CSIMode = 'PUCCH 1-1';
-Station.Tx.PDSCH.RVSeq = [0 0 1 2];
+%Station.Tx.PDSCH.CSIMode = 'PUCCH 1-1';
+%Station.Tx.PDSCH.RVSeq = [0 0 1 2];
 User = setupUsers(Config);
 User.Position = [190, 295,1.5];
 
 Channel = setupChannel(Station, User, Config);
 
 %Choice of MCS and their SINR range of interrest [dB]
-MCSlevels=[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
-SINRlevels=[-5.2 -3.5 -2.5 -1 0.2 1.7 4.2 6 7.4 12 12.5 13 15 17.5 17;
-             -4 -2.25 -1.5 0.2 1.2 2.7 5.2 7 9.5 16 17 18 20 30 30];
+MCSlevels=20;%[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
+SINRlevels=[12 ; 16];%[-5.2 -3.5 -2.5 -1 0.2 1.7 4.2 6 7.4 12 12.5 13 15 17.5 17;
+              %-4 -2.25 -1.5 0.2 1.2 2.7 5.2 7 9.5 16 17 18 20 30 30];
 
 %Create a figure for plotting
 figure;
@@ -96,14 +96,21 @@ for iMCS=1:length(MCSlevels)
                 %Changes are made as this is where the noise is added
 
                 %Add noise to waveform depending on SINR
-                Channel.ChannelModel.addAWGNdl(Station, User, SINR(iMeasurement));
+                %Channel.ChannelModel.addAWGNdl(Station, User, SINR(iMeasurement));
 
                 %downlinkUeReception
-                User.Rx.computeOffset(Station);
-                if User.Rx.Offset >=0
-                    User.Rx.applyOffset(Station); 
-                end
-                User.Rx.referenceMeasurements(Station);
+                %User.Rx.computeOffset(Station);
+                %if User.Rx.Offset >=0
+                %    User.Rx.applyOffset(Station); 
+                %end
+                %User.Rx.referenceMeasurements(Station);
+
+
+                %copy waveform to receiver
+                User.Rx.Waveform = Station.Tx.Waveform;
+                User.Rx.WaveformInfo = Station.Tx.WaveformInfo;
+                User.Rx.RxPwdBm = -20;
+                
                 User.Rx.demodulateWaveform(Station);
 
                 if User.Rx.Demod 
@@ -115,7 +122,7 @@ for iMCS=1:length(MCSlevels)
 
                     % Select CQI
                     User.Rx.selectCqi(Station);
-                    %If CQI returns 0, even though it demodulated set CQI to 1
+                    %If CQI returns 0, even though it is demodulated set CQI to 1
                     if User.Rx.CQI == 0
                         User.Rx.CQI = 1;
                     end
@@ -151,7 +158,7 @@ for iMCS=1:length(MCSlevels)
             
                 Station.NSubframe = mod(iRound +1,10);
                 User.reset();
-        end
+            end
             %Record average BLER
             BER(iMeasurement) = mean(BERtemp);
             BLER(iMeasurement)=mean(BLERtemp);
