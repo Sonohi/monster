@@ -35,6 +35,8 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 
 	% Find UE in main Simulation list and initialise scan result
 	user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
+	% Set antenna bearing value based on current angle
+	user.Rx.AntennaArray.Bearing = ueSweep.currentAngle;
 	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax, 'sinr', -realmax);
 	% Check over which metric we need to perform the sweep
 	if strcmp(ueSweep.metric, 'sinr')
@@ -71,10 +73,26 @@ function [ueSweep, sweepCompleted] = evaluateCurrentAngle(Simulation, ueSweep)
 		if isempty(searchResult)
 			% This eNodeBId is not present in the list, add it
 			for iStation = 1:length(ueSweep.eNodeBList)
-				if ueSweep.eNodeBList(iStation).eNodeBId == 0
+				if ueSweep.eNodeBList(iStation).eNodeBId == -1
 					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxMetric, 'sinr', maxMetric);
 					break;
 				end
+			end
+		else
+			% In this case, we have already the eNodeB in the list, let's check whether we need to update 
+			currentEnBMetrics = ueSweep.eNodeBList(searchResult);
+			if strcmp(ueSweep.metric, 'sinr')
+				if maxMetric > currentEnBMetrics.sinr
+					ueSweep.eNodeBList(searchResult).sinr = maxMetric;
+					ueSweep.eNodeBList(searchResult).angle = ueSweep.currentAngle;
+				end
+			elseif strcmp(ueSweep.metric, 'power')
+				if maxMetric > currentEnBMetrics.rxPowdBm
+					ueSweep.eNodeBList(searchResult).rxPowdBm = maxMetric;
+					ueSweep.eNodeBList(searchResult).angle = ueSweep.currentAngle;
+				end
+			else 
+				monsterLog('(MARITIME SWEEP - evaluateCurrentAngle) error, unsupported optimisation metric', 'ERR');
 			end
 		end
 

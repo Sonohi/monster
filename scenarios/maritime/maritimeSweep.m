@@ -2,7 +2,6 @@
 % Maritime sweep scenario
 %
 close all;
-clear all;
 monsterLog('(MARITIME SWEEP) starting simulation', 'NFO');
 
 % Get configuration
@@ -29,6 +28,9 @@ monsterLog('(MARITIME SWEEP) simulation configuration generated', 'NFO');
 
 % Create a simulation object 
 Simulation = Monster(Config);
+
+% Set default bearing 
+Simulation.Users.Rx.AntennaArray.Bearing = 180;
 
 % Create the maritime sweep specific data structure to store the state
 % Choose on which metric to optimise teh sweep: power or sinr

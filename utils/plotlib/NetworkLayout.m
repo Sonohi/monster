@@ -282,6 +282,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				end
 			elseif strcmp(Config.Terrain.type,'maritime')
 				% In this case, the macros are placed on the northern side of the coastline 
+				rng(Config.Runtime.seed);
 				northCoastLimit = max(Config.Terrain.coast.coastline(:,2));
 				minY = northCoastLimit + Config.Terrain.inlandDelta(2);
 				maxY = Config.Terrain.area(4) - Config.Terrain.inlandDelta(2);

@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10;
+			numRounds = 100;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -152,6 +152,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 					max(Terrain.buildings(:, 4))];
 			elseif strcmp(Terrain.type,'maritime')
 				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
+				rng(obj.Runtime.seed);
 				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
 				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
 				% Compute the coastline
