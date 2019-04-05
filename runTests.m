@@ -13,3 +13,8 @@ result = run(suite);
 monsterLog('Testing UE functions...','NFO')
 suite = TestSuite.fromFolder('ue', 'IncludingSubfolders', true);
 result = run(suite);
+
+% Test MetricRecorder
+monsterLog('Testing MetricRecorder functions...','NFO')
+suite = TestSuite.fromFolder('results', 'IncludingSubfolders', true);
+result = run(suite);
