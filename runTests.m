@@ -18,3 +18,8 @@ result = run(suite);
 monsterLog('Testing MetricRecorder functions...','NFO')
 suite = TestSuite.fromFolder('results', 'IncludingSubfolders', true);
 result = run(suite);
+
+% Test Monster (simulation)
+monsterLog('Testing Monster functions...','NFO')
+suite = TestSuite.fromFolder('tests', 'IncludingSubfolders', true);
+result = run(suite);
