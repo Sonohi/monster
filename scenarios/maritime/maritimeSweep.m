@@ -8,7 +8,7 @@ monsterLog('(MARITIME SWEEP) starting simulation', 'NFO');
 Config = MonsterConfig();
 
 % Setup configuration for scenario
-Config.SimulationPlot.runtimePlot = 1;
+Config.SimulationPlot.runtimePlot = 0;
 Config.Ue.number = 1;
 Config.Ue.antennaType = 'vivaldi';
 Config.MacroEnb.number = 3;
