@@ -17,7 +17,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             testCase.Config.SimulationPlot.generateHeatMap = 0;
             %Set a single macroEnb
             testCase.Config.MacroEnb.number = 1;
-            testCase.Config.MacroEnb.subframes = 50;
+            testCase.Config.MacroEnb.numPRBs = 50;
             testCase.Config.MacroEnb.height = 35;
             testCase.Config.MacroEnb.noiseFigure = 7;
             testCase.Config.MacroEnb.antennaGain = 0;
@@ -26,7 +26,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             testCase.Config.PicoEnb.number =0;
             %Set a single Ue
             testCase.Config.Ue.number = 1;
-			testCase.Config.Ue.subframes = 25;
+			testCase.Config.Ue.numPRBs = 25;
 			testCase.Config.Ue.height = 1.5;
 			testCase.Config.Ue.noiseFigure = 7;
 			testCase.Config.Ue.antennaGain = 0;
