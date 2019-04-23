@@ -72,11 +72,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
 			obj.Logs = Logs;
 
-			%Scenario properties
-			Scenario = struct();
-			Scenario.scenario = 'none';
-			obj.Scenario = Scenario;
-
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
 			SimulationPlot.runtimePlot = 0;
@@ -230,7 +225,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Arq.maxBufferSize = 1024;
 			Arq.timeout = 20;
 			obj.Arq = Arq;
-
+            
 			% Properties related to plotting
 			Plot = struct();
 			if obj.SimulationPlot.runtimePlot
