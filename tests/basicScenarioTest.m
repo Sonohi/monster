@@ -103,7 +103,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             %verify power consumption and state
             %Power is calculated as CellReffP*P0+DeltaP*Pmax. This is 224W.
             arrayfun(@(x) testCase.verifyTrue(x == 224), testCase.Simulation.Results.powerConsumed);
-            testCase.verifyEqual( mean(testCase.Simulation.Results.powerState), 1); 
+            arrayfun(@(x) testCase.verifyEqual( x , 1), testCase.Simulation.Results.powerState); % powerState should be 1 in this case as it is always on
             %verify scheduling
             %testCase.verifyEqual(testCase.Simulation.Results.schedule, ???); %TODO: find a proper way to do this
             %verify HARQ and ARQ
