@@ -3,7 +3,7 @@ classdef BaseCell < matlab.mixin.Copyable
 	%Properties
 	properties
 		Center;
-		Radius;
+		ISD;
 		CellID;
 		CellType;
 		PosScenario;
@@ -21,13 +21,13 @@ classdef BaseCell < matlab.mixin.Copyable
 			switch cellType
 				case 'macro'
 					obj.PosScenario = 'hexagonal';
-					obj.Radius = Config.MacroEnb.radius;
+					obj.ISD = Config.MacroEnb.ISD;
 				case 'micro'
 					obj.PosScenario = Config.MicroEnb.positioning;
-					obj.Radius = Config.MicroEnb.Radius;
+					obj.ISD = Config.MicroEnb.ISD;
 				case 'pico'
 					obj.PosScenario = Config.PicoEnb.positioning;
-					obj.Radius = Config.PicoEnb.radius;
+					obj.ISD = Config.PicoEnb.ISD;
 				otherwise
 					monsterLog('Unknown cell type selected.','ERR')
 			end
