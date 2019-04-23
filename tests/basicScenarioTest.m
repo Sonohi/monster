@@ -62,6 +62,8 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
             %Set scheduling
             testCase.Config.Scheduling.type = 'roundRobin';
+            %TODO: add SON parameters
+
             %Set HARQ and ARQ
             testCase.Config.Harq.active = true;
 			testCase.Config.Harq.maxRetransmissions = 3;
@@ -80,7 +82,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
     methods (TestMethodTeardown)
         function resetObjects(testCase)
             %Test Teardown
-
+            clear all;
         end
     end
 
@@ -97,10 +99,11 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             end
             %Verify results
             %Verify utilization
-            testCase.verifyTrue( mean(testCase.Simulation.Results.util(2:end)) >=100); %First round util is 0, so that is omitted
+            testCase.verifyTrue( mean(testCase.Simulation.Results.util(2:end)) ==100); %First round util is 0, so that is omitted
             %verify power consumption and state
-            testCase.verifyTrue(mean(testCase.Simulation.Results.powerConsumed) >= 224); %TODO: precise prediction of this value
-            testCase.verifyEqual( mean(testCase.Simulation.Results.powerState), 1);
+            %Power is calculated as CellReffP*P0+DeltaP*Pmax. This is 224W.
+            arrayfun(@(x) testCase.verifyTrue(x == 224), testCase.Simulation.Results.powerConsumed);
+            testCase.verifyEqual( mean(testCase.Simulation.Results.powerState), 1); 
             %verify scheduling
             %testCase.verifyEqual(testCase.Simulation.Results.schedule, ???); %TODO: find a proper way to do this
             %verify HARQ and ARQ
