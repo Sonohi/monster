@@ -1,15 +1,12 @@
 clear all 
 
-% Disable cast to struct warnings
-w = warning ('off','all');
-
 %% Get configuration
 Config = MonsterConfig(); % Get template config parameters
 
 %add scenario specific setup for '3GPP TR 38.901 UMa':
  % from https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf Table 7.2-1, table 7.5-6 and table 7.8-1 on UMa
  Config.Scenario = '3GPP TR 38.901 UMa';
- Config.MacroEnb.radius = 500;
+ Config.MacroEnb.ISD = 500;
  Config.MacroEnb.number = 19;
  Config.MicroEnb.number = 0;
  Config.PicoEnb.number = 0;
@@ -27,7 +24,7 @@ Config = MonsterConfig(); % Get template config parameters
  Config.Phy.downlinkFrequency = 6000; %6Ghz
  %At 6GHz the BW is set to 20MHz, by this link 20MHz is 100 DL subframes http://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_CellRS.html
  %TODO: Check up on this statement, both above and below.
- Config.MacroEnb.subframes = 100;
+ Config.MacroEnb.numPRBs = 100;
  Config.MacroEnb.Pmax = 10^(49/10)/1e3; %49 dBm converted to W
  %UT antenna configurations 1 element (vertically polarized), Isotropic antenna gain pattern 
  Config.Ue.noiseFigure = 9; %dB

@@ -5,7 +5,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		Center;             %Center of the target area
 		MacroCoordinates;   %Center of each macro cell
 		Cells;              %Cell array containing all macro cell obj
-		Radius;             %The ISD of macrocells
+		ISD;             %The ISD of macrocells
 		NumMacro;                %The number of macro cells
 		NumMicro;
 		NumPico;
@@ -19,7 +19,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			%Constructor functions
 
 			obj.Center = [xc yc];
-			obj.Radius = Config.MacroEnb.radius;
+			obj.ISD = Config.MacroEnb.ISD;
 			obj.NumMacro = Config.MacroEnb.number;
 			obj.computeMacroCoordinates();
 			obj.generateCells(Config);
@@ -183,15 +183,15 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			%Two first coordinates are "special" cases and are done seperately.
 			centers(1,:) =obj.Center;
 			if obj.NumMacro > 1
-				centers(2,1) = obj.Center(1,1)+obj.Radius*cos(rho);
-				centers(2,2) = obj.Center(1,2)+obj.Radius*sin(rho);
+				centers(2,1) = obj.Center(1,1)+obj.ISD*cos(rho);
+				centers(2,2) = obj.Center(1,2)+obj.ISD*sin(rho);
 			end
 			%Rest of the coordinates follow the same pattern, but when going out one "ring" a special action are carried out.
 			for i=3:obj.NumMacro
 				if special
 					%Perform special action
-					centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
-					centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
+					centers(i,1) = centers(i-1,1) + obj.ISD*cos(theta+rho);
+					centers(i,2) = centers(i-1,2) + obj.ISD*sin(theta+rho);
 					stepTrack = stepTrack +1;
 					turn = false;
 					if stepTrack == rings-1
@@ -213,8 +213,8 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					end
 				else
 					%walk, then update
-					centers(i,1) = centers(i-1,1) + obj.Radius*cos(theta+rho);
-					centers(i,2) = centers(i-1,2) + obj.Radius*sin(theta+rho);
+					centers(i,1) = centers(i-1,1) + obj.ISD*cos(theta+rho);
+					centers(i,2) = centers(i-1,2) + obj.ISD*sin(theta+rho);
 					stepTrack = stepTrack +1;
 					turn = false;
 					if stepTrack == rings

@@ -36,7 +36,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			numEnodeBs = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
 			obj.util = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			obj.powerConsumed = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.subframes) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Config.Harq.active
 				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);

@@ -46,19 +46,19 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		function obj = EvolvedNodeB(Config, BsClass, cellId)
 			switch BsClass
 				case 'macro'
-					obj.NDLRB = Config.MacroEnb.subframes;
+					obj.NDLRB = Config.MacroEnb.numPRBs;
 					obj.Pmax = Config.MacroEnb.Pmax; % W
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
 				case 'micro'
-					obj.NDLRB = Config.MicroEnb.subframes;
+					obj.NDLRB = Config.MicroEnb.numPRBs;
 					obj.Pmax = Config.MicroEnb.Pmax; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 				case 'pico'
-					obj.NDLRB = Config.PicoEnb.subframes;
+					obj.NDLRB = Config.PicoEnb.numPRBs;
 					obj.Pmax = Config.PicoEnb.Pmax;  % W
 					obj.P0 = 6.8; % W
 					obj.DeltaP = 4.0;
@@ -357,12 +357,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
 			if ~isempty(associatedUEs)
-				prbQuota = floor(Config.Ue.subframes/length(associatedUEs));
+				prbQuota = floor(Config.Ue.numPRBs/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
 					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
 					prbQuota = 6;
-					ueMax = floor(Config.Ue.subframes/prbQuota);
+					ueMax = floor(Config.Ue.numPRBs/prbQuota);
 					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
 					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
 					iDiff = 0;
@@ -393,7 +393,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					% In this case, all connected UEs can be scheduled, so RR can be reset
 					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 				end
-				prbAvailable = Config.Ue.subframes;
+				prbAvailable = Config.Ue.numPRBs;
 				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
 				for iUser = 1:length(associatedUEs)
 					if prbAvailable >= prbQuota

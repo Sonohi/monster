@@ -1,8 +1,5 @@
 clear all 
 
-% Disable cast to struct warnings
-w = warning ('off','all');
-
 %% Get configuration
 Config = MonsterConfig(); % Get template config parameters
 
@@ -16,10 +13,10 @@ Config = MonsterConfig(); % Get template config parameters
     Config.Phy.downlinkFrequency = 4000; %MHz
     Config.MacroEnb.height= 25;
     Config.MacroEnb.Pmax = 10^(41/10)/1e3; %41dBm converted to W
-    Config.MacroEnb.subframes = 50; % 10MHz bandwidth
+    Config.MacroEnb.numPRBs = 50; % 10MHz bandwidth
     %Ue Transmit power in dBm = 23. 
     %Percentage of high loss and low loss: 20/80 (high/low)
-    Config.MacroEnb.radius = 200; %intersite distance in meters
+    Config.MacroEnb.ISD = 200; %intersite distance in meters
     %Number of antenna elements per TRxP: up to 256 Tx/Rx
     %Number of Ue antenna element: Up to 8 Tx/Rx
     %Device deployment: 80/20 (indoor/outdoor - in car)

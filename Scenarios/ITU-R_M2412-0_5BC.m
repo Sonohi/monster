@@ -1,8 +1,5 @@
 clear all 
 
-% Disable cast to struct warnings
-w = warning ('off','all');
-
 %% Get configuration
 Config = MonsterConfig(); % Get template config parameters
 
@@ -10,7 +7,7 @@ Config = MonsterConfig(); % Get template config parameters
     % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.b Configuration C
     %User Experienced Data Rate Evaluation
     Config.Scenario = 'ITU-R M.2412-0 5.B.C';
-    Config.MacroEnb.radius = 200;
+    Config.MacroEnb.ISD = 200;
     Config.MacroEnb.number = 19;
     Config.MicroEnb.number = 9*Config.MacroEnb.number;
     Config.PicoEnb.number = 0;
@@ -38,10 +35,10 @@ Config = MonsterConfig(); % Get template config parameters
                                     %e.i.r.p. should not exceed 68 dBm
     %The chosen scenario is for 10MHz bandwidth at 4GHz for macro
     Config.Phy.downlinkFrequency = 4000; %4GHz
-    Config.MacroEnb.subframes = 50 % 50 subframes =10MHz bandwidth
+    Config.MacroEnb.numPRBs = 50 % 50 subframes =10MHz bandwidth
     Config.MacroEnb.Pmax = 10^(41/10)/1e3 ;%41dBm converted to W
     %For micro the chosen scenario is 4GHz and 10MHz bandwidth
-    Config.MicroEnb.subframes = 50 ; %50 subframes = 10MHz Bandwidth
+    Config.MicroEnb.numPRBs = 50 ; %50 subframes = 10MHz Bandwidth
     Config.MicroEnb.Pmax = 10^(30/10)/1e3; % 30 dBm converted to W
     %UE power class: 4 GHz: 23 dBm, 30 GHz: 23 dBm, e.i.r.p. should not exceed 43 dBm
     %Ue Transmit power in dBm = 23. 

@@ -1,15 +1,12 @@
 clear all 
 
-% Disable cast to struct warnings
-w = warning ('off','all');
-
 %% Get configuration
 Config = MonsterConfig(); % Get template config parameters
 
 %add scenario specific setup for Single Cell Scenario:
 % Deploys a single cell for testing purposes.
 Config.Scenario = 'Single Cell';
-Config.MacroEnb.radius = 300;
+Config.MacroEnb.ISD = 300;
 Config.MacroEnb.number = 1;
 Config.MicroEnb.number = 0;
 Config.PicoEnb.number = 0; 

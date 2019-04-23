@@ -46,7 +46,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
 			obj.ENodeBID = -1;
-			obj.NULRB = Config.Ue.subframes;
+			obj.NULRB = Config.Ue.numPRBs;
 			obj.RNTI = 1;
 			obj.DuplexMode = 'FDD';
 			obj.CyclicPrefixUL = 'Normal';
