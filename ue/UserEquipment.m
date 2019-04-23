@@ -46,7 +46,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
 			obj.ENodeBID = -1;
-			obj.NULRB = Config.Ue.subframes;
+			obj.NULRB = Config.Ue.numPRBs;
 			obj.RNTI = 1;
 			obj.DuplexMode = 'FDD';
 			obj.CyclicPrefixUL = 'Normal';
@@ -77,7 +77,8 @@ classdef UserEquipment < matlab.mixin.Copyable
 				obj.Rlc = struct('ArqRxBuffer', ArqRx());
 			end
 			obj.Hangover = struct('TargetEnb', -1, 'HoState', 0, 'HoStart', -1, 'HoComplete', -1);
-			obj.Pmax = 10; %10dBm
+			%TODO: make configureable in a proper way
+			obj.Pmax = 10;
     end
 		
 		function s = struct(obj)

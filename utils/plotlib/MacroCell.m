@@ -15,7 +15,7 @@ classdef MacroCell < BaseCell
 			%Constructor
 			obj = obj@BaseCell(xc, yc, Config, cellId, 'macro')
 			%Set arguments
-			obj.CellRadius = obj.Radius/3;
+			obj.CellRadius = obj.ISD/3;
 			obj.Area    = 3*2*sqrt(3)*(obj.CellRadius)^2; %Total area of all three cells belonging to that site
 			obj.computeMicroPos();
 			obj.computePicoPos(Config);
