@@ -62,7 +62,14 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
             %Set scheduling
             testCase.Config.Scheduling.type = 'roundRobin';
-            %TODO: add SON parameters
+            %Son Parameters
+            testCase.Config.Son.neighbourRadius = 100;
+			testCase.Config.Son.hysteresisTimer = 0.001;
+			testCase.Config.Son.switchTimer = 0.001;
+			testCase.Config.Son.utilisationRange = 1:100;
+			testCase.Config.Son.utilLow = Son.utilisationRange(1);
+			testCase.Config.Son.utilHigh = Son.utilisationRange(end);
+			testCase.Config.Son.powerScale = 1;
 
             %Set HARQ and ARQ
             testCase.Config.Harq.active = true;
@@ -105,22 +112,34 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             arrayfun(@(x) testCase.verifyTrue(x == 224), testCase.Simulation.Results.powerConsumed);
             arrayfun(@(x) testCase.verifyEqual( x , 1), testCase.Simulation.Results.powerState); % powerState should be 1 in this case as it is always on
             %verify scheduling
-            %testCase.verifyEqual(testCase.Simulation.Results.schedule, ???); %TODO: find a proper way to do this
+            for i=2:testCase.Config.Runtime.numRounds
+                for j=1:testCase.Config.MacroEnb.numPRBs 
+                    testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).UeId, 1); %Assert that UE 1 is scheduled all the time
+                    testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).NDI, true); %Asssert that New Data Indicator indicates that there are more data.
+                    %testCase.verifyTrue(testCase.Simulation.Results.schedule(i,1,j).ModOrd == 2 ||...
+                    %testCase.Simulation.Results.schedule(i,1,j).ModOrd == 4 ||...
+                    %testCase.Simulation.Results.schedule(i,1,j).ModOrd == 6 ); %TODO: examine how to assert this
+                    %testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).Mcs > 20); %TODO: examine how to assert this
+                end
+            end
             %verify HARQ and ARQ
-            %TODO: Find a proper solution for this.
+            arrayfun(@(x) testCase.verifyEqual(x ,0), testCase.Simulation.Results.harqRtx); %Should be 0. With good signal strength retransmission should be 0
+            arrayfun(@(x) testCase.verifyEqual(x ,0), testCase.Simulation.Results.arqRtx); %TODO: verify this statement
             %verify BER and BLER
-            %TODO: Find a proper solution for this.
+            testCase.verifyTrue(mean(testCase.Simulation.Results.ber(2:end)) < 0.15 ); %Should be less than a certain threshhold. With good signal strength retransmission should be 0
+            testCase.verifyTrue(mean(testCase.Simulation.Results.bler(2:end))< 0.15 ); %TODO: verify this statement
             %verify CQI
-            arrayfun(@(x) testCase.verifyTrue(0 <= x && x <= 15) , testCase.Simulation.Results.cqi); %TODO: find a more narrow range
+            arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.cqi); %TODO: find a more narrow range and confirm
             %Verify SNR and SINR. With only 1 Enb they should be the same
             testCase.verifyTrue( any(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB) < 1e-4 ));
-            testCase.verifyTrue( 0 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 50 ); %TODO: find a more appropiate range
+            %TODO: find a more appropiate range and/or veriy current
+            testCase.verifyTrue( 35 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
             %Verify difference between pre and post Evm
             testCase.verifyTrue(any(testCase.Simulation.Results.preEvm > testCase.Simulation.Results.postEvm));
             %Verify throughput
             testCase.verifyTrue( any( testCase.Simulation.Results.throughput(2:end) > 1e8) ); %With 50 PRBs the throughput is expected to be in the 100mb/s range
             %Verify receivedPowerdBm
-            testCase.verifyTrue( any(-100 < testCase.Simulation.Results.receivedPowerdBm) && any( testCase.Simulation.Results.receivedPowerdBm < -30) ); %TODO: narrow this range
+            testCase.verifyTrue( any(-70 < testCase.Simulation.Results.receivedPowerdBm) && any( testCase.Simulation.Results.receivedPowerdBm < -55) ); %TODO: narrow this range and verify
             %Verify rsrqdB, rsrpdBm, rssidBm
             testCase.verifyTrue( any(-100 < testCase.Simulation.Results.rsrqdB) && any(testCase.Simulation.Results.rsrqdB < 0) ); %TODO: narrow this range
             testCase.verifyTrue( any(-100 < testCase.Simulation.Results.rsrpdBm) && any(testCase.Simulation.Results.rsrpdBm < -30) ); %TODO: narrow this range
