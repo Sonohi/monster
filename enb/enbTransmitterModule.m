@@ -38,20 +38,23 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			%
 			
 			obj.Enb = enb;
-			obj.TxPwdBm = 10*log10(enb.Pmax)+30;
+
 			switch enb.BsClass
 				case 'macro'
 					obj.Gain = Config.MacroEnb.antennaGain;
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
 					obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType);
+					obj.TxPwdBm = 10*log10(Config.MacroEnb.Pmax)+30;
 				case 'micro'
 					obj.Gain = Config.MicroEnb.antennaGain;
 					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
 					obj.AntennaArray = AntennaArray(Config.MicroEnb.antennaType);
+					obj.TxPwdBm = 10*log10(Config.MicroEnb.Pmax)+30;
 				case 'pico'
 					obj.Gain = Config.PicoEnb.antennaGain;
 					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
 					obj.AntennaArray = AntennaArray(Config.PicoEnb.antennaType);
+					obj.TxPwdBm = 10*log10(Config.PicoEnb.Pmax)+30;
 				otherwise
 					monsterLog(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end

@@ -53,7 +53,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Create network layout
 			monsterLog('(MONSTER - setupSimulation) setting up network layout', 'NFO');
-			Config.setupNetworkLayout()
+			Config.setupNetworkLayout();
 
 			% Setup eNodeBs
 			monsterLog('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'NFO');

@@ -8,20 +8,20 @@ function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
 	maxRadius = max(area(3)/2,area(4)/2);
 	%Depending on position scenario and radius resize axes to that or resize to building grid
 	%Check macro
-	if Config.MacroEnb.radius > maxRadius
-		maxRadius = Config.MacroEnb.radius;
+	if Config.MacroEnb.ISD > maxRadius
+		maxRadius = Config.MacroEnb.ISD;
 	end
 	%Check micro
-	if (strcmp(Config.MicroEnb.positioning,'uniform')  && Config.MicroEnb.radius > maxRadius)
-		maxRadius = Config.MicroEnb.radius;
+	if (strcmp(Config.MicroEnb.positioning,'uniform')  && Config.MicroEnb.ISD > maxRadius)
+		maxRadius = Config.MicroEnb.ISD;
 	end
 	%If hexagonal
-	if (strcmp(Config.MicroEnb.positioning,'hexagonal')  && (Config.MacroEnb.radius*3/2 > maxRadius && Config.MicroEnb.number > 6 ))
-		maxRadius = Config.MacroEnb.radius*3/2;
+	if (strcmp(Config.MicroEnb.positioning,'hexagonal')  && (Config.MacroEnb.ISD*3/2 > maxRadius && Config.MicroEnb.number > 6 ))
+		maxRadius = Config.MacroEnb.ISD*3/2;
 	end
 	%Check pico
-	if (strcmp(Config.PicoEnb.positioning,'uniform') && Config.PicoEnb.radius > maxRadius)
-		maxRadius = Config.PicoEnb.radius;
+	if (strcmp(Config.PicoEnb.positioning,'uniform') && Config.PicoEnb.ISD > maxRadius)
+		maxRadius = Config.PicoEnb.ISD;
 	end
 	%Set axes accordingly
 	set(layout_axes,'XLim',[xc-maxRadius-10,xc+maxRadius+10],'YLim',[yc-maxRadius-10,yc+maxRadius+10]); %+/-10 for better looks
