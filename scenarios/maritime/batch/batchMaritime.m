@@ -11,14 +11,14 @@ if ~exist(folderPath, 'dir')
 	mkdir(strcat(folderPath, '/sweep'));
 end
 
-batchSeeds = [45 60 112 126 135 200];
+batchSeeds = [45 60 75 112 126 135 200];
+%batchSimulation(batchSeeds(iSeed), toggleSweep);
 parfor iSeed = 1:length(batchSeeds)
 	for toggleSweep = 0:1
 		try
 			batchSimulation(batchSeeds(iSeed), toggleSweep);
 		catch ME
-			monsterLog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', i),'WRN');
-			monsterLog(ME.stack);
+			monsterLog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', iSeed),'WRN');
 		end	
 	end
 end
