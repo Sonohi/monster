@@ -354,7 +354,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		% set uplink static scheduling
-		function obj = setScheduleUL(obj, Config, Logger)
+		function obj = setScheduleUL(obj, Config)
 			% Check the number of users associated with the eNodeB and initialise to all
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
@@ -404,7 +404,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
+						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
 						break;
 					end
 				end
@@ -501,7 +501,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = uplinkReception(obj, Users, timeNow, ChannelEstimator, Logger)
+		function obj = uplinkReception(obj, Users, timeNow, ChannelEstimator)
 			% uplinkReception performs uplink demodulation and decoding
 			%
 			% :obj: EvolvedNodeB instance
@@ -512,7 +512,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
-				Logger.Log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
+				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
 			else				
 				% IDs of users and their position in the Users struct correspond
 				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
@@ -541,13 +541,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 		end
 		
-		function obj = uplinkDataDecoding(obj, Users, Config, Logger)
+		function obj = uplinkDataDecoding(obj, Users, Config)
 			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
 			%
 			% :param obj: EvolvedNodeB instance
 			% :param Users: Array<UserEquipment> UEs instances
 			% :param Config: MonsterConfig instance
-			% :param Logger: MonsterLog instance
 			
 			% Filter UEs linked to this eNodeB
 			timeNow = Config.Runtime.currentTime;
@@ -569,7 +568,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						[harqPid, harqAck] = obj.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(obj.Rx.UeData(iUser).PUCCH);
 						
 						if ~isempty(harqPid)
-							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config, Logger);
+							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config, obj.Logger);
 							
 							% Contact ARQ based on the feedback
 							if Config.Arq.active && ~isempty(sqn)

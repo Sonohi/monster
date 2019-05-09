@@ -205,7 +205,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
 			Channel.interferenceType = 'Full';
-			Channel.shadowingActive = true;
+			Channel.shadowingActive = false;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
 			Channel.losMethod = '3GPP38901-probability';

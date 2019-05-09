@@ -207,7 +207,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 					% Assign user and schedule user
 					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Stations(1).setScheduleUL(testCase.Config, testCase.Logger);
+					testCase.Stations(1).setScheduleUL(testCase.Config);
 					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
 
 					% Traverse channel downlink with no waveform assigned to
@@ -218,7 +218,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					% Uplink
 					testCase.Users(1).Scheduled.UL = 1;
 					testCase.Users(1).Tx.setupTransmission();
-					testCase.Stations(1).setScheduleUL(testCase.Config, testCase.Logger);
+					testCase.Stations(1).setScheduleUL(testCase.Config);
 					
 					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))

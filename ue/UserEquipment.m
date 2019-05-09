@@ -263,7 +263,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			% :returns obj: UserEquipment instance
 			%
 			
-			obj.Scheduled = struct('DL', false, 'UL', false);;
+			obj.Scheduled = struct('DL', false, 'UL', false);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];

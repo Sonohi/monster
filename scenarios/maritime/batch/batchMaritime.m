@@ -17,7 +17,7 @@ parfor iSeed = 1:length(batchSeeds)
 		try
 			batchSimulation(batchSeeds(iSeed), toggleSweep);
 		catch ME
-			monsterLog(sprintf('(BATCH MAIN) Error in batch for simulation index %i', iSeed),'WRN');
+			disp(sprintf('(BATCH MAIN) Error in batch for simulation index %i'));
 		end	
 	end
 end

@@ -186,7 +186,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			if mod(obj.Config.Runtime.currentTime, obj.Config.Scheduling.refreshAssociationTimer) == 0
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs re-associating', 'NFO');
-				[obj.Users, obj.Stations] = refreshUsersAssociation(obj.Users, obj.Stations, obj.Channel, obj.Config, obj.Logger);
+				[obj.Users, obj.Stations] = refreshUsersAssociation(obj.Users, obj.Stations, obj.Channel, obj.Config);
 			else
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs not re-associated', 'NFO');
 			end			
@@ -305,7 +305,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config, obj.Logger), obj.Stations);
+			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), obj.Stations);
 		
 		end
 	end
