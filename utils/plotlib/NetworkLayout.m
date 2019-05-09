@@ -106,10 +106,6 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			microLengthX = length(microImg(1,:,1))/scale;
 			
 			for i=1:obj.NumMicro
-				% d = sqrt((macroPos(1, 1) - microPos(i,1)) ^ 2 + (macroPos(1, 2) - microPos(i,2)) ^ 2);
-				% if d< maxInterferrenceDistMicro2Macro
-				% 	monsterLog(strcat('Warning! Too high interferrence detected between macro and micro BST at',num2str(microPos(i,1)),',',num2str(microPos(i,2))),'WRN');
-				% end
 				xr = obj.MicroCoordinates(i,1);
 				yr = obj.MicroCoordinates(i,2);
 				

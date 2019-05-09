@@ -17,7 +17,7 @@ parfor iSeed = 1:length(batchSeeds)
 		try
 			batchSimulation(batchSeeds(iSeed), toggleSweep);
 		catch ME
-			disp(sprintf('(BATCH MAIN) Error in batch for simulation index %i'));
+			fprintf('(BATCH MAIN) Error in batch for simulation index %i\n', iSeed);
 		end	
 	end
 end

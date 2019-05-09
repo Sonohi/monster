@@ -136,7 +136,6 @@ classdef Monster < matlab.mixin.Copyable
 			obj.uplinkEnbReception();
 
 			% TODO: no data is actually being sent
-			%monsterLog('(MONSTER - run) uplink eNodeB data decoding', 'NFO');
 			%obj.uplinkEnbDataDecoding();
 		end
 
