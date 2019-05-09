@@ -12,7 +12,6 @@ if ~exist(folderPath, 'dir')
 end
 
 batchSeeds = [45 60 75 112 126 135 200];
-%batchSimulation(batchSeeds(iSeed), toggleSweep);
 parfor iSeed = 1:length(batchSeeds)
 	for toggleSweep = 0:1
 		try

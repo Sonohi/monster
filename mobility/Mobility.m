@@ -38,13 +38,15 @@ classdef Mobility < matlab.mixin.Copyable
 		seaDelta;
 		coast;
 		shipHeight;
+		Logger;
 	end
 	
 	methods
-		function obj = Mobility(scenario, velocity, seed, Config)
+		function obj = Mobility(scenario, velocity, seed, Config, Logger)
+			obj.Logger = Logger;
 			% Constructor
 			if ~any(strcmp(scenario, obj.supportedScenarios))
-				monsterLog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
+				obj.Logger.log(sprintf('Mobility scenario %s not supported',scenario),'ERR')
 			end
 			
 			% Set arguments
@@ -397,8 +399,7 @@ classdef Mobility < matlab.mixin.Copyable
 			building = obj.buildingFootprints(intersect(cornerXIdx, cornerYIdx),:);
 			
 			if isempty(building)
-				monsterLog('Something went wrong in finding closest building','ERR')
-				
+				obj.Logger.log('Something went wrong in finding closest building','ERR')
 			end
 			
 		end

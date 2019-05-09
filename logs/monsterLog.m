@@ -36,43 +36,44 @@
 function monsterLog(msg, varargin)
 	
 %Constants
-validLogTypeValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};
+validLogLevelValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};
 textColors = {[1 0 0], [1, 0.5, 0], [0 0.7 1],[0 0 0], [0 0.7 1]}; % Black, orange, red, cyan
 
 logToFile=getpref('monsterLog', 'logToFile', false);
 logFile=getpref('monsterLog', 'logFile', 'monsterLog.txt');
-logLevel=getpref('monsterLog','logLevel', length(validLogTypeValues));
+logLevel=getpref('monsterLog','logLevel', 'NFO');
 logInBlack=getpref('monsterLog','logInBlack', 0);
-
-if logLevel < 1
-    error('Sonohi log level must be >= 1');
+[isLogLevelValid, logLevelTypeIdx] = ismember(logLevel, validLogLevelValues);
+if ~isLogLevelValid
+    error('Monster log level must be one of ERR, WRN, DBG, NFO, NFO0');
 end
-%The second argument is the log type, check if it's valid.
+
+%The second argument is the message log level, check if it's valid.
 %If not specified assume NFO level
-isValid=0;
+isMsgLogLevelValid=0;
 if nargin > 1 && ischar(varargin{1})
-    [isValid, logTypeIdx] = ismember(varargin{1}, validLogTypeValues);
-    if isValid
-        logType = varargin{1};
-				argIdx = 2;
-				if strcmp(logType,'ERR')
-					try
-					errType = varargin{2};
-					catch ME
-					errType = 'Monster:unspecified';
-					end
-				end
-    end
+	[isMsgLogLevelValid, msgLogLevelIdx] = ismember(varargin{1}, validLogLevelValues);
+	if isMsgLogLevelValid
+		msgLogLevel = varargin{1};
+		argIdx = 2;
+		if strcmp(msgLogLevel,'ERR')
+			try
+			errType = varargin{2};
+			catch ME
+			errType = 'Monster:unspecified';
+			end
+		end
+	end
 end
 
-if nargin == 1 || ~isValid
-    logType = 'NFO';
-    logTypeIdx = find(strcmp(validLogTypeValues,logType));
-    argIdx = 1;
+if nargin == 1 || ~isMsgLogLevelValid
+	msgLogLevel = 'NFO';
+	msgLogLevelIdx = find(strcmp(validLogLevelValues,msgLogLevel));
+	argIdx = 1;
 end
 
 %Check the logLevel to know if we need to log this message
-if logTypeIdx > logLevel
+if msgLogLevelIdx > logLevelTypeIdx
     return
 end
 
@@ -105,9 +106,9 @@ if nargin > 1
     idx = cellfun(@isstr, varargin);
     varargin(idx) = strrep(varargin(idx), '%', '%%');
     varargin(idx) = strrep(varargin(idx), '\', '\\');
-    msg=sprintf(['%s\tIn %s: ', msg], logType, callerName, varargin{argIdx:end});
+    msg=sprintf(['%s\tIn %s: ', msg], msgLogLevel, callerName, varargin{argIdx:end});
 else
-    msg=sprintf(['%s\tIn %s: ', msg], logType, callerName);
+    msg=sprintf(['%s\tIn %s: ', msg], msgLogLevel, callerName);
 end
 
 %Detect newlines and align subsequent lines vertically to the first one by adding spaces
@@ -127,17 +128,17 @@ if logToFile
 end
 
 %If the log type is an error, launch an error and break the code execution
-if strcmp(logType, 'ERR')
+if strcmp(msgLogLevel, 'ERR')
     me = MException(errType, logMsg);
     throwAsCaller(me);
 else
 
 % Log to console if logToFile is 0 or 2 (log both on file and terminal)
 if logToFile == 2 || logToFile == 0
-    if strcmp(logType, 'NFO') || logInBlack
+    if strcmp(msgLogLevel, 'NFO') || logInBlack
         fprintf(1, logMsg);
     else
-        cprintf(textColors{logTypeIdx}, logMsg);
+        cprintf(textColors{msgLogLevelIdx}, logMsg);
     end
 end
 

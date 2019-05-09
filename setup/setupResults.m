@@ -1,13 +1,11 @@
-function Results = setupResults (Config)
+function Results = setupResults (Config, Logger)
 	% setupResults - performs the necessary setup for the simulation results
 	%	
-	% Syntax: Results = setupResults(Config)
-	% Parameters:
-	% :Config: (MonsterConfig) simulation config class instance
-	%	Returns:
-	% :Results: (MetricRecorder) simulation metric recorder class instances
+	% :param Config: MonsterConfig simulation config class instance
+	% :param Logger: MonsterLog instance
+	% :returns Results: MetricRecorder simulation metric recorder class instances
 
-	monsterLog('(SETUP - setupResults) setting up results structure', 'NFO');
+	Logger.log('(SETUP - setupResults) setting up results structure', 'NFO');
 	% TODO check whether we need to differentiate cases with thr parameters
 	Results = MetricRecorder(Config);
 

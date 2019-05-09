@@ -214,7 +214,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :param Mode: Mode of transmission.
 			% :returns SINR: List of SINR for each station
 
-			monsterLog('func listSINR: Interference is considered intra-class eNB stations','WRN')
+			obj.Channel.Logger.log('func listSINR: Interference is considered intra-class eNB stations','WRN')
 
 
 			% Get received power for each station
@@ -370,7 +370,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						d2(d2<10) = 10;
 						lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 					else
-						monsterLog('A pathloss calculation failed','ERR')
+						obj.Channel.Logger.log('A pathloss calculation failed','ERR')
 					end
 			end
 
@@ -607,11 +607,11 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% 
 
 			if isempty(TxNode.Tx.Waveform)
-				monsterLog('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
+				obj.Channel.Logger.log('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
 			end
 			
 			if isempty(TxNode.Tx.WaveformInfo)
-				monsterLog('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
+				obj.Channel.Logger.log('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
 			end
 			
 			obj.TempSignalVariables.RxWaveform = TxNode.Tx.Waveform;
@@ -813,7 +813,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				axisXY = config.SpatialMaps.axisNLOS;
 			end
 			
-			obj.checkInterpolationRange(axisXY, userPosition);
+			obj.checkInterpolationRange(axisXY, userPosition, obj.Channel.Logger);
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 		end
 
@@ -852,7 +852,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		end
 		
 		
-		function checkInterpolationRange(axisXY, Position)
+		function checkInterpolationRange(axisXY, Position, Logger)
 			% Function used to check if the position can be interpolated
 			%
  			% :param axisXY:
@@ -873,7 +873,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			if extrapolation
 				pos = sprintf('(%s)',num2str(Position));
 				bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
-				sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
+				Logger.log(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
 			end
 		end
 		
@@ -915,13 +915,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						elseif (User.Position(3) > 13) && (User.Position(3) <= 23)
 							C = ((User.Position(3)-13)/10)^(1.5);
 						else
-							sonohilog('Error in computing LOS. Height out of range','ERR');
+							Channel.Logger.log('Error in computing LOS. Height out of range','ERR');
 						end
 						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
 					end
 					
 				otherwise
-					monsterLog(sprintf('(Monster3GPP38901 - LOSprobability) AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
+					Channel.Logger.log(sprintf('(Monster3GPP38901 - LOSprobability) AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
 			end
 			
 			x = rand;
@@ -992,7 +992,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					%end
 
 					if User.Position(3) >23
-						sonohilog('Error in computing LOS. Height out of range','ERR');
+						Channel.Logger.log('Error in computing LOS. Height out of range','ERR');
 					end
 
 					prop = dist2d;
@@ -1001,7 +1001,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23) = (18./prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23) + exp(-1*((prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23))/63)).*(1-(18./prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)))).*(1+((User.Position(3)-13)/10).^(1.5)*(5/4)*(prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)/100).^3.*exp(-1*(prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)/150)));
 					
 				otherwise
-					sonohilog(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
+					Channel.Logger.log(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
 					
 			end
 			

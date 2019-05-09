@@ -18,7 +18,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Config, id)
+		function obj = TrafficGenerator(trafficModel, AssociatedUeIds, Config, id, Logger)
 			% TrafficGenerator
 			%
 			% :param trafficModel:
@@ -55,18 +55,20 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 						clear traffic
 					end
 				otherwise
-					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported traffic model','ERR');
+					Logger.log('(TRAFFIC GENERATOR constructor) error, unsupported traffic model', 'ERR');
 			end
 			obj.ArrivalMode = Config.Traffic.arrivalDistribution;
 			obj.AssociatedUeIds = AssociatedUeIds;
-			obj.ArrivalTimes = obj.setArrivalTimes(Config);
+			obj.ArrivalTimes = obj.setArrivalTimes(Config, Logger);
 		end
 		
-		function ArrivalTimes = setArrivalTimes(obj, Config)
+		function ArrivalTimes = setArrivalTimes(obj, Config, Logger)
 			% Set arrival times is used to set the starting times for the associated UEs
 			%
 			% :Config.Traffic.poissonLambda: mean of the Poisson process, used if the arrival process is Poisson
-			% :Config.Traffic.uniformRange: range of the Uniform process, used if the arrival process is Uniform			% :Config.Traffic.static: static start time if the arrival process is static
+			% :Config.Traffic.uniformRange: range of the Uniform process, used if the arrival process is Uniform			
+			% :Config.Traffic.static: static start time if the arrival process is static
+
 			rng(Config.Runtime.seed);
 			switch obj.ArrivalMode
 				case 'Poisson'
@@ -80,13 +82,13 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 				case 'Static'
 					tStart(1:length(obj.AssociatedUeIds), 1) = Config.Traffic.static;
 				otherwise
-					monsterLog('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode','ERR');
+					Logger.log('(TRAFFIC GENERATOR constructor) error, unsupported arrival mode');
 					tStart = [];
 			end
 			ArrivalTimes = tStart*10^-3;
 		end
 
-		function tStart = getStartingTime(obj, ueId)
+		function tStart = getStartingTime(obj, ueId, Logger)
 			% Get starting time is used to get the starting time for an individual UE
 			%
 			% :ueId: UE ID
@@ -94,7 +96,7 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			if ueIx
 				tStart = obj.ArrivalTimes(ueIx);
 			else
-				monsterLog('(TRAFFIC GENERATOR getStartingTime) error, UE not found','ERR');
+				Logger.log('(TRAFFIC GENERATOR getStartingTime) error, UE not found');
 				tStart = NaN;
 			end
 		

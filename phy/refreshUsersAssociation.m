@@ -1,10 +1,11 @@
-function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Config)
+function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Config, Logger)
 	% refreshUsersAssociation links UEs to a eNodeB
 	%
-	% :Users: Array<UserEquipment> instances
-	% :Stations: Array<EvolvedNodeB> instances
-	% :Channel: Channel instance
-	% :Config: MonsterConfig instance
+	% :param Users: Array<UserEquipment> instances
+	% :param Stations: Array<EvolvedNodeB> instances
+	% :param Channel: Channel instance
+	% :param Config: MonsterConfig instance
+	% :param Logger: MonsterLog instance
 	%
 	% :Users: Array<UserEquipment> instances with associated eNodeBs
 	% :Stations: Array<EvolvedNodeB> instances with associated UEs
@@ -38,7 +39,7 @@ function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, C
 	% Use the result of refreshUsersAssociation to setup the UL scheduling
 	for iStation = 1:length(Stations)
 		Stations(iStation).resetScheduleUL();
-		Stations(iStation).setScheduleUL(Config);
+		Stations(iStation).setScheduleUL(Config, Logger);
 	end
 	for iUser = 1:length(Users)
 		iServingStation = find([Stations.NCellID] == Users(iUser).ENodeBID);

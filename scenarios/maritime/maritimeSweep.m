@@ -1,6 +1,7 @@
 %
 % Maritime sweep scenario
 %
+tic;
 close all;
 monsterLog('(MARITIME SWEEP) starting simulation', 'NFO');
 
@@ -9,6 +10,7 @@ Config = MonsterConfig();
 
 % Setup configuration for scenario
 Config.SimulationPlot.runtimePlot = 0;
+Config.Logs.logLevel = 'WRN';
 Config.Ue.number = 1;
 Config.Ue.antennaType = 'vivaldi';
 Config.MacroEnb.number = 3;
@@ -34,7 +36,7 @@ Simulation.Users.Rx.AntennaArray.Bearing = 180;
 
 % Create the maritime sweep specific data structure to store the state
 % Choose on which metric to optimise teh sweep: power or sinr
-sweepParameters = generateSweepParameters(Simulation, 'sinr');
+sweepParameters = generateSweepParameters(Simulation, 'power');
 
 monsterLog('(MARITIME SWEEP) sweep parameters initialised', 'NFO');
 
@@ -64,5 +66,6 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 		monsterLog('(MARITIME SWEEP) cleaned parameters for next round', 'NFO');
 	else
 		monsterLog('(MARITIME SWEEP) simulation completed', 'NFO');
+		toc;
 	end
 end

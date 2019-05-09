@@ -12,8 +12,9 @@ function batchSimulation(simulationSeed, sweepEnabled)
 	% Setup configuration for scenario
 	Config.Runtime.seed = simulationSeed;
 	Config.Logs.logToFile = 1;
-	Config.Logs.defaultLogName = strcat(Config.Logs.logPath, datestr(datetime, ...
+	Config.Logs.logFile = strcat(Config.Logs.logPath, datestr(datetime, ...
 		Config.Logs.dateFormat), '_seed_', num2str(simulationSeed), '.log');
+	Config.Logs.logLevel = 'WRN';
 	Config.SimulationPlot.runtimePlot = 0;
 	Config.Ue.number = 1;
 	Config.Ue.antennaType = 'vivaldi';

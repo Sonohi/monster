@@ -15,15 +15,15 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = NetworkLayout(xc, yc, Config)
+		function obj = NetworkLayout(xc, yc, Config, Logger)
 			%Constructor functions
 
 			obj.Center = [xc yc];
 			obj.ISD = Config.MacroEnb.ISD;
 			obj.NumMacro = Config.MacroEnb.number;
-			obj.computeMacroCoordinates(Config);
+			obj.computeMacroCoordinates(Config, Logger);
 			obj.generateCells(Config);
-			obj.findMicroCoordinates(Config);
+			obj.findMicroCoordinates(Config, Logger);
 			obj.findPicoCoordinates(Config);
 			obj.NumMicro = length(obj.MicroCoordinates(:,1));
 			obj.NumPico = length(obj.PicoCoordinates(:,1));
@@ -142,12 +142,13 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			end
 		end
 		
-		function drawUes(~, Users, Config)
+		function drawUes(~, Users, Config, Logger)
 			% drawUes plots the Users in the plot layout
 			%
-			% :obj: NetworkLayout instance
-			%	:Users: Array<UserEquipment> instances
-			% :Config: MonsterConfig instance
+			% :param obj: NetworkLayout instance
+			%	:param Users: Array<UserEquipment> instances
+			% :param Config: MonsterConfig instance
+			% :param Logger: MonsterLog instance
 			%
 			
 			if strcmp(Config.Terrain.type, 'city')
@@ -204,12 +205,9 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				end
 
 			else 
-				monsterLog('(NETWORK LAYOUT - drawUes) error, unsupported terrain type', 'ERR');
+				Logger.log('(NETWORK LAYOUT - drawUes) error, unsupported terrain type', 'ERR');
 
 			end
-
-			
-			
 			% Toggle the legend
 			legend('Location','northeastoutside')
 		end
@@ -223,7 +221,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	
 	methods (Access = private)
 		
-		function obj = computeMacroCoordinates(obj, Config)
+		function obj = computeMacroCoordinates(obj, Config, Logger)
 			centers = zeros(obj.NumMacro,2);
 			if strcmp(Config.Terrain.type,'city')
 				%Computes the center coordinates by walking in hexagons around the center
@@ -301,7 +299,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				centers(:,1) = macroX';
 				centers(:,2) = macroY';
 			else
-				monsterLog('(NETWORK LAYOUT - computeMacroCoordinates) unsupported terrain scenario', 'ERR');
+				Logger.log('(NETWORK LAYOUT - computeMacroCoordinates) unsupported terrain scenario');
 			end
 			% Set back in object			
 			obj.MacroCoordinates = centers;
@@ -317,7 +315,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		end
 		
 		%Find the coordinates of all microcells in all macrocells
-		function obj = findMicroCoordinates(obj,Config)
+		function obj = findMicroCoordinates(obj,Config, Logger)
 			
 			microCenters = zeros(Config.MicroEnb.number,2);
 			iMicro = 1;
@@ -334,7 +332,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			end
 			%informs if microstations were unable to be placed
 			if iMicro-1 < Config.MicroEnb.number
-				monsterLog(strcat('Cannot place the last  ', num2str(Config.MicroEnb.number-(iMicro-1)),' micro BST.'),'WRN');
+				Logger.log(strcat('Cannot place the last  ', num2str(Config.MicroEnb.number-(iMicro-1)),' micro BST.'));
 			end
 			obj.MicroCoordinates = microCenters(1:iMicro-1,:);
 		end

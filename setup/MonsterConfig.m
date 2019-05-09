@@ -52,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10;
+			numRounds = 600000;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -65,11 +65,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Logs configuration
 			Logs = struct();
-			Logs.logToFile = 0;
+			Logs.logToFile = 0; % 0 only console | 1 only file | 2 both 
+			Logs.logInBlack = 0;
 			Logs.dateFormat = 'yyyy-mm-dd_HH.MM.SS';
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
-			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
 			obj.Logs = Logs;
 
 			% Properties related to drawing and plotting
@@ -169,7 +170,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
 				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
 			else
-				monsterLog('(MONSTER CONFIG - constructor) unsupported terrain scenario', 'ERR');
+				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
 			end
 			obj.Terrain = Terrain;
 
@@ -271,17 +272,16 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 		end
 
-		function setupNetworkLayout(obj)
-				% Setup the layout given the config
-				%
-				% Syntax: Config.setupNetworkLayout()
-				% Parameters:
-				% :obj: (MonsterConfig) simulation config class instance
-				%	Sets:
-				% :obj.Plot.Layout: (<NetworkLayout>) network layout class instance
+		function setupNetworkLayout(obj, Logger)
+			% Setup the layout given the config
+			%
+			% :param obj: (MonsterConfig) simulation config class instance
+			%	:param Logger: MonsterLog instance
+			% :sets obj.Plot.Layout: <NetworkLayout> network layout class instance
+
 			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
 			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
-			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
+			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
 		end
 
 		function storeConfig(obj, logName)
@@ -290,7 +290,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% :obj: the MonsterConfig instance
 			% :logName: the name of the log to use, minus path and date
 			
-			fullLogName = strcat(obj.Logs.defaultLogName, logName);
+			fullLogName = strcat(obj.Logs.logFile, logName);
 			save(fullLogName, 'obj')
 		end
 		

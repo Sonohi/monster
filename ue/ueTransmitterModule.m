@@ -79,7 +79,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			%
 			% returns :obj.ReGrid: 
 			if ~isempty(obj.ReGrid)
-				monsterLog('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
+				obj.ueObj.Logger('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
 			end
 
 			obj.ReGrid = lteULResourceGrid(struct(obj.UeObj));

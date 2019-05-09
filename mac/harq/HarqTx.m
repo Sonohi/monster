@@ -134,14 +134,14 @@ classdef HarqTx < matlab.mixin.Copyable
 		end
 
 		% Handle the reception of a ACK/NACk
-		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Config)
+		function [obj, state, sqn] = handleReply(obj, procId, ack, timeNow, Config, Logger)
 			% find index
 			iProc = find([obj.processes.procId] == procId);
 			% Check it this is an outdated report 
 			if isempty(obj.processes(iProc).tb)
 				fSpec = 'Delayed ACK/NACK received at HARQ TX for process %i\n';
 				s=sprintf(fSpec, procId);
-    		monsterLog(s,'WRN');
+    		Logger.log(s,'WRN');
 				sqn = [];
 				state = [];
 			else

@@ -60,11 +60,11 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, Config)
+		function obj = recordEnbMetrics(obj, Stations, Config, Logger)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = Config.Runtime.currentRound + 1;
 			obj = obj.recordUtil(Stations, schRound);
-			obj = obj.recordPower(Stations, schRound, Config.Son.powerScale, Config.Son.utilLow);
+			obj = obj.recordPower(Stations, schRound, Config.Son.powerScale, Config.Son.utilLow, Logger);
 			obj = obj.recordSchedule(Stations, schRound);
 			obj = obj.recordPowerState(Stations, schRound);
 			if Config.Harq.active
@@ -87,13 +87,13 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo)
+		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo, Logger)
 			for iStation = 1:length(Stations)
 				if ~isempty(obj.util(schRound, iStation))
 					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo);
 					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
 				else
-					monsterLog('(METRICS RECORDER - recordPower) metric cannot be recorded. Please call recordUtil first.','ERR')
+					Logger.log('(METRICS RECORDER - recordPower) metric cannot be recorded. Please call recordUtil first.','ERR')
 				end
 			end
 		end
@@ -126,7 +126,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		end
 		
 		% UE metrics
-		function obj = recordUeMetrics(obj, Users, schRound)
+		function obj = recordUeMetrics(obj, Users, schRound, Logger)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
