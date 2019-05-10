@@ -16,4 +16,4 @@ Config.Channel.losMethod = 'NLOS';
 simulation = Monster(Config);
 
 %% Inspect Layout
-H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 10);
+H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 50);
