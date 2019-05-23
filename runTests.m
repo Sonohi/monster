@@ -1,15 +1,15 @@
 import matlab.unittest.TestSuite;
 % Test Channel
-monsterLog('Testing Channel functions...','NFO')
+disp('Testing Channel functions...');
 suite = TestSuite.fromFolder('channel', 'IncludingSubfolders', true);
 result = run(suite);
 
 % Test eNB
-monsterLog('Testing eNB functions...','NFO')
+disp('Testing eNB functions...');
 suite = TestSuite.fromFolder('enb', 'IncludingSubfolders', true);
 result = run(suite);
 
 % Test UE
-monsterLog('Testing UE functions...','NFO')
+disp('Testing UE functions...');
 suite = TestSuite.fromFolder('ue', 'IncludingSubfolders', true);
 result = run(suite);

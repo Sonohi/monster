@@ -11,9 +11,9 @@ classdef MacroCell < BaseCell
 	end
 	
 	methods
-		function obj = MacroCell(xc, yc, Config, cellId)
+		function obj = MacroCell(xc, yc, Config, cellId, Logger)
 			%Constructor
-			obj = obj@BaseCell(xc, yc, Config, cellId, 'macro')
+			obj = obj@BaseCell(xc, yc, Config, cellId, 'macro', Logger);
 			%Set arguments
 			obj.CellRadius = obj.ISD/3;
 			obj.Area    = 3*2*sqrt(3)*(obj.CellRadius)^2; %Total area of all three cells belonging to that site

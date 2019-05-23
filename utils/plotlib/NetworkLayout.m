@@ -12,6 +12,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		MicroCoordinates;    %Coordinates of the micro BST, placed on the middle of the edges of the cell border
 		PicoCoordinates;
 		Scenario;
+		Logger;
 	end
 	
 	methods
@@ -19,11 +20,12 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			%Constructor functions
 
 			obj.Center = [xc yc];
+			obj.Logger = Logger;
 			obj.ISD = Config.MacroEnb.ISD;
 			obj.NumMacro = Config.MacroEnb.number;
-			obj.computeMacroCoordinates(Config, Logger);
+			obj.computeMacroCoordinates(Config, obj.Logger);
 			obj.generateCells(Config);
-			obj.findMicroCoordinates(Config, Logger);
+			obj.findMicroCoordinates(Config, obj.Logger);
 			obj.findPicoCoordinates(Config);
 			obj.NumMicro = length(obj.MicroCoordinates(:,1));
 			obj.NumPico = length(obj.PicoCoordinates(:,1));
@@ -305,7 +307,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		function obj = generateCells(obj,Config)
 			cells = cell(obj.NumMacro,1);
 			for i=1:obj.NumMacro
-				cells(i)={MacroCell(obj.MacroCoordinates(i,1),obj.MacroCoordinates(i,2),Config,i)};
+				cells(i)={MacroCell(obj.MacroCoordinates(i,1),obj.MacroCoordinates(i,2),Config,i, obj.Logger)};
 			end
 			obj.Cells = cells;
 		end

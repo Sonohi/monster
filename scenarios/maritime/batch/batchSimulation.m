@@ -17,7 +17,11 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 	Config.Logs.logLevel = 'NFO';
 	Config.SimulationPlot.runtimePlot = 0;
 	Config.Ue.number = 1;
-	Config.Ue.antennaType = 'vivaldi';
+	if sweepEnabled
+		Config.Ue.antennaType = 'vivaldi';
+	else 
+		Config.Ue.antennaType = 'omni';
+	end
 	Config.MacroEnb.number = 3;
 	Config.MicroEnb.number = 0;
 	Config.PicoEnb.number = 0;

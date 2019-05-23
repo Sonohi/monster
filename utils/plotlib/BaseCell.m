@@ -7,13 +7,15 @@ classdef BaseCell < matlab.mixin.Copyable
 		CellID;
 		CellType;
 		PosScenario;
+		Logger;
 	end
 	
 	methods
-		function obj =BaseCell(xc, yc, Config, cellId, cellType)
+		function obj =BaseCell(xc, yc, Config, cellId, cellType, Logger)
 			%Constructor
 			
 			%Set arguments
+			obj.Logger = Logger
 			obj.Center  = [xc yc];
 			obj.CellID = cellId;
 			obj.CellType = cellType;
@@ -29,7 +31,7 @@ classdef BaseCell < matlab.mixin.Copyable
 					obj.PosScenario = Config.PicoEnb.positioning;
 					obj.ISD = Config.PicoEnb.ISD;
 				otherwise
-					monsterLog('Unknown cell type selected.','ERR')
+					obj.Logger.log('Unknown cell type selected.','ERR')
 			end
 			
 		end

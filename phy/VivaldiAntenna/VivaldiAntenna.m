@@ -67,6 +67,10 @@ methods
 		%[x, index] = unique(az); 
 		gain = interp1(az(:,1), az(:,2), phi);
 
+		% Normalize gain profile
+		% Minimum is transformed to 0, max gain is given as the absolute value of the minimum gain
+		gain = abs(min(az(:,2))) + gain ;
+
 
 	end
 
