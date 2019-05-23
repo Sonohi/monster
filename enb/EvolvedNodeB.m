@@ -404,7 +404,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
+						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
 						break;
 					end
 				end
@@ -512,7 +512,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
-				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
+				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
 			else				
 				% IDs of users and their position in the Users struct correspond
 				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;

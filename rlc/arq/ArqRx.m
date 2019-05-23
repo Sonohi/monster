@@ -49,7 +49,7 @@ classdef ArqRx < matlab.mixin.Copyable
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-				Logger.log('ARQ received duplicate TB', 'NFO');
+				Logger.log('ARQ received duplicate TB', 'WRN');
 			end
 		end
 

@@ -52,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 600000;
+			numRounds = 100;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -131,7 +131,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to mobility
 			Mobility = struct();
-			Mobility.scenario = 'maritime'; % pedestrian | pedestrian-indoor | maritime
+			Mobility.scenario = 'pedestrian'; % pedestrian | pedestrian-indoor | maritime
 			Mobility.step = 0.01;
 			Mobility.seed = 19;
 			obj.Mobility = Mobility;

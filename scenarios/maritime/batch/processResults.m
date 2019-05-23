@@ -2,7 +2,7 @@
 % Utility to process the results of a batch simulation
 %
 
-basePath = 'results/maritime/2019.04.18';
+basePath = 'results/maritime/2019.05.21';
 noSweepPath = strcat(basePath, '/no_sweep');
 sweepPath = strcat(basePath, '/sweep');
 
@@ -13,16 +13,16 @@ if ~isempty(fileNames)
 	% Construct a structure to store all the values and get info from the
 	% first file
 	load(fileNames{1});
-	Config = Simulation.Config;
-	clear Simulation;
+	Config = storedResults.config;
+	clear storedResults;
 	aggNoSweep = struct(...
 		'sinr', zeros(length(fileNames), Config.Runtime.totalRounds),...
 		'power', zeros(length(fileNames), Config.Runtime.totalRounds));
 	for iFile = 1:length(fileNames)
 		load(fileNames{iFile});
-		aggNoSweep.sinr(iFile, :) = Simulation.Results.sinrdB;
-		aggNoSweep.power(iFile, :) = Simulation.Results.receivedPowerdBm;
-		clear Simulation;
+		aggNoSweep.sinr(iFile, :) = storedResults.sinr;
+		aggNoSweep.power(iFile, :) = storedResults.power;
+		clear storedResults;
 	end
 end
 
@@ -32,16 +32,16 @@ if ~isempty(fileNames)
 	% Construct a structure to store all the values and get info from the
 	% first file
 	load(fileNames{1});
-	Config = Simulation.Config;
-	clear Simulation;
+	Config = storedResults.config;
+	clear storedResults;
 	aggSweep = struct(...
 		'sinr', zeros(length(fileNames), Config.Runtime.totalRounds),...
 		'power', zeros(length(fileNames), Config.Runtime.totalRounds));
 	for iFile = 1:length(fileNames)
 		load(fileNames{iFile});
-		aggSweep.sinr(iFile, :) = Simulation.Results.sinrdB;
-		aggSweep.power(iFile, :) = Simulation.Results.receivedPowerdBm;
-		clear Simulation;
+		aggSweep.sinr(iFile, :) = storedResults.sinr;
+		aggSweep.power(iFile, :) = storedResults.power;
+		clear storedResults;
 	end
 end
 

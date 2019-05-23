@@ -8,7 +8,7 @@ function Channel = setupChannel (Stations, Users, Config, Logger)
 	%	
 	% :returns Channel: MonsterChannel simulation channel class instance
 
-	Logger.log('(SETUP - setupChannel) setting up Channel', 'NFO');
+	Logger.log('(SETUP - setupChannel) setting up Channel', 'DBG');
 	Channel = MonsterChannel(Stations, Users, Config, Logger);
 	
 end

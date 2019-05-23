@@ -7,7 +7,7 @@ function Stations = setupStations (Config, Logger)
 	
 	
 	% Setup macro
-	Logger.log('(SETUP - setupStations) setting up macro eNodeBs', 'NFO');
+	Logger.log('(SETUP - setupStations) setting up macro eNodeBs', 'DBG');
 	rangeA = 1;
 	rangeB = Config.MacroEnb.number;
 	Stations(rangeA:rangeB) = arrayfun(@(x) EvolvedNodeB(Config, 'macro', x, Logger), rangeA:rangeB);
@@ -17,7 +17,7 @@ function Stations = setupStations (Config, Logger)
 
 	% Setup micro
 	if Config.MicroEnb.number > 0
-		Logger.log('(SETUP - setupStations) setting up micro eNodeBs', 'NFO');
+		Logger.log('(SETUP - setupStations) setting up micro eNodeBs', 'DBG');
 		rangeA = Config.MacroEnb.number + 1;
 		rangeB = Config.MicroEnb.number + Config.MacroEnb.number;
 		Stations(rangeA:rangeB) = arrayfun(@(x) EvolvedNodeB(Config, 'micro', x, Logger), rangeA:rangeB);
@@ -31,7 +31,7 @@ function Stations = setupStations (Config, Logger)
 	
 	% Setup pico
 	if Config.PicoEnb.number > 0 
-% 	Logger.log('(SETUP - setupStations) setting up pico eNodeBs', 'NFO');
+% 	Logger.log('(SETUP - setupStations) setting up pico eNodeBs', 'DBG');
 % 	rangeA = Config.MacroEnb.number + Config.MicroEnb.number + 1;
 % 	rangeB = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
 % 	Stations(rangeA:rangeB) = arrayfun(@(x) EvolvedNodeB(Config, 'pico', x, Logger), rangeA:rangeB);
@@ -44,7 +44,7 @@ function Stations = setupStations (Config, Logger)
 	end
 	% Setup neighbour relationships
 	% TODO revise with multiple macro base stations
-	% Logger.log('(SETUP - setupStations) setting up eNodeBs neighbours', 'NFO');
+	% Logger.log('(SETUP - setupStations) setting up eNodeBs neighbours', 'DBG');
 	% arrayfun(@(x)x.setNeighbours(Stations, Config), Stations);
 end
 	

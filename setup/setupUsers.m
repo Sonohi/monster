@@ -5,7 +5,7 @@ function Users = setupUsers (Config, Logger)
 	%	:param Logger: MonsterLog instance 
 	% :returns Users: Array<UserEquipment> simulation UEs class instances
 
-	Logger.log('(SETUP - setupUsers) setting up UEs', 'NFO');
+	Logger.log('(SETUP - setupUsers) setting up UEs', 'DBG');
 	numUsers = Config.Ue.number;
 	Users = arrayfun(@(x) UserEquipment(Config, x, Logger), 1:numUsers);
 end

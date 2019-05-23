@@ -117,6 +117,29 @@ To ease the code and make it more scalable, there are 2 wrapper methods that are
 These are `recordEnbMetrics` and `recordUeMetrics`. When a new metric is added, the metric-recording method should be called from inside one of these 2 directly.
 As regards the structure of the data produced, they are normally recorded once per scheduling round, thus rows represent the time evolution of the metric in the simulation. Columns on the other hand. represent either the number of UEs, or those of the eNodeBs, depending on the metric.
 
+# Charting utility
+
+The charting utility included in the project at `/charts/` is fully optional and provided as a possible tool among the many available.
+It is based on [pyecharts](https://pyecharts.org/#/) a Python port of the Echarts library from Baidu.
+It is suggested to create subfolders based on the project started, e.g. `/charts/maritime`;
+
+## Installation
+One option to install the library and get going is to use [Anaconda](https://anaconda.com), but feel free to use other alternatives based on your environment/python preferences.
+The following instructions are provided for Ubuntu 18.04, for other OS, please refer to the official [Anaconda installation docs](https://docs.anaconda.com/anaconda/).
+
+### Download
+Download the installer on [Anaconda's website](https://www.anaconda.com/distribution/).
+
+### Ubuntu 18.04 Python 3.6 installation 
+Assuming the installer has been downloaded in `~/Downloads/`, then follow the instructions for Anaconda in the [docs](https://docs.anaconda.com/anaconda/install/linux/).
+Once the installation is finished, check also [the following link for Python 3.6](https://docs.anaconda.com/anaconda/user-guide/faq/#anaconda-faq-35).
+
+### Pyecharts installation
+Once the installation is completed and you are in a virtual environment as per documentation notes above, simply issue `pip install pyecharts` to add it.
+
+## Usage 
+Usage of pyecharts can be done in several ways. One option is to rely on [Jupyter notebook](https://jupyter.org/) that is already included in the Anaconda distribution and an integration is also provided when installing pyecharts.
+
 # Licence
 **MONSTer** is release under **MIT** licence available in copy at the root of the repository.
 

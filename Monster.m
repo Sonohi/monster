@@ -27,13 +27,13 @@ classdef Monster < matlab.mixin.Copyable
 
 			obj.Logger = Logger;
 			obj.Config = Config;
-			obj.Logger.log('(MONSTER) setting up simulation', 'NFO');
+			obj.Logger.log('(MONSTER) setting up simulation', 'DBG');
 			obj.setupSimulation();
-			obj.Logger.log('(MONSTER) simulation setup completed', 'NFO');
+			obj.Logger.log('(MONSTER) simulation setup completed', 'DBG');
 
 			if obj.Config.SimulationPlot.runtimePlot
 				% Draw the eNodeBs
-				obj.Config.Plot.Layout.draweNBs(obj.Config);
+				obj.Config.Plot.Layout.drawScenario(obj.Config);
 				% Draw the UEs
 				obj.Config.Plot.Layout.drawUes(obj.Users, obj.Config, obj.Logger);
 			end
@@ -47,27 +47,27 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			% Create network layout
-			obj.Logger.log('(MONSTER - setupSimulation) setting up network layout', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up network layout', 'DBG');
 			obj.Config.setupNetworkLayout(obj.Logger);
 
 			% Setup eNodeBs
-			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'DBG');
 			Stations = setupStations(obj.Config, obj.Logger);
 
 			% Setup UEs
-			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation UEs', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation UEs', 'DBG');
 			Users = setupUsers(obj.Config, obj.Logger);
 
 			% Setup channel
-			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation channel', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation channel', 'DBG');
 			Channel = setupChannel(Stations, Users, obj.Config, obj.Logger);
 
 			% Setup traffic
-			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation traffic', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation traffic', 'DBG');
 			[Traffic, Users] = setupTraffic(Users, obj.Config, obj.Logger);
 
 			% Setup results
-			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'NFO');
+			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'DBG');
 			Results = setupResults(obj.Config, obj.Logger);
 
 			% Assign the properties to the Monster object
@@ -102,37 +102,37 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			obj.Logger.log('(MONSTER - run) performing UE movement', 'NFO');
+			obj.Logger.log('(MONSTER - run) performing UE movement', 'DBG');
 			obj.moveUsers();
 
-			obj.Logger.log('(MONSTER - run) checking UE-eNodeB association', 'NFO');
+			obj.Logger.log('(MONSTER - run) checking UE-eNodeB association', 'DBG');
 			obj.associateUsers();
 
-			obj.Logger.log('(MONSTER - run) updating UE transmission queues', 'NFO');
+			obj.Logger.log('(MONSTER - run) updating UE transmission queues', 'DBG');
 			obj.updateUsersQueues();
 
-			obj.Logger.log('(MONSTER - run) downlink UE scheduling', 'NFO');
+			obj.Logger.log('(MONSTER - run) downlink UE scheduling', 'DBG');
 			obj.schedule();
 
-			obj.Logger.log('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'NFO');
+			obj.Logger.log('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'DBG');
 			obj.setupEnbTransmitters();
 
-			obj.Logger.log('(MONSTER - run) traversing channel in downlink', 'NFO');
+			obj.Logger.log('(MONSTER - run) traversing channel in downlink', 'DBG');
 			obj.downlinkTraverse();
 
-			obj.Logger.log('(MONSTER - run) downlink UE reception', 'NFO');
+			obj.Logger.log('(MONSTER - run) downlink UE reception', 'DBG');
 			obj.downlinkUeReception();
 
-			obj.Logger.log('(MONSTER - run) downlink UE data decoding', 'NFO');
+			obj.Logger.log('(MONSTER - run) downlink UE data decoding', 'DBG');
 			obj.downlinkUeDataDecoding();
 
-			obj.Logger.log('(MONSTER - run) setting up UE uplink', 'NFO');
+			obj.Logger.log('(MONSTER - run) setting up UE uplink', 'DBG');
 			obj.setupUeTransmitters();
 			
-			obj.Logger.log('(MONSTER - run) traversing channel in uplink', 'NFO');
+			obj.Logger.log('(MONSTER - run) traversing channel in uplink', 'DBG');
 			obj.uplinkTraverse();
 
-			obj.Logger.log('(MONSTER - run) uplink eNodeB reception', 'NFO');
+			obj.Logger.log('(MONSTER - run) uplink eNodeB reception', 'DBG');
 			obj.uplinkEnbReception();
 
 			% TODO: no data is actually being sent
@@ -145,10 +145,10 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			obj.Logger.log('(MONSTER - collectResults) eNodeB metrics recording', 'NFO');
+			obj.Logger.log('(MONSTER - collectResults) eNodeB metrics recording', 'DBG');
 			obj.Results = obj.Results.recordEnbMetrics(obj.Stations, obj.Config, obj.Logger);
 
-			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'NFO');
+			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'DBG');
 			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Config.Runtime.currentRound, obj.Logger);
 		
 		end
@@ -159,10 +159,10 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
+			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
 			arrayfun(@(x)x.reset(obj.Config.Runtime.currentRound + 1), obj.Stations);
 
-			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'NFO');
+			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
 			arrayfun(@(x)x.reset(), obj.Users);		
 		end
 			
@@ -184,10 +184,10 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 
 			if mod(obj.Config.Runtime.currentTime, obj.Config.Scheduling.refreshAssociationTimer) == 0
-				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs re-associating', 'NFO');
+				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs re-associating', 'DBG');
 				[obj.Users, obj.Stations] = refreshUsersAssociation(obj.Users, obj.Stations, obj.Channel, obj.Config);
 			else
-				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs not re-associated', 'NFO');
+				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs not re-associated', 'DBG');
 			end			
 		end
 		

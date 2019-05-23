@@ -12,7 +12,7 @@ function plotcoverage(stations,channel, Config)
 		% Results are saved in mat files to speed up the simulation. It can be
 		% forced by setting a flag in the config.
 		if exist(filename, 'file') && ~Config.SimulationPlot.generateCoverageMap
-			monsterLog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','NFO');
+			monsterLog('Coverage calculations found, loading from file. Set tag in function call if you require recomputation (e.g. a change in channel)','DBG');
 			load(filename)
 		else
 			monsterLog(sprintf('Calculating coverage for Station %i, EIRP/subcarrier: %s, EIRP(dBm): %s', station.NCellID, num2str(10*log10(station.Tx.getEIRPSubcarrier)+30), num2str(station.Tx.getEIRPdBm)));

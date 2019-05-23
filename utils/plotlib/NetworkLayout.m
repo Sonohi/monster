@@ -29,7 +29,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.NumPico = length(obj.PicoCoordinates(:,1));
 		end
 		
-		function draweNBs(obj, Config)
+		function drawScenario(obj, Config)
 			enbLabelOffsetY = 0;
 			% Depending on the terrain type, check buildings or coastline
 			if strcmp(Config.Terrain.type, 'city')
@@ -210,7 +210,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 
 		function Plot(obj, Simulation)
 			[Simulation.Config.Plot.LayoutFigure, Simulation.Config.Plot.LayoutAxes] = createLayoutPlot(Simulation.Config);
-			obj.draweNBs(Simulation.Config);
+			obj.drawScenario(Simulation.Config);
 			obj.drawUes(Simulation.Users, Simulation.Config);
 		end
 	end

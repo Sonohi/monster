@@ -21,7 +21,7 @@ classdef MonsterLog < matlab.mixin.Copyable
 			% :param Config: MonsterConfig instance
 			% :returns obj: MonsterLog instance
 			%
-			obj.validLogLevelValues = {'ERR', 'WRN', 'DBG', 'NFO', 'NFO0'};
+			obj.validLogLevelValues = {'ERR', 'WRN', 'NFO', 'NFO0', 'DBG'};
 			
 			% Check preferences for log level
 			[isLogLevelValid, logLevelTypeIdx] = ismember(Config.Logs.logLevel, obj.validLogLevelValues);

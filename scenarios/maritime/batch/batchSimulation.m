@@ -1,8 +1,10 @@
-function batchSimulation(simulationSeed, sweepEnabled)
-
+function batchSimulation(simulationSeed, sweepEnabled, folderPath)
+	% Single instance of simulation for the maritime batch scenario
 	%
-	% Batch simulation of maritime scenario with seed and sweep toggle
-	%
+	% :param simulationSeed: integer that sets the seed for the simulation instance
+	% :param sweepEnabled: boolean that toggles whether the sweeping algorithm should be enabled in this instance
+	% :param folderPath: string that represents the path of the folder where to save the results
+	% 
 	
 	% Get configuration
 	Config = MonsterConfig();
@@ -12,7 +14,7 @@ function batchSimulation(simulationSeed, sweepEnabled)
 	Config.Logs.logToFile = 1;
 	Config.Logs.logFile = strcat(Config.Logs.logPath, datestr(datetime, ...
 		Config.Logs.dateFormat), '_seed_', num2str(simulationSeed), '.log');
-	Config.Logs.logLevel = 'ERR';
+	Config.Logs.logLevel = 'NFO';
 	Config.SimulationPlot.runtimePlot = 0;
 	Config.Ue.number = 1;
 	Config.Ue.antennaType = 'vivaldi';
@@ -80,8 +82,14 @@ function batchSimulation(simulationSeed, sweepEnabled)
 				subFolder = 'sweep';
 			end
 			resultsFileName = strcat(basePath, '/', subFolder, '/', fileName);
+			storedResults = struct('sinr', Simulation.Results.sinrdB, 'power', Simulation.Results.receivedPowerdBm, 'config', Simulation.Config);
 			
-			save(resultsFileName, 'Simulation');
+			if ~exist(folderPath, 'dir')
+				mkdir(folderPath);
+				mkdir(strcat(folderPath, '/no_sweep'));
+				mkdir(strcat(folderPath, '/sweep'));
+			end
+			save(resultsFileName, 'storedResults');
 		end
 	end
 
