@@ -15,7 +15,7 @@ classdef BaseCell < matlab.mixin.Copyable
 			%Constructor
 			
 			%Set arguments
-			obj.Logger = Logger
+			obj.Logger = Logger;
 			obj.Center  = [xc yc];
 			obj.CellID = cellId;
 			obj.CellType = cellType;
