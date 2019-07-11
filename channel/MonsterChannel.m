@@ -13,10 +13,12 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		simulationTime = 0;
 		extraSamplesArea = 1200;
 		Estimator = struct();
+		Logger;
+		area;
 	end
 	
 	methods
-		function obj = MonsterChannel(Stations, Users, Config)
+		function obj = MonsterChannel(Stations, Users, Config, Logger)
 			% MonsterChannel
 			%
 			% :param Stations:
@@ -24,15 +26,20 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :param Config:
 			% :returns obj:
 			%
-
+			obj.Logger = Logger;
 			obj.Mode = Config.Channel.mode;
 			obj.Region = Config.Channel.region;
 			obj.enableFading = Config.Channel.fadingActive;
 			obj.InterferenceType = Config.Channel.interferenceType;
 			obj.enableShadowing = Config.Channel.shadowingActive;
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
-			obj.BuildingFootprints = Config.Terrain.buildings;
 			obj.LOSMethod = Config.Channel.losMethod;
+			if strcmp(Config.Terrain.type, 'city')
+				obj.BuildingFootprints = Config.Terrain.buildings;
+			else 
+				obj.BuildingFootprints = [];
+			end
+			obj.area = Config.Terrain.area;
 			obj.setupChannel(Stations, Users);
 			obj.createChannelEstimator();
 		end
@@ -85,15 +92,15 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 
 			if ~strcmp(Mode,'downlink') && ~strcmp(Mode,'uplink')
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode');
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode');
 			end
 			
 			if any(~isa(Stations, 'EvolvedNodeB'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongStationClass');
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongStationClass');
 			end
 			
 			if any(~isa(Users, 'UserEquipment'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
 			end
 			
 			% Filter stations and users
@@ -103,7 +110,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			if ~isempty(stations)
 				obj.callChannelModel(Stations, Users, Mode);
 			else
-				monsterLog('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
+				obj.Logger.log('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
 			
 		end
@@ -176,14 +183,14 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 
 		
-		function h = plotSINR(obj, Stations, User, resolution)
+		function h = plotSINR(obj, Stations, User, resolution, Logger)
 			% plotSINR
 			%
 			% :obj: MonsterChannel instance
 			% :Stations: Array<EvolvedNodeB> instances
 			% :User: UserEquipment instance
 			% :resolution: Float
-			%
+			% :param Logger: MonsterLog instance
 			
 			[receivedPower, grid] = obj.signalPowerMap(Stations, User, resolution);
 			receivedPowerWatts = 10.^((receivedPower-30)./10);
@@ -202,7 +209,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 			end
 
-			monsterLog('(MONSTER CHANNEL - plotSINR) Computing SINR map...')
+			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...');
 			
 			h = figure;
 			contourf(grid(1,:),grid(2,:),10*log10(max(SINR,[],3)))
@@ -223,7 +230,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 			
 			% Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
-			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + obj.extraSamplesArea;
+			area = obj.area(3) - obj.area(1) + obj.extraSamplesArea;
 		end
 
 		function list = getENBPowerList(obj, User, Stations, Mode)
@@ -238,6 +245,22 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 			if isa(obj.ChannelModel, 'Monster3GPP38901')
 				list = obj.ChannelModel.listCellPower(User, Stations, Mode);
+			end
+		end
+
+
+		function list = getENBSINRList(obj, User, Stations, Mode)
+			% getENBSINRList
+			%
+			% Returns list of SINR for each station
+			% :obj: MonsterChannel instance
+			% :User: :UserEquipment:
+			% :Stations: [:EvolvedNodeB]:
+			% :Mode: 'downlink' or 'uplink'
+			%
+
+			if isa(obj.ChannelModel, 'Monster3GPP38901')
+				list = obj.ChannelModel.listSINR(User, Stations, Mode);
 			end
 		end
 

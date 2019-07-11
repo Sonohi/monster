@@ -4,7 +4,7 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 	%
 	% by Jakob Thrane, DTU Fotonik, 2018
 	%
-	% V1.1 - implementing matrix oprations for matrix of 2d and 3d positions
+	% V1.1 - implementing matrix operations for matrix of 2d and 3d positions
 	% By Markus Greve Bech, DTU Fotonik, 2019
 	% 
 	% Scenario =

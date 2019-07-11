@@ -13,6 +13,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			Users
 			SFplot
 			SINRplot
+			Logger
 		end
 
 		methods (TestClassSetup)
@@ -23,36 +24,37 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				Config.SimulationPlot.runtimePlot = 0;
 				Config.MacroEnb.number = 5;
 				Config.Ue.number = 5;
+				testCase.Logger = MonsterLog(Config);
 				
-				Config.setupNetworkLayout();
-				Stations = setupStations(Config);
-				Users = setupUsers(Config);
-				Channel = setupChannel(Stations, Users, Config);
-				[Traffic, Users] = setupTraffic(Users, Config);
+				Config.setupNetworkLayout(testCase.Logger);
+				Stations = setupStations(Config, testCase.Logger);
+				Users = setupUsers(Config, testCase.Logger);
+				Channel = setupChannel(Stations, Users, Config, testCase.Logger);
+				[Traffic, Users] = setupTraffic(Users, Config, testCase.Logger);
 				
 				testCase.Config = Config;
 				testCase.Stations = Stations;
 				testCase.Users = Users;
-				testCase.Channel = MonsterChannel(Stations, Users, Config);
+				testCase.Channel = MonsterChannel(Stations, Users, Config, testCase.Logger);
 				testCase.ChannelModel = testCase.Channel.ChannelModel;
 				%testCase.SFplot = testCase.ChannelModel.plotSFMap(Stations(1));
-				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Stations, testCase.Users(1), 30);
+				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Stations, testCase.Users(1), 30, Logger);
 				
 				
 				% Channel with no shadowing
 				noShadowingConfig = copy(Config);
 				noShadowingConfig.Channel.shadowingActive = 0;
 				noShadowingConfig.Channel.losMethod = 'NLOS';
-				testCase.ChannelNoSF = MonsterChannel(Stations, Users, noShadowingConfig);
+				testCase.ChannelNoSF = MonsterChannel(Stations, Users, noShadowingConfig, testCase.Logger);
 				testCase.ChannelNoSFModel = testCase.ChannelNoSF.ChannelModel;
-				%testCase.SINRplot = testCase.ChannelNoSF.plotSINR(testCase.Stations, testCase.Users(1), 30);
+				%testCase.SINRplot = testCase.ChannelNoSF.plotSINR(testCase.Stations, testCase.Users(1), 30, Logger);
 
 				% Channel with no interference
 				noInterferenceConfig = copy(Config);
 				noInterferenceConfig.Channel.interferenceType = 'None';
 				%Param.channel.enableShadowing = 1;
 				%Param.channel.InterferenceType = 'None';
-				testCase.ChannelNoInterference = MonsterChannel(Stations, Users, noInterferenceConfig);
+				testCase.ChannelNoInterference = MonsterChannel(Stations, Users, noInterferenceConfig, testCase.Logger);
 
 			end
 			

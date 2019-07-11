@@ -11,9 +11,10 @@ Config.MicroEnb.number = 0;
 Config.PicoEnb.number = 0;
 Config.Channel.shadowingActive = 0;
 Config.Channel.losMethod = 'NLOS';
+Logger = MonsterLog(Config);
 
 %% Setup objects
-simulation = Monster(Config);
+simulation = Monster(Config, Logger);
 
 %% Inspect Layout
-H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 10);
+H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 10, simulation.Logger);

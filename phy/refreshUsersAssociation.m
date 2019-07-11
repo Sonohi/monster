@@ -1,10 +1,10 @@
 function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Config)
 	% refreshUsersAssociation links UEs to a eNodeB
 	%
-	% :Users: Array<UserEquipment> instances
-	% :Stations: Array<EvolvedNodeB> instances
-	% :Channel: Channel instance
-	% :Config: MonsterConfig instance
+	% :param Users: Array<UserEquipment> instances
+	% :param Stations: Array<EvolvedNodeB> instances
+	% :param Channel: Channel instance
+	% :param Config: MonsterConfig instance
 	%
 	% :Users: Array<UserEquipment> instances with associated eNodeBs
 	% :Stations: Array<EvolvedNodeB> instances with associated UEs

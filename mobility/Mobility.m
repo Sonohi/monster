@@ -33,14 +33,20 @@ classdef Mobility < matlab.mixin.Copyable
 		westEast = [2, 4];
 		northSouth = [1, 3];
 		avgfloorHeight = 3; % Roughly 3m
-		supportedScenarios = {'pedestrian', 'pedestrian-indoor'}
+		supportedScenarios = {'pedestrian', 'pedestrian-indoor', 'maritime'}
+		area;
+		seaDelta;
+		coast;
+		shipHeight;
+		Logger;
 	end
 	
 	methods
-		function obj = Mobility(scenario, velocity, seed, Config)
+		function obj = Mobility(scenario, velocity, seed, Config, Logger)
+			obj.Logger = Logger;
 			% Constructor
 			if ~any(strcmp(scenario, obj.supportedScenarios))
-				monsterLog(sprintf('Mobility scenario %s not supported',scenario),'ERR')
+				obj.Logger.log(sprintf('Mobility scenario %s not supported',scenario),'ERR');
 			end
 			
 			% Set arguments
@@ -48,7 +54,11 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Velocity = velocity;
 			obj.Seed = seed;
 			obj.Rounds = Config.Runtime.totalRounds;
-			obj.buildingFootprints = Config.Terrain.buildings;
+			if strcmp(scenario, 'maritime')
+				obj.buildingFootprints = [];
+			else
+				obj.buildingFootprints = Config.Terrain.buildings;
+			end
 			
 			% Produce parameters and compute movement.
 			obj.setParameters(Config);
@@ -78,10 +88,15 @@ classdef Mobility < matlab.mixin.Copyable
 		function obj = createTrajectory(obj)
 			% Create vector of trajectory with length(rounds)
 			obj.Trajectory = zeros(obj.Rounds, 3); % x, y, z
-			if strcmp(obj.Scenario, 'pedestrian')
-				obj.randomWalkPedestrian();
-			elseif strcmp(obj.Scenario, 'pedestrian-indoor')
-				obj.randomWalkPedestrianIndoor();
+			switch obj.Scenario
+				case 'pedestrian'
+					obj.randomWalkPedestrian();
+				case 'pedestrian-indoor'
+					obj.randomWalkPedestrianIndoor();
+				case 'maritime'
+					obj.createMaritimeTrajectory();
+				otherwise
+					obj.Logger.log(sprintf('Mobility scenario %s not supported',scenario),'ERR');
 			end
 		end
 		
@@ -160,8 +175,6 @@ classdef Mobility < matlab.mixin.Copyable
 						obj.Trajectory(round,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
 						
 				end
-				
-				
 			end
 		end
 		
@@ -250,13 +263,32 @@ classdef Mobility < matlab.mixin.Copyable
 								stateVar = obj.setCrossedStateVars(stateVar, newPos);
 								nextState = 'moving';
 							end
-							
 						end
-						
 				end
 			end
 		end
 		
+		function obj = createMaritimeTrajectory(obj)
+			% createMaritimeTrajectory generates a maritime trajectory for the sea-based scenario
+			% 
+			% :param obj: Mobility Instance 
+			% :returns obj: Mobility instnace with updated trajectory property
+			%
+			
+			startX = obj.area(1) + obj.seaDelta(1);
+			startY = obj.area(2) + obj.seaDelta(2);
+			endX = obj.area(3) - obj.seaDelta(1);
+			endY = round(min(obj.coast.coastline(:,2)) - obj.seaDelta(2));
+			mapX = sort(startX + randperm(endX, 50));
+			mapY = sort(startY + randperm(round(endY - startY), 50));
+			spreadX = linspace(startX, endX, obj.Rounds);
+			spreadY = interp1(mapX, mapY, spreadX, 'spline');
+			obj.Trajectory(:,1) = spreadX(1,:);
+			obj.Trajectory(:, 2) = spreadY(1,:);
+			% Assume UE ship height constant (TODO can be varied for different martitime conditions)
+			obj.Trajectory(:,3) = ones(obj.Rounds,1)*obj.shipHeight;
+		end
+
 		function stateVar = initializeStateVars(obj, start, startSide)
 			stateVar = struct();
 			stateVar.timeLeftForCrossing = obj.pedestrianCrossingPause;
@@ -306,25 +338,29 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.wallDistance = 1;
 			obj.movementSpeed = obj.Velocity; % [m/s]
 			obj.pedestrianHeight = Config.Ue.height;
-			if strcmp(obj.Scenario, 'pedestrian')
-				% TODO: randomize wait times between appropriate numbers.
-				obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
-				obj.pedestrianCrossingPause = 5; % Roughly 5 seconds for crossing, equal to 5000 rounds
-				obj.turningDistance = 2*obj.wallDistance; % When turning we want to move past the corner
-				obj.crossingDistance = obj.roadWidth + 2*obj.wallDistance; %When crossing we want to move past the corner
-			elseif strcmp(obj.Scenario, 'pedestrian-indoor')
-				obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
-				obj.wallThickness = 0.3; %30cm of outer wall thickness
+			obj.shipHeight = Config.Ue.height;
+			switch obj.Scenario
+				case 'pedestrian'
+					% TODO: randomize wait times between appropriate numbers.
+					obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
+					obj.pedestrianCrossingPause = 5; % Roughly 5 seconds for crossing, equal to 5000 rounds
+					obj.turningDistance = 2*obj.wallDistance; % When turning we want to move past the corner
+					obj.crossingDistance = obj.roadWidth + 2*obj.wallDistance; %When crossing we want to move past the corner
+					obj.Indoor = 0;
+				case 'pedestrian-indoor'
+					obj.pedestrianTurnPause = 0.02; % 20 ms of pause;
+					obj.wallThickness = 0.3; %30cm of outer wall thickness
+					obj.Indoor = 1;
+				case 'maritime'
+					obj.area = Config.Terrain.area;
+					obj.coast = Config.Terrain.coast;
+					obj.seaDelta = Config.Terrain.seaDelta;
+					obj.Indoor = 0;
+				otherwise
+					obj.Logger.log(sprintf('Mobility scenario %s not supported',scenario),'ERR');
 			end
 			
 			obj.distanceMoved = obj.TimeStep * obj.movementSpeed;
-			
-			% Set indoor boolean
-			if strcmp(obj.Scenario,'pedestrian-indoor')
-				obj.Indoor = 1;
-			else
-				obj.Indoor = 0;
-			end
 		end
 		
 		function [buildingIdx, buildingSide] = getRandomBuilding(obj)
@@ -365,8 +401,7 @@ classdef Mobility < matlab.mixin.Copyable
 			building = obj.buildingFootprints(intersect(cornerXIdx, cornerYIdx),:);
 			
 			if isempty(building)
-				monsterLog('Something went wrong in finding closest building','ERR')
-				
+				obj.Logger.log('Something went wrong in finding closest building','ERR')
 			end
 			
 		end

@@ -52,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10;
+			numRounds = 100;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -65,11 +65,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Logs configuration
 			Logs = struct();
-			Logs.logToFile = 0;
+			Logs.logToFile = 0; % 0 only console | 1 only file | 2 both 
+			Logs.logInBlack = 0;
 			Logs.dateFormat = 'yyyy-mm-dd_HH.MM.SS';
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
-			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
 			obj.Logs = Logs;
 
 			% Properties related to drawing and plotting
@@ -130,7 +131,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to mobility
 			Mobility = struct();
-			Mobility.scenario = 'pedestrian';
+			Mobility.scenario = 'pedestrian'; % pedestrian | pedestrian-indoor | maritime
 			Mobility.step = 0.01;
 			Mobility.seed = 19;
 			obj.Mobility = Mobility;
@@ -140,25 +141,46 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Handover.x2Timer = 0.01;
 			obj.Handover = Handover;
 
-			% Properties related to terrain and scenario 
+			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
-			Terrain.buildingsFile = 'mobility/buildings.txt';
-			Terrain.heightRange = [20,50];
-			Terrain.buildings = load(Terrain.buildingsFile);
-			Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
-			Terrain.area = [...
-				min(Terrain.buildings(:, 1)), ...
-				min(Terrain.buildings(:, 2)), ...
-				max(Terrain.buildings(:, 3)), ...
-				max(Terrain.buildings(:, 4))];
+			Terrain.type = 'maritime'; % city | maritime
+			if strcmp(Terrain.type,'city')
+				% In the city scenario, a Manhattan city grid is generated based on a buildings file
+				Terrain.buildingsFile = 'mobility/buildings.txt';
+				Terrain.heightRange = [20,50];
+				Terrain.buildings = load(Terrain.buildingsFile);
+				Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
+				Terrain.area = [...
+					min(Terrain.buildings(:, 1)), ...
+					min(Terrain.buildings(:, 2)), ...
+					max(Terrain.buildings(:, 3)), ...
+					max(Terrain.buildings(:, 4))];
+			elseif strcmp(Terrain.type,'maritime')
+				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
+				rng(obj.Runtime.seed);
+				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
+				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
+				% Compute the coastline
+				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
+				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
+				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
+				spreadY = interp1(coastX, coastY, spreadX, 'spline');
+				Terrain.coast.coastline(:,1) = spreadX(1,:);
+				Terrain.coast.coastline(:,2) = spreadY(1,:);				
+				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
+				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
+			else
+				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
+			end
 			obj.Terrain = Terrain;
 
-			% Properties related to the traffic
+			% Properties related to the traffic 
+			% Traffic types: fullBuffer | videoStreaming | webBrowsing 
 			Traffic = struct();
-			Traffic.primary = 'videoStreaming';
+			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0.5;
-			Traffic.arrivalDistribution = 'Poisson';
+			Traffic.mix = 0;
+			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
@@ -183,7 +205,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
 			Channel.interferenceType = 'Full';
-			Channel.shadowingActive = true;
+			Channel.shadowingActive = false;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
 			Channel.losMethod = '3GPP38901-probability';
@@ -243,24 +265,23 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
 
 			% Plot
-			if SimulationPlot.runtimePlot
+			if obj.SimulationPlot.runtimePlot
 				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
 
 		end
 
-		function setupNetworkLayout(obj)
-				% Setup the layout given the config
-				%
-				% Syntax: Config.setupNetworkLayout()
-				% Parameters:
-				% :obj: (MonsterConfig) simulation config class instance
-				%	Sets:
-				% :obj.Plot.Layout: (<NetworkLayout>) network layout class instance
+		function setupNetworkLayout(obj, Logger)
+			% Setup the layout given the config
+			%
+			% :param obj: (MonsterConfig) simulation config class instance
+			%	:param Logger: MonsterLog instance
+			% :sets obj.Plot.Layout: <NetworkLayout> network layout class instance
+
 			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
 			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
-			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
+			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
 		end
 
 		function storeConfig(obj, logName)
@@ -269,7 +290,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% :obj: the MonsterConfig instance
 			% :logName: the name of the log to use, minus path and date
 			
-			fullLogName = strcat(obj.Logs.defaultLogName, logName);
+			fullLogName = strcat(obj.Logs.logFile, logName);
 			save(fullLogName, 'obj')
 		end
 		

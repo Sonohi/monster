@@ -1,14 +1,12 @@
-function Users = setupUsers (Config)
+function Users = setupUsers (Config, Logger)
 	% setupUsers - performs the necessary setup for the UEs in the simulation
 	%	
-	% Syntax: Users = setupUsers(Config)
-	% Parameters:
-	% :Config: (MonsterConfig) simulation config class instance
-	%	Returns:
-	% :Users: (Array<UserEquipment>) simulation UEs class instances
+	% :param Config: MonsterConfig simulation config class instance
+	%	:param Logger: MonsterLog instance 
+	% :returns Users: Array<UserEquipment> simulation UEs class instances
 
-	monsterLog('(SETUP - setupUsers) setting up UEs', 'NFO');
+	Logger.log('(SETUP - setupUsers) setting up UEs', 'DBG');
 	numUsers = Config.Ue.number;
-	Users = arrayfun(@(x) UserEquipment(Config, x), 1:numUsers);
+	Users = arrayfun(@(x) UserEquipment(Config, x, Logger), 1:numUsers);
 end
 	

@@ -38,11 +38,13 @@ classdef UserEquipment < matlab.mixin.Copyable
 		Seed;
 		Mobility;
 		Traffic = struct('generatorId', 1, 'startTime', 0)
+		Logger;
 	end
 	
 	methods
 		% Constructor
-		function obj = UserEquipment(Config, userId)
+		function obj = UserEquipment(Config, userId, Logger)
+			obj.Logger = Logger;
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
 			obj.ENodeBID = -1;
@@ -59,7 +61,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
+			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config, obj.Logger);
 			obj.Position = obj.Mobility.Trajectory(1,:);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
@@ -239,7 +241,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 					if state == 0
 						sqn = obj.Rlc.ArqRxBuffer.decodeSqn(obj.Rx.TransportBlock);
 						if ~isempty(sqn)
-							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime);
+							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime, obj.Logger);
 						end	
 						% Set ACK and PID information for this UE to report back to the serving eNodeB 
 						obj.Mac.HarqReport.pid = harqPidBits;
@@ -261,7 +263,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			% :returns obj: UserEquipment instance
 			%
 			
-			obj.Scheduled = struct('DL', false, 'UL', false);;
+			obj.Scheduled = struct('DL', false, 'UL', false);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];

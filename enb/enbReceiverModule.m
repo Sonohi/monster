@@ -15,6 +15,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 	methods
 		
 		function obj = enbReceiverModule(enb, Config)
+			obj.enbObj = enb;
 			switch enb.BsClass
 				case 'macro'
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
@@ -23,10 +24,9 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				case 'pico'
 					obj.NoiseFigure = Config.PicoEnb.noiseFigure;
 				otherwise
-					monsterLog(sprintf('(ENODEB RECEIVER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
+					obj.enbObj.Logger.log(sprintf('(ENODEB RECEIVER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
 			obj.ReceivedSignals = cell(Config.Ue.number,1);
-			obj.enbObj = enb;
 		end
 		
 		function createRecievedSignalStruct(obj, id)
