@@ -49,6 +49,10 @@ classdef Mobility < matlab.mixin.Copyable
 				obj.Logger.log(sprintf('Mobility scenario %s not supported',scenario),'ERR');
 			end
 			
+			if strcmp(scenario, 'pedestrian') && strcmp(Config.Terrain.type,'maritime')
+				obj.Logger.log('Combination of mobility and terrain type not supported','ERR');
+			end
+			
 			% Set arguments
 			obj.Scenario = scenario;
 			obj.Velocity = velocity;
