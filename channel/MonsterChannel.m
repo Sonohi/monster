@@ -209,7 +209,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 			end
 
-			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...');
+			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...','NFO');
 			
 			h = figure;
 			contourf(grid(1,:),grid(2,:),10*log10(max(SINR,[],3)))
@@ -305,7 +305,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 		
 		
-		function [LOS, prop] = isLinkLOS(obj, Station, User, draw, varargin)
+		function [LOS, prop] = isLinkLOS(obj, txConfig, rxConfig, draw)
 			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
 			%
 			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
@@ -322,20 +322,13 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Check if User is indoor
 			% Else use probability to determine LOS state
 			% TODO: FIX
-			if User.Mobility.Indoor
-				LOS = 0;
-				prop = NaN;
-			else
+	
 				switch obj.LOSMethod
 					case 'fresnel'
-						LOS = obj.fresnelLOScomputation(Station, User, draw);
-						prop = NaN;
+							LOS = obj.fresnelLOScomputation(txConfig, rxConfig, draw);
+							prop = NaN;
 					case '3GPP38901-probability'
-						if isempty(varargin)
-							[LOS, prop] = Monster3GPP38901.LOSprobability(obj, Station, User);
-						else
-							[LOS, prop] = Monster3GPP38901.LOSprobability(obj, Station, User, varargin{1});
-						end
+							[LOS, prop] = Monster3GPP38901.LOSprobability(obj, txConfig, rxConfig);
 					case 'NLOS'
 						LOS = 0;
 						prop = NaN;
@@ -343,11 +336,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 						LOS = 1;
 						prop = NaN;
 				end
-			end
+			
 		end
 		
 		
-		function LOS = fresnelLOScomputation(obj, Station, User, draw)
+		function LOS = fresnelLOScomputation(obj, txConfig, rxConfig, draw)
 			% fresnelLOScomputation
 			%
 			% :obj:
@@ -356,11 +349,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :draw:
 			%
 
-			txPos = Station.Position;
-			txFreq = Station.DlFreq;
-			rxPos = User.Position;
+			txPos = txConfig.position;
+			txFreq = txConfig.freq;
+			rxPos = rxConfig.positions;
 			
-			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos,rxPos);
+			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos, rxPos);
 			
 			distVec = distVec(2:end); % First is zero
 			totalDistance = distVec(end); % Meters
