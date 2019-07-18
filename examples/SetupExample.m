@@ -17,4 +17,4 @@ Logger = MonsterLog(Config);
 simulation = Monster(Config, Logger);
 
 %% Inspect Layout
-H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 10, simulation.Logger);
+H = simulation.Channel.plotSINR(simulation.Stations, simulation.Users(1), 50, simulation.Logger);

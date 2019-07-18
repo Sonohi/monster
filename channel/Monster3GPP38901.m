@@ -162,7 +162,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 
 			obj.TempSignalVariables.RxWaveform = station.Tx.Waveform; % Temp variable for BW indication
 			obj.TempSignalVariables.RxWaveformInfo = station.Tx.WaveformInfo; % Temp variable for BW indication
-			[receivedPower, receivedPowerWatt] = obj.computeLinkBudgetMatrix(station, user, 'downlink', sampleGrid);
+			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(station, user, 'downlink', sampleGrid);
 			%obj.TempSignalVariables.RxPower = receivedPower;
 			%[SNR, ~, noisePower] = obj.computeSNR();
 			%TODO: make computeSINR matrix compatible
@@ -257,7 +257,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 
 
 		
-		function [receivedPower, receivedPowerWatt] = computeLinkBudget(obj, Station, User, mode)
+		function [receivedPower, receivedPowerWatt] = computeLinkBudget(obj, Station, User, mode, varargin)
 			% Compute link budget for Tx -> Rx
 			% 
 			% :param obj:
@@ -272,136 +272,74 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% The channel is reciprocal in terms of received power, thus the path
 			% loss is extracted from channel conditions provided by
 			%
+
+			% construct a structure for handling variables
+			rxConfig = struct()
+			txConfig = struct()
+
+			% Check if the link budget is required f or a single tx -> rx, or a grid of positions
+			% TODO: add Z value (height)
+			if isempty(varargin)
+				[X, Y] = meshgrid(varargin{1}(1,:), varargin{1}(2,:));
+			else
+				X = User.Position(1);
+				Y = User.Position(2);
+			end
+
+			positions = [X Y];
+				
+			rxConfig.d2d = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:2),[x y]), X, Y);
+			rxConfig.d3d = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:3),[x y User.Position(3)]), X, Y);
+
+			
+			% TODO: fix
+			[rxConfig.LOS, prop] = obj.Channel.isLinkLOS(Station, User, false, rxConfig.d2d);
+			if ~isnan(prop)
+				rxConfig.LOS = obj.spatialLOSstate(Station, [X Y], prop);
+			end
+
 			switch mode
 				case 'downlink'
-					lossdB = obj.computePathLoss(Station, User, Station.Tx.Freq);
-					EIRPdBm = Station.Tx.getEIRPdBm(Station.Position, User.Position);
-					receivedPower = EIRPdBm-lossdB+User.Rx.getLoss(Station.Position, User.Position); %dBm
+					txConfig.hBs = Station.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Station);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
+					txConfig.freq = Station.Tx.Freq;
+
 				case 'uplink'
-					lossdB = obj.computePathLoss(Station, User, User.Tx.Freq);
-					EIRPdBm = User.Tx.getEIRPdBm;
-					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
+					txConfig.hBs = Station.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Station);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
+					txConfig.Freq = User.Tx.Freq;
+					
 			end
-			receivedPowerWatt = 10^((receivedPower-30)/10);
-		end
 
-		function [receivedPower, receivedPowerWatt] = computeLinkBudgetMatrix(obj, Station, User, mode, sampleGrid)
-			% computeLinkBudgetMatrix
-			%
-			% :param obj:
-			% :param Station:
-			% :param User:
-			% :param mode:
-			% :param sampleGrid:
-			% :returns receivedPower:
-			% :returns receivedPowerWatt:
-			% 
-			% Matrix edition: Create 2d an 3d distances from sampleGrid.
-			% TODO: reformat this function to work with computeLinkBudget
-			
+			shadowing = obj.Channel.enableShadowing;
+			if shadowing
+				%find XCorr for each position
+				rxConfig.xCorr = arrayfun(@(x,y,z) obj.computeShadowingLoss(TxNode, [x y], z), reshape(positions(:,1),size(LOS)), reshape(positions(:,2),size(LOS)), LOS );
+			else 
+				rxConfig.xCorr = 0;
+			end
 
-			
-			[X, Y] = meshgrid(sampleGrid(1,:), sampleGrid(2,:));
-			d2 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:2),[x y]), X, Y);
-			d3 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:3),[x y User.Position(3)]), X, Y);
 			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), X, Y);
 			DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Station.Position, [x y]), X, Y);
+			lossdBm = obj.computePathLoss(txConfig, rxConfig);
+
 
 			switch mode
 				case 'downlink'
-					lossdB = obj.computePathLossMatrix(Station, User, Station.Tx.Freq, d2, d3);
-					%EIRPdBm = Station.Tx.getEIRPdBm(Station.Position, User.Position);
-					%TODO: make Station.Tx.getEIRPdBm produce matrix output instead of work around
-					%Work around found above in double for loop
-
-					receivedPower = EIRPdBm-lossdB-DownlinkUeLoss; %dBm
+					receivedPower = EIRPdBm-lossdB+DownlinkUeLoss; %dBm
 				case 'uplink'
-					lossdB = obj.computePathLossMatrix(Station, User, User.Tx.Freq, d2, d3);
-					
 					EIRPdBm = User.Tx.getEIRPdBm;
-					
 					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
 			end
+
 			receivedPowerWatt = 10^((receivedPower-30)./10);
 		end
 		
 
-		function [lossdB] = computePathLossMatrix(obj,TxNode, RxNode, Freq, d2, d3)
-			% computePathLossMatrix
-			%
-			% :param obj:
-			% :param TxNode:
-			% :param RxNode:
-			% :param Freq: 
-			% :param d2:
-			% :param d3:
-			% :returns lossdB:
-			%
-			% TODO: refactorize the functionality of this with computePathLoss
-			f = Freq/10e2; % Frequency in GHz
-			hBs = TxNode.Position(3);
-			hUt = RxNode.Position(3);
 
-			areatype = obj.Channel.getAreaType(TxNode);
-			
-			shadowing = obj.Channel.enableShadowing;
-			% Check whether we have buildings in the scenario
-			if ~isempty(obj.Channel.BuildingFootprints)
-				avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
-				avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
-			else
-				avgBuilding = 0;
-				avgStreetWidth = 0;
-			end
-
-			[LOS, prop] = obj.Channel.isLinkLOSMatrix(TxNode, RxNode, false, d2);
-			%TODO make LOS function work for spatialLOSstate
-			%if ~isnan(prop)
-				% LOS state is determined by comparing with spatial map of
-				% random variables, if the probability of determining LOS
-				% is used.
-				%LOS = obj.spatialLOSstate(TxNode, RxNode.Position, prop);
-			%end
-
-			try
-				lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-				catch ME
-					if strcmp(ME.identifier,'Pathloss3GPP:Range')
-						d2(d2<10) = 10;
-						lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-					else
-						obj.Channel.Logger.log('A pathloss calculation failed','ERR')
-					end
-			end
-
-			%TODO: make this part matrix compatible
-			% if RxNode.Mobility.Indoor
-			% 	% Low loss model consists of LOS
-			% 	materials = {'StandardGlass', 'Concrete'; 0.3, 0.7};
-			% 	sigma_P = 4.4;
-				
-			% 	% High loss model consists of
-			% 	%materials = {'IIRGlass', 'Concrete'; 0.7, 0.3}
-			% 	%sigma_P = 6.5;
-				
-			% 	PL_tw = buildingloss3gpp38901(materials, f);
-				
-			% 	% If indoor depth can be computed
-			% 	%PL_in = indoorloss3gpp38901('', 2d_in);
-			% 	% Otherwise sample from uniform
-			% 	PL_in  = indoorloss3gpp38901(areatype);
-			% 	indoorLosses = PL_tw + PL_in + randn(1, 1)*sigma_P;
-			% 	lossdB = lossdB + indoorLosses;
-			% end
-			
-			%TODO: make computeShadowingLoss compatible with matrices.
-			%if shadowing
-			%	XCorr = obj.computeShadowingLoss(TxNode, RxNode.Position, LOS);
-			%	lossdB = lossdB + XCorr;
-			%end
-		end
-		
-		function [lossdB] = computePathLoss(obj, TxNode, RxNode, Freq)
+		function [lossdB] = computePathLoss(obj, txConfig, rxConfig)
 			% Computes path loss. uses the following parameters
 			% TODO revise function documentation format
 			% ..todo:: Compute indoor depth from mobility class
@@ -415,23 +353,26 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% * `shadowing` - Boolean for enabling/disabling shadowing using log-normal distribution
 			% * `avgBuilding` - Average height of buildings
 			% * `avgStreetWidth` - Average width of the streets
-			f = Freq/10e2; % Frequency in GHz
-			hBs = TxNode.Position(3);
-			hUt = RxNode.Position(3);
-			distance2d =  obj.Channel.getDistance(TxNode.Position(1:2),RxNode.Position(1:2));
-			distance3d = obj.Channel.getDistance(TxNode.Position,RxNode.Position);
+			% * `varargin` -matrix forms of distance 2D, 3D and grid of positions 
 			
-			areatype = obj.Channel.getAreaType(TxNode);
-			seed = obj.Channel.getLinkSeed(RxNode, TxNode);
-			[LOS, prop] = obj.Channel.isLinkLOS(TxNode, RxNode, false );
-			if ~isnan(prop)
-				% LOS state is determined by comparing with spatial map of
-				% random variables, if the probability of determining LOS
-				% is used.
-				LOS = obj.spatialLOSstate(TxNode, RxNode.Position, prop);
-			end
+			% Extract transmitter configurations. All scalar values.
+			hBs = txConfig.hBs;
+			freq = txConfig.freq;
+			areaType = txConfig.areaType;
 			
-			shadowing = obj.Channel.enableShadowing;
+			% Extract receiver configuration, can be arrays.
+			hUt = rxConfig.hUt;
+			distance2d = rxConfig.d2d;
+			distance3d = rxConfig.d3d;
+			LOS = rxConfig.LOS;
+			LOSprop = rxConfig.LOSprop;
+			xCorr = rxConfig.shadowingLoss; 
+
+			assert(length(hUt) == length(distance2d))
+			assert(length(hUt) == length(distance3d))
+			assert(length(hUt) == length(LOS))
+			
+			
 			% Check whether we have buildings in the scenario
 			if ~isempty(obj.Channel.BuildingFootprints)
 				avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
@@ -468,11 +409,9 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				indoorLosses = PL_tw + PL_in + randn(1, 1)*sigma_P;
 				lossdB = lossdB + indoorLosses;
 			end
-		
-			if shadowing
-				XCorr = obj.computeShadowingLoss(TxNode, RxNode.Position, LOS);
-				lossdB = lossdB + XCorr;
-			end			
+			
+			% Add possible shadowing loss
+			lossdB = lossdB + xCorr;
 		end
 		
 
@@ -758,36 +697,20 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			config = obj.findStationConfig(station);
 			map = config.SpatialMaps.LOSprop;
 			axisXY = config.SpatialMaps.axisLOSprop;
-			LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
-			if LOSrealize < LOSprop
-				LOS = 1;
-			else
-				LOS = 0;
-			end
-			
-		end
-
-		function LOS = spatialLOSstateMatrix(obj, station, userPosition, LOSprop)
-			% Determine spatial LOS state by realizing random variable from
-			% spatial correlated map and comparing to LOS probability. Done
-			% according to 7.6.3.3
-			%
-			% :param obj:
-			% :param station:
-			% :param userPosition:
-			% :param LOSprop:
-			% :returns LOS:
-			%
-
-			config = obj.findStationConfig(station);
-			map = config.SpatialMaps.LOSprop;
-			axisXY = config.SpatialMaps.axisLOSprop;
-			LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
-			if LOSrealize < LOSprop
-				LOS = 1;
-			else
-				LOS = 0;
-			end
+            if length(LOSprop) >1
+                LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(:,1), userPosition(:,2), 'spline');
+                LOSrealize = reshape(LOSrealize, size(LOSprop));
+            else
+                LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+            end
+			LOS = LOSprop;
+            LOS(LOSprop > LOSrealize) = 1;
+            LOS(LOSprop < LOSrealize) = 0;
+            %if LOSrealize < LOSprop
+			%	LOS = 1;
+			%else
+			%	LOS = 0;
+			%end
 			
 		end
 		
@@ -815,6 +738,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			obj.checkInterpolationRange(axisXY, userPosition, obj.Channel.Logger);
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+
+
 		end
 
 
@@ -877,7 +802,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 		end
 		
-		function [LOS, varargout] = LOSprobability(Channel, Station, User)
+		function [LOS, varargout] = LOSprobability(Channel, Station, User, varargin)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			%
 			% :param Channel:
@@ -888,71 +813,11 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			%
 
 			areaType = Channel.getAreaType(Station);
-			dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
-			
-			% TODO: make this a simplified function 
-			switch areaType
-				case 'RMa'
-					if dist2d <= 10
-						prop = 1;
-					else
-						prop = exp(-1*((dist2d-10)/1000));
-					end
-					
-				case 'UMi'
-					if dist2d <= 18
-						prop = 1;
-					else
-						prop = 18/dist2d + exp(-1*((dist2d)/36))*(1-(18/dist2d));
-					end
-					
-				case 'UMa'
-					if dist2d <= 18
-						prop = 1;
-					else
-						if User.Position(3) <= 13
-							C = 0;
-						elseif (User.Position(3) > 13) && (User.Position(3) <= 23)
-							C = ((User.Position(3)-13)/10)^(1.5);
-						else
-							Channel.Logger.log('Error in computing LOS. Height out of range','ERR');
-						end
-						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
-					end
-					
-				otherwise
-					Channel.Logger.log(sprintf('(Monster3GPP38901 - LOSprobability) AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
-			end
-			
-			x = rand;
-			if x > prop
-				LOS = 0;
+			if isempty(varargin)
+				dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
 			else
-				LOS = 1;
+				dist2d = varargin{1, 1};
 			end
-			
-			
-			if nargout > 1
-				varargout{1} = prop;
-				varargout{2} = x;
-				varargout{3} = dist2d;
-			end
-		end
-		
-		function [LOS, varargout] = LOSprobabilityMatrix(Channel, Station, User, dist2d)
-			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
-			%
-			% :param Channel:
-			% :param Station:
-			% :param User:
-			% :param dist2d:
-			% :returns LOS: 
-			% :returns varargout:
-			%
-
-			areaType = Channel.getAreaType(Station);
-			%dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
-			
 			% TODO: make this a simplified function 
 			switch areaType
 				case 'RMa'
@@ -976,6 +841,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					prop = dist2d;
 					prop(prop<=18)=1;
 					prop(prop~=1)=18./prop(prop~=1)+ exp(-1*((prop(prop~=1))/36)).*(1-(18./prop(prop~=1)));
+					
 					
 				case 'UMa'
 					%if dist2d <= 18
@@ -1002,9 +868,9 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					
 				otherwise
 					Channel.Logger.log(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
-					
 			end
 			
+			%x = rand;
 			x = rand(length(prop(:,1)),length(prop(1,:)));
 			if x > prop
 				LOS = 0;
@@ -1016,12 +882,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			LOS(x>LOS) = 0;
 			LOS(LOS~= 0) =1;
 			
-			
 			if nargout > 1
 				varargout{1} = prop;
 				varargout{2} = x;
 				varargout{3} = dist2d;
 			end
 		end
+		
+		
 	end
 end
