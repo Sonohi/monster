@@ -121,8 +121,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% TODO: Move this to TransmitterModule?
 			% Function computes transmission power based on NDLRB
 			% Return power per subcarrier. (OFDM symbol)
-			total_power = obj.Pmax;
-			TxPw = total_power/(12*obj.NDLRB);
+			totalPower = obj.Pmax;
+			TxPw = totalPower/(12*obj.NDLRB);
 		end
 		
 		% reset users
@@ -179,8 +179,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Optional: returns list of MCS
 			idxUE = obj.getPRBSetDL(ue);
 			listMCS = [obj.ScheduleDL(idxUE).Mcs];
-            minMCS = min(listMCS);
-            varargout{1} = listMCS;
+			minMCS = min(listMCS);
+			varargout{1} = listMCS;
 		end
 		
 		function mod = getModulationDL(obj, ue)
@@ -349,7 +349,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.PowerState = 1;
 				obj.HystCount = 0;
 				obj.SwitchCount = 0;
-				
 			end
 		end
 		

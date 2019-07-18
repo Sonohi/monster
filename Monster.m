@@ -3,14 +3,14 @@ classdef Monster < matlab.mixin.Copyable
 	% An instance of the class Monster has the following properties
 	% 
 	% :Config: (MonsterConfig) simulation config class instance
-	% :Stations: (Array<EvolvedNodeB>) simulation eNodeBs class instances
+	% :Sites: (Array<Site>) simulation cell sites class instances
 	% :Users: (Array<UserEquipment>) simulation UEs class instances
 	% :Channel: (Channel) simulation channel class instance
 	% :Traffic: (TrafficGenerator) simulation traffic generator class instance
 
 	properties 
 		Config;
-		Stations;
+		Sites;
 		Users;
 		Channel;
 		Traffic;
@@ -52,7 +52,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Setup eNodeBs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation eNodeBs', 'DBG');
-			Stations = setupStations(obj.Config, obj.Logger);
+			Sites = setupSites(obj.Config, obj.Logger);
 
 			% Setup UEs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation UEs', 'DBG');

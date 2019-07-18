@@ -2,15 +2,17 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	%This is the class defining the layout for macro cells
 	
 	properties
-		Center;             %Center of the target area
-		MacroCoordinates;   %Center of each macro cell
-		Cells;              %Cell array containing all macro cell obj
-		ISD;             %The ISD of macrocells
-		NumMacro;                %The number of macro cells
-		NumMicro;
-		NumPico;
-		MicroCoordinates;    %Coordinates of the micro BST, placed on the middle of the edges of the cell border
-		PicoCoordinates;
+		Center;             	% Center of the target area
+		ISD;             			% The ISD of macrocells
+		NumMacroSites;				% Number of macro sites
+		MacroCellsPerSite;		% Number of macro cells per site
+		MacroCoordinates;   	% Center of each macro site
+		MacroCells;	        	% Cell array containing all macro cell obj
+		MicroPosPerMacroCell;	% NUmber of available micro sites position per macro cell
+		NumMicroSites;				% Number of micro sites
+		MicroCellsPerSite;		% Number of micro cells per site
+		MicroCoordinates;   	% Coordinates of the micro sites, placed on the middle of the edges of the cell border
+		MicroCells;	        	% Cell array containing all micro cell obj
 		Scenario;
 		Logger;
 	end
@@ -22,13 +24,13 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.Center = [xc yc];
 			obj.Logger = Logger;
 			obj.ISD = Config.MacroEnb.ISD;
-			obj.NumMacro = Config.MacroEnb.number;
+			obj.MicroPosPerMacroCell = 3; % from ITU-RM2412-0 scenario 8.3.2
+			obj.NumMacroSites = Config.MacroEnb.sitesNumber;
+			obj.MacroCellsPerSite = Config.MacroEnb.cellsPerSite;
 			obj.computeMacroCoordinates(Config, obj.Logger);
-			obj.generateCells(Config);
-			obj.findMicroCoordinates(Config, obj.Logger);
-			obj.findPicoCoordinates(Config);
-			obj.NumMicro = length(obj.MicroCoordinates(:,1));
-			obj.NumPico = length(obj.PicoCoordinates(:,1));
+			obj.NumMicroSites = length(obj.MicroCoordinates(:,1));
+			obj.MicroCellsPerSite = Config.MicroEnb.cellsPerSite;
+			obj.generateCells(Config);		
 		end
 		
 		function drawScenario(obj, Config)
@@ -63,7 +65,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			end
 			
 			%Draw macros
-			for i=1:obj.NumMacro
+			for i=1:obj.NumMacroSites
 				xc = obj.Cells{i}.Center(1);
 				yc = obj.Cells{i}.Center(2);
 				text(Config.Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
@@ -220,7 +222,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	methods (Access = private)
 		
 		function obj = computeMacroCoordinates(obj, Config, Logger)
-			centers = zeros(obj.NumMacro,2);
+			centers = zeros(obj.NumMacroSites,2);
 			if strcmp(Config.Terrain.type,'city')
 				%Computes the center coordinates by walking in hexagons around the center
 				steps = 1;
@@ -233,12 +235,12 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				stepTrack = 0;
 				%Two first coordinates are "special" cases and are done seperately.
 				centers(1,:) = obj.Center;
-				if obj.NumMacro > 1
+				if obj.NumMacroSites > 1
 					centers(2,1) = obj.Center(1,1)+obj.ISD*cos(rho);
 					centers(2,2) = obj.Center(1,2)+obj.ISD*sin(rho);
 				end
 				%Rest of the coordinates follow the same pattern, but when going out one "ring" a special action are carried out.
-				for i=3:obj.NumMacro
+				for i=3:obj.NumMacroSites
 					if special
 						%Perform special action
 						centers(i,1) = centers(i-1,1) + obj.ISD*cos(theta+rho);
@@ -292,8 +294,8 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				maxY = Config.Terrain.area(4) - Config.Terrain.inlandDelta(2);
 				minX = Config.Terrain.area(1) + Config.Terrain.inlandDelta(1);
 				maxX = Config.Terrain.area(3) - Config.Terrain.inlandDelta(1);
-				macroX = linspace(minX, maxX, obj.NumMacro);
-				macroY = randi([round(minY), round(minY + (maxY-minY)/3)], obj.NumMacro, 1);
+				macroX = linspace(minX, maxX, obj.NumMacroSites);
+				macroY = randi([round(minY), round(minY + (maxY-minY)/3)], obj.NumMacroSites, 1);
 				centers(:,1) = macroX';
 				centers(:,2) = macroY';
 			else
@@ -303,49 +305,49 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.MacroCoordinates = centers;
 		end
 
-		%Generate Macrocell objects from MacroCoordinates
+		% Generate the cells instances used to provide positioning info
 		function obj = generateCells(obj,Config)
-			cells = cell(obj.NumMacro,1);
-			for i=1:obj.NumMacro
-				cells(i)={MacroCell(obj.MacroCoordinates(i,1),obj.MacroCoordinates(i,2),Config,i, obj.Logger)};
-			end
-			obj.Cells = cells;
-		end
-		
-		%Find the coordinates of all microcells in all macrocells
-		function obj = findMicroCoordinates(obj,Config, Logger)
-			
-			microCenters = zeros(Config.MicroEnb.number,2);
-			iMicro = 1;
-			iMacro = 1;
-			while iMicro <= Config.MicroEnb.number && iMacro <= obj.NumMacro
-				for i=1:9 %up to 9 positions per macro site
-					%Find the micro stations that are actually set up, e.i. more than 9 micro stations pr macro site is not supported
-					if iMicro <= Config.MicroEnb.number
-						microCenters(iMicro,:) = obj.Cells{iMacro}.MicroPos(i,:);
-						iMicro = iMicro +1 ;
+			% Initialise data structures for storing cell instances
+			macroCells = cell(obj.NumMacroSites * obj.MacroCellsPerSite,1);
+			microCells = cell(obj.NumMacroSites*obj.MacroCellsPerSite*obj.MicroPosPerMacroCell*obj.MicroCellsPerSite, 1);
+			macroCount = 0;
+			microCount = 0;
+			for iMacroSite = 1:obj.NumMacroSites
+				macroSiteCentre = [obj.MacroCoordinates(iSite, 1), obj.MacroCoordinates(iSite, 2)];
+				macroCellsIds = 3*iMacroSite + [1:obj.MacroCellsPerSite];
+				macroCellsCentres = calculateCellCentres(macroSiteCentre, obj.MacroCellsPerSite, Config.MacroEnb.ISD);
+				for iMacroCell = 1: obj.MacroCellsPerSite
+					macroCount = macroCount + 1;
+					macroCells(macroCount) = {MacroCell(macroCellsCentres(iCell), macroCellsIds(iMacroCell), obj.MicroPosPerMacroCell, Config, obj.Logger)};
+					% At this point the macro cell instance includes also the available positions for the centres of the micro sites
+					microSitesCentres = macroCells(macroCount).MicroCoordinates;
+					% Now generate the micro cells for each micro site
+					for iMicroSite = 1:length(microSitesCentres)
+						% Generate IDs for the micro cells of this micro site
+						microSiteCentre = [microSitesCentres(iMicroSite, 1), microSitesCentres(iMicroSite, 2)];
+						microCellsIds = 3*macroCellsIds(iMacroCell) + [1:obj.MicroCellsPerSite];
+						microCellsCentres = calculateCellCentres(microSiteCentre, obj.MicroCellsPerSite, Config.MicroEnb.ISD);
+						for iMicroCell = 1:obj.MicroCellsPerSite
+							microCount = microCount + 1;
+							microCells(microCount) = {MicroCell(microCellsCentres(iMicroCell), microCellsIds(iMicroCell), Config, obj.Logger)};
+						end
 					end
 				end
-				iMacro = iMacro +1;
 			end
-			%informs if microstations were unable to be placed
-			if iMicro-1 < Config.MicroEnb.number
-				Logger.log(strcat('Cannot place the last  ', num2str(Config.MicroEnb.number-(iMicro-1)),' micro BST.'));
-			end
-			obj.MicroCoordinates = microCenters(1:iMicro-1,:);
+			obj.MacroCells = macroCells;
+			obj.MicroCells = microCells;
 		end
-		
-		%Find the coordinates of all picocells in all macrocells
-		function obj = findPicoCoordinates(obj,Config)
-			
-			picoCenters = zeros(Config.PicoEnb.number,2);
-			iPico = 1;
-			for i=1:obj.NumMacro
-				nPico = length(obj.Cells{i}.PicoPos(:,1));
-				picoCenters(iPico:iPico+nPico-1,:) = obj.Cells{i}.PicoPos;
-				iPico = iPico+ nPico;
+
+		% Calculates the position of the cell centres for groups of cells of the same site
+		function cellsCentres = calculateCellCentres(siteCentre, numCells, ISD)
+			% Divide the circumference angle around the centre based on the number of cells
+			theta = 2*pi/numCells;
+			% The average cell radius is calculated dividing the ISD by the number of cells
+			cellRadius = ISD/numCells;
+			for iCell = 1:numCells
+				cellsCentres(iCell, 1) = siteCentre(1) + cellRadius * cos((iCell-1)*theta);
+				cellsCentres(iCell, 2) = siteCentre(2) + cellRadius * sin((iCell-1)*theta); 
 			end
-			obj.PicoCoordinates = picoCenters(1:iPico-1,:);
 		end
 		
 	end

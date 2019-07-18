@@ -84,7 +84,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.number = 1;
+			MacroEnb.sitesNumber = 1;
+			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -96,7 +97,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.sitesNumber = 1;
+			MicroEnb.cellsPerSite = 1;
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
@@ -106,18 +108,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.antennaType = 'omni';
 			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
-
-			PicoEnb = struct();
-			PicoEnb.number = 1;
-			PicoEnb.numPRBs = 6;
-			PicoEnb.height = 5;
-			PicoEnb.positioning = 'uniform';
-			PicoEnb.ISD = 200;
-			PicoEnb.noiseFigure = 7;
-			PicoEnb.antennaGain = 0;
-			PicoEnb.antennaType = 'omni';
-			PicoEnb.Pmax =  0.13; %W
-			obj.PicoEnb = PicoEnb;
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
