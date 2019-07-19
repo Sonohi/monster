@@ -48,7 +48,7 @@ function [numPoints,distVec,elavationProfile] = getElevationProfile(BuildingFoot
 						break;
 					else
 						% Check if we're inside a building
-						fbuildings_x = obj.BuildingFootprints(obj.BuildingFootprints(:,1) < position(1,i) & obj.BuildingFootprints(:,3) > position(1,i),:);
+						fbuildings_x = BuildingFootprints(BuildingFootprints(:,1) < position(1,i) & BuildingFootprints(:,3) > position(1,i),:);
 						fbuildings_y = fbuildings_x(fbuildings_x(:,2) < position(2,i) & fbuildings_x(:,4) > position(2,i),:);
 						
 						if ~isempty(fbuildings_y)

@@ -182,6 +182,27 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 		end
 
+		function h = plotPower(obj, Stations, User, resolution, Logger)
+			[receivedPower, grid] = obj.signalPowerMap(Stations, User, resolution);
+			%receivedPowerWatts = 10.^((receivedPower-30)./10);
+
+			
+			Logger.log('(MONSTER CHANNEL - plotPower) Computing Power map...','NFO');
+			
+			h = figure;
+			contourf(grid(1,:),grid(2,:),max(receivedPower,[],3))
+			c = colorbar();
+			c.Label.String = 'Power [dBm]';
+			xlabel('X [meters]')
+			ylabel('Y [meters]')
+			hold on
+			for iStation = 1:length(Stations)
+				plot(Stations(iStation).Position(1), Stations(iStation).Position(2), 'o', 'MarkerSize', 5, 'MarkerFaceColor', 'r')
+			end
+
+
+		end
+
 		
 		function h = plotSINR(obj, Stations, User, resolution, Logger)
 			% plotSINR
@@ -328,7 +349,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 							LOS = obj.fresnelLOScomputation(txConfig, rxConfig, draw);
 							prop = NaN;
 					case '3GPP38901-probability'
-							[LOS, prop] = Monster3GPP38901.LOSprobability(obj, txConfig, rxConfig);
+							[LOS, prop] = Monster3GPP38901.LOSprobability(txConfig, rxConfig);
 					case 'NLOS'
 						LOS = 0;
 						prop = NaN;

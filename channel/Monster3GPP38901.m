@@ -255,9 +255,67 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 			
 		end
-		
-		
-		
+
+		function [txConfig, userConfig] = getLinkParameters(obj, Station, User, mode, varargin)
+			% Function acts like a wrapper between lower layer physical computations (usually matrix operations) and the Monster API of Station and User objects
+			% construct a structure for handling variables
+			%
+			% :param Station: Station object
+			% :param User: User object
+			% :param mode: 'downlink' or 'uplink' % Currently only difference is frequency
+			% :param varargin: (optional) 2xN array of positions for which the link budget is wanted.
+			userConfig = struct();
+			txConfig = struct();
+			
+			txConfig.position = Station.Position;
+
+			if ~isempty(varargin{1})
+				[X, Y] = meshgrid(varargin{1}{1}(1,:), varargin{1}{1}(2,:));
+				Z = User.Position(3)*ones(length(X),length(Y));
+			else
+				X = User.Position(1);
+				Y = User.Position(2);
+				Z = User.Position(3);
+			end
+			userConfig.positions = [reshape(X,[],1)  reshape(Y,[],1) reshape(Z,[],1)];
+			
+			userConfig.Indoor = User.Mobility.Indoor;
+						
+			userConfig.d2d = arrayfun(@(x, y) obj.Channel.getDistance(Station.Position(1:2),[x y]), userConfig.positions(:,1), userConfig.positions(:,2));
+			userConfig.d3d = arrayfun(@(x, y, z) obj.Channel.getDistance(Station.Position(1:3),[x y z]), userConfig.positions(:,1), userConfig.positions(:,2), userConfig.positions(:,3));
+			switch mode
+				case 'downlink'
+					txConfig.hBs = Station.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Station);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
+					txConfig.freq = Station.Tx.Freq;
+					userConfig.hUt = User.Position(3);
+					
+					
+				case 'uplink'
+					txConfig.hBs = Station.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Station);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
+					txConfig.freq = User.Tx.Freq;
+					userConfig.hUt = User.Position(3);
+			end
+
+		end
+	
+
+		function [userConfig] = computeLOS(obj, Station, txConfig, userConfig)
+
+			if userConfig.Indoor
+				userConfig.LOS = 0;
+				userConfig.LOSprop = NaN;
+			else
+				[userConfig.LOS, userConfig.LOSprop] = obj.Channel.isLinkLOS(txConfig, userConfig, false);
+				if ~isnan(userConfig.LOSprop) % If a probablistic LOS model is used, the LOS state needs to be realized with spatial consistency
+					userConfig.LOS = obj.spatialLOSstate(Station, userConfig.positions(:,1:2), userConfig.LOSprop);
+				end
+			end
+		end
+
 		function [receivedPower, receivedPowerWatt] = computeLinkBudget(obj, Station, User, mode, varargin)
 			% Compute link budget for Tx -> Rx
 			%
@@ -274,94 +332,44 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% loss is extracted from channel conditions provided by
 			%
 			
-			% construct a structure for handling variables
-			rxConfig = struct();
-			txConfig = struct();
+
+			[txConfig, userConfig] = obj.getLinkParameters(Station, User, mode, varargin);
 			
-			txConfig.position = Station.Position;
-			
-			% Check if the link budget is required f or a single tx -> rx, or a grid of positions
-			if ~isempty(varargin)
-				[X, Y] = meshgrid(varargin{1}(1,:), varargin{1}(2,:));
-				
-				Z = User.Position(3)*ones(length(X),length(Y));
-				
-			else
-				X = User.Position(1);
-				Y = User.Position(2);
-				Z = User.Position(3);
-				
-			end
-			
-			rxConfig.positions = [reshape(X,[],1)  reshape(Y,[],1) reshape(Z,[],1)];
-			
-			rxConfig.d2d = arrayfun(@(x, y) obj.Channel.getDistance(Station.Position(1:2),[x y]), rxConfig.positions(:,1), rxConfig.positions(:,2));
-			rxConfig.d3d = arrayfun(@(x, y, z) obj.Channel.getDistance(Station.Position(1:3),[x y z]), rxConfig.positions(:,1), rxConfig.positions(:,2), rxConfig.positions(:,3));
-			switch mode
-				case 'downlink'
-					txConfig.hBs = Station.Position(3);
-					txConfig.areaType = obj.Channel.getAreaType(Station);
-					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
-					txConfig.freq = Station.Tx.Freq;
-					rxConfig.hUt = User.Position(3);
-					
-					
-				case 'uplink'
-					txConfig.hBs = Station.Position(3);
-					txConfig.areaType = obj.Channel.getAreaType(Station);
-					txConfig.seed = obj.Channel.getLinkSeed(User, Station);
-					txConfig.freq = User.Tx.Freq;
-					rxConfig.hUt = User.Position(3);
-			end
-			
-			
-			if User.Mobility.Indoor
-				rxConfig.LOS = 0;
-				rxConfig.LOSprop = NaN;
-			else
-				[rxConfig.LOS, rxConfig.LOSprop] = obj.Channel.isLinkLOS(txConfig, rxConfig, false);
-				if ~isnan(rxConfig.LOSprop)
-					rxConfig.LOS = obj.spatialLOSstate(Station, rxConfig.positions(:,1:2), rxConfig.LOSprop);
-				end
-			end
-			
-			
-			
+			userConfig = obj.computeLOS(Station, txConfig, userConfig);
+		
 			if obj.Channel.enableShadowing
-				%find XCorr for each position
-				xCorr = arrayfun(@(x,y,z) obj.computeShadowingLoss(Station, [x y], z), reshape(rxConfig.positions(:,1),size(rxConfig.LOS)), reshape(rxConfig.positions(:,2),size(rxConfig.LOS)), rxConfig.LOS );
+				xCorr = arrayfun(@(x,y,z) obj.computeShadowingLoss(Station, [x y], z), reshape(userConfig.positions(:,1),size(userConfig.LOS)), reshape(userConfig.positions(:,2),size(userConfig.LOS)), userConfig.LOS );
 			else
 				xCorr = 0;
 			end
-			
-			
-			if User.Mobility.Indoor
-				indoorLoss = obj.computeIndoorLoss(txConfig, rxConfig);
+
+			if userConfig.Indoor
+				indoorLoss = obj.computeIndoorLoss(txConfig, userConfig);
 			else
 				indoorLoss = 0;
 			end
+
 			
-			
-			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), rxConfig.positions(:,1), rxConfig.positions(:,2));
-			DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Station.Position, [x y]), rxConfig.positions(:,1), rxConfig.positions(:,2));
-			lossdB = obj.computePathLoss(txConfig, rxConfig);
+			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), userConfig.positions(:,1), userConfig.positions(:,2));
+			lossdB = obj.computePathLoss(txConfig, userConfig);
 			
 			% Add possible shadowing loss and indoor loss
 			lossdB = lossdB + xCorr + indoorLoss;
 			
 			switch mode
 				case 'downlink'
+					DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Station.Position, [x y]), userConfig.positions(:,1), userConfig.positions(:,2));
 					receivedPower = EIRPdBm-lossdB+DownlinkUeLoss; %dBm
 				case 'uplink'
 					EIRPdBm = User.Tx.getEIRPdBm;
-					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
+					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm 
 			end
 			
 			receivedPowerWatt = 10.^((receivedPower-30)./10);
 		end
 		
 		
-		function [indoorLoss] = computeIndoorLoss(txConfig, rxConfig)
+		function [indoorLoss] = computeIndoorLoss(txConfig, userConfig)
 			
 			% Low loss model consists of LOS
 			materials = {'StandardGlass', 'Concrete'; 0.3, 0.7};
@@ -376,13 +384,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% If indoor depth can be computed
 			%PL_in = indoorloss3gpp38901('', 2d_in);
 			% Otherwise sample from uniform
-			PL_in  = indoorloss3gpp38901(rxConfig.areaType);
+			PL_in  = indoorloss3gpp38901(userConfig.areaType);
 			indoorLoss = PL_tw + PL_in + randn(1, 1)*sigma_P;
 			
 			
 		end
 		
-		function [lossdB] = computePathLoss(obj, txConfig, rxConfig)
+		function [lossdB] = computePathLoss(obj, txConfig, userConfig)
 			% Computes path loss. uses the following parameters
 			% TODO revise function documentation format
 			% ..todo:: Compute indoor depth from mobility class
@@ -404,10 +412,10 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			areaType = txConfig.areaType;
 			
 			% Extract receiver configuration, can be arrays.
-			hUt = rxConfig.hUt;
-			distance2d = rxConfig.d2d;
-			distance3d = rxConfig.d3d;
-			LOS = rxConfig.LOS;
+			hUt = userConfig.hUt;
+			distance2d = userConfig.d2d;
+			distance3d = userConfig.d3d;
+			LOS = userConfig.LOS;
 			
 			% Check whether we have buildings in the scenario
 			if ~isempty(obj.Channel.BuildingFootprints)
@@ -817,64 +825,18 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 		end
 		
-		function [LOS, prop] = LOSprobability(Channel, txConfig, rxConfig)
+		function [LOS, prop] = LOSprobability(txConfig, userConfig)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			%
-			% :param Channel:
-			% :param Station:
-			% :param User:
-			% :returns LOS:
-			% :returns varargout:
+			% :param txConfig:
+			% :param userConfig:
+			% :returns LOS: LOS boolean
+			% :returns prop: Probability
 			%
-			prop = zeros(size(rxConfig.d2d));
+			prop = losProb3gpp38901(txConfig.areaType, userConfig.d2d, userConfig.hUt);
 			
-			switch txConfig.areaType
-				case 'RMa'
-					% If the user is less than 18 meters away, set the probability to
-					% 100%
-					leq_10_m = (rxConfig.d2d <=10);
-					gt_10_m =  (rxConfig.d2d >10);
-					prop(leq_10_m)=1;
-					prop(gt_10_m)= exp(-1*((rxConfig.d2d(gt_10_m)-10)/1000));
-					
-				case 'UMi'
-					% If the user is less than 18 meters away, set the probability to
-					% 100%
-					leq_18_m = (rxConfig.d2d<=18);
-					gt_18_m = (rxConfig.d2d>18);
-					prop(leq_18_m)=1;
-					
-					% Else, base it on distance
-					prop(gt_18_m)=18./rxConfig.d2d(gt_18_m)+ exp(-1*((rxConfig.d2d(gt_18_m))/36)).*(1-(18./rxConfig.d2d(gt_18_m)));
-					
-					
-				case 'UMa'
-					if rxConfig.hUt >23
-						Channel.Logger.log('Error in computing LOS. Height out of range','ERR');
-					end
-					
-					% If the user is less than 18 meters away, set the probability to 100%
-					leq_18_m = (rxConfig.d2d<=18); % Logical indexer
-					prop(leq_18_m)=1;
-					
-					% If the user height is below or equal to 13 meters
-					leq_13_m = (prop~=1 & rxConfig.positions(:,3) <= 13); % Logical indexer
-					prop(leq_13_m) = (18./rxConfig.d2d(leq_13_m) + exp(-1*((rxConfig.d2d(leq_13_m))/63)).*(1-(18./rxConfig.d2d(leq_13_m))));
-					
-					% If the user position is between 13 and 23 meters
-					leq_13_leq_23 = (prop~=1 & rxConfig.positions(:,3) > 13 & rxConfig.positions(:,3) <= 23); % Logical indexer
-					if any(any(leq_13_leq_23))
-						A = (18./rxConfig.d2d(leq_13_leq_23) + exp(-1*((rxConfig.d2d(leq_13_leq_23))/63)).*(1-(18./rxConfig.d2d(leq_13_leq_23)))); % First part of the equation [] square brackets
-						B = (1+((rxConfig.positions(:,3)-13)/10).^(1.5)*(5/4)*(rxConfig.d2d(leq_13_leq_23)/100).^3.*exp(-1*(rxConfig.d2d(leq_13_leq_23)/150))); % Second part, round brackets
-						prop(leq_13_leq_23) = A.*B;
-					end
-					
-				otherwise
-					Channel.Logger.log(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
-			end
-			
+			% Realize probability
 			x = rand(length(prop(:,1)),length(prop(1,:)));
-			
 			LOS = prop;
 			LOS(x>LOS) = 0;
 			LOS(LOS~= 0) =1;

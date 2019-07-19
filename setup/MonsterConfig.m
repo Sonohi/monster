@@ -180,7 +180,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
-			Channel.losMethod = '3GPP38901-probability';
+			Channel.losMethod = '3GPP38901-probability'; % 'NLOS', '3GPP38901-probability', 'LOS'
 			Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
 			obj.Channel = Channel;
 
