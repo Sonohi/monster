@@ -164,10 +164,6 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			obj.TempSignalVariables.RxWaveformInfo = station.Tx.WaveformInfo; % Temp variable for BW indication
 			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(station, user, 'downlink', sampleGrid);
 			receivedPower = reshape(receivedPower, length(sampleGrid), []);
-			%obj.TempSignalVariables.RxPower = receivedPower;
-			%[SNR, ~, noisePower] = obj.computeSNR();
-			%TODO: make computeSINR matrix compatible
-			%SINR = obj.computeSINR(station, user, Stations, receivedPowerWatt, noisePower, 'downlink');
 			obj.clearTempVariables();
 		end
 		
@@ -304,6 +300,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 	
 
 		function [userConfig] = computeLOS(obj, Station, txConfig, userConfig)
+			% Compute LOS situation
+			% If a probability based LOS method is used, the LOSprop is realized with spatial consistency
 
 			if userConfig.Indoor
 				userConfig.LOS = 0;
@@ -426,14 +424,16 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				avgStreetWidth = 0;
 			end
 			
-			%try
+			try
 				lossdB = loss3gpp38901(areaType, distance2d, distance3d, freq, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-			%catch ME
-			%	if strcmp(ME.identifier,'Pathloss3GPP:Range')
-			%			minRange = 10;
-			%		lossdB = loss3gpp38901(areaType, minRange, distance3d, freq, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-			%	end
-			%end
+			catch ME
+				if strcmp(ME.identifier,'Pathloss3GPP:Range')
+						minRange = 10;
+		 				lossdB = loss3gpp38901(areaType, minRange, distance3d, freq, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+				else
+					obj.Channel.Logger.log('Pathloss computation error', 'ERR')
+				end
+			end
 			
 		end
 		
