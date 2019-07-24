@@ -74,8 +74,43 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 		end
 		
 		function testSRSConfiguration(testCase)
+			% Set SRS configuration
+			ue = testCase.Monster.Users(1);
+			C_SRS = 3;
+			B_SRS = 3;
+			subframeConfig = 3; 
+			[srsStruct, srsInfo] = ue.Tx.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
 			
+			testCase.verifyEqual(srsStruct.BWConfig, C_SRS);
+			testCase.verifyEqual(srsStruct.BW, B_SRS);
+			testCase.verifyEqual(srsStruct.SubframeConfig, subframeConfig);
 			
+			% Per table 8.2-4 in 36213 for FDD
+			% MATLAB uses a different table allocation (maybe a prior release),
+			% thus the mapping is
+			% 0 = 1 ms
+			% 1-2 = 2 ms
+			% 3-8 = 5 ms
+			% 9-14 = 10 ms
+			% 15 = 1 ms
+			testCase.verifyEqual(double(srsInfo.CellPeriod), 5);
+			
+			subframeConfig = 14; 
+			[srsStruct, srsInfo] = ue.Tx.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
+			testCase.verifyEqual(double(srsInfo.CellPeriod), 10);
+			
+			subframeConfig = 1; 
+			[srsStruct, srsInfo] = ue.Tx.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
+			testCase.verifyEqual(double(srsInfo.CellPeriod), 2);
+			
+		end
+		
+		function testSRSplacement(testCase)
+			% Test SRS sequence is generated correctly
+		end
+		
+		function testSRSReferenceEstimation(testCase)
+			% Test SRS sequence is used properly in the channel estimator.
 		end
 		
 		function testPUUSCHConfiguration(testCase)
