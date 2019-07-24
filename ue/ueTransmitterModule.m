@@ -125,8 +125,52 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			
 			obj.ReGrid(obj.PUCCH.Indices) = obj.PUCCH.Symbols;
 			obj.setupPUSCHDRS();
+			obj.setupSRS();
 
 		end
+
+		function [srs, srsInfo] = setupSRSConfig(obj, C_SRS, B_SRS, SubframeConfig)
+			% Config for SRS
+			%
+			% C_SRS defines the cell specific SRS bandwidth
+			% B_SRS defines the UE specific SRS bandwidth
+			% SubframeConfig defines the periodicity of the SRS sequence
+			srs = struct;
+			srs.NTxAnts = 1; % TODO: Get number of Tx antennas
+			srs.HoppingBW = 0;      % SRS frequency hopping configuration
+			srs.TxComb =0;         % Even indices for comb transmission
+			srs.FreqPosition = 0;   % Frequency domain position
+			srs.ConfigIdx = 0;      % UE-specific SRS period = 10ms, offset = 0
+			srs.CyclicShift = 0;    % UE-cyclic shift
+			srs.BWConfig = C_SRS;       % Cell-specific SRS bandwidth configuration C_SRS
+			srs.BW = B_SRS;             % UE-specific SRS bandwidth configuration  B_SRS
+			srs.SubframeConfig = SubframeConfig; % Change to 2 ms period
+			srs.ConfigIdx = 0;
+			srsInfo = lteSRSInfo(obj.ueObj, srs);     
+		end
+
+		function obj = setupSRS(obj)
+			% Add SRS symbols to the grid
+			
+			[srs, srsInfo] = obj.setupSRSConfig(3, 3, 3);
+			% Configure SRS sequence according to TS
+			% 36.211 Section 5.5.1.3 with group hopping disabled
+			srs.SeqGroup = mod(ue.NCellID,30);
+
+			% Configure the SRS base sequence number (v) according to TS 36.211
+			% Section 5.5.1.4 with sequence hopping disabled
+			srs.SeqIdx = 1;
+
+			% Generate and map SRS to resource grid
+			% (if active under UE-specific SRS configuration)
+			if srsInfo.IsSRSSubframe
+				[srsIndices, ~] = lteSRSIndices(obj.ueObj, srs);% SRS indices
+				obj.ReGrid(srsIndices) = lteSRS(obj.ueObj, srs);  
+			end
+
+		end
+
+
 
 		function obj = setupPUSCHDRS(obj)
 			% Setup DRS sequence
