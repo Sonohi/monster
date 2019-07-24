@@ -5,6 +5,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		Waveform;
 		WaveformInfo;
 		ReGrid;
+		SRSGrid; % Resource grid only occupied by SRS symbols
 		PUCCH;
 		PUSCH;
 		Freq; % Operating frequency.
@@ -146,7 +147,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			srs.BW = B_SRS;             % UE-specific SRS bandwidth configuration  B_SRS
 			srs.SubframeConfig = SubframeConfig; % Change to 2 ms period
 			srs.ConfigIdx = 0;
-			srsInfo = lteSRSInfo(obj.ueObj, srs);     
+			srsInfo = lteSRSInfo(obj.UeObj, srs);     
 		end
 
 		function obj = setupSRS(obj)
@@ -155,7 +156,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			[srs, srsInfo] = obj.setupSRSConfig(3, 3, 3);
 			% Configure SRS sequence according to TS
 			% 36.211 Section 5.5.1.3 with group hopping disabled
-			srs.SeqGroup = mod(ue.NCellID,30);
+			srs.SeqGroup = mod(obj.UeObj.NCellID,30);
 
 			% Configure the SRS base sequence number (v) according to TS 36.211
 			% Section 5.5.1.4 with sequence hopping disabled
@@ -164,8 +165,16 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% Generate and map SRS to resource grid
 			% (if active under UE-specific SRS configuration)
 			if srsInfo.IsSRSSubframe
-				[srsIndices, ~] = lteSRSIndices(obj.ueObj, srs);% SRS indices
-				obj.ReGrid(srsIndices) = lteSRS(obj.ueObj, srs);  
+				[srsIndices, ~] = lteSRSIndices(obj.UeObj, srs);% SRS indices
+				
+				SRSSymbols = lteSRS(obj.UeObj, srs);
+				
+				% Store seperately for channel estimation
+				obj.SRSGrid = lteULResourceGrid(struct(obj.UeObj));
+				obj.SRSGrid(srsIndices) = SRSSymbols;
+
+				% Insert into resource grid
+				obj.ReGrid(srsIndices) = SRSSymbols;
 			end
 
 		end
@@ -186,6 +195,10 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% Modulate resource grid to SCFDMA
 			%
 			% Returns updated :obj.Waveform: and :obj.WaveformInfo:
+			if isempty(obj.ReGrid)
+				obj.UeObj.Logger.log('Empty subframe in transmitter?','ERR','MonsterUeTransmitterModule:EmptySubframe')
+			end
+
 			[obj.Waveform, obj.WaveformInfo] = lteSCFDMAModulate(obj.UeObj,obj.ReGrid);
 		end
 	

@@ -169,7 +169,7 @@ classdef Monster < matlab.mixin.Copyable
 
 	end	
 
-	methods (Access = private)
+	methods 
 		function obj = moveUsers(obj)
 			% moveUsers performs UE movements at the beginning of each round
 			%
