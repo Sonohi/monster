@@ -7,12 +7,11 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		NumMacroSites;				% Number of macro sites
 		MacroCellsPerSite;		% Number of macro cells per site
 		MacroCoordinates;   	% Center of each macro site
-		MacroCells;	        	% Cell array containing all macro cell obj
+		MacroCells;	        	% Array containing all macro cell obj
 		MicroPosPerMacroCell;	% NUmber of available micro sites position per macro cell
 		NumMicroSites;				% Number of micro sites
 		MicroCellsPerSite;		% Number of micro cells per site
-		MicroCoordinates;   	% Coordinates of the micro sites, placed on the middle of the edges of the cell border
-		MicroCells;	        	% Cell array containing all micro cell obj
+		MicroCells;	        	% Array containing all micro cell obj
 		Scenario;
 		Logger;
 	end
@@ -24,18 +23,18 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.Center = [xc yc];
 			obj.Logger = Logger;
 			obj.ISD = Config.MacroEnb.ISD;
-			obj.MicroPosPerMacroCell = 3; % from ITU-RM2412-0 scenario 8.3.2
+			obj.MicroPosPerMacroCell = Config.MicroEnb.microPosPerMacroCell;
 			obj.NumMacroSites = Config.MacroEnb.sitesNumber;
 			obj.MacroCellsPerSite = Config.MacroEnb.cellsPerSite;
 			obj.computeMacroCoordinates(Config, obj.Logger);
-			obj.NumMicroSites = length(obj.MicroCoordinates(:,1));
+			obj.NumMicroSites = Config.MicroEnb.sitesNumber;
 			obj.MicroCellsPerSite = Config.MicroEnb.cellsPerSite;
-			obj.generateCells(Config);		
+			[obj.MacroCells, obj.MicroCells] = obj.generateCells(Config);		
 		end
 		
 		function drawScenario(obj, Config)
 			enbLabelOffsetY = 0;
-			% Depending on the terrain type, check buildings or coastline
+			% Depending on the terrain type, draw either the buildings or the coastline
 			if strcmp(Config.Terrain.type, 'city')
 				enbLabelOffsetY = -20;
 				buildings = Config.Terrain.buildings;
@@ -66,8 +65,8 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			
 			%Draw macros
 			for i=1:obj.NumMacroSites
-				xc = obj.Cells{i}.Center(1);
-				yc = obj.Cells{i}.Center(2);
+				xc = obj.MacroCells{i}.Center(1);
+				yc = obj.MacroCells{i}.Center(2);
 				text(Config.Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
 					strcat('Macro BS ', num2str(i), '(',num2str(round(xc)),', ',...
 					num2str(round(yc)),')'),'HorizontalAlignment','center');
@@ -306,40 +305,42 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		end
 
 		% Generate the cells instances used to provide positioning info
-		function obj = generateCells(obj,Config)
-			% Initialise data structures for storing cell instances
-			macroCells = cell(obj.NumMacroSites * obj.MacroCellsPerSite,1);
-			microCells = cell(obj.NumMacroSites*obj.MacroCellsPerSite*obj.MicroPosPerMacroCell*obj.MicroCellsPerSite, 1);
-			macroCount = 0;
-			microCount = 0;
+		function [macroCells, microCells] = generateCells(obj,Config)
+			% Initialise
+			macroSiteCount = 0;
+			macroCellCount = 0;
+			microSiteCount = obj.NumMacroSites;
+			microCellCount = 0;
 			for iMacroSite = 1:obj.NumMacroSites
-				macroSiteCentre = [obj.MacroCoordinates(iSite, 1), obj.MacroCoordinates(iSite, 2)];
-				macroCellsIds = 3*iMacroSite + [1:obj.MacroCellsPerSite];
-				macroCellsCentres = calculateCellCentres(macroSiteCentre, obj.MacroCellsPerSite, Config.MacroEnb.ISD);
+				macroSiteCount = macroSiteCount + 1;
+				macroSiteCentre = [obj.MacroCoordinates(iMacroSite, 1), obj.MacroCoordinates(iMacroSite, 2)];
+				macroCellsIds = 3*macroSiteCount + (1:obj.MacroCellsPerSite);
+				macroCellsCentres = obj.calculateCellCentres(macroSiteCentre, obj.MacroCellsPerSite, Config.MacroEnb.ISD);
 				for iMacroCell = 1: obj.MacroCellsPerSite
-					macroCount = macroCount + 1;
-					macroCells(macroCount) = {MacroCell(macroCellsCentres(iCell), macroCellsIds(iMacroCell), obj.MicroPosPerMacroCell, Config, obj.Logger)};
+					macroCellCount = macroCellCount + 1;
+					macroCellCentre = [macroCellsCentres(iMacroCell, 1), macroCellsCentres(iMacroCell, 2)];
+					macroCells(macroCellCount) = MacroCell(Config, obj.Logger, macroSiteCount, macroCellCentre, macroCellsIds(iMacroCell), obj.MicroPosPerMacroCell);
 					% At this point the macro cell instance includes also the available positions for the centres of the micro sites
-					microSitesCentres = macroCells(macroCount).MicroCoordinates;
+					microSitesCentres = macroCells(macroCellCount).MicroCoordinates;
 					% Now generate the micro cells for each micro site
 					for iMicroSite = 1:length(microSitesCentres)
+						microSiteCount = microSiteCount + 1;
 						% Generate IDs for the micro cells of this micro site
 						microSiteCentre = [microSitesCentres(iMicroSite, 1), microSitesCentres(iMicroSite, 2)];
-						microCellsIds = 3*macroCellsIds(iMacroCell) + [1:obj.MicroCellsPerSite];
-						microCellsCentres = calculateCellCentres(microSiteCentre, obj.MicroCellsPerSite, Config.MicroEnb.ISD);
+						microCellsIds = 3*microSiteCount + (1:obj.MicroCellsPerSite);
+						microCellsCentres = obj.calculateCellCentres(microSiteCentre, obj.MicroCellsPerSite, Config.MicroEnb.ISD);
 						for iMicroCell = 1:obj.MicroCellsPerSite
-							microCount = microCount + 1;
-							microCells(microCount) = {MicroCell(microCellsCentres(iMicroCell), microCellsIds(iMicroCell), Config, obj.Logger)};
+							microCellCount = microCellCount + 1;
+							microCellCentre = [microCellsCentres(iMicroCell, 1), microCellsCentres(iMicroCell, 2)];
+							microCells(microCellCount) = MicroCell(Config, obj.Logger, microSiteCount, microCellCentre, microCellsIds(iMicroCell));
 						end
 					end
 				end
 			end
-			obj.MacroCells = macroCells;
-			obj.MicroCells = microCells;
 		end
 
 		% Calculates the position of the cell centres for groups of cells of the same site
-		function cellsCentres = calculateCellCentres(siteCentre, numCells, ISD)
+		function cellsCentres = calculateCellCentres(obj, siteCentre, numCells, ISD)
 			% Divide the circumference angle around the centre based on the number of cells
 			theta = 2*pi/numCells;
 			% The average cell radius is calculated dividing the ISD by the number of cells

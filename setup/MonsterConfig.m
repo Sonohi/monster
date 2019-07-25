@@ -75,7 +75,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.runtimePlot = 1;
 			SimulationPlot.generateCoverageMap = 0;
 			SimulationPlot.generateHeatMap = 0;
 			SimulationPlot.heatMapType = 'perStation';
@@ -84,7 +84,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.sitesNumber = 1;
+			MacroEnb.sitesNumber = 2;
 			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
@@ -97,8 +97,9 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.sitesNumber = 1;
-			MicroEnb.cellsPerSite = 1;
+			MicroEnb.sitesNumber = 6;
+			MicroEnb.cellsPerSite = 3;
+			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';

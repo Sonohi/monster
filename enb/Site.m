@@ -9,14 +9,13 @@ classdef Site < matlab.mixin.Copyable
 
 	methods
 		% Constructor
-		function obj = Site(Config, Logger, siteId, cellsClass, cellNumber)
+		function obj = Site(Config, Logger, sitePosition, siteId, cellsClass, cellsIds)
 			obj.SiteId = siteId;
 			obj.Logger = Logger;
-			% Call constructor of cells/eNodeBs and assign the cell id based on the siteId
-			cellsIds = 3*siteId + [1:cellNumber];
-			Cells(1:cellNumber) = arrayfun(@(x) EvolvedNodeB(Config, cellsClass, x, Logger), cellsIds);
-
+			obj.Position = sitePosition;
+			% Call constructor of cells/eNodeBs and assign the cell ids
+			Cells(1:length(cellsIds)) = arrayfun(@(x) EvolvedNodeB(Config, Logger, cellsClass, sitePosition, x, siteId, -1), cellsIds);
+			obj.Cells = Cells;
 		end
-
 	end
 end

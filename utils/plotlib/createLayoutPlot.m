@@ -16,12 +16,8 @@ function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
 		maxRadius = Config.MicroEnb.ISD;
 	end
 	%If hexagonal
-	if (strcmp(Config.MicroEnb.positioning,'hexagonal')  && (Config.MacroEnb.ISD*3/2 > maxRadius && Config.MicroEnb.number > 6 ))
+	if (strcmp(Config.MicroEnb.positioning,'hexagonal')  && (Config.MacroEnb.ISD*3/2 > maxRadius && Config.MicroEnb.sitesNumber > 6 ))
 		maxRadius = Config.MacroEnb.ISD*3/2;
-	end
-	%Check pico
-	if (strcmp(Config.PicoEnb.positioning,'uniform') && Config.PicoEnb.ISD > maxRadius)
-		maxRadius = Config.PicoEnb.ISD;
 	end
 	%Set axes accordingly
 	set(layout_axes,'XLim',[xc-maxRadius-10,xc+maxRadius+10],'YLim',[yc-maxRadius-10,yc+maxRadius+10]); %+/-10 for better looks

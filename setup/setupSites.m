@@ -8,23 +8,45 @@ function Sites = setupSites (Config, Logger)
 	
 	% Setup macro
 	Logger.log('(SETUP - setupSites) setting up macro sites', 'DBG');
-	rangeA = 1;
-	rangeB = Config.MacroEnb.sitesNumber;
-	Sites(rangeA:rangeB) = arrayfun(@(x) Site(Config, Logger, x, 'macro', Config.MacroEnb.cellsPerSite), rangeA: rangeB);
-	for iSite = rangeA:rangeB
-		Sitess(iSite).Position = [Config.Plot.Layout.MacroCoordinates(iSite,:), Config.MacroEnb.height];
+	for iSite = 1:Config.MacroEnb.sitesNumber
+		% Retrieve site ID and cells IDs for this site
+		siteId = iSite;
+		iSiteCells = find([Config.Plot.Layout.MacroCells.SiteID] == siteId);
+		siteCellsIds = [Config.Plot.Layout.MacroCells(iSiteCells).CellID];
+		sitePosition = [Config.Plot.Layout.MacroCoordinates(iSite,:), Config.MacroEnb.height];
+		% Call the site constructor and pass site and cells IDs
+		Sites(iSite) = Site(Config, Logger, sitePosition, siteId, 'macro', siteCellsIds);
 	end
 
-	% Setup micro
 	if Config.MicroEnb.sitesNumber > 0
-		Logger.log('(SETUP - setupStations) setting up micro sites', 'DBG');
-		rangeA = Config.MacroEnb.sitesNumber + 1;
-		rangeB = Config.MicroEnb.sitesNumber + Config.MacroEnb.sitesNumber;
-		Sites(rangeA:rangeB) = arrayfun(@(x) Site(Config, Logger, x, 'micro', Config.MicroEnb.cellsPerSite), rangeA: rangeB);
-		ii = 1;
-		for iSite = rangeA:rangeB
-			Stations(iStation).Position = [Config.Plot.Layout.MicroCoordinates(ii,:), Config.MicroEnb.height];
-			ii =+ 1;
+		% Micro sites should be created within the macro cells, depending on the number
+		totMacroCells = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite;
+		for iSite = 1:Config.MicroEnb.sitesNumber
+			iMacroCell = iSite - floor(iSite/totMacroCells)*totMacroCells;
+			if ~iMacroCell
+				iMacroCell = totMacroCells;
+			end
+			macroCell = Config.Plot.Layout.MacroCells(iMacroCell);
+			% The microCoordinates is of size Config.MicroEnb.microPosPerMacroCell
+			% We need to find how many of the micro sites positions are already used in this macro cell
+			% Find cells that have set the macro cell to the current one
+			iMicroCellInMacro = 1;
+			allCells = [Sites.Cells];
+			iCellsInMacro = find([allCells.MacroCellId] == macroCell.CellID);
+
+			if ~isempty(iCellsInMacro)
+				iMicroCellInMacro = iMicroCellInMacro + 1;
+				% Throw an error if there are more than the allowed number
+				if iMicroCellInMacro > microPosPerMacroCell
+					Logger.log("(SETUP - setupSites) exceeded maximum number of allowed micro sites per macro cell", "ERR");
+				end
+			end
+			sitePosition = [macroCell.MicroCoordinates(iMicroCellInMacro, 1), macroCell.MicroCoordinates(iMicroCellInMacro, 2)];
+			siteId = iSite + Config.MacroEnb.sitesNumber;
+			% Now find IDS for the micro cells that can be created for this micro site
+			iSiteCells = find([Config.Plot.Layout.MicroCells.SiteID] == siteId);
+			siteCellsIds = [Config.Plot.Layout.MicroCells(iSiteCells).CellID];
+			Sites(iSite + Config.MacroEnb.sitesNumber) = Site(Config, Logger, sitePosition, siteId, 'micro', siteCellsIds);
 		end
 	end
 end

@@ -7,9 +7,9 @@ classdef MacroCell < BaseCell
 	end
 	
 	methods
-		function obj = MacroCell(cellCentre, cellId, microPosPerMacroCell, Config, Logger)
+		function obj = MacroCell(Config, Logger, siteId, cellCentre, cellId, microPosPerMacroCell)
 			% Constructor
-			obj = obj@BaseCell(cellCentre, cellId, 'macro', Config, Logger);
+			obj = obj@BaseCell(Config, Logger, siteId, cellCentre, cellId, 'macro');
 			% Calculate possible positions of micro sites
 			obj.computeMicroPos(microPosPerMacroCell);
 		end

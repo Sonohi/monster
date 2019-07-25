@@ -6,8 +6,8 @@ classdef MicroCell < BaseCell
 	end
 
 	methods 
-		function obj = MicroCell(cellCentre, cellId, Config, Logger)
-			obj = obj@BaseCell(cellCentre, cellId, 'micro', Config, Logger);
+		function obj = MicroCell(Config, Logger, siteId, cellCentre, cellId)
+			obj = obj@BaseCell(Config, Logger, siteId, cellCentre, cellId, 'micro');
 		end
 	end
 end 

@@ -3,6 +3,7 @@ classdef BaseCell < matlab.mixin.Copyable
 	%Properties
 	properties
 		Center;
+		SiteID;
 		CellID;
 		CellType;
 		PosScenario;
@@ -12,11 +13,12 @@ classdef BaseCell < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = BaseCell(cellCentre, cellId, cellType, Config, Logger)
+		function obj = BaseCell(Config, Logger, siteId, cellCentre, cellId, cellType)
 			%Constructor
 			
 			%Set arguments
 			obj.Logger = Logger;
+			obj.SiteID = siteId;
 			obj.Center = cellCentre;
 			obj.CellID = cellId;
 			obj.CellType = cellType;
@@ -35,11 +37,6 @@ classdef BaseCell < matlab.mixin.Copyable
 					obj.Logger.log('Unknown cell type selected.','ERR')
 				obj.Area = 2*sqrt(3)*(obj.Radius)^2;
 			end
-			
 		end
-		
 	end
-	
-	
-	
 end
