@@ -33,10 +33,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 	methods(TestMethodSetup)
 		function setUplinkWaveform(testCase)
 			testCase.Monster.associateUsers();
-			testCase.Monster.schedule();
-			testCase.Monster.setupUeTransmitters();
-			testCase.Monster.uplinkTraverse();
-			testCase.Monster.uplinkEnbReception();
+			testCase.Monster.scheduleUL();
 		end
 		
 	end
@@ -49,8 +46,11 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 		
 		function testModulation(testCase)
 			% Test that grid is modulated and can be demodulated
+			testCase.Monster.setupUeTransmitters();
 			ue = testCase.Monster.Users(1);
+		
 			waveform = ue.Tx.Waveform;
+			
 			
 			% Demodulate waveform
 			demodGrid = lteSCFDMADemodulate(struct(ue), waveform);
@@ -64,30 +64,41 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 				demod = false;
 			end
 			
-			testCase.verifyTrue(demod)
+			testCase.verifyTrue(demod);
+		end
+		
+		function testSetupResourceGrid(testCase)
+			ue = testCase.Monster.Users(1);
+			ue.Tx.ReGrid = zeros(9,9);
+			testCase.verifyError(@() ue.Tx.setupResourceGrid(), 'ueTransmitterModule:ExpectedEmptyResourceGrid')
 		end
 		
 		function testModulationError(testCase)
 			ue = testCase.Monster.Users(1);
-			ue.Tx.reset()% No grid set
+			ue.Tx.reset();% No grid set
 			testCase.verifyError(@() ue.Tx.modulateResourceGrid(),'MonsterUeTransmitterModule:EmptySubframe');
+		end
+		
+		function testEIRPdBm(testCase)
+			ue = testCase.Monster.Users(1);
+			testCase.verifyEqual(ue.Tx.getEIRPdBm, (ue.Tx.TxPwdBm + ue.Tx.Gain));
 		end
 		
 		function testSRSConfiguration(testCase)
 			% Set SRS configuration
 			ue = testCase.Monster.Users(1);
-			C_SRS = 3;
-			B_SRS = 3;
+			C_SRS = 0;
+			B_SRS = 7;
 			subframeConfig = 3; 
 			[srsStruct, srsInfo] = ue.Tx.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
 			
 			testCase.verifyEqual(srsStruct.BWConfig, C_SRS);
 			testCase.verifyEqual(srsStruct.BW, B_SRS);
 			testCase.verifyEqual(srsStruct.SubframeConfig, subframeConfig);
-			
+		
 			% Per table 8.2-4 in 36213 for FDD
 			% MATLAB uses a different table allocation (maybe a prior release),
-			% thus the mapping is
+			% thus the mapping of subframeConfig is
 			% 0 = 1 ms
 			% 1-2 = 2 ms
 			% 3-8 = 5 ms
@@ -105,18 +116,38 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			
 		end
 		
-		function testSRSplacement(testCase)
-			% Test SRS sequence is generated correctly
-		end
-		
-		function testSRSReferenceEstimation(testCase)
-			% Test SRS sequence is used properly in the channel estimator.
-		end
-		
-		function testPUUSCHConfiguration(testCase)
+		function testSRSisStored(testCase)
+			% Test SRS sequence is stored in reference structure
+			ue = testCase.Monster.Users(1);
+			ue.Tx.setupTransmission();
+			
+			testCase.verifyNotEmpty(ue.Tx.Ref.srsIdx);
+			testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.srsIdx));
 			
 		end
 		
+		function testPUSCHDRSisStored(testCase)
+			ue = testCase.Monster.Users(1);
+			ue.Tx.setupTransmission();
+			
+			if ~isempty(ue.Tx.PUSCH.PRBSet)
+				testCase.verifyNotEmpty(ue.Tx.Ref.puschDRSIdx);
+				testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.puschDRSIdx));
+			else
+				testCase.verifyEmpty(ue.Tx.Ref.puschDRSIdx);
+				testCase.verifyEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.puschDRSIdx));
+			end
+			
+		end
+		
+		function testPUCCHDRSisStored(testCase)
+			ue = testCase.Monster.Users(1);
+			ue.Tx.setupTransmission();
+			
+			testCase.verifyNotEmpty(ue.Tx.Ref.pucchDRSIdx);
+			testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.pucchDRSIdx));
+			
+		end
 		
 		
 	end

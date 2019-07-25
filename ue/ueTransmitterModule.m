@@ -5,7 +5,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		Waveform;
 		WaveformInfo;
 		ReGrid;
-		SRSGrid; % Resource grid only occupied by SRS symbols
+		Ref; % Resource grid for reference signals
 		PUCCH;
 		PUSCH;
 		Freq; % Operating frequency.
@@ -37,6 +37,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			obj.HarqActive = Config.Harq.active;
 			%TODO: make configureable
 			obj.TxPwdBm = 23;
+			obj.resetRef();
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)
@@ -80,10 +81,11 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			%
 			% returns :obj.ReGrid: 
 			if ~isempty(obj.ReGrid)
-				obj.ueObj.Logger('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
+				obj.UeObj.Logger.log('Expecting empty resource grid. UE tx not reset between rounds.', 'ERR', 'ueTransmitterModule:ExpectedEmptyResourceGrid')
 			end
 
 			obj.ReGrid = lteULResourceGrid(struct(obj.UeObj));
+			obj.Ref.Grid = obj.ReGrid; % Same structure for reference frame
 		end
 
 		function obj = setupControlSignals(obj)
@@ -110,25 +112,27 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			
 			chs.ResourceIdx = 0;
 			switch obj.PUCCH.Format
-				case 1
-					obj.PUCCH.Bits = harqAck;
-					obj.PUCCH.Symbols = ltePUCCH1(struct(obj.UeObj),chs,harqAck);
-					obj.PUCCH.Indices = ltePUCCH1Indices(struct(obj.UeObj),chs);
 				case 2
 					obj.PUCCH.Bits = pucch2Bits;
 					obj.PUCCH.Symbols = ltePUCCH2(struct(obj.UeObj),chs,pucch2Bits);
 					obj.PUCCH.Indices = ltePUCCH2Indices(struct(obj.UeObj),chs);
-				case 3
-					obj.PUCCH.Bits = pucch2Bits;
-					obj.PUCCH.Symbols = ltePUCCH3(struct(obj.UeObj),chs,pucch2Bits);
-					obj.PUCCH.Indices = ltePUCCH3Indices(struct(obj.UeObj),chs);
+					pucchDRSIdx = ltePUCCH2DRSIndices(struct(obj.UeObj), chs);
+					pucchDRS = ltePUCCH2DRS(struct(obj.UeObj), chs, harqBits(3:end));
 			end
 			
 			obj.ReGrid(obj.PUCCH.Indices) = obj.PUCCH.Symbols;
+			obj.ReGrid(pucchDRSIdx) = pucchDRS;
+
+			% Store reference in seperate grid for channel estimator
+			obj.Ref.Grid(pucchDRSIdx) = pucchDRS;
+			obj.Ref.pucchDRSIdx = pucchDRSIdx;
+
 			obj.setupPUSCHDRS();
 			obj.setupSRS();
 
 		end
+		
+
 
 		function [srs, srsInfo] = setupSRSConfig(obj, C_SRS, B_SRS, SubframeConfig)
 			% Config for SRS
@@ -145,15 +149,16 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			srs.CyclicShift = 0;    % UE-cyclic shift
 			srs.BWConfig = C_SRS;       % Cell-specific SRS bandwidth configuration C_SRS
 			srs.BW = B_SRS;             % UE-specific SRS bandwidth configuration  B_SRS
-			srs.SubframeConfig = SubframeConfig; % Change to 2 ms period
+			srs.SubframeConfig = SubframeConfig; 
 			srs.ConfigIdx = 0;
 			srsInfo = lteSRSInfo(obj.UeObj, srs);     
 		end
 
 		function obj = setupSRS(obj)
 			% Add SRS symbols to the grid
+			[C_SRS, B_SRS, subframeConfig] = obj.selectSRSConfig();
 			
-			[srs, srsInfo] = obj.setupSRSConfig(3, 3, 3);
+			[srs, srsInfo] = obj.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
 			% Configure SRS sequence according to TS
 			% 36.211 Section 5.5.1.3 with group hopping disabled
 			srs.SeqGroup = mod(obj.UeObj.NCellID,30);
@@ -165,20 +170,28 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% Generate and map SRS to resource grid
 			% (if active under UE-specific SRS configuration)
 			if srsInfo.IsSRSSubframe
-				[srsIndices, ~] = lteSRSIndices(obj.UeObj, srs);% SRS indices
+				[srsIdx, ~] = lteSRSIndices(obj.UeObj, srs);% SRS indices
 				
 				SRSSymbols = lteSRS(obj.UeObj, srs);
 				
 				% Store seperately for channel estimation
-				obj.SRSGrid = lteULResourceGrid(struct(obj.UeObj));
-				obj.SRSGrid(srsIndices) = SRSSymbols;
+				obj.Ref.Grid(srsIdx) = SRSSymbols;
+				obj.Ref.srsIdx = srsIdx;
 
 				% Insert into resource grid
-				obj.ReGrid(srsIndices) = SRSSymbols;
+				obj.ReGrid(srsIdx) = SRSSymbols;
 			end
 
 		end
-
+	
+		function [C_SRS, B_SRS, subframeConfig] = selectSRSConfig(obj)
+			% TODO: Add scheme for selecting SRS configuration based on higher
+			% layer protocol messages.
+			C_SRS = 7;
+			B_SRS = 0;
+			subframeConfig = 3;
+			
+		end
 
 
 		function obj = setupPUSCHDRS(obj)
@@ -186,10 +199,13 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 
 			% Returns updated :obj.ReGrid:
 			puschdrsSeq = ltePUSCHDRS(struct(obj.UeObj),obj.PUSCH);
-			puschdrsSeqind = ltePUSCHDRSIndices(struct(obj.UeObj),obj.PUSCH);
-			obj.ReGrid(puschdrsSeqind) = puschdrsSeq;
+			puschDRSIdx = ltePUSCHDRSIndices(struct(obj.UeObj),obj.PUSCH);
+			obj.ReGrid(puschDRSIdx) = puschdrsSeq;
+			obj.Ref.Grid(puschDRSIdx) = puschdrsSeq;
+			obj.Ref.puschDRSIdx = puschDRSIdx;
 
 		end
+
 
 		function obj = modulateResourceGrid(obj)
 			% Modulate resource grid to SCFDMA
@@ -206,7 +222,18 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		function obj = reset(obj)
 			obj.Waveform = [];
 			obj.ReGrid = [];
+			obj.resetRef();
+
 		end	
+
+		function obj = resetRef(obj)
+			% Reset reference
+			obj.Ref = struct(); %
+			obj.Ref.Grid = [];
+			obj.Ref.srsIdx = [];
+			obj.Ref.pucchDRSIdx = [];
+			obj.Ref.puschDRSIdx = [];
+		end
 		
 	end
 	
