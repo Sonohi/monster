@@ -145,8 +145,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			ue.Tx.setupTransmission();
 			
 			testCase.verifyNotEmpty(ue.Tx.Ref.pucchDRSIdx);
-			testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.pucchDRSIdx));
-			
+			testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.pucchDRSIdx));  
 		end
 		
 		

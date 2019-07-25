@@ -205,7 +205,7 @@ classdef Monster < matlab.mixin.Copyable
 		end
 
 		function obj = scheduleDL(obj) 
-			% schedule is used to perform the allocation of eNodeB resources in the downlink to the UEs
+			% scheduleDL is used to perform the allocation of eNodeB resources in the downlink to the UEs
 			% 
 			% :obj: Monster instance
 			%
@@ -222,16 +222,20 @@ classdef Monster < matlab.mixin.Copyable
 		end
 
 		function obj = scheduleUL(obj)
+			% scheduleUL is used to perform the allocation of eNodeB resources in the uplink
+			% 
+			% :obj: Monster instance
+			%
 
 
-				% Use the result of refreshUsersAssociation to setup the UL scheduling
-				arrayfun(@(x)x.resetScheduleUL(), obj.Stations);
-				arrayfun(@(x)x.setScheduleUL(obj.Config), obj.Stations);
+			% Use the result of refreshUsersAssociation to setup the UL scheduling
+			arrayfun(@(x)x.resetScheduleUL(), obj.Stations);
+			arrayfun(@(x)x.setScheduleUL(obj.Config), obj.Stations);
 
-				for iUser = 1:length(obj.Users)
-					iServingStation = find([obj.Stations.NCellID] == obj.Users(iUser).ENodeBID);
-					obj.Users(iUser).setSchedulingSlots(obj.Stations(iServingStation));
-				end
+			for iUser = 1:length(obj.Users)
+				iServingStation = find([obj.Stations.NCellID] == obj.Users(iUser).ENodeBID);
+				obj.Users(iUser).setSchedulingSlots(obj.Stations(iServingStation));
+			end
 
 		end
 

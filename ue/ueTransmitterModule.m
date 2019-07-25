@@ -93,7 +93,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% PUCCH
 			% PUSCH
 			% DRS
-			% SRS (optional)
+			% SRS
 			%
 			% Returns updated :obj.ReGrid:
 			cqiBits = de2bi(obj.UeObj.Rx.CQI, 4, 'left-msb')';
@@ -156,9 +156,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 
 		function obj = setupSRS(obj)
 			% Add SRS symbols to the grid
-			[C_SRS, B_SRS, subframeConfig] = obj.selectSRSConfig();
+			[CSRS, BSRS, subframeConfig] = obj.selectSRSConfig();
 			
-			[srs, srsInfo] = obj.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
+			[srs, srsInfo] = obj.setupSRSConfig(CSRS, BSRS, subframeConfig);
 			% Configure SRS sequence according to TS
 			% 36.211 Section 5.5.1.3 with group hopping disabled
 			srs.SeqGroup = mod(obj.UeObj.NCellID,30);
@@ -184,11 +184,22 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 
 		end
 	
-		function [C_SRS, B_SRS, subframeConfig] = selectSRSConfig(obj)
+		function [CSRS, BSRS, subframeConfig] = selectSRSConfig(obj)
+			% Select configuration of SRS sequence
+			%
 			% TODO: Add scheme for selecting SRS configuration based on higher
 			% layer protocol messages.
-			C_SRS = 7;
-			B_SRS = 0;
+			%
+			% Per table 8.2-4 in 36213 for FDD
+			% MATLAB uses a different table allocation (maybe a prior release),
+			% thus the mapping of subframeConfig is
+			% 0 = 1 ms
+			% 1-2 = 2 ms
+			% 3-8 = 5 ms
+			% 9-14 = 10 ms
+			% 15 = 1 ms
+			CSRS = 7;
+			BSRS = 0;
 			subframeConfig = 3;
 			
 		end
