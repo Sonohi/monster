@@ -350,11 +350,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 							prop = NaN;
 					case '3GPP38901-probability'
 							[LOS, prop] = Monster3GPP38901.LOSprobability(txConfig, rxConfig);
-					case 'NLOS'
-						LOS = 0;
+					case 'NLOS'                   
+						LOS = zeros(size(rxConfig.positions,1),1);
 						prop = NaN;
 					case 'LOS'
-						LOS = 1;
+						LOS =  ones(size(rxConfig.positions,1),1);
 						prop = NaN;
 				end
 			
