@@ -1,16 +1,12 @@
-function [Users, Stations] = refreshUsersAssociation(Users, Stations, Channel, Config)
+function refreshUsersAssociation(Users, Stations, Channel, Config)
 	% refreshUsersAssociation links UEs to a eNodeB
 	%
 	% :param Users: Array<UserEquipment> instances
 	% :param Stations: Array<EvolvedNodeB> instances
 	% :param Channel: Channel instance
 	% :param Config: MonsterConfig instance
-	%
-	% :Users: Array<UserEquipment> instances with associated eNodeBs
-	% :Stations: Array<EvolvedNodeB> instances with associated UEs
-	%
 	
-	% Now loop the users to get the association based on the signal attenuation
+	% Loop the users to get the association based on the signal attenuation
 	for iUser = 1:length(Users)
 			
 		% Get the ID of the eNodeB this UE has the best signal to 

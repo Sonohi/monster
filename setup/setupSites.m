@@ -15,7 +15,7 @@ function Sites = setupSites (Config, Logger)
 		siteCellsIds = [Config.Plot.Layout.MacroCells(iSiteCells).CellID];
 		sitePosition = [Config.Plot.Layout.MacroCoordinates(iSite,:), Config.MacroEnb.height];
 		% Call the site constructor and pass site and cells IDs
-		Sites(iSite) = Site(Config, Logger, sitePosition, siteId, 'macro', siteCellsIds);
+		Sites(iSite) = Site(Config, Logger, sitePosition, siteId, 'macro', -1, siteCellsIds);
 	end
 
 	if Config.MicroEnb.sitesNumber > 0
@@ -35,18 +35,19 @@ function Sites = setupSites (Config, Logger)
 			iCellsInMacro = find([allCells.MacroCellId] == macroCell.CellID);
 
 			if ~isempty(iCellsInMacro)
-				iMicroCellInMacro = iMicroCellInMacro + 1;
+				iMicroCellInMacro = iMicroCellInMacro + length(iCellsInMacro)/Config.MicroEnb.microPosPerMacroCell;
 				% Throw an error if there are more than the allowed number
-				if iMicroCellInMacro > microPosPerMacroCell
+				if iMicroCellInMacro > Config.MicroEnb.microPosPerMacroCell
 					Logger.log("(SETUP - setupSites) exceeded maximum number of allowed micro sites per macro cell", "ERR");
 				end
 			end
-			sitePosition = [macroCell.MicroCoordinates(iMicroCellInMacro, 1), macroCell.MicroCoordinates(iMicroCellInMacro, 2)];
+			sitePosition = [macroCell.MicroCoordinates(iMicroCellInMacro, :), Config.MicroEnb.height];
 			siteId = iSite + Config.MacroEnb.sitesNumber;
 			% Now find IDS for the micro cells that can be created for this micro site
 			iSiteCells = find([Config.Plot.Layout.MicroCells.SiteID] == siteId);
 			siteCellsIds = [Config.Plot.Layout.MicroCells(iSiteCells).CellID];
-			Sites(iSite + Config.MacroEnb.sitesNumber) = Site(Config, Logger, sitePosition, siteId, 'micro', siteCellsIds);
+			Sites(iSite + Config.MacroEnb.sitesNumber) = Site(Config, Logger, ...
+				sitePosition, siteId, 'micro', macroCell.CellID, siteCellsIds);
 		end
 	end
 end

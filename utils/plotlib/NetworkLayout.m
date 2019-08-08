@@ -32,7 +32,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			[obj.MacroCells, obj.MicroCells] = obj.generateCells(Config);		
 		end
 		
-		function drawScenario(obj, Config)
+		function drawScenario(obj, Config, Sites)
 			enbLabelOffsetY = 0;
 			% Depending on the terrain type, draw either the buildings or the coastline
 			if strcmp(Config.Terrain.type, 'city')
@@ -63,82 +63,68 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					'LineStyle', '-.');
 			end
 			
-			%Draw macros
-			for i=1:obj.NumMacroSites
-				xc = obj.MacroCells{i}.Center(1);
-				yc = obj.MacroCells{i}.Center(2);
-				text(Config.Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
-					strcat('Macro BS ', num2str(i), '(',num2str(round(xc)),', ',...
-					num2str(round(yc)),')'),'HorizontalAlignment','center');
-				[macroImg, ~, alpha] = imread('utils/images/macro.png');
-				% For some magical reason the image is rotated 180 degrees.
-				macroImg = imrotate(macroImg,180);
-				alpha = imrotate(alpha,180);
-				% Scale size of figure
-				scale = 30;
-				macroLengthY = length(macroImg(:,1,1))/scale;
-				macroLengthX = length(macroImg(1,:,1))/scale;
-				% Position and set alpha from png image
-				f = imagesc(Config.Plot.LayoutAxes,[xc-macroLengthX xc+macroLengthX],[yc-macroLengthY yc+macroLengthY],macroImg);
-				set(f, 'AlphaData', alpha);
-				if strcmp(Config.Terrain.type, 'city')
-					% For the city scenario, draw 3 sectors as hexagons (flat top and bottom)
-					theta = pi/3;
-					xyHex = zeros(7,2);
-					for i=1:3
-						cHex = [(xc + obj.Cells{1}.CellRadius * cos((i-1)*2*theta)) ...
-							(yc + obj.Cells{1}.CellRadius * sin((i-1)*2*theta))];
-						for j=1:7
-							xyHex(j,1) = cHex(1) + obj.Cells{1}.CellRadius*cos(j*theta);
-							xyHex(j,2) = cHex(2) + obj.Cells{1}.CellRadius*sin(j*theta);
-						end
-						l = line(Config.Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
-						set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
-					end					
-				end
-			end
-			
-			%Draw Micros
-			[microImg, ~, alpha] = imread('utils/images/micro.png');
+			% Draw the sites on the layout
+			% Load images 
+			[macroImg, ~, macroAlpha] = imread('utils/images/macro.png');
 			% For some magical reason the image is rotated 180 degrees.
-			microImg = imrotate(microImg,180);
-			alpha = imrotate(alpha,180);
+			macroImg = imrotate(macroImg,180);
+			macroAlpha = imrotate(macroAlpha,180);
 			% Scale size of figure
 			scale = 30;
+			macroLengthY = length(macroImg(:,1,1))/scale;
+			macroLengthX = length(macroImg(1,:,1))/scale;
+			
+			[microImg, ~, microAlpha] = imread('utils/images/micro.png');
+			% For some magical reason the image is rotated 180 degrees.
+			microImg = imrotate(microImg,180);
+			microAlpha = imrotate(microAlpha,180);
+			% Scale size of figure
 			microLengthY = length(microImg(:,1,1))/scale;
 			microLengthX = length(microImg(1,:,1))/scale;
 			
-			for i=1:obj.NumMicro
-				xr = obj.MicroCoordinates(i,1);
-				yr = obj.MicroCoordinates(i,2);
+			% Loop on the sites and draw depending on the class
+			for iSite = 1:length(Sites)
+				xc = Sites(iSite).Position(1);
+				yc = Sites(iSite).Position(2);
+				siteLabel = strcat('Macro site ',num2str(Sites(iSite).SiteId));
+				siteImg = macroImg;
+				siteImgAlpha = macroAlpha;
+				siteImgLenghX = macroLengthX;
+				siteImgLenghY = macroLengthY;
+				cellsPerSite = Config.MacroEnb.cellsPerSite;
+				cellRadius = obj.MacroCells(1).Radius;
+				if strcmp(Sites(iSite).Class, 'micro')
+					siteLabel = strcat('Micro site ', num2str(Sites(iSite).SiteId));
+					siteImg = microImg;
+					siteImgAlpha = microAlpha;
+					siteImgLenghX = microLengthX;
+					siteImgLenghY = microLengthY;
+					cellsPerSite = Config.MicroEnb.cellsPerSite;
+					cellRadius = obj.MicroCells(1).Radius;
+				end
+				text(Config.Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
+					strcat(siteLabel, '(',num2str(round(xc)),', ',...
+					num2str(round(yc)),')'),'HorizontalAlignment','center');
+				% Position and set alpha from png image
+				f = imagesc(Config.Plot.LayoutAxes,[xc - siteImgLenghX xc + siteImgLenghX], ...
+					[yc - siteImgLenghY yc + siteImgLenghY], siteImg);
+				set(f, 'AlphaData', siteImgAlpha);
 				
-				f = imagesc(Config.Plot.LayoutAxes,[xr-microLengthX xr+microLengthX],[yr-microLengthY yr+microLengthY],microImg);
-				set(f, 'AlphaData', alpha);
-				
-				text(xr,yr+20,strcat('Micro BS ', num2str(i+1),' (',num2str(round(xr)),', ', ...
-					num2str(round(yr)),')'),'HorizontalAlignment','center','FontSize',9);
-			end
+				% Now draw the cells boundaries for the site
+				theta = pi/cellsPerSite;
+				xyHex = zeros(7,2);
+				for i=1:cellsPerSite
+					cHex = [(xc + cellRadius * cos((i-1)*2*theta)) ...
+						(yc + cellRadius * sin((i-1)*2*theta))];
+					for j=1:7
+						xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
+						xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
+					end
+					l = line(Config.Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
+					set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
+				end			
+			end		
 			
-			%Draw Picos
-			[picoImg, ~, alpha] = imread('utils/images/pico.png');
-			% For some magical reason the image is rotated 180 degrees.
-			picoImg = imrotate(picoImg,180);
-			alpha = imrotate(alpha,180);
-			% Scale size of figure
-			scale = 30;
-			picoLengthY = length(picoImg(:,1,1))/scale;
-			picoLengthX = length(picoImg(1,:,1))/scale;
-			
-			for i=1:obj.NumPico
-				x = obj.PicoCoordinates(i,1);
-				y = obj.PicoCoordinates(i,2);
-				text(x,y+20,strcat('Pico BS ', num2str(i+1),' (',num2str(round(x)),', ', ...
-					num2str(round(y)),')'),'HorizontalAlignment','center','FontSize',9);
-				
-				f = imagesc(Config.Plot.LayoutAxes,[x-picoLengthX x+picoLengthX],[y-picoLengthY y+picoLengthY],picoImg);
-				set(f, 'AlphaData', alpha);
-				drawnow();
-			end
 		end
 		
 		function drawUes(~, Users, Config, Logger)

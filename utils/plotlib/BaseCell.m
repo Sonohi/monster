@@ -30,9 +30,6 @@ classdef BaseCell < matlab.mixin.Copyable
 				case 'micro'
 					obj.PosScenario = Config.MicroEnb.positioning;
 					obj.Radius = Config.MicroEnb.ISD/Config.MicroEnb.cellsPerSite;
-				case 'pico'
-					obj.PosScenario = Config.PicoEnb.positioning;
-					obj.Radius = Config.PicoEnb.ISD/Config.PicoEnb.cellsPerSite;
 				otherwise
 					obj.Logger.log('Unknown cell type selected.','ERR')
 				obj.Area = 2*sqrt(3)*(obj.Radius)^2;

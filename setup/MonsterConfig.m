@@ -84,12 +84,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.sitesNumber = 2;
+			MacroEnb.sitesNumber = 1;
 			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
-			MacroEnb.ISD = 1000; %Cell radius is one third of intersite distance. ISD
+			MacroEnb.ISD = 500;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
 			MacroEnb.antennaType = 'omni';
@@ -103,7 +103,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
-			MicroEnb.ISD = 200;
+			MicroEnb.ISD = 100;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
 			MicroEnb.antennaType = 'omni';
@@ -134,13 +134,15 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
-			Terrain.type = 'maritime'; % city | maritime
+			Terrain.type = 'city'; % city | maritime
 			if strcmp(Terrain.type,'city')
-				% In the city scenario, a Manhattan city grid is generated based on a buildings file
-				Terrain.buildingsFile = 'mobility/buildings.txt';
+				% In the city scenario, a Manhattan city grid is generated based on a size parameter
+				Terrain.areaSize = 500;
 				Terrain.heightRange = [20,50];
-				Terrain.buildings = load(Terrain.buildingsFile);
-				Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
+				Terrain.buildingWidth = 40;
+				Terrain.roadWidth = 10;
+				Terrain.buildings = generateManhattanGrid(...
+					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
 				Terrain.area = [...
 					min(Terrain.buildings(:, 1)), ...
 					min(Terrain.buildings(:, 2)), ...
