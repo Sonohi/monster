@@ -30,7 +30,8 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				testCase.Logger = MonsterLog(Config);
 				
 				Config.setupNetworkLayout(testCase.Logger);
-				Stations = setupStations(Config, testCase.Logger);
+				Sites = setupSites(Config, testCase.Logger);
+				Stations = [Sites.Cells];
 				Users = setupUsers(Config, testCase.Logger);
 				Channel = setupChannel(Stations, Users, Config, testCase.Logger);
 				[Traffic, Users] = setupTraffic(Users, Config, testCase.Logger);

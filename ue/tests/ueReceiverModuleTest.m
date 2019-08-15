@@ -19,7 +19,8 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Config.Ue.number = 1;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Config.setupNetworkLayout(testCase.Logger);
-			testCase.Stations = setupStations(testCase.Config, testCase.Logger);
+			Sites = setupSites(testCase.Config, testCase.Logger);
+			testCase.Stations = [Sites.Cells];
 			testCase.Users = setupUsers(testCase.Config, testCase.Logger);
 			testCase.RxModule = [testCase.Users.Rx];
 			testCase.TxModule = [testCase.Stations.Tx];
