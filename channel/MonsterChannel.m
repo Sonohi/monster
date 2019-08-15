@@ -154,8 +154,6 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				areaType = obj.Region.macroScenario;
 			elseif strcmp(Station.BsClass,'micro')
 				areaType = obj.Region.microScenario;
-			elseif strcmp(Station.BsClass,'pico')
-				areaType = obj.Region.picoScenario;
 			end
 		end
 	

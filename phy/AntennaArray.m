@@ -21,7 +21,7 @@ classdef AntennaArray < handle
 			obj.Logger = Logger;
 			obj.Type = type;
 			switch type
-				case '3GPP38901'
+				case 'sectorised'
 					obj.config3gpp38901()
 				case 'omni'
 					obj.configOmniDirectional()
@@ -143,7 +143,7 @@ classdef AntennaArray < handle
 		
 		function antennaGains = getAntennaGains(obj, TxPosition, RxPosition)
 			switch obj.Type
-				case '3GPP38901'
+				case 'sectorised'
 					antennaGains = obj.compute3GPPAntennaGains(TxPosition, RxPosition);
 				case 'omni'
 					antennaGains = {0}; %Ideal antenna pattern in all directions

@@ -8,7 +8,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 	% :SimulationPlot: (struct) configuration for plotting
 	% :MacroEnb: (struct) configuration for macro eNodeBs
 	% :MicroEnb: (struct) configuration for micro eNodeBs
-	% :PicoEnb: (struct) configuration for pico eNodeBs
 	%	:Ue: (struct) configuration for UEs
 	% :Mobility: (struct) configuration for UE mobility
 	% :Handover: (struct) configuration for X2 and S1 handover
@@ -27,7 +26,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		SimulationPlot = struct();
 		MacroEnb = struct();
 		MicroEnb = struct();
-		PicoEnb = struct();
 		Ue = struct();
 		Mobility = struct();
 		Handover = struct();
@@ -52,7 +50,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 100;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -92,12 +90,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MacroEnb.ISD = 500;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
-			MacroEnb.antennaType = 'omni';
+			MacroEnb.antennaType = 'sectorised';
 			MacroEnb.Pmax = 20; % W
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.sitesNumber = 6;
+			MicroEnb.sitesNumber = 3;
 			MicroEnb.cellsPerSite = 3;
 			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
@@ -106,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.ISD = 100;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
-			MicroEnb.antennaType = 'omni';
+			MicroEnb.antennaType = 'sectorised';
 			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
 

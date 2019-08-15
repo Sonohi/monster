@@ -12,8 +12,9 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config  = MonsterConfig();
-			testCase.Config.MacroEnb.number = 1;
-			testCase.Config.MicroEnb.number = 0;
+			testCase.Config.MacroEnb.sitesNumber = 1;
+			testCase.Config.MacroEnb.cellsPerSite = 1;
+			testCase.Config.MicroEnb.sitesNumber = 0;
 			testCase.Config.Ue.number = 1;
 			testCase.Config.setupNetworkLayout();
 			testCase.Stations = setupStations(testCase.Config);

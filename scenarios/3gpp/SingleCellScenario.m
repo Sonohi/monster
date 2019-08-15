@@ -7,10 +7,10 @@ Config = MonsterConfig(); % Get template config parameters
 % Deploys a single cell for testing purposes.
 Config.Scenario = 'Single Cell';
 Config.MacroEnb.ISD = 300;
-Config.MacroEnb.number = 1;
-Config.MicroEnb.number = 0;
-Config.PicoEnb.number = 0; 
-Config.MacroEnb.height= 35;
+Config.MacroEnb.sitesNumber = 1;
+Config.MacroEnb.cellsPerSite = 1;
+Config.MacroEnb.height = 35;
+Config.MicroEnb.sitesNumber = 0;
 Config.Ue.number = 1;
 Config.Ue.height = 1.5;
 Config.Traffic.primary = 'fullBuffer';

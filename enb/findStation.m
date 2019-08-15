@@ -6,7 +6,7 @@ function Station = findStation(cellId, Sites)
 	%
 	% :returns Station: EvolvedNodeB handle of the cell found
 
-	allCells = getStations(Sites);
+	allCells = [Sites.Cells];
 	iCell = find([allCells.NCellID] == cellId);
 	if ~isempty(iCell)
 		Station = allCells(iCell);

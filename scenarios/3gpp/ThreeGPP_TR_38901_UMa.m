@@ -7,9 +7,9 @@ Config = MonsterConfig(); % Get template config parameters
 % from https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/14.03.00_60/tr_138901v140300p.pdf Table 7.2-1, table 7.5-6 and table 7.8-1 on UMa
 Config.Scenario = '3GPP TR 38.901 UMa';
 Config.MacroEnb.ISD = 500;
-Config.MacroEnb.number = 19;
-Config.MicroEnb.number = 0;
-Config.PicoEnb.number = 0;
+Config.MacroEnb.sitesNumber = 19;
+Config.MacroEnb.cellsPerSite = 1;
+Config.MicroEnb.sitesNumber = 0;
 Config.MacroEnb.height= 25;
 Config.Ue.number = 30 * Config.MacroEnb.number; %Estimated, not mentioned directly
 Config.Ue.height = 1.5;

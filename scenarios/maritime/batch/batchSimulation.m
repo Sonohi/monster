@@ -22,9 +22,9 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 	else 
 		Config.Ue.antennaType = 'omni';
 	end
-	Config.MacroEnb.number = 3;
-	Config.MicroEnb.number = 0;
-	Config.PicoEnb.number = 0;
+	Config.MacroEnb.sitesNumber = 3;
+	Config.MacroEnb.cellsPerSite = 1;
+	Config.MicroEnb.sitesNumber = 0;
 	Config.Mobility.scenario = 'maritime';
 	Config.Phy.uplinkFrequency = 1747.5;
 	Config.Phy.downlinkFrequency = 2600;

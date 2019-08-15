@@ -4,6 +4,7 @@ classdef Monster < matlab.mixin.Copyable
 	% 
 	% :Config: (MonsterConfig) simulation config class instance
 	% :Sites: (Array<Site>) simulation cell sites class instances
+	% :Stations: (Array<EvolvedNodeB>) reference to network cells
 	% :Users: (Array<UserEquipment>) simulation UEs class instances
 	% :Channel: (Channel) simulation channel class instance
 	% :Traffic: (TrafficGenerator) simulation traffic generator class instance
@@ -11,6 +12,7 @@ classdef Monster < matlab.mixin.Copyable
 	properties 
 		Config;
 		Sites;
+		Stations;
 		Users;
 		Channel;
 		Traffic;
@@ -53,13 +55,13 @@ classdef Monster < matlab.mixin.Copyable
 			% Setup eNodeBs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation sites', 'DBG');
 			Sites = setupSites(obj.Config, obj.Logger);
+			Stations = [Sites.Cells];
 
 			% Setup UEs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation UEs', 'DBG');
 			Users = setupUsers(obj.Config, obj.Logger);
 
 			% Setup channel
-			Stations = getStations(Sites);
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation channel', 'DBG');
 			Channel = setupChannel(Stations, Users, obj.Config, obj.Logger);
 
@@ -74,6 +76,7 @@ classdef Monster < matlab.mixin.Copyable
 			% Assign the properties to the Monster object
 			
 			obj.Sites = Sites;
+			obj.Stations = Stations;
 			obj.Users = Users;
 			obj.Channel = Channel;
 			obj.Traffic = Traffic;
@@ -147,8 +150,7 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			obj.Logger.log('(MONSTER - collectResults) eNodeB metrics recording', 'DBG');
-			Stations = getStations(obj.Sites);
-			obj.Results = obj.Results.recordEnbMetrics(Stations, obj.Config, obj.Logger);
+			obj.Results = obj.Results.recordEnbMetrics(obj.Stations, obj.Config, obj.Logger);
 
 			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'DBG');
 			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Config.Runtime.currentRound, obj.Logger);
@@ -162,8 +164,7 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
-			Stations = getStations(obj.Sites);
-			arrayfun(@(x)x.reset(obj.Config.Runtime.currentRound + 1), Stations);
+			arrayfun(@(x)x.reset(obj.Config.Runtime.currentRound + 1), obj.Stations);
 
 			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
 			arrayfun(@(x)x.reset(), obj.Users);		
@@ -188,9 +189,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			if mod(obj.Config.Runtime.currentTime, obj.Config.Scheduling.refreshAssociationTimer) == 0
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs re-associating', 'DBG');
-				Stations = getStations(obj.Sites);
-				%[obj.Users, UpdatedStations] = refreshUsersAssociation(obj.Users, Stations, obj.Channel, obj.Config);
-				refreshUsersAssociation(obj.Users, Stations, obj.Channel, obj.Config);
+				refreshUsersAssociation(obj.Users, obj.Stations, obj.Channel, obj.Config);
 			else
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs not re-associated', 'DBG');
 			end			
@@ -213,11 +212,10 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			
 			% Set the ShouldSchedule flag for all the eNodeBs 
-			Stations = getStations(obj.Sites);
-			arrayfun(@(x)x.evaluateScheduling(obj.Users), Stations);
+			arrayfun(@(x)x.evaluateScheduling(obj.Users), obj.Stations);
 
 			% Now call the schedule method on the eNodeBs
-			arrayfun(@(x)x.downlinkSchedule(obj.Users, obj.Config), Stations);
+			arrayfun(@(x)x.downlinkSchedule(obj.Users, obj.Config), obj.Stations);
 
 			% Finally, evaluate the power state for the eNodeBs
 			% TODO revise for multiple macro eNodeBs
@@ -230,21 +228,20 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 			
-			Stations = getStations(obj.Sites);
 			% Create the transport blocks for all the UEs
-			arrayfun(@(x)x.generateTransportBlockDL(Stations, obj.Config), obj.Users);
+			arrayfun(@(x)x.generateTransportBlockDL(obj.Stations, obj.Config), obj.Users);
 
 			% Create the codewords for all the UEs
 			arrayfun(@(x)x.generateCodewordDL(), obj.Users);
 
 			% Setup the reference signals at the eNB transmitters 
-			arrayfun(@(x)x.setupGrid(obj.Config.Runtime.currentRound), [Stations.Tx]);
+			arrayfun(@(x)x.setupGrid(obj.Config.Runtime.currentRound), [obj.Stations.Tx]);
 
 			% Create the symbols for all the UEs' codewords at the eNodeBs
-			arrayfun(@(x)x.setupPdsch(obj.Users), Stations);
+			arrayfun(@(x)x.setupPdsch(obj.Users), obj.Stations);
 
 			% Finally modulate the waveform for all the eNodeBs
-			arrayfun(@(x)x.modulateTxWaveform(), [Stations.Tx]);
+			arrayfun(@(x)x.modulateTxWaveform(), [obj.Stations.Tx]);
 
 		end
 
@@ -253,8 +250,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			%
-			Stations = getStations(obj.Sites);
-			obj.Channel.traverse(Stations, obj.Users, 'downlink');
+			obj.Channel.traverse(obj.Stations, obj.Users, 'downlink');
 
 		end
 
@@ -263,8 +259,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			%
-			Stations = getStations(obj.Sites);
-			arrayfun(@(x)x.downlinkReception(Stations, obj.Channel.Estimator.Downlink), obj.Users);
+			arrayfun(@(x)x.downlinkReception(obj.Stations, obj.Channel.Estimator.Downlink), obj.Users);
 
 		end
 
@@ -291,8 +286,7 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			% 
-			Stations = getStations(obj.Sites);
-			obj.Channel.traverse(Stations, obj.Users,'uplink');
+			obj.Channel.traverse(obj.Stations, obj.Users,'uplink');
 		
 		end
 
@@ -301,9 +295,8 @@ classdef Monster < matlab.mixin.Copyable
 			% 
 			% :obj: Monster instance
 			%
-			Stations = getStations(obj.Sites);
-			arrayfun(@(x)x.createReceivedSignal(), [Stations.Rx]);
-			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), Stations);			
+			arrayfun(@(x)x.createReceivedSignal(), [obj.Stations.Rx]);
+			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), obj.Stations);			
 		
 		end 
 
@@ -312,8 +305,7 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			% :obj: Monster instance
 			%
-			Stations = getStations(obj.Sites);
-			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), Stations);
+			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), obj.Stations);
 		
 		end
 	end
