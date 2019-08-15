@@ -24,6 +24,9 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				Config.SimulationPlot.runtimePlot = 0;
 				Config.MacroEnb.number = 5;
 				Config.Ue.number = 5;
+				Config.Terrain.type = 'city';
+				Config.Mobility.scenario = 'pedestrian';
+				Config.Channel.shadowingActive = 1;
 				testCase.Logger = MonsterLog(Config);
 				
 				Config.setupNetworkLayout(testCase.Logger);

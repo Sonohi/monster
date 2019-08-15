@@ -15,9 +15,13 @@ classdef Site < matlab.mixin.Copyable
 			obj.Logger = Logger;
 			obj.Position = sitePosition;
 			obj.Class = cellsClass;
+			% Depending on the number of cells in this site, generate bearing values
+			theta = 360/length(cellsIds);
+			possibleBearings = 0:theta:360;
+			bearings = possibleBearings(1:length(cellsIds));
 			% Call constructor of cells/eNodeBs and assign the cell ids
-			Cells(1:length(cellsIds)) = arrayfun(@(x) EvolvedNodeB(Config, Logger, ...
-				cellsClass, sitePosition, x, siteId, macroCellId), cellsIds);
+			Cells(1:length(cellsIds)) = arrayfun(@(x, y) EvolvedNodeB(Config, Logger, ...
+				cellsClass, sitePosition, x, y, siteId, macroCellId), cellsIds, bearings);
 			obj.Cells = Cells;
 		end
 	end

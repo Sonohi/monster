@@ -29,7 +29,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = enbTransmitterModule(enb, Config)
+		function obj = enbTransmitterModule(enb, Config, antennaBearing)
 			% enbTransmitterModule
 			%
 			% :param enb:
@@ -45,14 +45,21 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
 					obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger);
 					obj.TxPwdBm = 10*log10(Config.MacroEnb.Pmax)+30;
+					if ~strcmp(Config.MacroEnb.antennaType, 'omni')
+						obj.AntennaArray.Bearing = antennaBearing;
+					end
 				case 'micro'
 					obj.Gain = Config.MicroEnb.antennaGain;
 					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
 					obj.AntennaArray = AntennaArray(Config.MicroEnb.antennaType, obj.Enb.Logger);
 					obj.TxPwdBm = 10*log10(Config.MicroEnb.Pmax)+30;
+					if ~strcmp(Config.MicroEnb.antennaType, 'omni')
+						obj.AntennaArray.Bearing = antennaBearing;
+					end
 				otherwise
 					obj.Enb.Logger.log(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
+
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
 			obj.Waveform = zeros(Nfft, 1);
 			obj.resetReference();

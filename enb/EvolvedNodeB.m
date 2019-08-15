@@ -45,7 +45,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 	
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Config, Logger, BsClass, position, cellId, siteId, macroCellId)
+		function obj = EvolvedNodeB(Config, Logger, BsClass, position, cellId, antennaBearing, siteId, macroCellId)
 			obj.Logger = Logger;
 			obj.SiteId = siteId;
 			obj.MacroCellId = macroCellId;
@@ -66,7 +66,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 			end
-			
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -89,7 +88,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
 				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
-			obj.Tx = enbTransmitterModule(obj, Config);
+			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
 			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)

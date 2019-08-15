@@ -27,6 +27,9 @@ classdef Monster < matlab.mixin.Copyable
 			% :param Config: MonsterConfig instance
 			% :param Logger: MonsterLog instance
 
+			% Assert that the configuration is valid before starting the construction
+			validateConfiguration(Config, Logger);
+
 			obj.Logger = Logger;
 			obj.Config = Config;
 			obj.Logger.log('(MONSTER) setting up simulation', 'DBG');

@@ -96,7 +96,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			MicroEnb = struct();
 			MicroEnb.sitesNumber = 3;
-			MicroEnb.cellsPerSite = 3;
+			MicroEnb.cellsPerSite = 1;
 			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
@@ -104,7 +104,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MicroEnb.ISD = 100;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
-			MicroEnb.antennaType = 'sectorised';
+			MicroEnb.antennaType = 'omni';
 			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
 
@@ -133,36 +133,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
 			Terrain.type = 'city'; % city | maritime
-			if strcmp(Terrain.type,'city')
-				% In the city scenario, a Manhattan city grid is generated based on a size parameter
-				Terrain.areaSize = 500;
-				Terrain.heightRange = [20,50];
-				Terrain.buildingWidth = 40;
-				Terrain.roadWidth = 10;
-				Terrain.buildings = generateManhattanGrid(...
-					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
-				Terrain.area = [...
-					min(Terrain.buildings(:, 1)), ...
-					min(Terrain.buildings(:, 2)), ...
-					max(Terrain.buildings(:, 3)), ...
-					max(Terrain.buildings(:, 4))];
-			elseif strcmp(Terrain.type,'maritime')
-				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
-				rng(obj.Runtime.seed);
-				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
-				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
-				% Compute the coastline
-				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
-				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
-				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
-				spreadY = interp1(coastX, coastY, spreadX, 'spline');
-				Terrain.coast.coastline(:,1) = spreadX(1,:);
-				Terrain.coast.coastline(:,2) = spreadY(1,:);				
-				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
-				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
-			else
-				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
-			end
 			obj.Terrain = Terrain;
 
 			% Properties related to the traffic 
@@ -196,10 +166,10 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
 			Channel.interferenceType = 'Full';
-			Channel.shadowingActive = false;
+			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
-			Channel.losMethod = '3GPP38901-probability';
+			Channel.losMethod = '3GPP38901-probability'; % 'NLOS', '3GPP38901-probability', 'LOS'
 			Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
 			obj.Channel = Channel;
 
@@ -254,13 +224,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			%assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
 			% Check traffic configuration
 			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
-
-			% Plot
-			if obj.SimulationPlot.runtimePlot
-				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
-				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
-			end
-
 		end
 
 		function setupNetworkLayout(obj, Logger)
@@ -270,9 +233,53 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			%	:param Logger: MonsterLog instance
 			% :sets obj.Plot.Layout: <NetworkLayout> network layout class instance
 
+			% Setup up needed terrain information given the terrain chosen
+			obj.setupTerrain()
+
 			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
 			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
+			% Plot
+			if obj.SimulationPlot.runtimePlot
+				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
+				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
+			end
 			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
+		end
+
+		function setupTerrain(obj)
+			Terrain = struct();
+			Terrain.type = obj.Terrain.type;
+			if strcmp(Terrain.type,'city')
+				% In the city scenario, a Manhattan city grid is generated based on a size parameter
+				Terrain.areaSize = 500;
+				Terrain.heightRange = [20,50];
+				Terrain.buildingWidth = 40;
+				Terrain.roadWidth = 10;
+				Terrain.buildings = generateManhattanGrid(...
+					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
+				Terrain.area = [...
+					min(Terrain.buildings(:, 1)), ...
+					min(Terrain.buildings(:, 2)), ...
+					max(Terrain.buildings(:, 3)), ...
+					max(Terrain.buildings(:, 4))];
+			elseif strcmp(Terrain.type,'maritime')
+				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
+				rng(obj.Runtime.seed);
+				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
+				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
+				% Compute the coastline
+				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
+				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
+				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
+				spreadY = interp1(coastX, coastY, spreadX, 'spline');
+				Terrain.coast.coastline(:,1) = spreadX(1,:);
+				Terrain.coast.coastline(:,2) = spreadY(1,:);				
+				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
+				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
+			else
+				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
+			end
+			obj.Terrain = Terrain;
 		end
 
 		function storeConfig(obj, logName)

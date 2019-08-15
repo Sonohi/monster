@@ -180,6 +180,27 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 		end
 
+		function h = plotPower(obj, Stations, User, resolution, Logger)
+			[receivedPower, grid] = obj.signalPowerMap(Stations, User, resolution);
+			%receivedPowerWatts = 10.^((receivedPower-30)./10);
+
+			
+			Logger.log('(MONSTER CHANNEL - plotPower) Computing Power map...','NFO');
+			
+			h = figure;
+			contourf(grid(1,:),grid(2,:),max(receivedPower,[],3))
+			c = colorbar();
+			c.Label.String = 'Power [dBm]';
+			xlabel('X [meters]')
+			ylabel('Y [meters]')
+			hold on
+			for iStation = 1:length(Stations)
+				plot(Stations(iStation).Position(1), Stations(iStation).Position(2), 'o', 'MarkerSize', 5, 'MarkerFaceColor', 'r')
+			end
+
+
+		end
+
 		
 		function h = plotSINR(obj, Stations, User, resolution, Logger)
 			% plotSINR
@@ -207,7 +228,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 			end
 
-			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...');
+			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...','NFO');
 			
 			h = figure;
 			contourf(grid(1,:),grid(2,:),10*log10(max(SINR,[],3)))
@@ -303,45 +324,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 		
 		
-		function [LOS, prop] = isLinkLOS(obj, Station, User, draw)
-			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
-			%
-			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
-			% 2. :attr:`SonohiChannel.LOSMethod` : :attr:`3GPP38901-probability` Uses probability given table 7.4.2-1 of 3GPP TR 38.901. See :meth:`ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability` for more the implementation.
-			%
-			% :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
-			% :type Station: :class:`enb.EvolvedNodeB`
-			% :param User: Need :attr:`User.Position`
-			% :type User: :class:`ue.UserEquipment`
-			% :param bool draw: Draws fresnel zone and elevation profile.
-			% :returns: LOS (bool) indicating LOS
-			% :returns: (optional) probability is returned if :attr:`3GPP38901-probability` is assigned
-			% TODO: Merge this with isLinkLOSMatrix
-			
-			% Check if User is indoor
-			% Else use probability to determine LOS state
-			if User.Mobility.Indoor
-				LOS = 0;
-				prop = NaN;
-			else
-				switch obj.LOSMethod
-					case 'fresnel'
-						LOS = obj.fresnelLOScomputation(Station, User, draw);
-						prop = NaN;
-					case '3GPP38901-probability'
-						[LOS, prop] = Monster3GPP38901.LOSprobability(obj, Station, User);
-					case 'NLOS'
-						LOS = 0;
-						prop = NaN;
-					case 'LOS'
-						LOS = 1;
-						prop = NaN;
-				end
-			end
-		end
-		
-		
-		function [LOS, prop] = isLinkLOSMatrix(obj, Station, User, draw, dist2d)
+		function [LOS, prop] = isLinkLOS(obj, txConfig, rxConfig, draw)
 			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
 			%
 			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
@@ -357,28 +340,26 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			
 			% Check if User is indoor
 			% Else use probability to determine LOS state
-			if User.Mobility.Indoor
-				LOS = 0;
-				prop = NaN;
-			else
+			% TODO: FIX
+	
 				switch obj.LOSMethod
 					case 'fresnel'
-						LOS = obj.fresnelLOScomputation(Station, User, draw);
-						prop = NaN;
+							LOS = obj.fresnelLOScomputation(txConfig, rxConfig, draw);
+							prop = NaN;
 					case '3GPP38901-probability'
-						[LOS, prop] = Monster3GPP38901.LOSprobabilityMatrix(obj, Station, User, dist2d);
-					case 'NLOS'
-						LOS = 0;
+							[LOS, prop] = Monster3GPP38901.LOSprobability(txConfig, rxConfig);
+					case 'NLOS'                   
+						LOS = zeros(size(rxConfig.positions,1),1);
 						prop = NaN;
 					case 'LOS'
-						LOS = 1;
+						LOS =  ones(size(rxConfig.positions,1),1);
 						prop = NaN;
 				end
-			end
+			
 		end
 		
 		
-		function LOS = fresnelLOScomputation(obj, Station, User, draw)
+		function LOS = fresnelLOScomputation(obj, txConfig, rxConfig, draw)
 			% fresnelLOScomputation
 			%
 			% :obj:
@@ -387,11 +368,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :draw:
 			%
 
-			txPos = Station.Position;
-			txFreq = Station.DlFreq;
-			rxPos = User.Position;
+			txPos = txConfig.position;
+			txFreq = txConfig.freq;
+			rxPos = rxConfig.positions;
 			
-			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos,rxPos);
+			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos, rxPos);
 			
 			distVec = distVec(2:end); % First is zero
 			totalDistance = distVec(end); % Meters
