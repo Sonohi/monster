@@ -230,11 +230,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Plot.PHYAxes = axes;
 			end
 			obj.Plot = Plot;
-
-			% Check the number of macros and throw an error if set to an unsupported number
-			%assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-			% Check traffic configuration
-			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
+	
 
 			% Plot
 			if obj.SimulationPlot.runtimePlot
@@ -242,6 +238,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
 
+		end
+
+		function assertConfig(obj)
+			% Check for configuration assumptions in current config.
+			assert(obj.Phy.pucchFormat == 2, '(CONFIG ASSERT) error, only a puuchformat of 2 is currently implemented.')
+			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
 		end
 
 		function setupNetworkLayout(obj, Logger)
