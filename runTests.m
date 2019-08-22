@@ -15,11 +15,11 @@ suite = TestSuite.fromFolder('ue', 'IncludingSubfolders', true);
 result = run(suite);
 
 % Test MetricRecorder
-monsterLog('Testing MetricRecorder functions...','NFO')
+disp('Testing MetricRecorder functions...');
 suite = TestSuite.fromFolder('results', 'IncludingSubfolders', true);
 result = run(suite);
 
 % Test Monster (simulation)
-monsterLog('Testing Monster functions...','NFO')
+disp('Testing Monster functions...');
 suite = TestSuite.fromFolder('tests', 'IncludingSubfolders', true);
 result = run(suite);
