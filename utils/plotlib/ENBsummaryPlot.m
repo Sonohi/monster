@@ -16,12 +16,12 @@ classdef ENBsummaryPlot < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = ENBsummaryPlot(Stations)
+		function obj = ENBsummaryPlot(Cells)
 			obj.setColors();
 			obj.createFigureHandle();
 			obj.createTabGroup();
 			obj.getNumberOfRows();
-			obj.createTabForEachStation(Stations);
+			obj.createTabForEachCell(Cells);
 			obj.axes = findall(obj.fig,'type','axes');
 		end
 		
@@ -37,19 +37,19 @@ classdef ENBsummaryPlot < matlab.mixin.Copyable
 			obj.tabgp = uitabgroup(obj.fig,'Position',[.05 .05 .9 .9]);
 		end
 		
-		function obj = createTabForEachStation(obj, Stations)
+		function obj = createTabForEachCell(obj, Cells)
 			%% Setup tab for each enb
-			for stationIdx = 1:length(Stations)
-				station = Stations(stationIdx);
-				stationId = station.NCellID;
-				stationSummary = uitab(obj.tabgp,'Title',sprintf('Station %i', stationId));
-				stationSummaryAxes = axes('parent', stationSummary);
-				hold(stationSummaryAxes,'on')
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				cellId = Cell.NCellID;
+				cellSummary = uitab(obj.tabgp,'Title',sprintf('Cell %i', cellId));
+				cellSummaryAxes = axes('parent', cellSummary);
+				hold(cellSummaryAxes,'on')
 				
 				for metricIdx = 1:length(obj.metrics)
 					metric = obj.metrics{metricIdx};
 					metricColor = obj.metricsColor(metricIdx,:);
-					h = subplot(obj.numRows,obj.numCols,metricIdx,'Tag',sprintf('station%i%s',stationId, metric));
+					h = subplot(obj.numRows,obj.numCols,metricIdx,'Tag',sprintf('Cell%i%s',cellId, metric));
 					animatedline(h,'Color',metricColor)
 					title(h,metric)
 					xlabel(h,'Seconds')
@@ -63,28 +63,28 @@ classdef ENBsummaryPlot < matlab.mixin.Copyable
 		end
 		
 		
-		function obj = addData(obj,stationId,metric,x,y)
-			h = obj.findSubplotHandle(stationId, metric);
+		function obj = addData(obj,cellId,metric,x,y)
+			h = obj.findSubplotHandle(cellId, metric);
 			addpoints(h,x,y)
 		end
 		
-		function obj = ENBBulkPlot(obj, Stations, SimulationMetrics, iRound)
+		function obj = ENBBulkPlot(obj, Cells, SimulationMetrics, iRound)
 			simTime = iRound * 0.001;
 			iRound = iRound + 1;
-			for stationIdx = 1:length(Stations)
-				station = Stations(stationIdx);
-				obj.addData(station.NCellID, 'PowerState', simTime, SimulationMetrics.powerState(iRound,stationIdx));
-				obj.addData(station.NCellID, 'PowerConsumed', simTime, SimulationMetrics.powerConsumed(iRound,stationIdx));
-				obj.addData(station.NCellID, 'HARQ', simTime, SimulationMetrics.harqRtx(iRound,stationIdx));
-				obj.addData(station.NCellID, 'Utilization', simTime, SimulationMetrics.util(iRound,stationIdx));
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				obj.addData(Cell.NCellID, 'PowerState', simTime, SimulationMetrics.powerState(iRound,iCell));
+				obj.addData(Cell.NCellID, 'PowerConsumed', simTime, SimulationMetrics.powerConsumed(iRound,iCell));
+				obj.addData(Cell.NCellID, 'HARQ', simTime, SimulationMetrics.harqRtx(iRound,iCell));
+				obj.addData(Cell.NCellID, 'Utilization', simTime, SimulationMetrics.util(iRound,iCell));
 			end
 		end
 	end
 	
 	methods(Access=private)
 		
-		function h = findSubplotHandle(obj, stationId,metric)
-			Tag = sprintf('station%i%s',stationId, metric);
+		function h = findSubplotHandle(obj, cellId,metric)
+			Tag = sprintf('Cell%i%s',cellId, metric);
 			axEq = findall(obj.axes,'Tag',Tag);
 			h = get(axEq,'Children');
 		end

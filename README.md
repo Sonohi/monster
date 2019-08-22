@@ -8,7 +8,7 @@ The entire framework has just been largely re-factored to adopt a class-based st
 It should be considered in **alpha** stage and updated frequently.
 If you encounter bugs or some unexpected behaviour, please open an issue.
 Contributors are welcome and encouraged! 
-We have an always-growing number of feature requests, so feel free to pick or just go ahead with your own, following the style and phylosophy of the existing modules.
+We have an always-growing number of feature requests, so feel free to pick or just go ahead with your own, following the style and philosophy of the existing modules.
 
 # Environment requirements
 MATLAB and included [LTE system toolbox](https://se.mathworks.com/products/lte-system.html).
@@ -52,6 +52,17 @@ These are:
 4. `clean` performs the relevant resets and cleanup of the variables used in the round and prepares the various object instances for the next round. Relevant variable values that should be used for a time evolution of the simulation nodes are not reset at this stage.
 
 The simulation is then completed for the number of rounds configured and the results are made available as part of the `Monster` object created in the attribute `Results`.
+
+# Common terminology
+Some confusion might arise when implementing a model of a mobile networks in relation to what is actually meant with e.g. a cell or the likes.
+MONSTeR strives to keep a simple set of definitions of the models to reduce the chances of confusion.
+Thus some key concepts are specified here in relation to their usage in the project for class names, variable names, etc.
+1. **eNodeB** an eNodeB is considered as a logical entity that terminates the air interface in the Radio Access Network. 
+In MONSTeR an eNodeB is modelled with the `EvolvedNodeB` class. 
+This class further requires instances of the `enbTransmitterModule`, `enbReceiverModule` and `AntennaArray` classes to complete the transmission chain.
+2. **cell** in MONSTeR the concept of a cell is modelled and implemented with the `EvolvedNodeB` class mentioned above.
+Broadly speaking then, the term *cell* and *eNodeB* can be used somewhat interchangeably in the context of the framework.
+3. **site** a site is a collective term for one or more cells. In MONSTeR this is implemented by the `Site` class.
 
 # Performance metrics
 The framework uses a class for taking care of recording performance metrics from the simulations.

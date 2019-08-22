@@ -38,21 +38,21 @@ function [numPoints,distVec,elavationProfile] = getElevationProfile(BuildingFoot
 					distance = norm(position(1:2,i-1)'-rxPos(1:2));
 					
 					% Move position
-					[moved_dist,position(1:2,i)] = move(position(1:2,i-1),signX,signY,avgG,resolution);
-					distVec(i) = distVec(i-1)+moved_dist; %#ok
+					[movedDist,position(1:2,i)] = move(position(1:2,i-1),signX,signY,avgG,resolution);
+					distVec(i) = distVec(i-1)+movedDist; %#ok
 					
 					% Check if new position is at a greater distance, if so, we
 					% passed it.
-					distance_n = norm(position(1:2,i)'-rxPos(1:2));
-					if distance_n >= distance
+					distanceN = norm(position(1:2,i)'-rxPos(1:2));
+					if distanceN >= distance
 						break;
 					else
 						% Check if we're inside a building
-						fbuildings_x = BuildingFootprints(BuildingFootprints(:,1) < position(1,i) & BuildingFootprints(:,3) > position(1,i),:);
-						fbuildings_y = fbuildings_x(fbuildings_x(:,2) < position(2,i) & fbuildings_x(:,4) > position(2,i),:);
+						fBuildingsX = BuildingFootprints(BuildingFootprints(:,1) < position(1,i) & BuildingFootprints(:,3) > position(1,i),:);
+						fBuildingsY = fBuildingsX(fBuildingsX(:,2) < position(2,i) & fBuildingsX(:,4) > position(2,i),:);
 						
-						if ~isempty(fbuildings_y)
-							elavationProfile(i) = fbuildings_y(5); %#ok
+						if ~isempty(fBuildingsY)
+							elavationProfile(i) = fBuildingsY(5); %#ok
 							if elavationProfile(i-1) == 0
 								numPoints = numPoints +1;
 							end

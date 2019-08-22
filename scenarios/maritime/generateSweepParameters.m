@@ -5,7 +5,7 @@ function sweepParameters = generateSweepParameters(Simulation, optimisationMetri
 	% :param optimisationMetric: string to choose over which metric the sweep should optimise
 	% :returns sweepParameters: sweep parameters for each UE
 
-	enbList(1:length(Simulation.Stations)) = struct('eNodeBId', -1, 'angle', 0, 'rxPowdBm', -realmax, 'sinr', -realmax); 
+	enbList(1:length(Simulation.Cells)) = struct('eNodeBId', -1, 'angle', 0, 'rxPowdBm', -realmax, 'sinr', -realmax); 
 
 	% The sweep algorithm is evaluated at every simulation round and the state is kept across rounds.
 	% This is to mimic a real-life continuous process discretised in the realm of the simulation

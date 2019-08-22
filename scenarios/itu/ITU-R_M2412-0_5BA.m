@@ -7,9 +7,9 @@ Config = MonsterConfig(); % Get template config parameters
 % from https://www.itu.int/dms_pub/itu-r/opb/rep/R-REP-M.2412-2017-PDF-E.pdf Table 5.c Configuration A
 %For Spectral efficiency and mobility Evaluations.
 Config.Scenario = 'ITU-R M.2412-0 5.B.A';
-Config.MacroEnb.number = 19;
-Config.MicroEnb.number = 0;
-Config.PicoEnb.number = 0;				
+Config.MacroEnb.sitesNumber = 19;
+Config.MacroEnb.cellsPerSite = 1;
+Config.MicroEnb.sitesNumber = 0;
 Config.Phy.downlinkFrequency = 4000; %MHz
 Config.MacroEnb.height= 25;
 Config.MacroEnb.Pmax = 10^(41/10)/1e3; %41dBm converted to W

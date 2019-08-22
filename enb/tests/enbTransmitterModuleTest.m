@@ -3,7 +3,7 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 	properties
 		Config;
 		TxModule;
-		Stations;
+		Cells;
 		Logger;
 	end
 
@@ -12,9 +12,9 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.Config  = MonsterConfig();
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Config.setupNetworkLayout(testCase.Logger);
-
-			testCase.Stations = setupStations(testCase.Config, testCase.Logger);
-			testCase.TxModule = [testCase.Stations.Tx];
+			Sites = setupSites(testCase.Config, testCase.Logger);
+			testCase.Cells = [Sites.Cells];
+			testCase.TxModule = [testCase.Cells.Tx];
 
 		end
 	end
@@ -31,16 +31,16 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.verifyTrue(isa(testCase.TxModule, 'enbTransmitterModule'));
 		end
 		
-		function testStationAssignment(testCase)
-			for iStation = 1:length(testCase.Stations)
-				testCase.verifyTrue(isa(testCase.Stations(iStation).Tx,'enbTransmitterModule'));
+		function testCellAssignment(testCase)
+			for iCell = 1:length(testCase.Cells)
+				testCase.verifyTrue(isa(testCase.Cells(iCell).Tx,'enbTransmitterModule'));
 			end
 		end
 		
-		function testStationParameters(testCase)
-			for iStation = 1:length(testCase.Stations)
-				testCase.verifyTrue(testCase.TxModule(iStation).Enb == testCase.Stations(iStation));
-				testCase.verifyTrue(testCase.TxModule(iStation).TxPwdBm == 10*log10(testCase.Stations(iStation).Pmax)+30);
+		function testCellParameters(testCase)
+			for iCell = 1:length(testCase.Cells)
+				testCase.verifyTrue(testCase.TxModule(iCell).Enb == testCase.Cells(iCell));
+				testCase.verifyTrue(testCase.TxModule(iCell).TxPwdBm == 10*log10(testCase.Cells(iCell).Pmax)+30);
 			end
 		end
 		

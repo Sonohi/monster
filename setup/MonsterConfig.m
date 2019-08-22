@@ -8,7 +8,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 	% :SimulationPlot: (struct) configuration for plotting
 	% :MacroEnb: (struct) configuration for macro eNodeBs
 	% :MicroEnb: (struct) configuration for micro eNodeBs
-	% :PicoEnb: (struct) configuration for pico eNodeBs
 	%	:Ue: (struct) configuration for UEs
 	% :Mobility: (struct) configuration for UE mobility
 	% :Handover: (struct) configuration for X2 and S1 handover
@@ -27,7 +26,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		SimulationPlot = struct();
 		MacroEnb = struct();
 		MicroEnb = struct();
-		PicoEnb = struct();
 		Ue = struct();
 		Mobility = struct();
 		Handover = struct();
@@ -52,7 +50,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 100;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -75,49 +73,36 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
-			SimulationPlot.generateCoverageMap = 0;
-			SimulationPlot.generateHeatMap = 0;
-			SimulationPlot.heatMapType = 'perStation';
-			SimulationPlot.heatMapRes = 10;
+			SimulationPlot.runtimePlot = 1;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.number = 1;
+			MacroEnb.sitesNumber = 1;
+			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
-			MacroEnb.ISD = 1000; %Cell radius is one third of intersite distance. ISD
+			MacroEnb.ISD = 500;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
-			MacroEnb.antennaType = 'omni';
+			MacroEnb.antennaType = 'sectorised';
 			MacroEnb.Pmax = 20; % W
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.sitesNumber = 3;
+			MicroEnb.cellsPerSite = 1;
+			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
-			MicroEnb.ISD = 200;
+			MicroEnb.ISD = 100;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
 			MicroEnb.antennaType = 'omni';
 			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
-
-			PicoEnb = struct();
-			PicoEnb.number = 1;
-			PicoEnb.numPRBs = 6;
-			PicoEnb.height = 5;
-			PicoEnb.positioning = 'uniform';
-			PicoEnb.ISD = 200;
-			PicoEnb.noiseFigure = 7;
-			PicoEnb.antennaGain = 0;
-			PicoEnb.antennaType = 'omni';
-			PicoEnb.Pmax =  0.13; %W
-			obj.PicoEnb = PicoEnb;
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
@@ -230,20 +215,30 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Plot.PHYAxes = axes;
 			end
 			obj.Plot = Plot;
-	
-
-			% Plot
-			if obj.SimulationPlot.runtimePlot
-				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
-				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
-			end
-
 		end
 
 		function assertConfig(obj)
-			% Check for configuration assumptions in current config.
-			assert(obj.Phy.pucchFormat == 2, '(CONFIG ASSERT) error, only a puuchformat of 2 is currently implemented.')
-			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
+			% Asserts the configuration of the simulation 
+			%
+			% :param obj: MonsterConfig instance including scenario-specific configurations
+			%
+
+			% Assert macro eNodeB configuration
+			if strcmp(obj.MacroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MacroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MacroEnb.cellsPerSite == 1 || obj.MacroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			% Assert micro eNodeB configuration
+			if strcmp(obj.MicroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MicroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MicroEnb.cellsPerSite == 1 || obj.MicroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			errMsg = "(CONFIG - assertConfig) invalid value for Phy.pucchFormat. Only 2 is currently implemented";
+			assert(obj.Phy.pucchFormat == 2, errMsg);
+			errMsg = "(CONFIG - assertConfig) invalid value for Traffic.Mix. Only non negative values are allowed.";
+			assert(obj.Traffic.mix >= 0, errMsg);
 		end
 
 		function setupNetworkLayout(obj, Logger)
@@ -258,6 +253,11 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
 			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
+			% Plot
+			if obj.SimulationPlot.runtimePlot
+				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
+				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
+			end
 			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
 		end
 
@@ -265,11 +265,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Terrain = struct();
 			Terrain.type = obj.Terrain.type;
 			if strcmp(Terrain.type,'city')
-				% In the city scenario, a Manhattan city grid is generated based on a buildings file
-				Terrain.buildingsFile = 'mobility/buildings.txt';
+				% In the city scenario, a Manhattan city grid is generated based on a size parameter
+				Terrain.areaSize = 500;
 				Terrain.heightRange = [20,50];
-				Terrain.buildings = load(Terrain.buildingsFile);
-				Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
+				Terrain.buildingWidth = 40;
+				Terrain.roadWidth = 10;
+				Terrain.buildings = generateManhattanGrid(...
+					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
 				Terrain.area = [...
 					min(Terrain.buildings(:, 1)), ...
 					min(Terrain.buildings(:, 2)), ...

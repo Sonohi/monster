@@ -8,9 +8,9 @@ Config = MonsterConfig(); % Get template config parameters
 %User Experienced Data Rate Evaluation
 Config.Scenario = 'ITU-R M.2412-0 5.B.C';
 Config.MacroEnb.ISD = 200;
-Config.MacroEnb.number = 19;
-Config.MicroEnb.number = 9*Config.MacroEnb.number;
-Config.PicoEnb.number = 0;
+Config.MacroEnb.sitesNumber = 19;
+Config.MacroEnb.cellsPerSite = 1;
+Config.MicroEnb.sitesNumber = 9*Config.MacroEnb.number;
 Config.MacroEnb.height= 25;
 Config.microHeight = 10;
 Config.Ue.height = 1.5;
