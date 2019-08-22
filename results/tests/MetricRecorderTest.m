@@ -19,13 +19,6 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
         end
     end
 
-    methods (TestMethodTeardown)
-        function resetObjects(testCase)
-            %Test Teardown
-
-        end
-    end
-
     methods (Test)
         function testConstructor(testCase)
             testCase.verifyTrue(isa(testCase.MetricRecorder,'MetricRecorder'));

@@ -67,8 +67,8 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Son.hysteresisTimer = 0.001;
 			testCase.Config.Son.switchTimer = 0.001;
 			testCase.Config.Son.utilisationRange = 1:100;
-			testCase.Config.Son.utilLow = Son.utilisationRange(1);
-			testCase.Config.Son.utilHigh = Son.utilisationRange(end);
+			testCase.Config.Son.utilLow = testCase.Config.Son.utilisationRange(1);
+			testCase.Config.Son.utilHigh = testCase.Config.Son.utilisationRange(end);
 			testCase.Config.Son.powerScale = 1;
 
             %Set HARQ and ARQ
@@ -83,13 +83,6 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             testCase.Config.Arq.timeout = 20;
             
             testCase.Simulation = Monster(testCase.Config);
-        end
-    end
-
-    methods (TestMethodTeardown)
-        function resetObjects(testCase)
-            %Test Teardown
-            clear all;
         end
     end
 
@@ -131,20 +124,24 @@ classdef basicScenarioTest < matlab.unittest.TestCase
             %verify CQI
             arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.cqi); %TODO: find a more narrow range and confirm
             %Verify SNR and SINR. With only 1 Enb they should be the same
-            testCase.verifyTrue( any(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB) < 1e-4 ));
-            %TODO: find a more appropiate range and/or veriy current
+            testCase.verifyTrue( mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB) < 1e-4 )==1);
+            %TODO: find a more appropiate range and/or verify current
             testCase.verifyTrue( 35 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
             %Verify difference between pre and post Evm
-            testCase.verifyTrue(any(testCase.Simulation.Results.preEvm > testCase.Simulation.Results.postEvm));
+            testCase.verifyTrue(mean(testCase.Simulation.Results.preEvm > testCase.Simulation.Results.postEvm)==1);
             %Verify throughput
-            testCase.verifyTrue( any( testCase.Simulation.Results.throughput(2:end) > 1e8) ); %With 50 PRBs the throughput is expected to be in the 100mb/s range
+            testCase.verifyTrue( mean( testCase.Simulation.Results.throughput(2:end) > 1e8) == 1 ); %With 50 PRBs the throughput is expected to be in the 100mb/s range
             %Verify receivedPowerdBm
-            testCase.verifyTrue( any(-70 < testCase.Simulation.Results.receivedPowerdBm) && any( testCase.Simulation.Results.receivedPowerdBm < -55) ); %TODO: narrow this range and verify
-            %Verify rsrqdB, rsrpdBm, rssidBm
-            testCase.verifyTrue( any(-100 < testCase.Simulation.Results.rsrqdB) && any(testCase.Simulation.Results.rsrqdB < 0) ); %TODO: narrow this range
-            testCase.verifyTrue( any(-100 < testCase.Simulation.Results.rsrpdBm) && any(testCase.Simulation.Results.rsrpdBm < -30) ); %TODO: narrow this range
-            testCase.verifyTrue( any(-100 < testCase.Simulation.Results.rssidBm) && any(testCase.Simulation.Results.rssidBm < -30) ); %TODO: narrow this range
-
+            testCase.verifyTrue( mean(-70 < testCase.Simulation.Results.receivedPowerdBm) && mean( testCase.Simulation.Results.receivedPowerdBm < -55) ); %TODO: narrow this range and verify
+            %Verify rsrqdB, rsrpdBm, rssidBm is not unreasonable. 
+            testCase.verifyTrue( mean(-15 < testCase.Simulation.Results.rsrqdB) && mean(testCase.Simulation.Results.rsrqdB < 0) ); 
+            testCase.verifyTrue( mean(-100 < testCase.Simulation.Results.rsrpdBm) && mean(testCase.Simulation.Results.rsrpdBm < -30) ); %TODO: narrow this range
+            testCase.verifyTrue( mean(-100 < testCase.Simulation.Results.rssidBm) && mean(testCase.Simulation.Results.rssidBm < -30) ); %TODO: narrow this range
+            %Verify that rsrpdBm and rssidBm values are related as expected
+            testCase.verifyTrue( mean(-5 < (testCase.Simulation.Results.rsrpdBm-(testCase.Simulation.Results.rssidBm-10*log10(12*testCase.Simulation.Stations.NDLRB))))...
+                                && mean( (testCase.Simulation.Results.rsrpdBm-(testCase.Simulation.Results.rssidBm-10*log10(12*testCase.Simulation.Stations.NDLRB))) < 5))
+            testCase.verifyTrue( mean(-5 < (testCase.Simulation.Results.rssidBm-(testCase.Simulation.Results.rsrpdBm+10*log10(12*testCase.Simulation.Stations.NDLRB)))) ...
+                                && mean((testCase.Simulation.Results.rssidBm-(testCase.Simulation.Results.rsrpdBm+10*log10(12*testCase.Simulation.Stations.NDLRB))) < 5))
         end
 
 

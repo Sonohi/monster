@@ -12,12 +12,6 @@ classdef simulationTest < matlab.unittest.TestCase
         end
     end
 
-    methods (TestMethodTeardown)
-        function resetObjects(testCase)
-            %Test Teardown
-
-        end
-    end
 
     methods (Test)
         function testConstructor(testCase)
@@ -34,13 +28,16 @@ classdef simulationTest < matlab.unittest.TestCase
             testCase.verifyTrue(testCase.Config.Runtime.remainingRounds == testCase.Config.Runtime.totalRounds - testCase.Config.Runtime.currentRound - 1);
 
             %Test for channel setup as well???
+            
+            
 
         end
 
         function testRun(testCase)
+            
+            %Run the simulation loop
             testCase.Simulation.run();
-
-
+            
         end
 
         function testCollectResults(testCase)
@@ -53,8 +50,8 @@ classdef simulationTest < matlab.unittest.TestCase
             %Test that stations and users are reset
             %Test Stations
             arrayfun(@(x) testCase.verifyEqual(x.NSubframe, mod(1,10)) , testCase.Simulation.Stations);
-            %TODO: add picostations as well, they are currently disabled
-            for iStation = 1:testCase.Config.MacroEnb.number + testCase.Config.MicroEnb.number% +testCase.Config.PicoEnb.number
+
+            for iStation = 1:testCase.Config.MacroEnb.number + testCase.Config.MicroEnb.number
                 clear temp;
                 temp(1:testCase.Simulation.Stations(iStation).NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1, 'NDI', 1);
                 testCase.verifyEqual(testCase.Simulation.Stations(iStation).ScheduleDL  , temp );
