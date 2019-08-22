@@ -74,10 +74,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
 			SimulationPlot.runtimePlot = 1;
-			SimulationPlot.generateCoverageMap = 0;
-			SimulationPlot.generateHeatMap = 0;
-			SimulationPlot.heatMapType = 'perCell';
-			SimulationPlot.heatMapRes = 10;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
