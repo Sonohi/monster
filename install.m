@@ -4,7 +4,7 @@
 % :reInstallFlag: (boolean) when true the folders are re-installed
 
 % Protect function against clear
-%persistent MONSTER; 
+%persistent MONSTER;
 % Initialize MONSTER on creation
 
 restoredefaultpath
@@ -12,7 +12,7 @@ restoredefaultpath
 % Check if previous initialization was successful
 root = mfilename('fullpath');
 % Get directory of this file
-root = root(1:find(root==filesep,1,'last')-1); 
+root = root(1:find(root==filesep,1,'last')-1);
 setpref('monster','monsterRootFolder',root);
 
 
@@ -25,8 +25,8 @@ end
 
 addpath(root);
 
-dirs = {'examples','utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'power', 'results', 'rlc', ...
-	'setup', 'traffic', 'ue', 'validator', 'app', 'logs', 'batches'};
+dirs = {'examples','utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'results', 'rlc', ...
+	'setup', 'scenarios', 'tests', 'traffic', 'ue', 'validator', 'logs'};
 
 for i=1:numel(dirs)
 	add = [root filesep dirs{i}];
@@ -47,7 +47,7 @@ end
 
 % Disable warnings
 warning('off','catstruct:DuplicatesFound');
-	
+
 
 
 

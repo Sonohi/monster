@@ -13,3 +13,13 @@ result = run(suite);
 disp('Testing UE functions...');
 suite = TestSuite.fromFolder('ue', 'IncludingSubfolders', true);
 result = run(suite);
+
+% Test MetricRecorder
+disp('Testing MetricRecorder functions...');
+suite = TestSuite.fromFolder('results', 'IncludingSubfolders', true);
+result = run(suite);
+
+% Test Monster (simulation)
+disp('Testing Monster functions...');
+suite = TestSuite.fromFolder('tests', 'IncludingSubfolders', true);
+result = run(suite);
