@@ -17,12 +17,12 @@ classdef UESummaryPlot < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = UESummaryPlot(Stations)
+		function obj = UESummaryPlot(Cells)
 			obj.setColors();
 			obj.createFigureHandle();
 			obj.createTabGroup();
 			obj.getNumberOfRows();
-			obj.createTabForEachUE(Stations);
+			obj.createTabForEachUE(Cells);
 			obj.axes = findall(obj.fig,'type','axes');
 		end
 		
@@ -43,9 +43,9 @@ classdef UESummaryPlot < matlab.mixin.Copyable
 			for userIdx = 1:length(Users)
 				user = Users(userIdx);
 				userID = user.NCellID;
-				stationSummary = uitab(obj.tabgp,'Title',sprintf('User %i', userID));
-				stationSummaryAxes = axes('parent', stationSummary);
-				hold(stationSummaryAxes,'on')
+				cellSummary = uitab(obj.tabgp,'Title',sprintf('User %i', userID));
+				cellSummaryAxes = axes('parent', cellSummary);
+				hold(cellSummaryAxes,'on')
 				
 				for metricIdx = 1:length(obj.metrics)
 					metric = obj.metrics{metricIdx};
@@ -64,8 +64,8 @@ classdef UESummaryPlot < matlab.mixin.Copyable
 		end
 		
 		
-		function obj = addData(obj,stationId,metric,x,y)
-			h = obj.findSubplotHandle(stationId, metric);
+		function obj = addData(obj,cellId,metric,x,y)
+			h = obj.findSubplotHandle(cellId, metric);
 			addpoints(h,x,y)
 		end
 		

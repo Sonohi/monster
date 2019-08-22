@@ -9,7 +9,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			ChannelNoSFModel
 			ChannelNoInterference
 			Config
-			Stations
+			Cells
 			Users
 			SFplot
 			SINRplot
@@ -31,34 +31,34 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				Config.setupNetworkLayout(testCase.Logger);
 				Sites = setupSites(Config, testCase.Logger);
-				Stations = [Sites.Cells];
+				Cells = [Sites.Cells];
 				Users = setupUsers(Config, testCase.Logger);
-				Channel = setupChannel(Stations, Users, Config, testCase.Logger);
+				Channel = setupChannel(Cells, Users, Config, testCase.Logger);
 				[Traffic, Users] = setupTraffic(Users, Config, testCase.Logger);
 				
 				testCase.Config = Config;
-				testCase.Stations = Stations;
+				testCase.Cells = Cells;
 				testCase.Users = Users;
-				testCase.Channel = MonsterChannel(Stations, Users, Config, testCase.Logger);
+				testCase.Channel = MonsterChannel(Cells, Users, Config, testCase.Logger);
 				testCase.ChannelModel = testCase.Channel.ChannelModel;
-				%testCase.SFplot = testCase.ChannelModel.plotSFMap(Stations(1));
-				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Stations, testCase.Users(1), 30, Logger);
+				%testCase.SFplot = testCase.ChannelModel.plotSFMap(Cells(1));
+				%testCase.SINRplot = testCase.Channel.plotSINR(testCase.Cells, testCase.Users(1), 30, Logger);
 				
 				
 				% Channel with no shadowing
 				noShadowingConfig = copy(Config);
 				noShadowingConfig.Channel.shadowingActive = 0;
 				noShadowingConfig.Channel.losMethod = 'NLOS';
-				testCase.ChannelNoSF = MonsterChannel(Stations, Users, noShadowingConfig, testCase.Logger);
+				testCase.ChannelNoSF = MonsterChannel(Cells, Users, noShadowingConfig, testCase.Logger);
 				testCase.ChannelNoSFModel = testCase.ChannelNoSF.ChannelModel;
-				%testCase.SINRplot = testCase.ChannelNoSF.plotSINR(testCase.Stations, testCase.Users(1), 30, Logger);
+				%testCase.SINRplot = testCase.ChannelNoSF.plotSINR(testCase.Cells, testCase.Users(1), 30, Logger);
 
 				% Channel with no interference
 				noInterferenceConfig = copy(Config);
 				noInterferenceConfig.Channel.interferenceType = 'None';
 				%Param.channel.enableShadowing = 1;
 				%Param.channel.InterferenceType = 'None';
-				testCase.ChannelNoInterference = MonsterChannel(Stations, Users, noInterferenceConfig, testCase.Logger);
+				testCase.ChannelNoInterference = MonsterChannel(Cells, Users, noInterferenceConfig, testCase.Logger);
 
 			end
 			
@@ -97,15 +97,15 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 						testCase.verifyTrue(isa(testCase.ChannelModel,'Monster3GPP38901'))
 				end
 				
-				function testSetup3GPPStationConfigs(testCase)
-					testCase.verifyTrue(~isempty(testCase.ChannelModel.StationConfigs))
-					testCase.verifyEqual(length(fieldnames(testCase.ChannelModel.StationConfigs)),length(testCase.Stations))
+				function testSetup3GPPCellConfigs(testCase)
+					testCase.verifyTrue(~isempty(testCase.ChannelModel.CellConfigs))
+					testCase.verifyEqual(length(fieldnames(testCase.ChannelModel.CellConfigs)),length(testCase.Cells))
 				end
 
-				function test3GPPStationConfigs(testCase)
-					for iStation = 1:length(testCase.Stations)
-						station = testCase.Stations(iStation);
-						config = testCase.ChannelModel.findStationConfig(station);
+				function test3GPPCellConfigs(testCase)
+					for iCell = 1:length(testCase.Cells)
+						Cell = testCase.Cells(iCell);
+						config = testCase.ChannelModel.findCellConfig(Cell);
 						testCase.verifyTrue(~isempty(config.Position))
 						testCase.verifyTrue(isa(config.Tx,'enbTransmitterModule'))
 						testCase.verifyTrue(isa(config.SpatialMaps, 'struct'))
@@ -116,9 +116,9 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				end
 
 				function test3GPPSpatialMaps(testCase)
-					for iStation = 1:length(testCase.Stations)
-						station = testCase.Stations(iStation);
-						config = testCase.ChannelModel.findStationConfig(station);
+					for iCell = 1:length(testCase.Cells)
+						Cell = testCase.Cells(iCell);
+						config = testCase.ChannelModel.findCellConfig(Cell);
 						testCase.verifyTrue(isfield(config.SpatialMaps, 'LOS'))
 						testCase.verifyTrue(isfield(config.SpatialMaps, 'axisLOS'))
 						testCase.verifyTrue(isfield(config.SpatialMaps, 'NLOS'))
@@ -135,9 +135,9 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				end
 
 				function test3GPPSpatialMapsNoSF(testCase)
-					for iStation = 1:length(testCase.Stations)
-						station = testCase.Stations(iStation);
-						config = testCase.ChannelNoSFModel.findStationConfig(station);
+					for iCell = 1:length(testCase.Cells)
+						Cell = testCase.Cells(iCell);
+						config = testCase.ChannelNoSFModel.findCellConfig(Cell);
 						testCase.verifyTrue(~isfield(config.SpatialMaps, 'LOS'))
 						testCase.verifyTrue(~isfield(config.SpatialMaps, 'axisLOS'))
 						testCase.verifyTrue(~isfield(config.SpatialMaps, 'NLOS'))
@@ -150,31 +150,31 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				end
 
 				function testTraverseValidator(testCase)
-					testCase.verifyError(@() testCase.Channel.traverse(testCase.Stations, testCase.Users, ''),'MonsterChannel:noChannelMode')
-					testCase.verifyError(@() testCase.Channel.traverse(testCase.Stations, [], 'downlink'),'MonsterChannel:WrongUserClass')	
-					testCase.verifyError(@() testCase.Channel.traverse([], [], 'downlink'),'MonsterChannel:WrongStationClass')
+					testCase.verifyError(@() testCase.Channel.traverse(testCase.Cells, testCase.Users, ''),'MonsterChannel:noChannelMode')
+					testCase.verifyError(@() testCase.Channel.traverse(testCase.Cells, [], 'downlink'),'MonsterChannel:WrongUserClass')	
+					testCase.verifyError(@() testCase.Channel.traverse([], [], 'downlink'),'MonsterChannel:WrongCellClass')
 					
 					% No users assigned
-					testCase.verifyError(@() testCase.Channel.traverse(testCase.Stations, testCase.Users, 'downlink'),'MonsterChannel:NoUsersAssigned')					
+					testCase.verifyError(@() testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink'),'MonsterChannel:NoUsersAssigned')					
 				end
 
 				function testTraverseDownlink(testCase)
 
 					% Assign user
-					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
-					testCase.Stations(1).Tx.Waveform = [];
-					testCase.Stations(1).Tx.WaveformInfo = [];
+					testCase.Cells(1).Tx.Waveform = [];
+					testCase.Cells(1).Tx.WaveformInfo = [];
 
 					% Traverse channel downlink with no waveform assigned to
 					% transmitter
-					testCase.verifyError(@() 	testCase.Channel.traverse(testCase.Stations, testCase.Users, 'downlink'),'MonsterChannel:EmptyTxWaveform')
+					testCase.verifyError(@() 	testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink'),'MonsterChannel:EmptyTxWaveform')
 					
 					% Assign waveform and waveinfo to tx module
-					testCase.Stations(1).Tx.createReferenceSubframe();
-					testCase.Stations(1).Tx.assignReferenceSubframe();
-					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'downlink')
+					testCase.Cells(1).Tx.createReferenceSubframe();
+					testCase.Cells(1).Tx.assignReferenceSubframe();
+					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink')
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveformInfo))
 
@@ -210,56 +210,56 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			   function testTraverseUplink(testCase)
 
 					% Assign user and schedule user
-					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Stations(1).setScheduleUL(testCase.Config);
-					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).setScheduleUL(testCase.Config);
+					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
 					% Traverse channel downlink with no waveform assigned to
 					% transmitter
-					testCase.verifyError(@() 	testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink'),'MonsterChannel:EmptyTxWaveform')
+					testCase.verifyError(@() 	testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink'),'MonsterChannel:EmptyTxWaveform')
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
 					testCase.Users(1).Scheduled.UL = 1;
 					testCase.Users(1).Tx.setupTransmission();
-					testCase.Stations(1).setScheduleUL(testCase.Config);
+					testCase.Cells(1).setScheduleUL(testCase.Config);
 					
-					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
+					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink')
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveformInfo))
 
 
-					% Check the assigned station of the user have a received waveform
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.Waveform))
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.WaveformInfo))
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.SNR))
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.RxPwdBm))
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.PathGains))
-					testCase.verifyTrue(~isempty(testCase.Stations(1).Rx.ReceivedSignals{1}.PathFilters))
-					testCase.verifyTrue(isempty(testCase.Stations(1).Rx.ReceivedSignals{2}))
+					% Check the assigned Cell of the user have a received waveform
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.Waveform))
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.WaveformInfo))
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.SNR))
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.RxPwdBm))
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathGains))
+					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathFilters))
+					testCase.verifyTrue(isempty(testCase.Cells(1).Rx.ReceivedSignals{2}))
 					
 					% Check that the linkConditions are stored
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.uplink{1,1}))
 					
 					
 					% Combine received signals into one final waveform.
-					testCase.Stations(1).Rx.createReceivedSignal();
+					testCase.Cells(1).Rx.createReceivedSignal();
 					% Final waveform is the waveform the only user in uplink with the
 					% received power set.
-					testCase.verifyEqual(testCase.Stations(1).Rx.Waveform, setPower(testCase.Stations(1).Rx.ReceivedSignals{1}.Waveform, testCase.Stations(1).Rx.ReceivedSignals{1}.RxPwdBm))
+					testCase.verifyEqual(testCase.Cells(1).Rx.Waveform, setPower(testCase.Cells(1).Rx.ReceivedSignals{1}.Waveform, testCase.Cells(1).Rx.ReceivedSignals{1}.RxPwdBm))
 
 				 end
 				
-				 function testOneStationCase(testCase)
+				 function testOneCellCase(testCase)
 					% Assign user
-					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					% Assign waveform and waveinfo to tx module
-					testCase.Stations(1).Tx.createReferenceSubframe();
-					testCase.Stations(1).Tx.assignReferenceSubframe();
+					testCase.Cells(1).Tx.createReferenceSubframe();
+					testCase.Cells(1).Tx.assignReferenceSubframe();
 					
-					testCase.Channel.traverse(testCase.Stations(1), testCase.Users, 'downlink')
+					testCase.Channel.traverse(testCase.Cells(1), testCase.Users, 'downlink')
 					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINR,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNR,2))
 					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINRdB,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNRdB,2))
 					testCase.verifyEqual(round(testCase.Users(1).Rx.SINR,2), round(testCase.Users(1).Rx.SNR,2))
@@ -271,13 +271,13 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				function testNoInterference(testCase)
 					% Assign user
-					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
 					% Assign waveform and waveinfo to tx module
-					testCase.Stations(1).Tx.createReferenceSubframe();
-					testCase.Stations(1).Tx.assignReferenceSubframe();
-					testCase.ChannelNoInterference.traverse(testCase.Stations, testCase.Users, 'downlink')
+					testCase.Cells(1).Tx.createReferenceSubframe();
+					testCase.Cells(1).Tx.assignReferenceSubframe();
+					testCase.ChannelNoInterference.traverse(testCase.Cells, testCase.Users, 'downlink')
 
 					% Check the assigned user have a received waveform and that SNR equals SINR
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.Waveform))
@@ -295,19 +295,19 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				function testDownlinkAndUplink(testCase)
 					% Assign user
-					testCase.Stations(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Users(1).ENodeBID = testCase.Stations(1).NCellID;
+					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
-					testCase.Stations(1).Tx.createReferenceSubframe();
-					testCase.Stations(1).Tx.assignReferenceSubframe();
-					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'downlink')
+					testCase.Cells(1).Tx.createReferenceSubframe();
+					testCase.Cells(1).Tx.assignReferenceSubframe();
+					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink')
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
 					testCase.Users(1).Scheduled.UL = 1;
 					testCase.Users(1).Tx.setupTransmission();
-					testCase.Stations(1).setScheduleUL(testCase.Config);
-					testCase.Channel.traverse(testCase.Stations, testCase.Users, 'uplink')
+					testCase.Cells(1).setScheduleUL(testCase.Config);
+					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink')
 					
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink{1,1}))
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.uplink{1,1}))

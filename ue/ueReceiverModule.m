@@ -63,16 +63,16 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			loss = -obj.NoiseFigure + AntennaGain{1}  + obj.AntennaGain;
 		end
 
-		function oldValues = getFromHistory(obj, field, stationID)
-			stationfield = strcat('NCellID',int2str(stationID));
-			path = {'HistoryStats', stationfield, field};
+		function oldValues = getFromHistory(obj, field, cellId)
+			cellField = strcat('NCellID',int2str(cellId));
+			path = {'HistoryStats', cellField, field};
 			oldValues = getfield(obj, path{:});
 		end
 		
-		function obj = addToHistory(obj, field, stationID)
-			oldValues = obj.getFromHistory(field, stationID);
-			stationfield = strcat('NCellID',int2str(stationID));
-			path = {'HistoryStats', stationfield, field};
+		function obj = addToHistory(obj, field, cellId)
+			oldValues = obj.getFromHistory(field, cellId);
+			cellField = strcat('NCellID',int2str(cellId));
+			path = {'HistoryStats', cellField, field};
 			newValue = getfield(obj, field);
 			newArray = [oldValues, newValue];
 			obj = setfield(obj, path{:}, newArray);		
@@ -131,7 +131,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				% Log block reception
 				obj.logBlockReception();
 			else
-				obj.ueObj.Logger.log(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				obj.ueObj.Logger.log(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Cell(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.logNotDemodulated();
 				obj.CQI = 3;
 

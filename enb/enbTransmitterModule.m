@@ -57,7 +57,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 						obj.AntennaArray.Bearing = antennaBearing;
 					end
 				otherwise
-					obj.Enb.Logger.log(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid base station class %s', enb.NCellID, enb.BsClass), 'ERR');
+					obj.Enb.Logger.log(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
 
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));

@@ -1,4 +1,4 @@
-function plotSpectrums(Users,Stations, Config)
+function plotSpectrums(Users,Cells, Config)
 	% For each user add the spectrums to the correct subplots in Config.PHYAxes
 	for user = 1:length(Users)
 		SpectrumRxTag = sprintf('user%iSpectrumDL',user);
@@ -11,9 +11,9 @@ function plotSpectrums(Users,Stations, Config)
 		end
 
 
-		station = Stations([Stations.NCellID] == Users(user).ENodeBID);
-		if checkUserSchedule(Users(user),station)
-			Fs = Stations([Stations.NCellID] == Users(user).ENodeBID).Tx.WaveformInfo.SamplingRate;
+		Cell = Cells([Cells.NCellID] == Users(user).ENodeBID);
+		if checkUserSchedule(Users(user),Cell)
+			Fs = Cells([Cells.NCellID] == Users(user).ENodeBID).Tx.WaveformInfo.SamplingRate;
 			sig = setPower(Users(user).Rx.Waveform,Users(user).Rx.RxPwdBm);
 			F = fft(sig)./length(sig);
 			Fpsd = 10*log10(fftshift(abs(F).^2))+30;

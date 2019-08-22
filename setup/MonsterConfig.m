@@ -76,7 +76,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			SimulationPlot.runtimePlot = 1;
 			SimulationPlot.generateCoverageMap = 0;
 			SimulationPlot.generateHeatMap = 0;
-			SimulationPlot.heatMapType = 'perStation';
+			SimulationPlot.heatMapType = 'perCell';
 			SimulationPlot.heatMapRes = 10;
 			obj.SimulationPlot = SimulationPlot;
 

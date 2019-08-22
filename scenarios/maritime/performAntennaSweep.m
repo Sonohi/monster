@@ -36,13 +36,13 @@ function ueSweep = evaluateCurrentAngle(Simulation, ueSweep)
 	user = Simulation.Users([Simulation.Users.NCellID] == ueSweep.ueId);
 	% Set antenna bearing value based on current angle
 	user.Rx.AntennaArray.Bearing = ueSweep.currentAngle;
-	scanResult(1:length(Simulation.Stations)) = struct('eNodeBId', -1,'rxPowdBm', -realmax, 'sinr', -realmax);
+	scanResult(1:length(Simulation.Cells)) = struct('eNodeBId', -1,'rxPowdBm', -realmax, 'sinr', -realmax);
 	% Check over which metric we need to perform the sweep
 	switch ueSweep.metric
 		case 'sinr'
-			sinrList = Simulation.Channel.getENBSINRList(user, Simulation.Stations, 'downlink');
+			sinrList = Simulation.Channel.getENBSINRList(user, Simulation.Cells, 'downlink');
 			for iSinr = 1:length(sinrList)
-				scanResult(iSinr).eNodeBId = Simulation.Stations(iSinr).NCellID;
+				scanResult(iSinr).eNodeBId = Simulation.Cells(iSinr).NCellID;
 				scanResult(iSinr).sinr = sinrList(iSinr);
 			end
 			% Identify the eNodeB with the highest SINR
@@ -50,7 +50,7 @@ function ueSweep = evaluateCurrentAngle(Simulation, ueSweep)
 			maxMetric = max([scanResult.sinr]);
 			targetEnbId = scanResult([scanResult.sinr] == maxMetric).eNodeBId;
 		case 'power'
-			powerList = Simulation.Channel.getENBPowerList(user, Simulation.Stations, 'downlink');
+			powerList = Simulation.Channel.getENBPowerList(user, Simulation.Cells, 'downlink');
 			fieldsList = fieldnames(powerList);
 			for iField = 1:numel(fieldsList)
 				field = fieldsList{iField};
@@ -72,9 +72,9 @@ function ueSweep = evaluateCurrentAngle(Simulation, ueSweep)
 		searchResult = find([ueSweep.eNodeBList.eNodeBId] == targetEnbId, 1);
 		if isempty(searchResult)
 			% This eNodeBId is not present in the list, add it
-			for iStation = 1:length(ueSweep.eNodeBList)
-				if ueSweep.eNodeBList(iStation).eNodeBId == -1
-					ueSweep.eNodeBList(iStation) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxMetric, 'sinr', maxMetric);
+			for iCell = 1:length(ueSweep.eNodeBList)
+				if ueSweep.eNodeBList(iCell).eNodeBId == -1
+					ueSweep.eNodeBList(iCell) = struct('eNodeBId', targetEnbId, 'angle', ueSweep.currentAngle, 'rxPowdBm', maxMetric, 'sinr', maxMetric);
 					break;
 				end
 			end
@@ -127,7 +127,7 @@ function ueSweep = evaluateCurrentAngle(Simulation, ueSweep)
 			if user.ENodeBID ~= targetEnb.eNodeBId
 				Simulation.Logger.log('(MARITIME SWEEP - evaluateCurrentAngle) associating with new target eNodeB', 'DBG');
 				% Call the handler for the handover that will take care of processing the change
-				[~, Simulation.Stations] = handleHangover(user, Simulation.Stations, targetEnb.eNodeBId, Simulation.Config);
+				[~, Simulation.Cells] = handleHangover(user, Simulation.Cells, targetEnb.eNodeBId, Simulation.Config);
 				ueSweep.timeLastAssociation = Simulation.Config.Runtime.currentTime;
 				ueSweep.currentAngle = targetEnb.angle;
 				ueSweep.startAngle = targetEnb.angle;

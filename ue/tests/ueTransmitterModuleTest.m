@@ -4,7 +4,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 		Config;
 		TxModule;
 		RxModule;
-		Stations;
+		Cells;
 		Channel;
 		Users;
 		Logger;

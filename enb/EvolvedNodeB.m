@@ -245,12 +245,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			userIds = unique([obj.ScheduleUL]);
 		end
 		
-		function obj = evaluatePowerState(obj, Config, Stations)
+		function obj = evaluatePowerState(obj, Config, Cells)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
 			%
 			% :obj: EvolvedNodeB instance
 			% :Config: MonsterConfig instance
-			% :Stations: Array<EvolvedNodeB> instances in case neighbours are needed
+			% :Cells: Array<EvolvedNodeB> instances in case neighbours are needed
 			%
 			
 			% overload
@@ -260,18 +260,18 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
-					nboMicroIxs = find([obj.Stations.NCellID] ~= Stations(1).NCellID);
+					nboMicroIxs = find([obj.Cells.NCellID] ~= Cells(1).NCellID);
 					
 					% Loop the neighbours to find an inactive one
 					for iNbo = 1:length(nboMicroIxs)
 						if nboMicroIxs(iNbo) ~= 0							
 							% Check if it can be activated
-							if (~isempty(nboIx) && Stations(iNbo).PowerState == 5)
+							if (~isempty(nboIx) && Cells(iNbo).PowerState == 5)
 								% in this case change the PowerState of the target neighbour to "boot"
 								% and reset the hysteresis and the switching on/off counters
-								Stations(nboIx).PowerState = 6;
-								Stations(nboIx).HystCount = 0;
-								Stations(nboIx).SwitchCount = 0;
+								Cells(nboIx).PowerState = 6;
+								Cells(nboIx).HystCount = 0;
+								Cells(nboIx).SwitchCount = 0;
 								break;
 							end
 						end
