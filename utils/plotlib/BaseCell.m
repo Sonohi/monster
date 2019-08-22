@@ -3,39 +3,37 @@ classdef BaseCell < matlab.mixin.Copyable
 	%Properties
 	properties
 		Center;
-		ISD;
+		SiteID;
 		CellID;
 		CellType;
 		PosScenario;
+		Radius;
+		Area;
+		Logger;
 	end
 	
 	methods
-		function obj =BaseCell(xc, yc, Config, cellId, cellType)
+		function obj = BaseCell(Config, Logger, siteId, cellCentre, cellId, cellType)
 			%Constructor
 			
 			%Set arguments
-			obj.Center  = [xc yc];
+			obj.Logger = Logger;
+			obj.SiteID = siteId;
+			obj.Center = cellCentre;
 			obj.CellID = cellId;
 			obj.CellType = cellType;
 			%Set positioning scenario accordingly, currently not implemented fully.
 			switch cellType
 				case 'macro'
 					obj.PosScenario = 'hexagonal';
-					obj.ISD = Config.MacroEnb.ISD;
+					obj.Radius = Config.MacroEnb.ISD/Config.MacroEnb.cellsPerSite;
 				case 'micro'
 					obj.PosScenario = Config.MicroEnb.positioning;
-					obj.ISD = Config.MicroEnb.ISD;
-				case 'pico'
-					obj.PosScenario = Config.PicoEnb.positioning;
-					obj.ISD = Config.PicoEnb.ISD;
+					obj.Radius = Config.MicroEnb.ISD/Config.MicroEnb.cellsPerSite;
 				otherwise
-					monsterLog('Unknown cell type selected.','ERR')
+					obj.Logger.log('Unknown cell type selected.','ERR')
+				obj.Area = 2*sqrt(3)*(obj.Radius)^2;
 			end
-			
 		end
-		
 	end
-	
-	
-	
 end

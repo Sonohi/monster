@@ -24,7 +24,7 @@ classdef ArqRx < matlab.mixin.Copyable
 		end
 
 		% Handle the arrival of a new TB
-		function obj = handleTbReception(obj, sqn, tb, timeNow)
+		function obj = handleTbReception(obj, sqn, tb, timeNow, Logger)
 			% update the buffer object
 			obj.sqnReceived = sqn;
 			% now check for reordering
@@ -49,7 +49,7 @@ classdef ArqRx < matlab.mixin.Copyable
 			else
 				% in this case we received a TB that we already have.
 				% This can happen due to HARQ retransmissions and we don't need it
-				monsterLog('ARQ received duplicate TB', 'NFO');
+				Logger.log('ARQ received duplicate TB', 'WRN');
 			end
 		end
 

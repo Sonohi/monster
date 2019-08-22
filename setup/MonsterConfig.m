@@ -8,7 +8,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 	% :SimulationPlot: (struct) configuration for plotting
 	% :MacroEnb: (struct) configuration for macro eNodeBs
 	% :MicroEnb: (struct) configuration for micro eNodeBs
-	% :PicoEnb: (struct) configuration for pico eNodeBs
 	%	:Ue: (struct) configuration for UEs
 	% :Mobility: (struct) configuration for UE mobility
 	% :Handover: (struct) configuration for X2 and S1 handover
@@ -27,7 +26,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		SimulationPlot = struct();
 		MacroEnb = struct();
 		MicroEnb = struct();
-		PicoEnb = struct();
 		Ue = struct();
 		Mobility = struct();
 		Handover = struct();
@@ -65,58 +63,46 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Logs configuration
 			Logs = struct();
-			Logs.logToFile = 0;
+			Logs.logToFile = 0; % 0 only console | 1 only file | 2 both 
+			Logs.logInBlack = 0;
 			Logs.dateFormat = 'yyyy-mm-dd_HH.MM.SS';
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
-			Logs.defaultLogName = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
 			obj.Logs = Logs;
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
-			SimulationPlot.generateCoverageMap = 0;
-			SimulationPlot.generateHeatMap = 0;
-			SimulationPlot.heatMapType = 'perStation';
-			SimulationPlot.heatMapRes = 10;
+			SimulationPlot.runtimePlot = 1;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
-			MacroEnb.number = 1;
+			MacroEnb.sitesNumber = 1;
+			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
-			MacroEnb.ISD = 1000; %Cell radius is one third of intersite distance. ISD
+			MacroEnb.ISD = 500;
 			MacroEnb.noiseFigure = 7;
 			MacroEnb.antennaGain = 0;
-			MacroEnb.antennaType = 'omni';
+			MacroEnb.antennaType = 'sectorised';
 			MacroEnb.Pmax = 20; % W
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.number = 1;
+			MicroEnb.sitesNumber = 3;
+			MicroEnb.cellsPerSite = 1;
+			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
 			MicroEnb.height = 25;
 			MicroEnb.positioning = 'hexagonal';
-			MicroEnb.ISD = 200;
+			MicroEnb.ISD = 100;
 			MicroEnb.noiseFigure = 7;
 			MicroEnb.antennaGain = 0;
 			MicroEnb.antennaType = 'omni';
 			MicroEnb.Pmax = 6.3;
 			obj.MicroEnb = MicroEnb;
-
-			PicoEnb = struct();
-			PicoEnb.number = 1;
-			PicoEnb.numPRBs = 6;
-			PicoEnb.height = 5;
-			PicoEnb.positioning = 'uniform';
-			PicoEnb.ISD = 200;
-			PicoEnb.noiseFigure = 7;
-			PicoEnb.antennaGain = 0;
-			PicoEnb.antennaType = 'omni';
-			PicoEnb.Pmax =  0.13; %W
-			obj.PicoEnb = PicoEnb;
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
@@ -130,7 +116,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to mobility
 			Mobility = struct();
-			Mobility.scenario = 'pedestrian';
+			Mobility.scenario = 'pedestrian'; % pedestrian | pedestrian-indoor | maritime
 			Mobility.step = 0.01;
 			Mobility.seed = 19;
 			obj.Mobility = Mobility;
@@ -140,25 +126,18 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Handover.x2Timer = 0.01;
 			obj.Handover = Handover;
 
-			% Properties related to terrain and scenario 
+			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
-			Terrain.buildingsFile = 'mobility/buildings.txt';
-			Terrain.heightRange = [20,50];
-			Terrain.buildings = load(Terrain.buildingsFile);
-			Terrain.buildings(:,5) = randi([Terrain.heightRange],[1 length(Terrain.buildings(:,1))]);
-			Terrain.area = [...
-				min(Terrain.buildings(:, 1)), ...
-				min(Terrain.buildings(:, 2)), ...
-				max(Terrain.buildings(:, 3)), ...
-				max(Terrain.buildings(:, 4))];
+			Terrain.type = 'city'; % city | maritime
 			obj.Terrain = Terrain;
 
-			% Properties related to the traffic
+			% Properties related to the traffic 
+			% Traffic types: fullBuffer | videoStreaming | webBrowsing 
 			Traffic = struct();
-			Traffic.primary = 'videoStreaming';
+			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0.5;
-			Traffic.arrivalDistribution = 'Poisson';
+			Traffic.mix = 0;
+			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
@@ -186,7 +165,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
-			Channel.losMethod = '3GPP38901-probability';
+			Channel.losMethod = '3GPP38901-probability'; % 'NLOS', '3GPP38901-probability', 'LOS'
 			Channel.region = struct('type', 'Urban', 'macroScenario', 'UMa', 'microScenario', 'UMi', 'picoScenario', 'UMi');
 			obj.Channel = Channel;
 
@@ -236,31 +215,86 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Plot.PHYAxes = axes;
 			end
 			obj.Plot = Plot;
+		end
 
-			% Check the number of macros and throw an error if set to an unsupported number
-			%assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-			% Check traffic configuration
-			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
+		function assertConfig(obj)
+			% Asserts the configuration of the simulation 
+			%
+			% :param obj: MonsterConfig instance including scenario-specific configurations
+			%
 
+			% Assert macro eNodeB configuration
+			if strcmp(obj.MacroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MacroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MacroEnb.cellsPerSite == 1 || obj.MacroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			% Assert micro eNodeB configuration
+			if strcmp(obj.MicroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MicroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MicroEnb.cellsPerSite == 1 || obj.MicroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			errMsg = "(CONFIG - assertConfig) invalid value for Phy.pucchFormat. Only 2 is currently implemented";
+			assert(obj.Phy.pucchFormat == 2, errMsg);
+			errMsg = "(CONFIG - assertConfig) invalid value for Traffic.Mix. Only non negative values are allowed.";
+			assert(obj.Traffic.mix >= 0, errMsg);
+		end
+
+		function setupNetworkLayout(obj, Logger)
+			% Setup the layout given the config
+			%
+			% :param obj: (MonsterConfig) simulation config class instance
+			%	:param Logger: MonsterLog instance
+			% :sets obj.Plot.Layout: <NetworkLayout> network layout class instance
+
+			% Setup up needed terrain information given the terrain chosen
+			obj.setupTerrain()
+
+			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
+			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
 			% Plot
-			if SimulationPlot.runtimePlot
+			if obj.SimulationPlot.runtimePlot
 				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
 				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
 			end
-
+			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
 		end
 
-		function setupNetworkLayout(obj)
-				% Setup the layout given the config
-				%
-				% Syntax: Config.setupNetworkLayout()
-				% Parameters:
-				% :obj: (MonsterConfig) simulation config class instance
-				%	Sets:
-				% :obj.Plot.Layout: (<NetworkLayout>) network layout class instance
-			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
-			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
-			obj.Plot.Layout = NetworkLayout(xc,yc,obj); 
+		function setupTerrain(obj)
+			Terrain = struct();
+			Terrain.type = obj.Terrain.type;
+			if strcmp(Terrain.type,'city')
+				% In the city scenario, a Manhattan city grid is generated based on a size parameter
+				Terrain.areaSize = 500;
+				Terrain.heightRange = [20,50];
+				Terrain.buildingWidth = 40;
+				Terrain.roadWidth = 10;
+				Terrain.buildings = generateManhattanGrid(...
+					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
+				Terrain.area = [...
+					min(Terrain.buildings(:, 1)), ...
+					min(Terrain.buildings(:, 2)), ...
+					max(Terrain.buildings(:, 3)), ...
+					max(Terrain.buildings(:, 4))];
+			elseif strcmp(Terrain.type,'maritime')
+				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
+				rng(obj.Runtime.seed);
+				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
+				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
+				% Compute the coastline
+				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
+				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
+				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
+				spreadY = interp1(coastX, coastY, spreadX, 'spline');
+				Terrain.coast.coastline(:,1) = spreadX(1,:);
+				Terrain.coast.coastline(:,2) = spreadY(1,:);				
+				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
+				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
+			else
+				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
+			end
+			obj.Terrain = Terrain;
 		end
 
 		function storeConfig(obj, logName)
@@ -269,7 +303,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% :obj: the MonsterConfig instance
 			% :logName: the name of the log to use, minus path and date
 			
-			fullLogName = strcat(obj.Logs.defaultLogName, logName);
+			fullLogName = strcat(obj.Logs.logFile, logName);
 			save(fullLogName, 'obj')
 		end
 		

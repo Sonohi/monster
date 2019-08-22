@@ -13,43 +13,50 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		simulationTime = 0;
 		extraSamplesArea = 1200;
 		Estimator = struct();
+		Logger;
+		area;
 	end
 	
 	methods
-		function obj = MonsterChannel(Stations, Users, Config)
+		function obj = MonsterChannel(Cells, Users, Config, Logger)
 			% MonsterChannel
 			%
-			% :param Stations:
+			% :param Cells:
 			% :param Users:
 			% :param Config:
 			% :returns obj:
 			%
-
+			obj.Logger = Logger;
 			obj.Mode = Config.Channel.mode;
 			obj.Region = Config.Channel.region;
 			obj.enableFading = Config.Channel.fadingActive;
 			obj.InterferenceType = Config.Channel.interferenceType;
 			obj.enableShadowing = Config.Channel.shadowingActive;
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
-			obj.BuildingFootprints = Config.Terrain.buildings;
 			obj.LOSMethod = Config.Channel.losMethod;
-			obj.setupChannel(Stations, Users);
+			if strcmp(Config.Terrain.type, 'city')
+				obj.BuildingFootprints = Config.Terrain.buildings;
+			else 
+				obj.BuildingFootprints = [];
+			end
+			obj.area = Config.Terrain.area;
+			obj.setupChannel(Cells, Users);
 			obj.createChannelEstimator();
 		end
 		
-		function setupChannel(obj, Stations, Users)
+		function setupChannel(obj, Cells, Users)
 			% setupChannel
 			%
 			% :param obj:
-			% :param Stations:
+			% :param Cells:
 			% :param Users:
 			%
 
 			switch obj.Mode
 				case '3GPP38901'
-					obj.ChannelModel = Monster3GPP38901(obj, Stations);
+					obj.ChannelModel = Monster3GPP38901(obj, Cells);
 				case 'Quadriga'
-					obj.setupQuadrigaLayout(Stations, Users);
+					obj.setupQuadrigaLayout(Cells, Users);
 			end
 		end
 
@@ -71,54 +78,54 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.Estimator.Uplink = ul;
 		end
 		
-		function traverse(obj, Stations, Users, Mode)
+		function traverse(obj, Cells, Users, Mode)
 			% This function manipulates the waveform of the Tx module of either stations, or users depending on the selected mode
 			% E.g. `Mode='uplink'` uses the Tx modules of the Users, and hereof waveforms, transmission power etc.
-			% `Mode='downlink'` uses the Tx modules of the Stations, and hereof configurations.
+			% `Mode='downlink'` uses the Tx modules of the Cells, and hereof configurations.
 			%
-			% This function can only be used if the Stations have assigned users.
+			% This function can only be used if the Cells have assigned users.
 			%
 			% :param obj:
-			% :param Stations:
+			% :param Cells:
 			% :param Users:
 			% :param Mode:
 			%
 
 			if ~strcmp(Mode,'downlink') && ~strcmp(Mode,'uplink')
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode');
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown channel type selected.','ERR', 'MonsterChannel:noChannelMode');
 			end
 			
-			if any(~isa(Stations, 'EvolvedNodeB'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongStationClass');
+			if any(~isa(Cells, 'EvolvedNodeB'))
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of stations.','ERR', 'MonsterChannel:WrongCellClass');
 			end
 			
 			if any(~isa(Users, 'UserEquipment'))
-				monsterLog('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
+				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
 			end
 			
 			% Filter stations and users
-			[stations,~] = obj.getAssociated(Stations,Users);
+			[FilteredCells,~] = obj.getAssociated(Cells,Users);
 			
 			% Propagate waveforms
-			if ~isempty(stations)
-				obj.callChannelModel(Stations, Users, Mode);
+			if ~isempty(FilteredCells)
+				obj.callChannelModel(Cells, Users, Mode);
 			else
-				monsterLog('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
+				obj.Logger.log('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
 			
 		end
 		
-		function callChannelModel(obj, Stations, Users, Mode)
+		function callChannelModel(obj, Cells, Users, Mode)
 			% callChannelModel
 			%
 			% :param obj:
-			% :param Stations:
+			% :param Cells:
 			% :param Users:
 			% :param Mode:
 			%
 
 			if isa(obj.ChannelModel, 'Monster3GPP38901')
-				obj.ChannelModel.propagateWaveforms(Stations, Users, Mode);
+				obj.ChannelModel.propagateWaveforms(Cells, Users, Mode);
 			end
 		end
 		
@@ -135,29 +142,27 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			seed = rxObj.Seed * txObj.Seed + 10* obj.simulationRound;
 		end
 		
-		function areaType = getAreaType(obj,Station)
+		function areaType = getAreaType(obj,Cell)
 			% getAreaType
 			%
 			% :param obj:
-			% :param Station:
+			% :param Cell:
 			% :returns areaType
 			%
 
-			if strcmp(Station.BsClass, 'macro')
+			if strcmp(Cell.BsClass, 'macro')
 				areaType = obj.Region.macroScenario;
-			elseif strcmp(Station.BsClass,'micro')
+			elseif strcmp(Cell.BsClass,'micro')
 				areaType = obj.Region.microScenario;
-			elseif strcmp(Station.BsClass,'pico')
-				areaType = obj.Region.picoScenario;
 			end
 		end
 	
 		
-		function [H, sampleGrid] = signalPowerMap(obj, Stations, User, Resolution)
+		function [H, sampleGrid] = signalPowerMap(obj, Cells, User, Resolution)
 			% signalPowerMap
 			%
 			% :param obj:
-			% :param Stations:
+			% :param Cells:
 			% :param User:
 			% :param Resolution:
 			% 
@@ -167,42 +172,63 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			X = -areaSize+Resolution*2:Resolution:areaSize-Resolution*2;
 			Y = -areaSize+Resolution*2:Resolution:areaSize-Resolution*2;
 			sampleGrid = [X;Y];
-			% Get matrix for each station
-			H=zeros(length(X),length(Y),length(Stations));
-			for iStation=1:length(Stations)
+			% Get matrix for each Cell
+			H=zeros(length(X),length(Y),length(Cells));
+			for iCell=1:length(Cells)
 				user=copy(User);
-				H(:,:,iStation) =obj.ChannelModel.getreceivedPowerMatrix(Stations(iStation), user, sampleGrid);
+				H(:,:,iCell) =obj.ChannelModel.getreceivedPowerMatrix(Cells(iCell), user, sampleGrid);
 			end
 		end
 
+		function h = plotPower(obj, Cells, User, resolution, Logger)
+			[receivedPower, grid] = obj.signalPowerMap(Cells, User, resolution);
+			%receivedPowerWatts = 10.^((receivedPower-30)./10);
+
+			
+			Logger.log('(MONSTER CHANNEL - plotPower) Computing Power map...','NFO');
+			
+			h = figure;
+			contourf(grid(1,:),grid(2,:),max(receivedPower,[],3))
+			c = colorbar();
+			c.Label.String = 'Power [dBm]';
+			xlabel('X [meters]')
+			ylabel('Y [meters]')
+			hold on
+			for iCell = 1:length(Cells)
+				plot(Cells(iCell).Position(1), Cells(iCell).Position(2), 'o', 'MarkerSize', 5, 'MarkerFaceColor', 'r')
+			end
+
+
+		end
+
 		
-		function h = plotSINR(obj, Stations, User, resolution)
+		function h = plotSINR(obj, Cells, User, resolution, Logger)
 			% plotSINR
 			%
 			% :obj: MonsterChannel instance
-			% :Stations: Array<EvolvedNodeB> instances
+			% :Cells: Array<EvolvedNodeB> instances
 			% :User: UserEquipment instance
 			% :resolution: Float
-			%
+			% :param Logger: MonsterLog instance
 			
-			[receivedPower, grid] = obj.signalPowerMap(Stations, User, resolution);
+			[receivedPower, grid] = obj.signalPowerMap(Cells, User, resolution);
 			receivedPowerWatts = 10.^((receivedPower-30)./10);
 			[~, thermalNoise] = thermalLoss();
 
-			for iStation = 1:length(Stations)
-				% Get power of associated station
-				receivedPowerStation = receivedPowerWatts(:,:,iStation);
+			for iCell = 1:length(Cells)
+				% Get power of associated Cell
+				receivedPowerCell = receivedPowerWatts(:,:,iCell);
 
 				% Get power of interfering stations 
 				% TODO: this needs to be based on the same class of stations.
-				interferencePower = sum(receivedPowerWatts(:,:, 1:end ~= iStation),3);
+				interferencePower = sum(receivedPowerWatts(:,:, 1:end ~= iCell),3);
 
 				% Compute SINR
-				SINR(:,:,iStation) = obj.calculateSINR(receivedPowerStation, interferencePower, thermalNoise);
+				SINR(:,:,iCell) = obj.calculateSINR(receivedPowerCell, interferencePower, thermalNoise);
 
 			end
 
-			monsterLog('(MONSTER CHANNEL - plotSINR) Computing SINR map...')
+			Logger.log('(MONSTER CHANNEL - plotSINR) Computing SINR map...','NFO');
 			
 			h = figure;
 			contourf(grid(1,:),grid(2,:),10*log10(max(SINR,[],3)))
@@ -211,8 +237,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			xlabel('X [meters]')
 			ylabel('Y [meters]')
 			hold on
-			for iStation = 1:length(Stations)
-				plot(Stations(iStation).Position(1), Stations(iStation).Position(2), 'o', 'MarkerSize', 5, 'MarkerFaceColor', 'r')
+			for iCell = 1:length(Cells)
+				plot(Cells(iCell).Position(1), Cells(iCell).Position(2), 'o', 'MarkerSize', 5, 'MarkerFaceColor', 'r')
 			end
 		end
 		
@@ -223,43 +249,59 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 			
 			% Extra samples for allowing interpolation. Error will be thrown in this is exceeded.
-			area = (max(obj.BuildingFootprints(:,3)) - min(obj.BuildingFootprints(:,1))) + obj.extraSamplesArea;
+			area = obj.area(3) - obj.area(1) + obj.extraSamplesArea;
 		end
 
-		function list = getENBPowerList(obj, User, Stations, Mode)
+		function list = getENBPowerList(obj, User, Cells, Mode)
 			% getCellPowerList
 			%
-			% Returns list of received power to each station
+			% Returns list of received power to each Cell
 			% :obj: MonsterChannel instance
 			% :User: :UserEquipment:
-			% :Stations: [:EvolvedNodeB]:
+			% :Cells: [:EvolvedNodeB]:
 			% :Mode: 'downlink' or 'uplink'
 			%
 
 			if isa(obj.ChannelModel, 'Monster3GPP38901')
-				list = obj.ChannelModel.listCellPower(User, Stations, Mode);
+				list = obj.ChannelModel.listCellPower(User, Cells, Mode);
 			end
 		end
 
-		function eNBID = getENB(obj, User, Stations, Mode)
+
+		function list = getENBSINRList(obj, User, Cells, Mode)
+			% getENBSINRList
+			%
+			% Returns list of SINR for each Cell
+			% :obj: MonsterChannel instance
+			% :User: :UserEquipment:
+			% :Cells: [:EvolvedNodeB]:
+			% :Mode: 'downlink' or 'uplink'
+			%
+
+			if isa(obj.ChannelModel, 'Monster3GPP38901')
+				list = obj.ChannelModel.listSINR(User, Cells, Mode);
+			end
+		end
+
+		function eNBID = getENB(obj, User, Cells, Mode)
 			% getENB
 			%
 			% Returns ID of eNB with highest received power
 			% :obj: MonsterChannel instance
 			% :User: :UserEquipment:
-			% :Stations: [:EvolvedNodeB:]
+			% :Cells: [:EvolvedNodeB:]
 			% :Mode: 'downlink' or 'uplink'
 			%
 			
 			% get list of enb and received power to user
-			list = obj.getENBPowerList(User, Stations, Mode);
+			list = obj.getENBPowerList(User, Cells, Mode);
 
-			% Loop through data structure and find station with heighest received power
+			% Loop through data structure and find Cell with heighest received power
 			fields = fieldnames(list);
 			receivedPowerStructure = cellfun(@(x) getfield(list,x), fields);
-			stationIds = [receivedPowerStructure.NCellID];
+			cellIds = [receivedPowerStructure.NCellID];
 			[~, idx] = max([receivedPowerStructure.receivedPowerdBm]);
-			eNBID = stationIds(idx);
+			eNBID = cellIds(idx);
 		end
 		
 		function setupRound(obj, simRound, simTime)
@@ -277,57 +319,19 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		%%%%% Quardiga model %%%%%%
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		function setupQuadrigaLayout(obj, Stations, Users)
+		function setupQuadrigaLayout(obj, Cells, Users)
 			% Call Quadriga setup function
 		end
 		
 		
-		function [LOS, prop] = isLinkLOS(obj, Station, User, draw)
+		function [LOS, prop] = isLinkLOS(obj, txConfig, rxConfig, draw)
 			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
 			%
 			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
 			% 2. :attr:`SonohiChannel.LOSMethod` : :attr:`3GPP38901-probability` Uses probability given table 7.4.2-1 of 3GPP TR 38.901. See :meth:`ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability` for more the implementation.
 			%
-			% :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
-			% :type Station: :class:`enb.EvolvedNodeB`
-			% :param User: Need :attr:`User.Position`
-			% :type User: :class:`ue.UserEquipment`
-			% :param bool draw: Draws fresnel zone and elevation profile.
-			% :returns: LOS (bool) indicating LOS
-			% :returns: (optional) probability is returned if :attr:`3GPP38901-probability` is assigned
-			% TODO: Merge this with isLinkLOSMatrix
-			
-			% Check if User is indoor
-			% Else use probability to determine LOS state
-			if User.Mobility.Indoor
-				LOS = 0;
-				prop = NaN;
-			else
-				switch obj.LOSMethod
-					case 'fresnel'
-						LOS = obj.fresnelLOScomputation(Station, User, draw);
-						prop = NaN;
-					case '3GPP38901-probability'
-						[LOS, prop] = Monster3GPP38901.LOSprobability(obj, Station, User);
-					case 'NLOS'
-						LOS = 0;
-						prop = NaN;
-					case 'LOS'
-						LOS = 1;
-						prop = NaN;
-				end
-			end
-		end
-		
-		
-		function [LOS, prop] = isLinkLOSMatrix(obj, Station, User, draw, dist2d)
-			% Check if link between `txPos` and `rxPos` is LOS using one of two methods
-			%
-			% 1. :attr:`SonohiChannel.LOSMethod` : :attr:`fresnel` 1st Fresnel zone and the building footprint.
-			% 2. :attr:`SonohiChannel.LOSMethod` : :attr:`3GPP38901-probability` Uses probability given table 7.4.2-1 of 3GPP TR 38.901. See :meth:`ch.SONOHImodels.3GPP38901.sonohi3GPP38901.LOSprobability` for more the implementation.
-			%
-			% :param Station: Need :attr:`Stations.Position` and :attr:`Stations.DlFreq`.
-			% :type Station: :class:`enb.EvolvedNodeB`
+			% :param Cell: Need :attr:`Cells.Position` and :attr:`Cells.DlFreq`.
+			% :type Cell: :class:`enb.EvolvedNodeB`
 			% :param User: Need :attr:`User.Position`
 			% :type User: :class:`ue.UserEquipment`
 			% :param bool draw: Draws fresnel zone and elevation profile.
@@ -336,41 +340,39 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			
 			% Check if User is indoor
 			% Else use probability to determine LOS state
-			if User.Mobility.Indoor
-				LOS = 0;
-				prop = NaN;
-			else
+			% TODO: FIX
+	
 				switch obj.LOSMethod
 					case 'fresnel'
-						LOS = obj.fresnelLOScomputation(Station, User, draw);
-						prop = NaN;
+							LOS = obj.fresnelLOScomputation(txConfig, rxConfig, draw);
+							prop = NaN;
 					case '3GPP38901-probability'
-						[LOS, prop] = Monster3GPP38901.LOSprobabilityMatrix(obj, Station, User, dist2d);
-					case 'NLOS'
-						LOS = 0;
+							[LOS, prop] = Monster3GPP38901.LOSprobability(txConfig, rxConfig);
+					case 'NLOS'                   
+						LOS = zeros(size(rxConfig.positions,1),1);
 						prop = NaN;
 					case 'LOS'
-						LOS = 1;
+						LOS =  ones(size(rxConfig.positions,1),1);
 						prop = NaN;
 				end
-			end
+			
 		end
 		
 		
-		function LOS = fresnelLOScomputation(obj, Station, User, draw)
+		function LOS = fresnelLOScomputation(obj, txConfig, rxConfig, draw)
 			% fresnelLOScomputation
 			%
 			% :obj:
-			% :Station:
+			% :Cell:
 			% :User:
 			% :draw:
 			%
 
-			txPos = Station.Position;
-			txFreq = Station.DlFreq;
-			rxPos = User.Position;
+			txPos = txConfig.position;
+			txFreq = txConfig.freq;
+			rxPos = rxConfig.positions;
 			
-			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos,rxPos);
+			[numPoints,distVec,elevProfile] = getElevationProfile(obj.BuildingFootprints, txPos, rxPos);
 			
 			distVec = distVec(2:end); % First is zero
 			totalDistance = distVec(end); % Meters
@@ -425,9 +427,9 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 		end
 		
-		function interferingStations = getInterferingStations(SelectedStation, Stations)
-			interferingStations = Stations(find(strcmp({Stations.BsClass},SelectedStation.BsClass)));
-			interferingStations = interferingStations([interferingStations.NCellID]~=SelectedStation.NCellID);
+		function interferingCells = getInterferingCells(SelectedCell, Cells)
+			interferingCells = Cells(find(strcmp({Cells.BsClass},SelectedCell.BsClass)));
+			interferingCells = interferingCells([interferingCells.NCellID]~=SelectedCell.NCellID);
 		end
 		
 		function distance = getDistance(txPos,rxPos)
@@ -436,48 +438,48 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 		
 		
-		function [stations, users] = getAssociated(Stations,Users)
-			% Returns stations and users that are associated
-			stations = [];
-			for istation = 1:length(Stations)
-				UsersAssociated = [Stations(istation).Users.UeId];
+		function [cells, users] = getAssociated(Cells,Users)
+			% Returns cells and users that are associated
+			cells = [];
+			for iCell = 1:length(Cells)
+				UsersAssociated = [Cells(iCell).Users.UeId];
 				UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
 				if ~isempty(UsersAssociated)
-					stations = [stations, Stations(istation)];
+					cells = [cells, Cells(iCell)];
 				end
 			end
 			
-			UsersAssociated = [Stations.Users];
+			UsersAssociated = [Cells.Users];
 			UserIds = [UsersAssociated.UeId];
 			UserIds = unique(UserIds);
 			UserIds = UserIds(UserIds ~= -1);
 			users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
-		function Pairing = getPairing(Stations, type)
+		function Pairing = getPairing(Cells, type)
 			% Output: [Nlinks x 2] sized vector with pairings
 			% where Nlinks is equal to the total number of associated users
-			% for Input Stations.
-			% E.g. Pairing(1,:) = All station ID's
+			% for Input Cells.
+			% E.g. Pairing(1,:) = All Cell ID's
 			% E.g. Pairing(2,:) = All user ID's
-			% and Pairing(1,1) = Describes the pairing of Station and User
+			% and Pairing(1,1) = Describes the pairing of Cell and User
 			
-			% Get number of links associated with the station.
+			% Get number of links associated with the Cell.
 			
 			nlink=1;
-			for i = 1:length(Stations)
+			for i = 1:length(Cells)
 				
 				switch type
 					case 'downlink'
-						association = [Stations(i).Users];
+						association = [Cells(i).Users];
 						users = extractUniqueIds([association.UeId]);
 					case 'uplink'	
-						scheduledUL = Stations(i).getUserIDsScheduledUL;
+						scheduledUL = Cells(i).getUserIDsScheduledUL;
 						users = scheduledUL;
 				end
 				
 				for ii = 1:length(users)
-					Pairing(:,nlink) = [Stations(i).NCellID; users(ii)]; %#ok
+					Pairing(:,nlink) = [Cells(i).NCellID; users(ii)]; %#ok
 					nlink = nlink+1;
 				end
 			end

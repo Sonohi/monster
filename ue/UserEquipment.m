@@ -38,11 +38,13 @@ classdef UserEquipment < matlab.mixin.Copyable
 		Seed;
 		Mobility;
 		Traffic = struct('generatorId', 1, 'startTime', 0)
+		Logger;
 	end
 	
 	methods
 		% Constructor
-		function obj = UserEquipment(Config, userId)
+		function obj = UserEquipment(Config, userId, Logger)
+			obj.Logger = Logger;
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
 			obj.ENodeBID = -1;
@@ -59,7 +61,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config);
+			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config, obj.Logger);
 			obj.Position = obj.Mobility.Trajectory(1,:);
 			obj.TLast = 0;
 			obj.PLast = [1 1];
@@ -91,8 +93,8 @@ classdef UserEquipment < matlab.mixin.Copyable
 		end
 			
 		% Find indexes in the serving eNodeB for the UL scheduling
-		function obj = setSchedulingSlots(obj, Station)
-			obj.SchedulingSlots = find(Station.ScheduleUL == obj.NCellID);
+		function obj = setSchedulingSlots(obj, Cell)
+			obj.SchedulingSlots = find(Cell.ScheduleUL == obj.NCellID);
 			obj.NULRB = length(obj.SchedulingSlots);
 			obj.Scheduled.UL = obj.NULRB ~= 0;
 		end
@@ -102,17 +104,17 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
 		end
 
-		function obj = generateTransportBlockDL(obj, Stations, Config)
+		function obj = generateTransportBlockDL(obj, Cells, Config)
 			% generateTransportBlockDL is used to create a TB with dummy data for the UE
 			%
 			% :param obj: UserEquipment instance
-			% :param Stations: Array<EvolvedNodeB> instances
+			% :param Cells: Array<EvolvedNodeB> instances
 			% :param Config: MonsterConfig instance
 			% :returns obj: UserEquipment instance
 			%
 
-			% Get the current serving station for this UE
-			enbObjHandle = Stations([Stations.NCellID] == obj.ENodeBID);
+			% Get the current serving Cell for this UE
+			enbObjHandle = Cells([Cells.NCellID] == obj.ENodeBID);
 
 			% Convert the relevant attributes to struct to allow local modification of fields
 			enb = struct(enbObjHandle);
@@ -202,16 +204,16 @@ classdef UserEquipment < matlab.mixin.Copyable
 			end
 		end
 
-		function obj = downlinkReception(obj, Stations, ChannelEstimator)
+		function obj = downlinkReception(obj, Cells, ChannelEstimator)
 			% downlinkReception is used to handle the reception and demodulation of a DL waveform
 			%
 			% :obj: UserEquipment instance
-			% :Stations: Array<EvolvedNodeB>
+			% :Cells: Array<EvolvedNodeB>
 			% :ChannelEstimator: Channel.Estimator property 
 			%
 
-			% Get the current serving station for this UE
-			enb = Stations([Stations.NCellID] == obj.ENodeBID);
+			% Get the current serving Cell for this UE
+			enb = Cells([Cells.NCellID] == obj.ENodeBID);
 			obj.Rx.receiveDownlink(enb, ChannelEstimator);	
 		end
 
@@ -239,7 +241,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 					if state == 0
 						sqn = obj.Rlc.ArqRxBuffer.decodeSqn(obj.Rx.TransportBlock);
 						if ~isempty(sqn)
-							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime);
+							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime, obj.Logger);
 						end	
 						% Set ACK and PID information for this UE to report back to the serving eNodeB 
 						obj.Mac.HarqReport.pid = harqPidBits;
@@ -261,7 +263,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			% :returns obj: UserEquipment instance
 			%
 			
-			obj.Scheduled = struct('DL', false, 'UL', false);;
+			obj.Scheduled = struct('DL', false, 'UL', false);
 			obj.Symbols = [];
 			obj.SymbolsInfo = [];
 			obj.Codeword = [];
