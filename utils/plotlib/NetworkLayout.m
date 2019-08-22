@@ -202,6 +202,69 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.drawScenario(Simulation.Config);
 			obj.drawUes(Simulation.Users, Simulation.Config);
 		end
+
+		function SiteConfig = getMacroSiteConfig(obj, Config, siteId)
+			% Returns the configuration of a macro site and its cells for position and ID
+			%
+			% :param obj: NetworkLayout instance
+			% :param Config: MonsterConfig instance
+			% :param siteId: Integer site identifier
+			% 
+			% :returns SiteConfig: struct with the site configuration
+
+			iSiteCells = find([obj.MacroCells.SiteID] == siteId);
+			siteCellsIds = [obj.MacroCells(iSiteCells).CellID];
+			sitePosition = [obj.MacroCoordinates(siteId,:), Config.MacroEnb.height];
+			SiteConfig = struct(...
+				'id', siteId,...
+				'class', 'macro',...
+				'position', sitePosition,...
+				'macroCellId', -1,...
+				'cellsIds', siteCellsIds);
+		end
+
+		function SiteConfig = getMicroSiteConfig(obj, Config, iSite, Sites)
+			% Returns the configuration of a micro site and its cells for position and ID
+			%
+			% :param obj: NetworkLayout instance
+			% :param Config: MonsterConfig instance
+			% :param iSite: Integer index to generate site id
+			% :param Sites: Array<Site> sites created
+			% 
+			% :returns SiteConfig: struct with the site configuration
+
+			% Find corresponding macro cell
+			totMacroCells = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite;
+			iMacroCell = iSite - floor(iSite/totMacroCells)*totMacroCells;
+			if ~iMacroCell
+				iMacroCell = totMacroCells;
+			end
+			macroCell = obj.MacroCells(iMacroCell);
+			% The microCoordinates is of size Config.MicroEnb.microPosPerMacroCell
+			% We need to find how many of the micro sites positions are already used in this macro cell
+			% Find cells that have set the macro cell to the current one
+			iMicroCellInMacro = 1;
+			allCells = [Sites.Cells];
+			iCellsInMacro = find([allCells.MacroCellId] == macroCell.CellID);
+			if ~isempty(iCellsInMacro)
+				iMicroCellInMacro = iMicroCellInMacro + length(iCellsInMacro)/Config.MicroEnb.microPosPerMacroCell;
+				% Throw an error if there are more than the allowed number
+				if iMicroCellInMacro > Config.MicroEnb.microPosPerMacroCell
+					obj.Logger.log("(SETUP - setupSites) exceeded maximum number of allowed micro sites per macro cell", "ERR");
+				end
+			end
+			sitePosition = [macroCell.MicroCoordinates(iMicroCellInMacro, :), Config.MicroEnb.height];
+			siteId = iSite + Config.MacroEnb.sitesNumber;
+			% Now find IDS for the micro cells that can be created for this micro site
+			iSiteCells = find([obj.MicroCells.SiteID] == siteId);
+			siteCellsIds = [obj.MicroCells(iSiteCells).CellID];
+			SiteConfig = struct(...
+				'id', siteId,...
+				'class', 'micro',...
+				'position', sitePosition,...
+				'macroCellId', macroCell.CellID,...
+				'cellsIds', siteCellsIds);
+		end
 	end
 	
 	methods (Access = private)

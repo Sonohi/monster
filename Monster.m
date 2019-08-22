@@ -28,7 +28,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :param Logger: MonsterLog instance
 
 			% Assert that the configuration is valid before starting the construction
-			validateConfiguration(Config, Logger);
+			Config.assertConfig();
 
 			obj.Logger = Logger;
 			obj.Config = Config;
@@ -119,7 +119,7 @@ classdef Monster < matlab.mixin.Copyable
 			obj.updateUsersQueues();
 
 			obj.Logger.log('(MONSTER - run) downlink UE scheduling', 'DBG');
-			obj.schedule();
+			obj.scheduleDL();
 
 			obj.Logger.log('(MONSTER - run) creating TB, codewords and waveforms for downlink', 'DBG');
 			obj.setupEnbTransmitters();
@@ -132,6 +132,9 @@ classdef Monster < matlab.mixin.Copyable
 
 			obj.Logger.log('(MONSTER - run) downlink UE data decoding', 'DBG');
 			obj.downlinkUeDataDecoding();
+
+			obj.Logger.log('(MONSTER - run) uplink scheduling', 'DBG');
+			obj.scheduleUL();
 
 			obj.Logger.log('(MONSTER - run) setting up UE uplink', 'DBG');
 			obj.setupUeTransmitters();
@@ -176,7 +179,7 @@ classdef Monster < matlab.mixin.Copyable
 
 	end	
 
-	methods (Access = private)
+	methods 
 		function obj = moveUsers(obj)
 			% moveUsers performs UE movements at the beginning of each round
 			%
@@ -208,8 +211,8 @@ classdef Monster < matlab.mixin.Copyable
 			end
 		end
 
-		function obj = schedule(obj) 
-			% schedule is used to perform the allocation of eNodeB resources in the downlink to the UEs
+		function obj = scheduleDL(obj) 
+			% scheduleDL is used to perform the allocation of eNodeB resources in the downlink to the UEs
 			% 
 			% :obj: Monster instance
 			%
@@ -223,6 +226,24 @@ classdef Monster < matlab.mixin.Copyable
 			% Finally, evaluate the power state for the eNodeBs
 			% TODO revise for multiple macro eNodeBs
 			% arrayfun(@(x)x.evaluatePowerState(obj.Config, obj.Stations), obj.Stations)
+		end
+
+		function obj = scheduleUL(obj)
+			% scheduleUL is used to perform the allocation of eNodeB resources in the uplink
+			% 
+			% :obj: Monster instance
+			%
+
+
+			% Use the result of refreshUsersAssociation to setup the UL scheduling
+			arrayfun(@(x)x.resetScheduleUL(), obj.Stations);
+			arrayfun(@(x)x.setScheduleUL(obj.Config), obj.Stations);
+
+			for iUser = 1:length(obj.Users)
+				iServingStation = find([obj.Stations.NCellID] == obj.Users(iUser).ENodeBID);
+				obj.Users(iUser).setSchedulingSlots(obj.Stations(iServingStation));
+			end
+
 		end
 
 		function obj = setupEnbTransmitters(obj)

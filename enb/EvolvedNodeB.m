@@ -45,14 +45,16 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 	
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Config, Logger, BsClass, position, cellId, antennaBearing, siteId, macroCellId)
+		function obj = EvolvedNodeB(Config, Logger, CellConfig, cellId, antennaBearing)
 			obj.Logger = Logger;
-			obj.SiteId = siteId;
-			obj.MacroCellId = macroCellId;
-			obj.BsClass = BsClass;
+			obj.SiteId = CellConfig.siteId;
+			obj.MacroCellId = CellConfig.macroCellId;
+			obj.BsClass = CellConfig.class;
+			% Set the cell position that corresponds to the site position
+			obj.Position = CellConfig.position;
 			obj.NCellID = cellId;
 			obj.Seed = cellId*Config.Runtime.seed;
-			switch BsClass
+			switch obj.BsClass
 				case 'macro'
 					obj.NDLRB = Config.MacroEnb.numPRBs;
 					obj.Pmax = Config.MacroEnb.Pmax; % W
@@ -95,8 +97,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
-			% Set the cell position that corresponds to the site position
-			obj.Position = position;
 		end
 		
 		function s = struct(obj)

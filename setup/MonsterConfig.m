@@ -219,11 +219,30 @@ classdef MonsterConfig < matlab.mixin.Copyable
 				Plot.PHYAxes = axes;
 			end
 			obj.Plot = Plot;
+		end
 
-			% Check the number of macros and throw an error if set to an unsupported number
-			%assert(obj.MacroEnb.number == 1, '(MONSTER CONFIG - constructor) only 1 macro eNodeB currently supported');
-			% Check traffic configuration
-			assert(obj.Traffic.mix >= 0, '(SETUP - setupTraffic) error, traffic mix cannot be negative');
+		function assertConfig(obj)
+			% Asserts the configuration of the simulation 
+			%
+			% :param obj: MonsterConfig instance including scenario-specific configurations
+			%
+
+			% Assert macro eNodeB configuration
+			if strcmp(obj.MacroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MacroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MacroEnb.cellsPerSite == 1 || obj.MacroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			% Assert micro eNodeB configuration
+			if strcmp(obj.MicroEnb.antennaType, 'sectorised')
+				errMsg = "(CONFIG - assertConfig) invalid value for MicroEnb.cellsPerSite with sectorised antenna type. Only 1 and 3 sectors are allowed";
+				assert(obj.MicroEnb.cellsPerSite == 1 || obj.MicroEnb.cellsPerSite == 3, errMsg)
+			end
+
+			errMsg = "(CONFIG - assertConfig) invalid value for Phy.pucchFormat. Only 2 is currently implemented";
+			assert(obj.Phy.pucchFormat == 2, errMsg);
+			errMsg = "(CONFIG - assertConfig) invalid value for Traffic.Mix. Only non negative values are allowed.";
+			assert(obj.Traffic.mix >= 0, errMsg);
 		end
 
 		function setupNetworkLayout(obj, Logger)
