@@ -44,9 +44,12 @@ classdef AntennaElement < handle
             gain = zeros(length(theta),length(phi));
             for itheta = 1:length(theta)
                 for iphi = 1:length(phi)
-                    gain(itheta, iphi) = -1*(min([-1*(obj.Avertical(theta(itheta))+obj.Ahorizontal(phi(iphi))),obj.Amax]));
+										gain(itheta, iphi) = -1*(min([-1*(obj.Avertical(theta(itheta))+obj.Ahorizontal(phi(iphi))),obj.Amax]));
                 end
-            end
+						end
+
+						% Normalize the gain
+						%gain = abs(obj.Amax) + gain;
 
         end
         
@@ -57,8 +60,8 @@ classdef AntennaElement < handle
             % Corresponds to parameters in table 9
             obj.theta3db = 65; %Degrees
             obj.phi3db = 65; %Degrees
-            obj.Amax = 30; %dB
-            obj.SLAv = 30; %dB
+            obj.Amax = 60; %dB, documented at 30 dB
+            obj.SLAv = 60; %dB, documented at 30 dB
         end
         
         function obj = setIndoorConfigITU(obj)
