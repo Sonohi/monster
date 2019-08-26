@@ -60,8 +60,8 @@ classdef AntennaElement < handle
             % Corresponds to parameters in table 9
             obj.theta3db = 65; %Degrees
             obj.phi3db = 65; %Degrees
-            obj.Amax = 60; %dB, documented at 30 dB
-            obj.SLAv = 60; %dB, documented at 30 dB
+            obj.Amax = 30; %dB, documented at 30 dB
+            obj.SLAv = 30; %dB, documented at 30 dB
         end
         
         function obj = setIndoorConfigITU(obj)

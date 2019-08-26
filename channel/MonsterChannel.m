@@ -11,7 +11,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		LOSMethod;
 		simulationRound = 0;
 		simulationTime = 0;
-		extraSamplesArea = 1200;
+		extraSamplesArea = 800;
 		Estimator = struct();
 		Logger;
 		area;
@@ -169,8 +169,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 
 			% Create sample Grid
 			areaSize = obj.getAreaSize;
-			X = -areaSize+Resolution*2:Resolution:areaSize-Resolution*2;
-			Y = -areaSize+Resolution*2:Resolution:areaSize-Resolution*2;
+			X = -areaSize+Resolution*2:Resolution:areaSize-80;
+			Y = -areaSize+Resolution*2:Resolution:areaSize-80;
 			sampleGrid = [X;Y];
 			% Get matrix for each Cell
 			H=zeros(length(X),length(Y),length(Cells));
