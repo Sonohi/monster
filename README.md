@@ -22,6 +22,9 @@ Tested versions of MATLAB are:
 When starting off with the project, it's important to navigate to the correct project folder in MATLAB and add the project folder and its subfolders to the path. 
 This can also be achieved by running the `install.m` script at the root of the project.
 
+The project changelog is available in the `CHANGELOG.md` file at the root of the project. 
+It is based on the project [Keep a changelog](https://github.com/olivierlacan/keep-a-changelog) and follows [Semantic versioning](https://semver.org/).
+
 # Overall logic and organisation
 MONSTeR relies heavily on the usage of classes in MATLAB. 
 These are fairly similar to those one would typically find in other object-oriented frameworks in other languages.
