@@ -133,7 +133,7 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Logger.log('(MONSTER - run) downlink UE data decoding', 'DBG');
 			obj.downlinkUeDataDecoding();
             
-            obj.Logger.log('(MONSTER - run) plotting constalation diagrams and Spectrum', 'DBG');
+            obj.Logger.log('(MONSTER - run) plotting constellation diagrams and spectrums', 'DBG');
             obj.plotRuntime();
             
 			obj.Logger.log('(MONSTER - run) uplink scheduling', 'DBG');
