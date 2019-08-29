@@ -11,7 +11,6 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 	properties
 		CellConfigs;
 		Channel;
-		TempSignalVariables = struct();
 		Pairings = [];
 		LinkConditions = struct();
 	end
@@ -42,6 +41,48 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				obj.CellConfigs.(cellString).LSP = lsp3gpp38901(obj.Channel.getAreaType(Cell));
 			end
 		end
+
+		function tempVar = propagateWaveform(obj, Cell, user, Cells, Mode)
+			tempVar = obj.TempVariables();
+			% Set waveform to be manipulated
+			switch Mode
+				case 'downlink'
+					tempVar = obj.setWaveform(Cell, tempVar);
+				case 'uplink'
+					tempVar = obj.setWaveform(user, tempVar);
+			end
+			
+			% Calculate recieved power between Cell and user
+			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Cell, user, Mode);
+			tempVar.RxPower = receivedPower;
+			tempVar.RxPowerWatt = receivedPowerWatt;
+			
+			% Calculate SNR using thermal noise
+			[SNR, SNRdB, noisePower] = obj.Channel.calculateSNR(tempVar.Waveform, tempVar.WaveformInfo.SamplingRate, tempVar.RxPower);
+			tempVar.RxSNR = SNR;
+			tempVar.RxSNRdB = SNRdB;
+			tempVar.noisePower = noisePower;
+			
+			% If Interference is assumed to be worst case, e.g. 'full', the SINR
+			% define how much noise is to be added
+			if strcmp(obj.Channel.InterferenceType, 'Full')
+				[tempVar] = computeSINR(obj, Cell, user, Cells, Mode, tempVar);
+				SNR = tempVar.RxSINR;
+			end
+			
+			% Compute N0
+			N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft);
+			
+			% Add AWGN
+			noise = N0*complex(randn(size(tempVar.Waveform)), randn(size(tempVar.Waveform)));
+			rxSig = tempVar.Waveform + noise;
+			tempVar.RxWaveform = rxSig;
+			
+			% Add fading
+			if obj.Channel.enableFading
+				tempVar = obj.addFading(Cell, user, Mode, tempVar);
+			end
+		end
 		
 		function propagateWaveforms(obj, Cells, Users, Mode)
 			% propagateWaveforms
@@ -56,99 +97,37 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			obj.Pairings = Pairing;
 			numLinks = length(Pairing(1,:));
 			
+			% Store link conditions
 			obj.LinkConditions.(Mode) = cell(numLinks,1);
 			
 			for i = 1:numLinks
-				obj.clearTempVariables()
+				
 				% Local copy for mutation
 				Cell = Cells([Cells.NCellID] == Pairing(1,i));
 				user = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
-				
-				% Set waveform to be manipulated
-				switch Mode
-					case 'downlink'
-						obj.setWaveform(Cell)
-					case 'uplink'
-						obj.setWaveform(user)
-				end
-				
-				% Calculate recieved power between Cell and user
-				[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Cell, user, Mode);
-				obj.TempSignalVariables.RxPower = receivedPower;
-				
-				% Calculate SNR using thermal noise
-				[SNR, SNRdB, noisePower] = obj.computeSNR();
-				obj.TempSignalVariables.RxSNR = SNR;
-				obj.TempSignalVariables.RxSNRdB = SNRdB;
-				
-				% Add/compute interference
-				SINR = obj.computeSINR(Cell, user, Cells, receivedPowerWatt, noisePower, Mode);
-				obj.TempSignalVariables.RxSINR = SINR;
-				obj.TempSignalVariables.RxSINRdB = 10*log10(SINR);
-				
-				% Compute N0
-				N0 = obj.computeSpectralNoiseDensity(Cell, Mode);
-				
-				% Add AWGN
-				noise = N0*complex(randn(size(obj.TempSignalVariables.RxWaveform)), randn(size(obj.TempSignalVariables.RxWaveform)));
-				rxSig = obj.TempSignalVariables.RxWaveform + noise;
-				obj.TempSignalVariables.RxWaveform = rxSig;
-				
-				% Add fading
-				if obj.Channel.enableFading
-					obj.addFading(Cell, user, Mode);
-				end
-				
+
+				% Propagate waveform and write received waveform to struct
+				tempVar = obj.propagateWaveform(Cell, user, Cells, Mode);
+		
+				% Sum waveforms from interfering stations and compute SINR
+				tempVar = obj.computeSINR(Cell, user, Cells, Mode, tempVar);
+	
 				% Receive signal at Rx module
 				switch Mode
 					case 'downlink'
-						obj.setReceivedSignal(user);
+						obj.setReceivedSignal(user,  tempVar);
 					case 'uplink'
-						obj.setReceivedSignal(Cell, user);
+						obj.setReceivedSignal(Cell, tempVar, user);
 				end
+			
+
 				
 				% Store in channel variable
-				obj.storeLinkCondition(i, Mode)
+				obj.storeLinkCondition(i, Mode, tempVar)
 				
 			end
 		end
-		
-		function N0 = computeSpectralNoiseDensity(obj, Cell, Mode)
-			% Compute spectral noise density NO
-			%
-			% :param obj:
-			% :param Cell:
-			% :param Mode:
-			% :returns N0:
-			%
-			% TODO: Find citation for this computation. It's partly taken from matworks - however there is a theoretical equation for the symbol energy of OFDM signals.
-			%
-			
-			switch Mode
-				case 'downlink'
-					Es = sqrt(2.0*Cell.CellRefP*double(obj.TempSignalVariables.RxWaveformInfo.Nfft));
-					N0 = 1/(Es*sqrt(obj.TempSignalVariables.RxSINR));
-				case 'uplink'
-					N0 = 1/(sqrt(obj.TempSignalVariables.RxSINR)  * sqrt(double(obj.TempSignalVariables.RxWaveformInfo.Nfft)))/sqrt(2);
-			end
-			
-		end
-		
-		function [SNR, SNRdB, thermalNoise] = computeSNR(obj)
-			% Calculate SNR using thermal noise. Thermal noise is bandwidth dependent.
-			%
-			% :param obj:
-			% :returns SNR:
-			% :returns SNRdB:
-			% :returns thermalNoise:
-			%
-			
-			[thermalLossdBm, thermalNoise] = thermalLoss(obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxWaveformInfo.SamplingRate);
-			rxNoiseFloor = thermalLossdBm;
-			SNRdB = obj.TempSignalVariables.RxPower-rxNoiseFloor;
-			SNR = 10.^((SNRdB)./10);
-		end
-		
+	
 		
 		function receivedPower = getreceivedPowerMatrix(obj, Cell, user, sampleGrid)
 			% Used for obtaining a SINR estimation of a given position
@@ -160,14 +139,14 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :returns receivedPower:
 			%
 			
-			obj.TempSignalVariables.RxWaveform = Cell.Tx.Waveform; % Temp variable for BW indication
-			obj.TempSignalVariables.RxWaveformInfo = Cell.Tx.WaveformInfo; % Temp variable for BW indication
+			%obj.TempSignalVariables.RxWaveform = Cell.Tx.Waveform; % Temp variable for BW indication
+			%obj.TempSignalVariables.RxWaveformInfo = Cell.Tx.WaveformInfo; % Temp variable for BW indication
 			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Cell, user, 'downlink', sampleGrid);
 			receivedPower = reshape(receivedPower, length(sampleGrid), []);
-			obj.clearTempVariables();
+			%obj.clearTempVariables();
 		end
 		
-		function [SINR] = computeSINR(obj, Cell, user, Cells, receivedPowerWatt, noisePower, Mode)
+		function [tempVar] = computeSINR(obj, Cell, user, Cells, Mode, tempVar)
 			% Compute SINR using received power and the noise power.
 			% Interference is given as the power of the received signal, given the power of the associated Cell, over the power of the neighboring cells.
 			%
@@ -181,30 +160,77 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :returns SINR:
 			%
 			% v1. InterferenceType Full assumes full power, thus the SINR computation can be done using just the link budget.
-			% TODO: Add waveform type interference.
+			%	v2. Adds power from interfering waveforms.
 			% TODO: clean up function arguments.
 			%
+
+			interferingCells = obj.Channel.getInterferingCells(Cell, Cells);
+			listCellPower = obj.listCellPower(user, interferingCells, Mode);
+			intCells  = fieldnames(listCellPower);
 			
 			if strcmp(obj.Channel.InterferenceType,'Full')
-				interferingCells = obj.Channel.getInterferingCells(Cell, Cells);
-				listCellPower = obj.listCellPower(user, interferingCells, Mode);
-				
-				intCells  = fieldnames(listCellPower);
 				intPower = 0;
 				% Sum power from interfering cells
 				for intCell = 1:length(fieldnames(listCellPower))
 					intPower = intPower + listCellPower.(intCells{intCell}).receivedPowerWatt;
 				end
 				
-				SINR = obj.Channel.calculateSINR(receivedPowerWatt, intPower, noisePower);
+				[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
+			elseif strcmp(obj.Channel.InterferenceType, 'Frequency')
+
+				% for each interfering waveform, compute channel impairments and get waveforms
+				interferingWaveforms = cell(length(interferingCells),1);
+				for intCell = 1:length(interferingCells)
+
+					tempIntVar = obj.propagateWaveform(interferingCells(intCell), user, Cells, Mode);
+
+					% Set correct power for each waveform
+					tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
+
+					interferingWaveforms{intCell}  = tempIntVar;
+
+				end
+
+				% Sum the waveforms to get combined interfering waveform
+				% Sum power to get estimated power
+				interferingWaveform = 0;
+				interferingPower = 0;
+				for intCell = 1:length(interferingCells)
+					interferingWaveform = interferingWaveform + interferingWaveforms{intCell}.RxWaveform;
+					interferingPower  = interferingPower + interferingWaveforms{intCell}.RxPowerWatt;
+				end
+				
+			%	interferingPower = bandpower(interferingWaveform);
+
+				Nfft = tempVar.WaveformInfo.Nfft;
+				[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
+				
+				% Compute N0 for power scaling of waveform
+				N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, tempVar.RxSINR, Nfft)*2;
+				interferingWaveform = setPower(interferingWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30) * N0;
+
+% 				spectrumAnalyser(interferingWaveform, tempVar.WaveformInfo.SamplingRate);
+%  			Fint = fft(interferingWaveform)./length(interferingWaveform);
+% 			Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+% 			figure
+% 			plot(Fpsd);
+% 			Fint = fft(tempVar.RxWaveform)./length(tempVar.RxWaveform);
+% 			Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+% 			hold on
+% 			plot(Fpsd)
+% % 			
+			
+			
+				tempVar.RxWaveform = tempVar.RxWaveform + interferingWaveform;
+				
+
 			else
-				SINR = obj.TempSignalVariables.RxSNR;
+				tempVar.RxSINR = tempVar.RxSNR;
 			end
 		end
 		
 		function SINR = listSINR(obj, User, Cells, Mode)
 			% Get list of SINR for all cells, assuming they all interfere.
-			% TODO: Find interfering cells based on class
 			%
 			% :param User: One user
 			% :param Cells: Multiple eNB's
@@ -438,7 +464,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		end
 		
 		
-		function addFading(obj, Cell, user, mode)
+		function tempVar = addFading(obj, Cell, user, mode, tempVar)
 			% addFading
 			%
 			% :param obj:
@@ -477,7 +503,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			c = physconst('lightspeed'); % speed of light in m/s
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
-			sig = [obj.TempSignalVariables.RxWaveform;zeros(200,1)];
+			sig = [tempVar.RxWaveform;zeros(200,1)];
 			
 			switch fadingmodel
 				case 'cdl'
@@ -492,7 +518,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					cdl.ReceiveAntennaArray.Size = [1 1 1 1 1];
 					cdl.SampleDensity = 256;
 					cdl.Seed = seed;
-					obj.TempSignalVariables.RxWaveform = cdl(sig);
+					tempVar.RxWaveform = cdl(sig);
 				case 'tdl'
 					tdl = nrTDLChannel;
 					
@@ -515,8 +541,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					tdl.Seed = seed;
 					%tdl.KFactorScaling = true;
 					%tdl.KFactor = 3;
-					[obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxPathGains, ~] = tdl(sig);
-					obj.TempSignalVariables.RxPathFilters = getPathFilters(tdl);
+					[tempVar.RxWaveform, tempVar.RxPathGains, ~] = tdl(sig);
+					tempVar.RxPathFilters = getPathFilters(tdl);
 			end
 		end
 		
@@ -561,7 +587,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			h = sum(obj.TempSignalVariables.RxPathGains,2);
 		end
 		
-		function setWaveform(obj, TxNode)
+		function tempVar = setWaveform(obj, TxNode, tempVar)
 			% Copies waveform and waveform info from tx module to temp variables
 			%
 			% :param obj:
@@ -576,8 +602,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				obj.Channel.Logger.log('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
 			end
 			
-			obj.TempSignalVariables.RxWaveform = TxNode.Tx.Waveform;
-			obj.TempSignalVariables.RxWaveformInfo =  TxNode.Tx.WaveformInfo;
+			tempVar.Waveform = TxNode.Tx.Waveform;
+			tempVar.WaveformInfo =  TxNode.Tx.WaveformInfo;
 		end
 		
 		function h = plotSFMap(obj, Cell)
@@ -597,7 +623,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			ylabel('y [Meters]')
 		end
 		
-		function RxNode = setReceivedSignal(obj, RxNode, varargin)
+		function RxNode = setReceivedSignal(obj, RxNode, tempVar, varargin)
 			% Copies waveform and waveform info to Rx module, enables transmission.
 			% Based on the class of RxNode, uplink or downlink can be determined
 			%
@@ -610,24 +636,24 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			if isa(RxNode, 'EvolvedNodeB')
 				userId = varargin{1}.NCellID;
 				RxNode.Rx.createRecievedSignalStruct(userId);
-				RxNode.Rx.ReceivedSignals{userId}.Waveform = obj.TempSignalVariables.RxWaveform;
-				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = obj.TempSignalVariables.RxWaveformInfo;
-				RxNode.Rx.ReceivedSignals{userId}.RxPwdBm = obj.TempSignalVariables.RxPower;
-				RxNode.Rx.ReceivedSignals{userId}.SNR = obj.TempSignalVariables.RxSNR;
-				RxNode.Rx.ReceivedSignals{userId}.PathGains = obj.TempSignalVariables.RxPathGains;
-				RxNode.Rx.ReceivedSignals{userId}.PathFilters = obj.TempSignalVariables.RxPathFilters;
+				RxNode.Rx.ReceivedSignals{userId}.Waveform = tempVar.RxWaveform;
+				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = tempVar.RxWaveformInfo;
+				RxNode.Rx.ReceivedSignals{userId}.RxPwdBm = tempVar.RxPower;
+				RxNode.Rx.ReceivedSignals{userId}.SNR = tempVar.RxSNR;
+				RxNode.Rx.ReceivedSignals{userId}.PathGains = tempVar.RxPathGains;
+				RxNode.Rx.ReceivedSignals{userId}.PathFilters = tempVar.RxPathFilters;
 			elseif isa(RxNode, 'UserEquipment')
-				RxNode.Rx.Waveform = obj.TempSignalVariables.RxWaveform;
-				RxNode.Rx.WaveformInfo =  obj.TempSignalVariables.RxWaveformInfo;
-				RxNode.Rx.RxPwdBm = obj.TempSignalVariables.RxPower;
-				RxNode.Rx.SNR = obj.TempSignalVariables.RxSNR;
-				RxNode.Rx.SINR = obj.TempSignalVariables.RxSINR;
-				RxNode.Rx.PathGains = obj.TempSignalVariables.RxPathGains;
-				RxNode.Rx.PathFilters = obj.TempSignalVariables.RxPathFilters;
+				RxNode.Rx.Waveform = tempVar.RxWaveform;
+				RxNode.Rx.WaveformInfo =  tempVar.WaveformInfo;
+				RxNode.Rx.RxPwdBm = tempVar.RxPower;
+				RxNode.Rx.SNR = tempVar.RxSNR;
+				RxNode.Rx.SINR = tempVar.RxSINR;
+				RxNode.Rx.PathGains = tempVar.RxPathGains;
+				RxNode.Rx.PathFilters = tempVar.RxPathFilters;
 			end
 		end
 		
-		function storeLinkCondition(obj, index, mode)
+		function storeLinkCondition(obj, index, mode, tempVar)
 			% storeLinkCondition
 			%
 			% :param obj:
@@ -636,30 +662,30 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			%
 			
 			linkCondition = struct();
-			linkCondition.Waveform = obj.TempSignalVariables.RxWaveform;
-			linkCondition.WaveformInfo =  obj.TempSignalVariables.RxWaveformInfo;
-			linkCondition.RxPwdBm = obj.TempSignalVariables.RxPower;
-			linkCondition.SNR = obj.TempSignalVariables.RxSNR;
-			linkCondition.SINR = obj.TempSignalVariables.RxSINR;
-			linkCondition.PathGains = obj.TempSignalVariables.RxPathGains;
-			linkCondition.PathFilters = obj.TempSignalVariables.RxPathFilters;
+			linkCondition.Waveform = tempVar.RxWaveform;
+			linkCondition.WaveformInfo =  tempVar.WaveformInfo;
+			linkCondition.RxPwdBm = tempVar.RxPower;
+			linkCondition.SNR = tempVar.RxSNR;
+			linkCondition.SINR = tempVar.RxSINR;
+			linkCondition.PathGains = tempVar.RxPathGains;
+			linkCondition.PathFilters = tempVar.RxPathFilters;
 			obj.LinkConditions.(mode){index} = linkCondition;
 		end
 		
-		function clearTempVariables(obj)
+		function tempVar = TempVariables(obj, tempVar)
 			% Clear temporary variables. These are used for waveform manipulation and power tracking
 			% The property TempSignalVariables is used, and is a struct of several parameters.
 			%
 			% :param obj:
 			%
-			
-			obj.TempSignalVariables.RxPower = [];
-			obj.TempSignalVariables.RxSNR = [];
-			obj.TempSignalVariables.RxSINR = [];
-			obj.TempSignalVariables.RxWaveform = [];
-			obj.TempSignalVariables.RxWaveformInfo = [];
-			obj.TempSignalVariables.RxPathGains = [];
-			obj.TempSignalVariables.RxPathFilters = [];
+			tempVar = struct();
+			tempVar.RxPower = [];
+			tempVar.RxSNR = [];
+			tempVar.RxSINR = [];
+			tempVar.RxWaveform = [];
+			tempVar.RxWaveformInfo = [];
+			tempVar.RxPathGains = [];
+			tempVar.RxPathFilters = [];
 		end
 	end
 	

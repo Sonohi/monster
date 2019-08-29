@@ -416,7 +416,29 @@ classdef MonsterChannel < matlab.mixin.Copyable
 	
 	methods(Static)
 
-		function SINR = calculateSINR(receivedPower, inteferingPower, noisePower)
+		function N0 = computeSpectralNoiseDensity(Cell, Mode, SNR, Nfft)
+			% Compute spectral noise density NO
+			%
+			% :param obj:
+			% :param Cell:
+			% :param Mode:
+			% :returns N0:
+			%
+			% TODO: Find citation for this computation. It's partly taken from matworks - however there is a theoretical equation for the symbol energy of OFDM signals.
+			%
+			
+			switch Mode
+				case 'downlink'
+					Es = sqrt(2.0*Cell.CellRefP*double(Nfft));
+					N0 = 1/(Es*sqrt(SNR));
+				case 'uplink'
+					N0 = 1/(sqrt(SNR)  * sqrt(double(Nfft)))/sqrt(2);
+			end
+			
+		end
+		
+
+		function [SINR, SINRdB] = calculateSINR(receivedPower, inteferingPower, noisePower)
 			% Calculates wideband SINR 
 			%
 			% :param receivedPower: Received power in watts
@@ -424,7 +446,23 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :param noisePower: Power of noise in watts
 
 			SINR = receivedPower ./ (inteferingPower + noisePower);
+			SINRdB = 10*log10(SINR);
 
+		end
+		
+		function [SNR, SNRdB, thermalNoise] = calculateSNR(Waveform, SamplingRate, Power)
+			% Calculate SNR using thermal noise. Thermal noise is bandwidth dependent.
+			%
+			% :param obj:
+			% :returns SNR:
+			% :returns SNRdB:
+			% :returns thermalNoise:
+			%
+			
+			[thermalLossdBm, thermalNoise] = thermalLoss(Waveform, SamplingRate);
+			rxNoiseFloor = thermalLossdBm;
+			SNRdB = Power-rxNoiseFloor;
+			SNR = 10.^((SNRdB)./10);
 		end
 		
 		function interferingCells = getInterferingCells(SelectedCell, Cells)
