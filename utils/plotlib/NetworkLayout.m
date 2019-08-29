@@ -110,19 +110,22 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					[yc - siteImgLenghY yc + siteImgLenghY], siteImg);
 				set(f, 'AlphaData', siteImgAlpha);
 				
-				% Now draw the cells boundaries for the site
-				theta = pi/cellsPerSite;
-				xyHex = zeros(7,2);
-				for i=1:cellsPerSite
-					cHex = [(xc + cellRadius * cos((i-1)*2*theta)) ...
-						(yc + cellRadius * sin((i-1)*2*theta))];
-					for j=1:7
-						xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
-						xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
-					end
-					l = line(Config.Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
-					set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
-				end			
+				% Now draw the cells boundaries for the site (only if macro
+				% site)
+                if strcmp(Sites(iSite).Class, 'macro')
+                    theta = pi/cellsPerSite;
+                    xyHex = zeros(7,2);
+                    for i=1:cellsPerSite
+                        cHex = [(xc + cellRadius * cos((i-1)*2*theta)) ...
+                            (yc + cellRadius * sin((i-1)*2*theta))];
+                        for j=1:7
+                            xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
+                            xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
+                        end
+                        l = line(Config.Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
+                        set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
+                    end
+                end
 			end		
 			
 		end

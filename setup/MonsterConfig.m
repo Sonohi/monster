@@ -207,13 +207,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
             
 			% Properties related to plotting
 			Plot = struct();
-			if obj.SimulationPlot.runtimePlot
-				Plot.Layout = '';
-				Plot.LayoutFigure = '';
-				Plot.LayoutAxes = axes;
-				Plot.PHYFigure = '';
-				Plot.PHYAxes = axes;
-			end
+			%if obj.SimulationPlot.runtimePlot
+			%	Plot.Layout = '';
+			%	Plot.LayoutFigure = '';
+			%	Plot.LayoutAxes = axes;
+			%	Plot.PHYFigure = '';
+			%	Plot.PHYAxes = axes;
+			%end
 			obj.Plot = Plot;
 		end
 
