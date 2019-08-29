@@ -21,6 +21,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		rsrqdB;
 		rsrpdBm;
 		rssidBm;
+		bitsArrived;
+		backhaulDelay;
 		Config;
 	end
 	
@@ -43,7 +45,9 @@ classdef MetricRecorder < matlab.mixin.Copyable
 				obj.arqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			end
 			obj.powerState = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			
+			obj.bitsArrived = zeros(Config.Runtime.totalRounds, numEnodeBs);
+			obj.backhaulDelay = zeros(Config.Runtime.totalRounds, numEnodeBs);
+
 			% Initialise for UE
 			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
@@ -122,6 +126,25 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		function obj = recordPowerState(obj, Cells, schRound)
 			for iCell = 1:length(Cells)
 				obj.powerState(schRound, iCell) = Cells(iCell).PowerState;
+			end
+		end
+
+		function obj = recordBackhaulMetrics(obj, Backhaul, schRound)
+			% Increment the scheduling round for Matlab's indexing
+			schRound = schRound + 1;
+			obj = obj.recordBitsArrived(Backhaul, schRound);
+			obj = obj.recordBackhaulDelay(Backhaul, schRound);
+		end
+
+		function obj = recordBitsArrived(obj, Backhaul, schRound)
+			for iBackhaul = 1:length(Backhaul)
+				obj.bitsArrived(schRound, iBackhaul) = Backhaul(iBackhaul).TotalBits;
+			end
+		end
+
+		function obj = recordBackhaulDelay(obj, Backhaul, schRound)
+			for iBackhaul = 1:length(Backhaul)
+				obj.backhaulDelay(schRound, iBackhaul) = Backhaul(iBackhaul).Delay;
 			end
 		end
 		

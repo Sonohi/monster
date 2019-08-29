@@ -39,6 +39,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Arq = struct();
 		Plot = struct();
 		Scenario = struct();
+		Backhaul = struct();
 	end
 
 	methods
@@ -73,13 +74,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 1;
+			SimulationPlot.runtimePlot = 0;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
 			MacroEnb.sitesNumber = 1;
-			MacroEnb.cellsPerSite = 3;
+			MacroEnb.cellsPerSite = 1;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -91,7 +92,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.sitesNumber = 3;
+			MicroEnb.sitesNumber = 0;
 			MicroEnb.cellsPerSite = 1;
 			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
@@ -106,7 +107,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 10;
+			Ue.number = 1;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 7;
@@ -131,13 +132,21 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Terrain.type = 'city'; % city | maritime
 			obj.Terrain = Terrain;
 
+			% Properties related to backhaul
+			Backhaul = struct();
+			Backhaul.propagationSpeed = 2*10^8; % [m/s] (usual speed of light in a fiber optic cable is approx. 2*10^8 m/s)
+			Backhaul.lengthOfMedium = 1000; % [m]
+			Backhaul.bandwidth = 10^6; % [bps] 
+			Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
+			obj.Backhaul = Backhaul;
+
 			% Properties related to the traffic 
 			% Traffic types: fullBuffer | videoStreaming | webBrowsing 
 			Traffic = struct();
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
 			Traffic.mix = 0;
-			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
+			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
