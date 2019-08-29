@@ -1,5 +1,6 @@
 ## Unreleased
 - Subcarrier-based interference calculation.
+- Simple backhaul network.
 
 ## 1.0.0 - 2019-08-29
 
