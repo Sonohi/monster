@@ -84,7 +84,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
 			MacroEnb.ISD = 500;
-			MacroEnb.noiseFigure = 7;
+			MacroEnb.noiseFigure = 0;
 			MacroEnb.antennaGain = 0;
 			MacroEnb.antennaType = 'sectorised';
 			MacroEnb.Pmax = 20; % W
@@ -109,7 +109,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.number = 10;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
-			Ue.noiseFigure = 7;
+			Ue.noiseFigure = 9;
 			Ue.antennaGain = 0;
 			Ue.antennaType = 'omni';
 			obj.Ue = Ue;
@@ -207,13 +207,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
             
 			% Properties related to plotting
 			Plot = struct();
-			if obj.SimulationPlot.runtimePlot
-				Plot.Layout = '';
-				Plot.LayoutFigure = '';
-				Plot.LayoutAxes = axes;
-				Plot.PHYFigure = '';
-				Plot.PHYAxes = axes;
-			end
 			obj.Plot = Plot;
 		end
 

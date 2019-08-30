@@ -11,8 +11,9 @@ function plotSpectrums(Users,Cells, Config)
 		end
 
 
-		Cell = Cells([Cells.NCellID] == Users(user).ENodeBID);
-		if checkUserSchedule(Users(user),Cell)
+		Cell = Cells([Cells.NCellID] == Users(user).NCellID);
+        
+		if ~isempty(Users(user).Rx.Waveform)
 			Fs = Cells([Cells.NCellID] == Users(user).ENodeBID).Tx.WaveformInfo.SamplingRate;
 			sig = setPower(Users(user).Rx.Waveform,Users(user).Rx.RxPwdBm);
 			F = fft(sig)./length(sig);
