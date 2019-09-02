@@ -14,8 +14,6 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Runtime.seed = 126;
 			%Skip plotting as values are going to be evaluated and not plots
 			testCase.Config.SimulationPlot.runtimePlot = 0;
-			testCase.Config.SimulationPlot.generateCoverageMap = 0;
-			testCase.Config.SimulationPlot.generateHeatMap = 0;
 			%Set a single macroEnb
 			testCase.Config.MacroEnb.sitesNumber = 1;
 			testCase.Config.MacroEnb.cellsPerSite = 1;
@@ -80,6 +78,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			% Get a logger instance
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Simulation = Monster(testCase.Config, testCase.Logger);
+			testCase.Config = testCase.Simulation.Config;
 		end
 	end
 	
@@ -123,7 +122,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			%Verify SNR and SINR. With only 1 Enb they should be the same
 			testCase.verifyTrue( mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB) < 1e-4 )==1);
 			%TODO: find a more appropiate range and/or verify current
-			testCase.verifyTrue( 20 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
+			testCase.verifyTrue( 15 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
 			%Verify difference between pre and post Evm
 			testCase.verifyTrue(mean(testCase.Simulation.Results.preEvm > testCase.Simulation.Results.postEvm)==1);
 			%Verify throughput

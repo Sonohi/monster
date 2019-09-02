@@ -63,9 +63,9 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			tempVar.RxSNRdB = SNRdB;
 			tempVar.noisePower = noisePower;
 			
-			% If Interference is assumed to be worst case, e.g. 'full', the SINR
+			% If Interference is assumed to be worst case, e.g. 'full' or 'none', the SINR
 			% define how much noise is to be added
-			if strcmp(obj.Channel.InterferenceType, 'Full')
+			if ~strcmp(obj.Channel.InterferenceType, 'Frequency')
 				[tempVar] = computeSINR(obj, Cell, user, Cells, Mode, tempVar);
 				SNR = tempVar.RxSINR;
 			end
@@ -109,9 +109,12 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				% Propagate waveform and write received waveform to struct
 				tempVar = obj.propagateWaveform(Cell, user, Cells, Mode);
 		
-				% Sum waveforms from interfering stations and compute SINR
-				tempVar = obj.computeSINR(Cell, user, Cells, Mode, tempVar);
-	
+				% Sum waveforms from interfering stations and compute SINR, if
+				% frequency type interference is wanted.
+				if strcmp(obj.Channel.InterferenceType,'Frequency')
+					tempVar = obj.computeSINR(Cell, user, Cells, Mode, tempVar);
+				end
+				
 				% Receive signal at Rx module
 				switch Mode
 					case 'downlink'
@@ -193,36 +196,49 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 
 				% Sum the waveforms to get combined interfering waveform
 				% Sum power to get estimated power
-				interferingWaveform = 0;
+				interferingWaveform = zeros(length(tempVar.RxWaveform),1);
 				interferingPower = 0;
 				for intCell = 1:length(interferingCells)
-					interferingWaveform = interferingWaveform + interferingWaveforms{intCell}.RxWaveform;
+					% Add random circular shift to create uncorrelated interfering
+					% waveforms
+					interferingWaveform = interferingWaveform + circshift(interferingWaveforms{intCell}.RxWaveform, randi(length(interferingWaveform)/2-1));
 					interferingPower  = interferingPower + interferingWaveforms{intCell}.RxPowerWatt;
 				end
-				
-			%	interferingPower = bandpower(interferingWaveform);
 
-				Nfft = tempVar.WaveformInfo.Nfft;
+				debug = false;
+			
+				% option 1.
+				% Add relative power to received waveform
+				% Set power of RxWaveform based on link budget
+				rxWaveform = setPower(tempVar.RxWaveform, tempVar.RxPower);
+				
+				if debug
+					Fint = fft(rxWaveform)./length(rxWaveform);
+					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+					figure
+					plot(Fpsd)
+					hold on
+				end
+				% Add interfering waveform
+				rxWaveform = rxWaveform + interferingWaveform;
+				
+				if debug
+					Fint = fft(rxWaveform)./length(rxWaveform);
+					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+					plot(Fpsd)
+
+					Fint = fft(interferingWaveform)./length(interferingWaveform);
+					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+					plot(Fpsd)
+					legend('No inteference', 'With interference', 'Interfering waveform')
+				end
+				% Normalize waveform 
+				tempVar.RxWaveform = setPower(rxWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30);
+				
+				% Compute worstcase SINR based on power profile. This assumes
+				% constant power on all subcarriers and is thus the worst expected
+				% SINR.
 				[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
-				
-				% Compute N0 for power scaling of waveform
-				N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, tempVar.RxSINR, Nfft)*2;
-				interferingWaveform = setPower(interferingWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30) * N0;
-
-% 				spectrumAnalyser(interferingWaveform, tempVar.WaveformInfo.SamplingRate);
-%  			Fint = fft(interferingWaveform)./length(interferingWaveform);
-% 			Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
-% 			figure
-% 			plot(Fpsd);
-% 			Fint = fft(tempVar.RxWaveform)./length(tempVar.RxWaveform);
-% 			Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
-% 			hold on
-% 			plot(Fpsd)
-% % 			
-			
-			
-				tempVar.RxWaveform = tempVar.RxWaveform + interferingWaveform;
-				
 
 			else
 				tempVar.RxSINR = tempVar.RxSNR;
@@ -637,7 +653,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				userId = varargin{1}.NCellID;
 				RxNode.Rx.createRecievedSignalStruct(userId);
 				RxNode.Rx.ReceivedSignals{userId}.Waveform = tempVar.RxWaveform;
-				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = tempVar.RxWaveformInfo;
+				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = tempVar.WaveformInfo;
 				RxNode.Rx.ReceivedSignals{userId}.RxPwdBm = tempVar.RxPower;
 				RxNode.Rx.ReceivedSignals{userId}.SNR = tempVar.RxSNR;
 				RxNode.Rx.ReceivedSignals{userId}.PathGains = tempVar.RxPathGains;

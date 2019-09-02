@@ -133,8 +133,8 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Logger.log('(MONSTER - run) downlink UE data decoding', 'DBG');
 			obj.downlinkUeDataDecoding();
             
-            obj.Logger.log('(MONSTER - run) plotting constellation diagrams and spectrums', 'DBG');
-            obj.plotRuntime();
+			obj.Logger.log('(MONSTER - run) plotting constellation diagrams and spectrums', 'DBG');
+			obj.plotRuntime();
             
 			obj.Logger.log('(MONSTER - run) uplink scheduling', 'DBG');
 			obj.scheduleUL();
@@ -340,11 +340,13 @@ classdef Monster < matlab.mixin.Copyable
            % plotRuntime executes the runtime plots
            %
            % :obj: Monster instance
-           %
-           plotSpectrums(obj.Users, obj.Cells, obj.Config);
-           plotConstDiagramDL(obj.Cells, obj.Users, obj.Config);
-           %plotLinks(obj.Users, obj.Cells, obj.Config.Plot.LayoutAxes, 'downlink');
-           plotAssociationTable(obj.Users, obj.Cells, obj.Config);
+					 %
+					 if obj.Config.SimulationPlot.runtimePlot
+						plotSpectrums(obj.Users, obj.Cells, obj.Config);
+						plotConstDiagramDL(obj.Cells, obj.Users, obj.Config);
+						%plotLinks(obj.Users, obj.Cells, obj.Config.Plot.LayoutAxes, 'downlink');
+						plotAssociationTable(obj.Users, obj.Cells, obj.Config);
+					 end
         end
 	end
 end

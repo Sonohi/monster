@@ -175,26 +175,24 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).Tx.createReferenceSubframe();
 					testCase.Cells(1).Tx.assignReferenceSubframe();
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink')
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveformInfo))
-
+					
+					% Check that the linkConditions are stored
+					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink))
 
 					% Check the assigned user have a received waveform
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.Waveform))
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.WaveformInfo))
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.SNR))
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.RxPwdBm))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathGains))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathFilters))
-					testCase.verifyTrue(testCase.Channel.ChannelModel.TempSignalVariables.RxSINR < testCase.Channel.ChannelModel.TempSignalVariables.RxSNR)
-					testCase.verifyTrue(testCase.Channel.ChannelModel.TempSignalVariables.RxSINRdB < testCase.Channel.ChannelModel.TempSignalVariables.RxSNRdB)
 					
-					testCase.verifyTrue(testCase.Users(1).Rx.SINR < testCase.Users(1).Rx.SNR)
-					testCase.verifyTrue(testCase.Users(1).Rx.SINRdB < testCase.Users(1).Rx.SNRdB)
-					
-					% Check that the linkConditions are stored
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink{1,1}))
-					
+					if testCase.Channel.enableFading
+						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathGains))
+						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathFilters))
+					end
+	
+					% Only one user assigned, thus SINR is equal to SNR
+					testCase.verifyTrue((testCase.Users(1).Rx.SINR - testCase.Users(1).Rx.SNR) < 1e-12)
+					testCase.verifyTrue((testCase.Users(1).Rx.SINRdB - testCase.Users(1).Rx.SNRdB) < 1e-12)
 					
 					% Check the other users have nothing
 					testCase.verifyTrue(isempty(testCase.Users(2).Rx.Waveform))
@@ -225,22 +223,22 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).setScheduleUL(testCase.Config);
 					
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink')
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveform))
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.TempSignalVariables.RxWaveformInfo))
-
+					% Check that the linkConditions are stored
+					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.uplink{1,1}))
+					
 
 					% Check the assigned Cell of the user have a received waveform
 					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.Waveform))
 					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.WaveformInfo))
 					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.SNR))
 					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.RxPwdBm))
-					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathGains))
-					testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathFilters))
+					if testCase.Channel.enableFading
+						testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathGains))
+						testCase.verifyTrue(~isempty(testCase.Cells(1).Rx.ReceivedSignals{1}.PathFilters))
+					end
 					testCase.verifyTrue(isempty(testCase.Cells(1).Rx.ReceivedSignals{2}))
 					
-					% Check that the linkConditions are stored
-					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.uplink{1,1}))
-					
+
 					
 					% Combine received signals into one final waveform.
 					testCase.Cells(1).Rx.createReceivedSignal();
@@ -260,8 +258,6 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).Tx.assignReferenceSubframe();
 					
 					testCase.Channel.traverse(testCase.Cells(1), testCase.Users, 'downlink')
-					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINR,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNR,2))
-					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINRdB,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNRdB,2))
 					testCase.verifyEqual(round(testCase.Users(1).Rx.SINR,2), round(testCase.Users(1).Rx.SNR,2))
 					testCase.verifyEqual(round(testCase.Users(1).Rx.SINRdB,2), round(testCase.Users(1).Rx.SNRdB,2))
 					
@@ -285,8 +281,6 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.SNR))
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.RxPwdBm))
 					
-					testCase.verifyEqual(testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSINR, testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSNR)
-					testCase.verifyEqual(testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSINRdB, testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSNRdB)
 					testCase.verifyEqual(testCase.Users(1).Rx.SINR, testCase.Users(1).Rx.SNR)
 					testCase.verifyEqual(testCase.Users(1).Rx.SINRdB, testCase.Users(1).Rx.SNRdB)
 				
