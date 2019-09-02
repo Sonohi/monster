@@ -263,7 +263,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			%
 
 			if isa(obj.ChannelModel, 'Monster3GPP38901')
-				list = obj.ChannelModel.listCellPower(User, Cells, Mode);
+				list = obj.ChannelModel.listCellPower(User, Cells);
 			end
 		end
 
@@ -468,6 +468,15 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		function interferingCells = getInterferingCells(SelectedCell, Cells)
 			interferingCells = Cells(find(strcmp({Cells.BsClass},SelectedCell.BsClass)));
 			interferingCells = interferingCells([interferingCells.NCellID]~=SelectedCell.NCellID);
+		end
+
+		function interferingUsers = getInterferingUsers(SelectedUser, AssociatedCell, Users, Cells)
+			% Find all cells that share the same class as the one the user is associated with
+			interferingCells = MonsterChannel.getInterferingCells(AssociatedCell, Cells);
+			% Find all users scheduled/associated with that class of cells
+			Pairing = MonsterChannel.getPairing([interferingCells, AssociatedCell],'uplink');
+			Pairing = Pairing(2,Pairing(2,:) ~= SelectedUser.NCellID); % Remove the selected user
+			interferingUsers = Users(Pairing);
 		end
 		
 		function distance = getDistance(txPos,rxPos)
