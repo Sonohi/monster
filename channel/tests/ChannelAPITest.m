@@ -22,7 +22,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				Config = MonsterConfig();
 				Config.SimulationPlot.runtimePlot = 0;
-				Config.MacroEnb.number = 5;
+				Config.MacroEnb.number = 1;
 				Config.Ue.number = 5;
 				Config.Terrain.type = 'city';
 				Config.Mobility.scenario = 'pedestrian';
@@ -172,8 +172,10 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.verifyError(@() 	testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink'),'MonsterChannel:EmptyTxWaveform')
 					
 					% Assign waveform and waveinfo to tx module
-					testCase.Cells(1).Tx.createReferenceSubframe();
-					testCase.Cells(1).Tx.assignReferenceSubframe();
+					for iCell = 1:length(testCase.Cells)
+						testCase.Cells(iCell).Tx.createReferenceSubframe();
+						testCase.Cells(iCell).Tx.assignReferenceSubframe();
+					end
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink')
 					
 					% Check that the linkConditions are stored
@@ -292,8 +294,10 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
-					testCase.Cells(1).Tx.createReferenceSubframe();
-					testCase.Cells(1).Tx.assignReferenceSubframe();
+					for iCell = 1:length(testCase.Cells)
+						testCase.Cells(iCell).Tx.createReferenceSubframe();
+						testCase.Cells(iCell).Tx.assignReferenceSubframe();
+					end
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'downlink')
 					
 					% Assign waveform and waveinfo to tx module

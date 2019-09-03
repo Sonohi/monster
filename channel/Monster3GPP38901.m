@@ -147,13 +147,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			receivedPower = reshape(receivedPower, length(sampleGrid), []);
 		end
 		
-		function [interferingPower] = sumReceivedPower(listPower)
-			entryNames = fieldnames(listPower);
-			interferingPower = 0;
-			for intIdx = 1:length(entryNames)
-				interferingPower = interferingPower + listPower.(entryNames{intIdx}).receivedPowerWatt;
-			end
-		end
+
 	
 		
 		function [tempVar] = computeSINR(obj, Cell, User, Cells, Users, Mode, tempVar)
@@ -173,109 +167,123 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% v1. InterferenceType Full assumes full power, thus the SINR computation can be done using just the link budget.
 			%	v2. Adds power from interfering waveforms.
 			% TODO: Add uplink interference
-				
+			interferes = true;
 			switch Mode
 				case 'downlink'
 					interferingCells = obj.Channel.getInterferingCells(Cell, Cells);
 					listCellPower = obj.listCellPower(User, interferingCells);
+					if isempty(interferingCells)
+						interferes = false;
+					end
 				case 'uplink'
 					interferingUsers = obj.Channel.getInterferingUsers(User, Cell, Users, Cells);
 					listUserPower = obj.listUserPower(Cell, interferingUsers);
+					if isempty(interferingUsers)
+						interferes = false;
+					end
 			end
-				
-			switch obj.Channel.InterferenceType
-				case 'Full'
-					% Power profile type interference.
-					% SINR is computed based on the power profile and nothing else.
+			
+			if interferes
+				switch obj.Channel.InterferenceType
+					case 'Full'
+						% Power profile type interference.
+						% SINR is computed based on the power profile and nothing else.
 
+						switch Mode
+							case 'downlink'
+								% Sum power from interfering cells
+								intPower = MonsterChannel.sumReceivedPower(listCellPower);
+							case 'uplink'
+								% Sum power from interfering users
+								intPower = MonsterChannel.sumReceivedPower(listUserPower);
+						end
+
+						[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
+
+					case 'Frequency'
+
+					interferingPower = 0;
+					% for each interfering waveform, compute channel impairments and get waveform
+					% Sum the waveforms to get combined interfering waveform
+					% Sum power to get estimated power
+					% TODO: Refactorize the uplink and downlink sum of waveforms
 					switch Mode
 						case 'downlink'
-							% Sum power from interfering cells
-							intPower = obj.sumReceivedPower(listCellPower);
+							interferingWaveform = zeros(length(tempVar.RxWaveform),1);
+							for intCell = 1:length(interferingCells)
+								tempIntVar = obj.propagateWaveform(interferingCells(intCell), User, Cells, Users, Mode);
+								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
+								interferingWaveform = interferingWaveform + circshift(tempIntVar.RxWaveform, randi(length(interferingWaveform)/2-1));
+								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
+							end
 						case 'uplink'
-							% Sum power from interfering users
-							intPower = obj.sumReceivedPower(listUserPower);
+							% Compute the longest waveform transmitted
+
+							intWaveformSize = [interferingUsers.Tx];
+							intWaveformSize = cellfun(@length,{intWaveformSize.Waveform}, 'UniformOutput', false);
+							intWaveformSize = max([intWaveformSize{:}])+200;
+
+							interferingWaveform = zeros(intWaveformSize,1);
+							for intUser = 1:length(interferingUsers)
+								tempIntVar = obj.propagateWaveform(Cell, interferingUsers(intUser), Cells, Users, Mode);
+								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
+								interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
+								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
+							end
 					end
 
-					[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
+					debug = false; % Debugging plots
 
-				case 'Frequency'
-				
-					interferingPower = 0;
-				% for each interfering waveform, compute channel impairments and get waveform
-				% Sum the waveforms to get combined interfering waveform
-				% Sum power to get estimated power
-				% TODO: Refactorize the uplink and downlink sum of waveforms
-				switch Mode
-					case 'downlink'
-						interferingWaveform = zeros(length(tempVar.RxWaveform),1);
-						for intCell = 1:length(interferingCells)
-							tempIntVar = obj.propagateWaveform(interferingCells(intCell), User, Cells, Users, Mode);
-							tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
-							interferingWaveform = interferingWaveform + circshift(tempIntVar.RxWaveform, randi(length(interferingWaveform)/2-1));
-							interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
-						end
-					case 'uplink'
-						intWaveformSize = [interferingUsers.Tx];
-						intWaveformSize = cellfun(@length,{intWaveformSize.Waveform}, 'UniformOutput', false);
-						intWaveformSize = max([intWaveformSize{:}])+200;
-						interferingWaveform = zeros(intWaveformSize,1);
-						for intUser = 1:length(interferingUsers)
-							tempIntVar = obj.propagateWaveform(Cell, interferingUsers(intUser), Cells, Users, Mode);
-							tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
-							interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
-							interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
-						end
-				end
+					% option 1.
+					% Add relative power to received waveform
+					% Set power of RxWaveform based on link budget
+					Waveform = setPower(tempVar.RxWaveform, tempVar.RxPower);
 
-				debug = false; % Debugging plots
-			
-				% option 1.
-				% Add relative power to received waveform
-				% Set power of RxWaveform based on link budget
-				Waveform = setPower(tempVar.RxWaveform, tempVar.RxPower);
-				
-				if debug
-					figure
-					hold on
-				end
-				
-				% Add interfering waveform
-				% If longer, truncate the rest
-				if length(interferingWaveform) > length(Waveform)
-					rxWaveform = Waveform + interferingWaveform(1:length(Waveform),1);
-				elseif length(interferingWaveform) < length(Waveform)
-					rxWaveform = Waveform + [interferingWaveform; complex(zeros(length(Waveform)-length(interferingWaveform),1))];
-				else
-					rxWaveform = Waveform + interferingWaveform;
-				end
-				
-				
-				if debug
-				
-					Fint = fft(interferingWaveform)./length(interferingWaveform);
-					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
-					plot(Fpsd)
-					
-					Fint = fft(rxWaveform)./length(rxWaveform);
-					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
-					plot(Fpsd)
-					
-					Fint = fft(Waveform)./length(Waveform);
-					Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
-					plot(Fpsd)
+					if debug
+						figure
+						hold on
+					end
 
-					legend('Interfering waveform', 'With interference', 'No inteference')
-				end
-				% Normalize waveform 
-				tempVar.RxWaveform = setPower(rxWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30);
-				
-				% Compute worstcase SINR based on power profile. This assumes
-				% constant power on all subcarriers and is thus the worst expected
-				% SINR.
-				[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
+					% Add interfering waveform
+					% If longer, truncate the rest
+					if length(interferingWaveform) > length(Waveform)
+						rxWaveform = Waveform + interferingWaveform(1:length(Waveform),1);
+					elseif length(interferingWaveform) < length(Waveform)
+						rxWaveform = Waveform + [interferingWaveform; complex(zeros(length(Waveform)-length(interferingWaveform),1))];
+					else
+						rxWaveform = Waveform + interferingWaveform;
+					end
 
-				otherwise
+
+					if debug
+
+						Fint = fft(interferingWaveform)./length(interferingWaveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						Fint = fft(rxWaveform)./length(rxWaveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						Fint = fft(Waveform)./length(Waveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						legend('Interfering waveform', 'With interference', 'No inteference')
+					end
+					% Normalize waveform 
+					tempVar.RxWaveform = setPower(rxWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30);
+
+					% Compute worstcase SINR based on power profile. This assumes
+					% constant power on all subcarriers and is thus the worst expected
+					% SINR.
+					[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
+
+					otherwise
+					tempVar.RxSINR = tempVar.RxSNR;
+				end
+			else
+				% No interferes, SNR equal SINR
 				tempVar.RxSINR = tempVar.RxSNR;
 			end
 		end

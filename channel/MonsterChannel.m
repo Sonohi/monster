@@ -531,5 +531,15 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				end
 			end
 		end
+		
+		function [interferingPower] = sumReceivedPower(listPower)
+			% Utility function for summing the power in a struct type data type
+			% Used in Monster3GPP38901
+			entryNames = fieldnames(listPower);
+			interferingPower = 0;
+			for intIdx = 1:length(entryNames)
+				interferingPower = interferingPower + listPower.(entryNames{intIdx}).receivedPowerWatt;
+			end
+		end
 	end	
 end
