@@ -13,6 +13,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		Gain = 4; % Antenna gain
 		UeObj;
 		HarqActive;
+		SRSActive;
 	end
 	
 	methods
@@ -35,6 +36,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				'NLayers', 1);
 			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
+			obj.SRSActive = Config.SRS.active;
 			%TODO: make configureable
 			obj.TxPwdBm = 23;
 			obj.resetRef();
@@ -128,7 +130,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			obj.Ref.pucchDRSIdx = pucchDRSIdx;
 
 			obj.setupPUSCHDRS();
-			obj.setupSRS();
+			if obj.SRSActive
+				obj.setupSRS();
+			end
 
 		end
 		

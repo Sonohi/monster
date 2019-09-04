@@ -9,6 +9,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 		Users;
 		Logger;
 		Monster;
+		MonsterSRSdisabled;
 	end
 	
 	methods (TestClassSetup)
@@ -17,9 +18,13 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.number = 1;
 			testCase.Config.MicroEnb.number = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SRS.active = true;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Monster = Monster(testCase.Config, testCase.Logger);
 		
+			% Disabled SRS Monster instance
+			testCase.Config.SRS.active = false;
+			testCase.MonsterSRSdisabled = Monster(testCase.Config, testCase.Logger);
 			
 		end
 	end
@@ -114,6 +119,15 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			[srsStruct, srsInfo] = ue.Tx.setupSRSConfig(C_SRS, B_SRS, subframeConfig);
 			testCase.verifyEqual(double(srsInfo.CellPeriod), 2);
 			
+		end
+
+		function testSRSdisabled(testCase)
+			ue = testCase.MonsterSRSdisabled.Users(1);
+			ue.Tx.setupTransmission();
+
+			testCase.verifyEmpty(ue.Tx.Ref.srsIdx);
+			testCase.verifyEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.srsIdx));
+
 		end
 		
 		function testSRSisStored(testCase)
