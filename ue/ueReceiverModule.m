@@ -1,20 +1,16 @@
 classdef ueReceiverModule < matlab.mixin.Copyable
 	properties
+		ChannelConditions = struct();
+
 		NoiseFigure;
 		EstChannelGrid;
 		NoiseEst;
 		RSSIdBm;
 		RSRQdB;
 		RSRPdBm;
-		SINR;
-		SINRdB;
-		SNR;
-		SNRdB;
-		Waveform;
-  	WaveformInfo;
-		RxPwdBm; % Wideband
-		PathGains; % Used for perfect synchronization
-		PathFilters; % Used for perfect synchronization;
+		
+		Waveform; % Manipulated waveform after offset is applied
+
 		Subframe;
 		EqSubframe;
 		TransportBlock;
@@ -56,6 +52,32 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
 		end
 		
+		function obj = setSNR(obj, SNR)
+			obj.ChannelConditions.SNR = SNR;
+			obj.ChannelConditions.SNRdB = 10*log10(SNR);
+		end
+		
+		function obj = setSINR(obj, SINR)
+			obj.ChannelConditions.SINR = SINR;
+			obj.ChannelConditions.SINRdB = 10*log10(SINR);
+		end
+		
+		function obj = setRxPw(obj, RxPw)
+			obj.ChannelConditions.RxPw = RxPw; % Watt
+			obj.ChannelConditions.RxPwdBm = 10*log10(RxPw)+30;
+		end
+		
+		function obj = setPathConditions(obj, PathGains, PathFilters)
+			% Used for perfect synchronization
+			obj.ChannelConditions.PathGains = PathGains;
+			obj.ChannelConditions.PathFilters = PathFilters;
+		end
+		
+		function obj = setWaveform(obj, Waveform, WaveformInfo)
+			obj.ChannelConditions.Waveform = Waveform;
+			obj.ChannelConditions.WaveformInfo = WaveformInfo;
+		end
+			
 		function loss = getLoss(obj, TxPosition, RxPosition)
 			% Get loss of receiver module by combining noise figure with gain from antenna element
 			% In the case of an ideal omni directional (isotropic) antenna the loss is equal to the noise figure
@@ -77,19 +99,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			newArray = [oldValues, newValue];
 			obj = setfield(obj, path{:}, newArray);		
 		end
-		
-		
-		function obj = set.SINR(obj,SINR,~)
-			% SINR given linear
-			obj.SINR = SINR;
-			obj.SINRdB = 10*log10(SINR);
-		end
-		
-		function obj = set.SNR(obj,SNR)
-			% SNR given linear
-			obj.SNR = SNR;
-			obj.SNRdB = 10*log10(SNR);
-		end
+
 			
 		function obj = set.PropDelay(obj,distance)
 			obj.PropDelay = distance/physconst('LightSpeed');
@@ -280,7 +290,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			%		Note:
 			% 		Since the OFDM demodulator/reference is assuming power is in dBm, 
 			%       the factor of 30 dB which is used when converting to dBm needs to be removed, thus the -30
-			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
+			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.ChannelConditions.RxPwdBm-30)); %Apply recieved power to waveform.
 			meas = hRSMeasurements(enb,Subframe);
 			obj.RSRPdBm = meas.RSRPdBm;
 			obj.RSSIdBm = meas.RSSIdBm;
@@ -293,12 +303,12 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% 2. Offset computation using xcorr and PSS/SSS signals
 			% 
 			% Updates obj.Waveform
-			if obj.PerfectSynchronization && ~isempty(obj.PathGains)
-				obj.Offset = nrPerfectTimingEstimate(obj.PathGains,obj.PathFilters);
+			if obj.PerfectSynchronization && ~isempty(obj.ChannelConditions.PathGains)
+				obj.Offset = nrPerfectTimingEstimate(obj.ChannelConditions.PathGains,obj.ChannelConditions.PathFilters);
 			else
 				obj.computeOffset(enbObj);
 			end
-			obj.Waveform = obj.Waveform(obj.Offset+1:end);
+			obj.Waveform = obj.ChannelConditions.Waveform(obj.Offset+1:end);
 		end
 		
 		function obj  = logBlockReception(obj)
@@ -388,12 +398,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.RSSIdBm = [];
 			obj.RSRQdB = [];
 			obj.RSRPdBm = [];
-			obj.SINR = [];
-			obj.SINRdB = [];
-			obj.SNR = [];
-			obj.SNRdB = [];
-			obj.Waveform = [];
-			obj.RxPwdBm = [];
+			obj.ChannelConditions = struct();
 			obj.Subframe = [];
 			obj.EstChannelGrid = [];
 			obj.EqSubframe = [];
