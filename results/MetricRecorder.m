@@ -11,7 +11,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		powerState;
 		ber;
 		snrdB;
-		sinrdB
+		sinrdB;
+		estsinrdB;
 		bler;
 		cqi;
 		preEvm;
@@ -48,6 +49,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.sinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.estsinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.cqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
@@ -176,7 +178,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSnrdB(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.ChannelConditions)
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
 					obj.snrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SNRdB;
 				end
 			end
@@ -184,8 +186,11 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSinrdB(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.ChannelConditions)
-					obj.sinrdB(schRound, iUser) = Users(iUser).Rx.SINRS;
+				if ~isempty(Users(iUser).Rx.SINRS)
+					obj.estsinrdB(schRound, iUser) = Users(iUser).Rx.SINRS;
+				end
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
+					obj.sinrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SINRdB;
 				end
 			end
 		end
@@ -221,7 +226,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordReceivedPowerdBm(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.ChannelConditions.RxPwdBm)
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
 					obj.receivedPowerdBm(schRound, iUser) = Users(iUser).Rx.ChannelConditions.RxPwdBm;
 				end
 			end

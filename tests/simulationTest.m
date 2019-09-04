@@ -77,12 +77,7 @@ classdef simulationTest < matlab.unittest.TestCase
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.RSSIdBm, [] ), testCase.Simulation.Users);
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.RSRQdB, [] ), testCase.Simulation.Users);
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.RSRPdBm, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.SINR, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.SINRdB, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.SNR, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.SNRdB, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.Waveform, [] ), testCase.Simulation.Users);
-			arrayfun(@(x) testCase.verifyEqual(x.Rx.RxPwdBm, [] ), testCase.Simulation.Users);
+			arrayfun(@(x) testCase.verifyTrue(isempty(fieldnames(x.Rx.ChannelConditions))), testCase.Simulation.Users);
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.Subframe, [] ), testCase.Simulation.Users);
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.EstChannelGrid, [] ), testCase.Simulation.Users);
 			arrayfun(@(x) testCase.verifyEqual(x.Rx.EqSubframe, [] ), testCase.Simulation.Users);

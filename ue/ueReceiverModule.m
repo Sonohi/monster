@@ -74,7 +74,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function obj = setWaveform(obj, Waveform, WaveformInfo)
-			obj.ChannelConditions.Waveform = Waveform;
+			obj.Waveform = Waveform;
 			obj.ChannelConditions.WaveformInfo = WaveformInfo;
 		end
 			
@@ -303,12 +303,21 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% 2. Offset computation using xcorr and PSS/SSS signals
 			% 
 			% Updates obj.Waveform
-			if obj.PerfectSynchronization && ~isempty(obj.ChannelConditions.PathGains)
+			PathGainsSet = false; % Stupid matlab
+			if ~isempty(fieldnames(obj.ChannelConditions))
+				if isfield(obj.ChannelConditions,'PathGains')
+					if ~isempty(obj.ChannelConditions.PathGains)
+						PathGainsSet = true;
+					end
+				end
+			end
+			
+			if obj.PerfectSynchronization && PathGainsSet
 				obj.Offset = nrPerfectTimingEstimate(obj.ChannelConditions.PathGains,obj.ChannelConditions.PathFilters);
 			else
 				obj.computeOffset(enbObj);
 			end
-			obj.Waveform = obj.ChannelConditions.Waveform(obj.Offset+1:end);
+			obj.Waveform = obj.Waveform(obj.Offset+1:end);
 		end
 		
 		function obj  = logBlockReception(obj)
@@ -399,6 +408,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.RSRQdB = [];
 			obj.RSRPdBm = [];
 			obj.ChannelConditions = struct();
+			obj.Waveform = [];
 			obj.Subframe = [];
 			obj.EstChannelGrid = [];
 			obj.EqSubframe = [];

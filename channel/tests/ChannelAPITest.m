@@ -183,27 +183,22 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 					% Check the assigned user have a received waveform
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.Waveform))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.WaveformInfo))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.SNR))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.RxPwdBm))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.WaveformInfo))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.SNR))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.RxPwdBm))
 					
 					if testCase.Channel.enableFading
-						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathGains))
-						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.PathFilters))
+						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.PathGains))
+						testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.PathFilters))
 					end
 	
 					% Only one user assigned, thus SINR is equal to SNR
-					testCase.verifyTrue((testCase.Users(1).Rx.SINR - testCase.Users(1).Rx.SNR) < 1e-12)
-					testCase.verifyTrue((testCase.Users(1).Rx.SINRdB - testCase.Users(1).Rx.SNRdB) < 1e-12)
+					testCase.verifyTrue((testCase.Users(1).Rx.ChannelConditions.SINR - testCase.Users(1).Rx.ChannelConditions.SNR) < 1e-12)
+					testCase.verifyTrue((testCase.Users(1).Rx.ChannelConditions.SINRdB - testCase.Users(1).Rx.ChannelConditions.SNRdB) < 1e-12)
 					
 					% Check the other users have nothing
 					testCase.verifyTrue(isempty(testCase.Users(2).Rx.Waveform))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.WaveformInfo))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.SNR))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.RxPwdBm))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.SINR))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.PathGains))
-					testCase.verifyTrue(isempty(testCase.Users(2).Rx.PathFilters))
+					testCase.verifyTrue(isempty(fieldnames(testCase.Users(2).Rx.ChannelConditions)))
 				
 				end
 				
@@ -260,8 +255,8 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).Tx.assignReferenceSubframe();
 					
 					testCase.Channel.traverse(testCase.Cells(1), testCase.Users, 'downlink')
-					testCase.verifyEqual(round(testCase.Users(1).Rx.SINR,2), round(testCase.Users(1).Rx.SNR,2))
-					testCase.verifyEqual(round(testCase.Users(1).Rx.SINRdB,2), round(testCase.Users(1).Rx.SNRdB,2))
+					testCase.verifyEqual(round(testCase.Users(1).Rx.ChannelConditions.SINR,2), round(testCase.Users(1).Rx.ChannelConditions.SNR,2))
+					testCase.verifyEqual(round(testCase.Users(1).Rx.ChannelConditions.SINRdB,2), round(testCase.Users(1).Rx.ChannelConditions.SNRdB,2))
 					
 					
 				 end
@@ -279,12 +274,12 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 					% Check the assigned user have a received waveform and that SNR equals SINR
 					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.Waveform))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.WaveformInfo))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.SNR))
-					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.RxPwdBm))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.WaveformInfo))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.SNR))
+					testCase.verifyTrue(~isempty(testCase.Users(1).Rx.ChannelConditions.RxPwdBm))
 					
-					testCase.verifyEqual(testCase.Users(1).Rx.SINR, testCase.Users(1).Rx.SNR)
-					testCase.verifyEqual(testCase.Users(1).Rx.SINRdB, testCase.Users(1).Rx.SNRdB)
+					testCase.verifyEqual(testCase.Users(1).Rx.ChannelConditions.SINR, testCase.Users(1).Rx.ChannelConditions.SNR)
+					testCase.verifyEqual(testCase.Users(1).Rx.ChannelConditions.SINRdB, testCase.Users(1).Rx.ChannelConditions.SNRdB)
 				
 				
 				end
