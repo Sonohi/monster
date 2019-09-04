@@ -47,7 +47,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			%set Channel properties
 			testCase.Config.Channel.mode = '3GPP38901';
 			testCase.Config.Channel.fadingActive = true;
-			testCase.Config.Channel.interferenceType = 'Power'; ['Power', 'Frequency']
+			testCase.Config.Channel.interferenceType = 'Power'; %['Power', 'Frequency']
 			testCase.Config.Channel.shadowingActive = true;
 			testCase.Config.Channel.reciprocityActive = true;
 			testCase.Config.Channel.perfectSynchronization = true;

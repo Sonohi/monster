@@ -13,6 +13,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		Channel;
 		Pairings = [];
 		LinkConditions = struct();
+		SignalPadding = 200;
 	end
 	
 	methods
@@ -148,70 +149,59 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		end
 		
 
-	
-		
-		function [tempVar] = computeSINR(obj, Cell, User, Cells, Users, Mode, tempVar)
-			% Compute SINR using received power and the noise power.
-			% Interference is given as the power of the received signal, given the power of the associated Cell, over the power of the neighboring cells.
-			%
-			% :param obj:
-			% :param Cell:
-			% :param User:
-			% :param Cells:
-			% :param Users:
-			% :param receivedPowerWatt:
-			% :param noisePower:
-			% :param Mode:
-			% :returns SINR:
-			%
-			% v1. InterferenceType Power assumes full power, thus the SINR computation can be done using just the link budget.
-			%	v2. Adds power from interfering waveforms.
-			% TODO: Add uplink interference
-			interferes = true;
+		function [interferesList, powerList] = getInterferes(obj, Cell, User, Cells, Users, Mode)
+			% Get a list of interferes given the mode of transmission.
+			% The interferers are for Cells based on the class of operations.
+			% Thus all Macros' interfere with each other.
+			% All users associated to the same class of stations also interfere
+			% with each other.
 			switch Mode
 				case 'downlink'
-					interferingCells = obj.Channel.getInterferingCells(Cell, Cells);
-					listCellPower = obj.listCellPower(User, interferingCells);
-					if isempty(interferingCells)
-						interferes = false;
-					end
+					interferesList = obj.Channel.getInterferingCells(Cell, Cells);
+					powerList = obj.listCellPower(User, interferesList);
 				case 'uplink'
-					interferingUsers = obj.Channel.getInterferingUsers(User, Cell, Users, Cells);
-					listUserPower = obj.listUserPower(Cell, interferingUsers);
-					if isempty(interferingUsers)
-						interferes = false;
-					end
+					interferesList = obj.Channel.getInterferingUsers(User, Cell, Users, Cells);
+					powerList = obj.listUserPower(Cell, interferesList);
 			end
+		end
+		
+		function tempVar = powerInterference(obj, powerList, Mode, tempVar)
+			% Power profile type interference.
+			% SINR is computed based on the power profile and nothing else.
+
+			switch Mode
+				case 'downlink'
+					% Sum power from interfering cells
+					intPower = MonsterChannel.sumReceivedPower(powerList);
+				case 'uplink'
+					% Sum power from interfering users
+					intPower = MonsterChannel.sumReceivedPower(powerList);
+			end
+
+			[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
+
 			
-			if interferes
-				switch obj.Channel.InterferenceType
-					case 'Power'
-						% Power profile type interference.
-						% SINR is computed based on the power profile and nothing else.
-
-						switch Mode
-							case 'downlink'
-								% Sum power from interfering cells
-								intPower = MonsterChannel.sumReceivedPower(listCellPower);
-							case 'uplink'
-								% Sum power from interfering users
-								intPower = MonsterChannel.sumReceivedPower(listUserPower);
-						end
-
-						[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
-
-					case 'Frequency'
-
-					interferingPower = 0;
+		end
+		
+		function [tempVar] = frequencyInterference(obj, Cell, User, Cells, Users, Mode, interferesList, tempVar)
+					% Compute interference based on the waveform of the signals. 
+					% The interfering waveforms are computed and added (with correct
+					% scaling in power and frequency) to the received signal of the
+					% link propagated. The SINRdB computed is based on the power
+					% profile and thus the worst case SINR expected if the frequency
+					% components are all used. The estimated SINR is computed at the
+					% receiver.
+					%
 					% for each interfering waveform, compute channel impairments and get waveform
 					% Sum the waveforms to get combined interfering waveform
 					% Sum power to get estimated power
 					% TODO: Refactorize the uplink and downlink sum of waveforms
+					interferingPower = 0;
 					switch Mode
 						case 'downlink'
 							interferingWaveform = zeros(length(tempVar.RxWaveform),1);
-							for intCell = 1:length(interferingCells)
-								tempIntVar = obj.propagateWaveform(interferingCells(intCell), User, Cells, Users, Mode);
+							for intCell = 1:length(interferesList)
+								tempIntVar = obj.propagateWaveform(interferesList(intCell), User, Cells, Users, Mode);
 								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
 								interferingWaveform = interferingWaveform + circshift(tempIntVar.RxWaveform, randi(length(interferingWaveform)/2-1));
 								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
@@ -219,13 +209,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						case 'uplink'
 							% Compute the longest waveform transmitted
 
-							intWaveformSize = [interferingUsers.Tx];
+							intWaveformSize = [interferesList.Tx];
 							intWaveformSize = cellfun(@length,{intWaveformSize.Waveform}, 'UniformOutput', false);
-							intWaveformSize = max([intWaveformSize{:}])+200;
+							intWaveformSize = max([intWaveformSize{:}])+obj.SignalPadding;
 
 							interferingWaveform = zeros(intWaveformSize,1);
-							for intUser = 1:length(interferingUsers)
-								tempIntVar = obj.propagateWaveform(Cell, interferingUsers(intUser), Cells, Users, Mode);
+							for intUser = 1:length(interferesList)
+								tempIntVar = obj.propagateWaveform(Cell, interferesList(intUser), Cells, Users, Mode);
 								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
 								interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
 								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
@@ -279,8 +269,35 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					% SINR.
 					[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
 
+		end
+		
+		function [tempVar] = computeSINR(obj, Cell, User, Cells, Users, Mode, tempVar)
+			% Compute SINR using received power and the noise power.
+			% Interference is given as the power of the received signal, given the power of the associated Cell, over the power of the neighboring cells.
+			%
+			% :param obj:
+			% :param Cell:
+			% :param User:
+			% :param Cells:
+			% :param Users:
+			% :param receivedPowerWatt:
+			% :param noisePower:
+			% :param Mode:
+			% :returns SINR:
+			%
+			% v1. InterferenceType Power assumes full power, thus the SINR computation can be done using just the link budget.
+			%	v2. Adds power from interfering waveforms.
+			% TODO: Add uplink interference
+
+			[interferesList, powerList] = obj.getInterferes(Cell, User, Cells, Users, Mode);
+			if ~isempty(interferesList)
+				switch obj.Channel.InterferenceType
+					case 'Power'
+						tempVar = obj.powerInterference(powerList, Mode, tempVar);
+					case 'Frequency'
+						tempVar = obj.frequencyInterference(Cell, User, Cells, Users, Mode, interferesList, tempVar);
 					otherwise
-					tempVar.RxSINR = tempVar.RxSNR;
+						tempVar.RxSINR = tempVar.RxSNR;
 				end
 			else
 				% No interferes, SNR equal SINR
@@ -329,7 +346,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			list = struct();
 			for iCell = 1:length(Cells)
 				Cell = Cells(iCell);
-				cellStr = sprintf('CellNCellID%i',Cell.NCellID);
+				cellStr = sprintf('NCellID%i',Cell.NCellID);
 				list.(cellStr).receivedPowerdBm = obj.computeLinkBudget(Cell, User, 'downlink');
 				list.(cellStr).receivedPowerWatt = 10^((list.(cellStr).receivedPowerdBm-30)/10);
 				list.(cellStr).NCellID = Cell.NCellID;
@@ -576,7 +593,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			c = physconst('lightspeed'); % speed of light in m/s
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
-			sig = [tempVar.RxWaveform;zeros(200,1)];
+			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
 			
 			switch fadingmodel
 				case 'cdl'
