@@ -63,7 +63,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			tempVar.RxSNRdB = SNRdB;
 			tempVar.noisePower = noisePower;
 			
-			% If Interference is assumed to be worst case, e.g. 'full' or 'none', the SINR
+			% If Interference is assumed to be worst case, e.g. 'Power' or 'None', the SINR
 			% define how much noise is to be added
 			if ~strcmp(obj.Channel.InterferenceType, 'Frequency')
 				[tempVar] = obj.computeSINR(Cell, User, Cells, Users, Mode, tempVar);
@@ -164,7 +164,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :param Mode:
 			% :returns SINR:
 			%
-			% v1. InterferenceType Full assumes full power, thus the SINR computation can be done using just the link budget.
+			% v1. InterferenceType Power assumes full power, thus the SINR computation can be done using just the link budget.
 			%	v2. Adds power from interfering waveforms.
 			% TODO: Add uplink interference
 			interferes = true;
@@ -185,7 +185,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			if interferes
 				switch obj.Channel.InterferenceType
-					case 'Full'
+					case 'Power'
 						% Power profile type interference.
 						% SINR is computed based on the power profile and nothing else.
 
