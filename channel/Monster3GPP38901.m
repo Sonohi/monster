@@ -733,20 +733,17 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			if isa(RxNode, 'EvolvedNodeB')
 				userId = varargin{1}.NCellID;
 				RxNode.Rx.createRecievedSignalStruct(userId);
-				RxNode.Rx.ReceivedSignals{userId}.Waveform = tempVar.RxWaveform;
-				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = tempVar.WaveformInfo;
-				RxNode.Rx.ReceivedSignals{userId}.RxPwdBm = tempVar.RxPower;
-				RxNode.Rx.ReceivedSignals{userId}.SNR = tempVar.RxSNR;
-				RxNode.Rx.ReceivedSignals{userId}.PathGains = tempVar.RxPathGains;
-				RxNode.Rx.ReceivedSignals{userId}.PathFilters = tempVar.RxPathFilters;
+				RxNode.Rx.setWaveform(userId, tempVar.RxWaveform, tempVar.WaveformInfo);
+				RxNode.Rx.setRxPw(userId, tempVar.RxPowerWatt);
+				RxNode.Rx.setSNR(userId, tempVar.RxSNR);
+				RxNode.Rx.setSINR(userId, tempVar.RxSINR);
+				RxNode.Rx.setPathConditions(userId, tempVar.RxPathGains, tempVar.RxPathFilters);
 			elseif isa(RxNode, 'UserEquipment')
-				RxNode.Rx.Waveform = tempVar.RxWaveform;
-				RxNode.Rx.WaveformInfo =  tempVar.WaveformInfo;
-				RxNode.Rx.RxPwdBm = tempVar.RxPower;
-				RxNode.Rx.SNR = tempVar.RxSNR;
-				RxNode.Rx.SINR = tempVar.RxSINR;
-				RxNode.Rx.PathGains = tempVar.RxPathGains;
-				RxNode.Rx.PathFilters = tempVar.RxPathFilters;
+				RxNode.Rx.setWaveform(tempVar.RxWaveform, tempVar.WaveformInfo);
+				RxNode.Rx.setRxPw(tempVar.RxPowerWatt);
+				RxNode.Rx.setSNR(tempVar.RxSNR);
+				RxNode.Rx.setSINR(tempVar.RxSINR);
+				RxNode.Rx.setPathConditions(tempVar.RxPathGains, tempVar.RxPathFilters);
 			end
 		end
 		

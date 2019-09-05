@@ -61,8 +61,8 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			
 			% Set waveform in Rx module
 			testCase.Users(1).Rx.Waveform = testCase.Cells(1).Tx.Waveform;
-			testCase.Users(1).Rx.WaveformInfo = testCase.Cells(1).Tx.WaveformInfo;
-			testCase.Users(1).Rx.RxPwdBm = -30;
+			testCase.Users(1).Rx.ChannelConditions.WaveformInfo = testCase.Cells(1).Tx.WaveformInfo;
+			testCase.Users(1).Rx.ChannelConditions.RxPwdBm = -30;
 			
 		end
 		
