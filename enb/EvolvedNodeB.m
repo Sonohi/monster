@@ -253,7 +253,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			%	:Users: Users
 
 			UserIds = obj.getUserIDsScheduledUL();
-			Users = Users([Users.NCellID]==UserIds);
+			Users = Users(ismember([Users.NCellID],UserIds));
 		end
 
 		function Users = getUsersScheduledDL(obj, Users)
@@ -263,7 +263,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			%	:Users: Users
 
 			UserIds = obj.getUserIDsScheduledDL();
-			Users = Users([Users.NCellID]==UserIds);
+			Users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
 		function obj = evaluatePowerState(obj, Config, Cells)
