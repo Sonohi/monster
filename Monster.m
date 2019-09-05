@@ -16,7 +16,6 @@ classdef Monster < matlab.mixin.Copyable
 		Users;
 		Channel;
 		Traffic;
-        Backhaul;
 		Results;
 		Logger;
 	end
@@ -76,7 +75,7 @@ classdef Monster < matlab.mixin.Copyable
             %Setup backhaul
             obj.Logger.log('(MONSTER - setupSimulation) setting up simulation backhaul','DBG');
             Traffic = applyBackhaulDelay(Traffic, obj.Config);
-            %Backhaul = BackhaulAggregation(Traffic, obj.Config);
+
 			% Setup results
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'DBG');
 			Results = setupResults(obj.Config, obj.Logger);
@@ -88,7 +87,6 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Users = Users;
 			obj.Channel = Channel;
 			obj.Traffic = Traffic;
-            %obj.Backhaul = Backhaul;
 			obj.Results = Results;			
 		end
 		
@@ -169,9 +167,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'DBG');
 			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Config.Runtime.currentRound, obj.Logger);
-            
-            %obj.Logger.log('(MONSTER - collectResults) Backhaul metrics recording','DBG');
-            %obj.Results = obj.Results.recordBackhaulMetrics(obj.Backhaul, obj.Config.Runtime.currentRound, obj.Logger);
+
 		end
 
 		function obj = clean(obj)
@@ -219,8 +215,6 @@ classdef Monster < matlab.mixin.Copyable
 			for iUser = 1: obj.Config.Ue.number
 				UeTrafficGenerator = obj.Traffic([obj.Traffic.Id] == obj.Users(iUser).Traffic.generatorId);
 				obj.Users(iUser).Queue = UeTrafficGenerator.updateTransmissionQueue(obj.Users(iUser), obj.Config.Runtime.currentTime);
-                %obj.Backhaul.updateAllQueues(obj.Users, obj.Config.Runtime.currentTime);
-                %obj.Users.Queue = obj.Backhaul.Queues;
 			end
 		end
 
