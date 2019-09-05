@@ -118,7 +118,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
-						lteULChannelEstimate(struct(ue), cec, obj.UeData(localIndex).Subframe);
+						lteULChannelEstimate(struct(ue), cec, obj.UeData(localIndex).Subframe, ue.Tx.Ref);
 				end
 			end
 		end

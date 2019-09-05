@@ -33,7 +33,8 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				'Active', 0,...
 				'Modulation', 'QPSK',...
 				'PRBSet', [],...
-				'NLayers', 1);
+				'NLayers', 1,...
+				'TrBlkSizes',1);
 			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
 			obj.SRSActive = Config.SRS.active;
@@ -71,10 +72,33 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				obj.setupControlSignals();
 
 				% TODO: add actual data here
+				obj.setupPUSCH();
 
 				% Modulate the resource grid
 				obj.modulateResourceGrid();
 			end
+		end
+
+		function bits = generatePUSCHBits(obj)
+
+			% Get transport block size
+			bits = randi([0,1],obj.PUSCH.TrBlkSizes(1),1);
+
+
+		end
+
+		function obj = setupPUSCH(obj)
+
+			% 1. Generate information bits for the PUSCH
+			%bits = obj.generatePUSCHBits();
+
+			% 2. Apply coding chain
+			%cw = lteULSCH(struct(obj.UeObj), obj.PUSCH, bits);
+
+			% 3. Generate PUSCH symbols
+			%puschSym = ltePUSCH(struct(obj.UeObj),obj.pusch,cw);
+
+			% 4. Add to resource grid
 		end
 
 		function obj = setupResourceGrid(obj)
