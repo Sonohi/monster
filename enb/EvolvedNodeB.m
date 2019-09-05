@@ -137,9 +137,10 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function [indPdsch, info] = getPDSCHindicies(obj)
+            enbObj = obj;
 			enb = struct(obj);
 			% get PDSCH indexes
-			[indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
+			[indPdsch, info] = ltePDSCHIndices(enb, enbObj.Tx.PDSCH, enbObj.Tx.PDSCH.PRBSet);
 		end
 
 		function [minMCS, varargout] = getMCSDL(obj, ue)

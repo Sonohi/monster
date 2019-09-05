@@ -1,4 +1,5 @@
 % Main entry point for MONSTER
+close all
 
 % Disable cast to struct warnings
 w = warning ('off','all');

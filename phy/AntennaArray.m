@@ -71,7 +71,7 @@ classdef AntennaArray < handle
 			y = Position(2);
 			x2=x+(L*cos(alpha));
 			y2=y+(L*sin(alpha));
-			arrow([x y],[x2 y2], 'EdgeColor',Color, 'FaceColor',Color)
+			line([x y],[x2 y2])
 		end
 		
 		function antennaElements = constructAntennaElements(obj)
@@ -86,8 +86,8 @@ classdef AntennaArray < handle
 		
 		function AzimuthAngle = getAzimuthAngle(obj, TxPosition, RxPosition)
 			
-			deltaX = TxPosition(1)- RxPosition(1);
-			deltaY = TxPosition(2)- RxPosition(2);
+			deltaX = RxPosition(1)- TxPosition(1) ;
+			deltaY = RxPosition(2)- TxPosition(2) ;
 			RxBearing = rad2deg(atan2(deltaY,deltaX));
 			AzimuthAngle = obj.Bearing + RxBearing;
 			

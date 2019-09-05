@@ -174,7 +174,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			%
 			% TODO: finalize antenna mapping and get gain from the correct panel/element
 			AntennaGains = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
-			EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure - AntennaGains{1};
+			EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure + AntennaGains{1};
 		end
 		
 		% Methods
