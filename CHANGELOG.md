@@ -1,6 +1,7 @@
 ## Unreleased
 - Subcarrier-based interference calculation.
 - Simple backhaul network.
+- Uplink PUSCH generation and channel estimation from SRS
 
 ## 1.0.0 - 2019-08-29
 
