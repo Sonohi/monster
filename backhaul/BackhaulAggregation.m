@@ -2,8 +2,6 @@ classdef BackhaulAggregation < matlab.mixin.Copyable
 
     %Properties of the class
     properties 
-        %Parent eNB
-        eNB;
         Bandwidth;
         PropagationSpeed;
         LengthOfMedium;
@@ -18,8 +16,7 @@ classdef BackhaulAggregation < matlab.mixin.Copyable
 
     methods 
         %Constructor
-        function obj = BackhaulAggregation(eNB, Traffic, Config)
-            obj.eNB = eNB;
+        function obj = BackhaulAggregation(Traffic, Config)
             obj.Bandwidth = Config.Backhaul.bandwidth;
             obj.PropagationSpeed = Config.Backhaul.propagationSpeed;
             obj.LengthOfMedium = Config.Backhaul.lengthOfMedium;
@@ -123,7 +120,7 @@ classdef BackhaulAggregation < matlab.mixin.Copyable
 
 				% Get all packets from the source portion that have a delivery time before the current simTime
 				for iPkt = pktIx:length(obj.Traffic(trafficId).TrafficSource)
-					if obj.Traffic(trafficId).TrafficSource(iPkt, 1) <= simTime + delay
+					if obj.Traffic(trafficId).TrafficSource(iPkt, 1) + delay <= simTime 
 						% increase frame size and update frame delivery deadline
 						newQueue.Size = newQueue.Size + obj.Traffic(trafficId).TrafficSource(iPkt, 2);
 						newQueue.Time = obj.Traffic(trafficId).TrafficSource(iPkt, 1);

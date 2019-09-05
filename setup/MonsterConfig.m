@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10;
+			numRounds = 150;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -107,7 +107,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 1;
+			Ue.number = 5;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
@@ -136,7 +136,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Backhaul = struct();
 			Backhaul.propagationSpeed = 2*10^8; % [m/s] (usual speed of light in a fiber optic cable is approx. 2*10^8 m/s)
 			Backhaul.lengthOfMedium = 1000; % [m]
-			Backhaul.bandwidth = 10^6; % [bps] 
+			Backhaul.bandwidth = 10^9; % [bps] 
 			Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
 			obj.Backhaul = Backhaul;
 
