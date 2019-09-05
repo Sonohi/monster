@@ -100,7 +100,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% Currently that only includes the wideband reporting
 			cqiBits = de2bi(obj.UeObj.Rx.CQI.wideBand, 4, 'left-msb')';
 			zeroPad = zeros(11,1);
-			if obj.HarqActive && isempty(obj.UeObj.Rx.TransportBlock) || ~obj.HarqActive
+			if (obj.HarqActive && isempty(obj.UeObj.Rx.TransportBlock)) || ~obj.HarqActive
 				reportHarqBit = 0;
 				harqBits = int8(zeros(4,1));
 			elseif obj.HarqActive

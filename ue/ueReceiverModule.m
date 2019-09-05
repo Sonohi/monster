@@ -275,7 +275,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 					% following elements are differential values from the wideband one for each sub band
 					obj.CQI.wideBand = cqiValues(1);
 					obj.SINRdB.wideBand = sinrValues(1);
-					for iValue = 2:length(cqiValues):
+					for iValue = 2:length(cqiValues)
 						obj.CQI.subBand(iValue - 1) = obj.CQI.wideBand + cqiValues(iValue);
 						obj.SINRdB.subBand(iValue - 1) = sinrValues(iValue);
 					end

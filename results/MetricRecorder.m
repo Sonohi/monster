@@ -133,8 +133,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
 			obj = obj.recordBler(Users, schRound);
-			obj = obj.recordSnrdB(Users, schRound);
-			obj = obj.recordSinrdB(Users, schRound);
+			obj = obj.recordSnr(Users, schRound);
+			obj = obj.recordSinr(Users, schRound);
 			obj = obj.recordCqi(Users, schRound);
 			obj = obj.recordEvm(Users, schRound);
 			obj = obj.recordThroughput(Users, schRound);
@@ -176,7 +176,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = recordSnrdB(obj, Users, schRound)
+		function obj = recordSnr(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
 					obj.snrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SNRdB;
@@ -184,7 +184,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = recordSinrdB(obj, Users, schRound)
+		function obj = recordSinr(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.SINRdB.wideBand)
 					obj.wideBandSinrdB(schRound, iUser) = Users(iUser).Rx.SINRdB.wideBand;
