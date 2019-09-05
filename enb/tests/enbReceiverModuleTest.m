@@ -3,8 +3,6 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 	properties
 		Config
 		Logger;
-		Cells;
-		Users;
 		Channel;
 		Monster;
 	end
@@ -32,22 +30,56 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 		function setUplinkWaveform(testCase)
 			testCase.Monster.associateUsers();
 			testCase.Monster.scheduleUL();
+			testCase.Monster.setupUeTransmitters();
+			testCase.Monster.uplinkTraverse();
+			
 		end
 		
 	end
 	
 	methods (Test)
+		
+
 
 		function testChannelEstimation(testCase)
 
 			% Create uplink waveform (with PUSCH)
+			testCase.verifyEqual(testCase.Monster.Users(1).Tx.PUSCH.Active,1)
 
 			% Set waveform at enb
-
-			% estimate channel, verify that the reference grid is used for additional information
-
+			testCase.Monster.Cells.Rx.createReceivedSignal();
+				
+			% Get users for the given cell
+			enbUsers = testCase.Monster.Cells.getUsersScheduledUL(testCase.Monster.Users(1));
+			
+			% No waveform parsed
+			testCase.verifyError(@() testCase.Monster.Cells.Rx.estimateChannels(enbUsers, testCase.Monster.Channel.Estimator), 'MonstereNBReceiverModule:NoWaveformParsed');
+			
+			% Lets Parse the waveforms and and demodulate it
+			testCase.Monster.Cells.Rx.parseWaveform();
+			
+			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.Waveform))
+				
+			% Demodulate received waveforms
+			testCase.Monster.Cells.Rx.demodulateWaveforms(enbUsers);
+			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.Subframe))
+			
+			% Estimate channels
+			testCase.Monster.Cells.Rx.estimateChannels(enbUsers, testCase.Monster.Channel.Estimator.Uplink);
+			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.EstChannelGrid));
+			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.NoiseEst));
+			
 		end
 
+		function testReceivedSignals(testCase)
+			
+			testCase.verifyTrue(isempty(testCase.Monster.Cells.Rx.Waveforms));
+			testCase.Monster.Cells.Rx.createReceivedSignal();
+			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.Waveforms));
+			
+			
+
+		end
 		
 	end
 

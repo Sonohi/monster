@@ -323,7 +323,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 			arrayfun(@(x)x.createReceivedSignal(), [obj.Cells.Rx]);
-			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), obj.Cells);			
+			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator.Uplink), obj.Cells);			
 		
 		end 
 
@@ -334,19 +334,21 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), obj.Cells);
 		
-        end
-        
-        function obj = plotRuntime(obj)
-           % plotRuntime executes the runtime plots
-           %
-           % :obj: Monster instance
-					 %
-					 if obj.Config.SimulationPlot.runtimePlot
-						plotSpectrums(obj.Users, obj.Cells, obj.Config);
-						plotConstDiagramDL(obj.Cells, obj.Users, obj.Config);
-						%plotLinks(obj.Users, obj.Cells, obj.Config.Plot.LayoutAxes, 'downlink');
-						plotAssociationTable(obj.Users, obj.Cells, obj.Config);
-					 end
-        end
+		end
+		
+		function obj = plotRuntime(obj)
+				% plotRuntime executes the runtime plots
+				%
+				% :obj: Monster instance
+				%
+				if obj.Config.SimulationPlot.runtimePlot
+					plotSpectrums(obj.Users, obj.Cells, obj.Config);
+					plotConstDiagramDL(obj.Cells, obj.Users, obj.Config);
+					%plotLinks(obj.Users, obj.Cells, obj.Config.Plot.LayoutAxes, 'downlink');
+					plotAssociationTable(obj.Users, obj.Cells, obj.Config);
+				end
+		end
+
+
 	end
 end
