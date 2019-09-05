@@ -86,7 +86,7 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 				subFolder = 'sweep';
 			end
 			resultsFileName = strcat(basePath, '/', subFolder, '/', fileName);
-			storedResults = struct('sinr', Simulation.Results.sinrdB, 'power', Simulation.Results.receivedPowerdBm, 'config', Simulation.Config);
+			storedResults = struct('sinr', Simulation.Results.wideBandSinrdB, 'power', Simulation.Results.receivedPowerdBm, 'config', Simulation.Config);
 			
 			if ~exist(folderPath, 'dir')
 				mkdir(folderPath);

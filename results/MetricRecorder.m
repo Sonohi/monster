@@ -11,9 +11,9 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		powerState;
 		ber;
 		snrdB;
-		sinrdB
+		wideBandSinrdB
 		bler;
-		cqi;
+		wideBandCqi;
 		preEvm;
 		postEvm;
 		throughput;
@@ -47,9 +47,9 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			% Initialise for UE
 			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.sinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.wideBandSinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.cqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.wideBandCqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.postEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.throughput = zeros(Config.Runtime.totalRounds, Config.Ue.number);
@@ -184,16 +184,16 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSinrdB(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.SINR)
-					obj.sinrdB(schRound, iUser) = 10*log10(Users(iUser).Rx.SINR);
+				if ~isempty(Users(iUser).Rx.SINRdB.wideBand)
+					obj.wideBandSinrdB(schRound, iUser) = Users(iUser).Rx.SINRdB.wideBand;
 				end
 			end
 		end
 		
 		function obj = recordCqi(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.CQI)
-					obj.cqi(schRound, iUser) = Users(iUser).Rx.CQI;
+				if ~isempty(Users(iUser).Rx.CQI.wideBand)
+					obj.wideBandCqi(schRound, iUser) = Users(iUser).Rx.CQI.wideBand;
 				end
 			end
 		end

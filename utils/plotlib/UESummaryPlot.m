@@ -77,7 +77,7 @@ classdef UESummaryPlot < matlab.mixin.Copyable
 				obj.addData(user.NCellID, 'BER', simTime, SimulationMetrics.ber(iRound, userIdx));
 				obj.addData(user.NCellID, 'preEVM', simTime, SimulationMetrics.preEvm(iRound, userIdx));
 				obj.addData(user.NCellID, 'postEVM', simTime, SimulationMetrics.postEvm(iRound, userIdx));
-				obj.addData(user.NCellID, 'CQI', simTime, SimulationMetrics.cqi(iRound, userIdx));
+				obj.addData(user.NCellID, 'WideBandCQI', simTime, SimulationMetrics.wideBandCqi(iRound, userIdx));
 				obj.addData(user.NCellID, 'SNR', simTime, SimulationMetrics.snrdB(iRound, userIdx));
 				obj.addData(user.NCellID, 'SINR', simTime, SimulationMetrics.sinrdB(iRound, userIdx));
 				obj.addData(user.NCellID, 'ReceivedPower', simTime, SimulationMetrics.receivedPowerdBm(iRound, userIdx));

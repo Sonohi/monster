@@ -96,7 +96,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% SRS
 			%
 			% Returns updated :obj.ReGrid:
-			cqiBits = de2bi(obj.UeObj.Rx.CQI, 4, 'left-msb')';
+			% Prepare payload with the latest CQI reporting.
+			% Currently that only includes the wideband reporting
+			cqiBits = de2bi(obj.UeObj.Rx.CQI.wideBand, 4, 'left-msb')';
 			zeroPad = zeros(11,1);
 			if obj.HarqActive && isempty(obj.UeObj.Rx.TransportBlock) || ~obj.HarqActive
 				reportHarqBit = 0;

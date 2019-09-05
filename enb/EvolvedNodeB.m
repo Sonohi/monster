@@ -522,6 +522,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			for iUser = 1:length(obj.Rx.UeData)
 				% If empty, no uplink UE data has been received in this round and skip
 				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
+					% Currently, the reporting 
 					cqiBits = obj.Rx.UeData(iUser).PUCCH(12:16,1);
 					cqi = bi2de(cqiBits', 'left-msb');
 					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);

@@ -190,7 +190,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.verifyTrue(testCase.Channel.ChannelModel.TempSignalVariables.RxSINRdB < testCase.Channel.ChannelModel.TempSignalVariables.RxSNRdB)
 					
 					testCase.verifyTrue(testCase.Users(1).Rx.SINR < testCase.Users(1).Rx.SNR)
-					testCase.verifyTrue(testCase.Users(1).Rx.SINRdB < testCase.Users(1).Rx.SNRdB)
+					testCase.verifyTrue(testCase.Users(1).Rx.SINRdB.wideBand < testCase.Users(1).Rx.SNRdB)
 					
 					% Check that the linkConditions are stored
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink{1,1}))
@@ -263,7 +263,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINR,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNR,2))
 					testCase.verifyEqual(round(testCase.Channel.ChannelModel.TempSignalVariables.RxSINRdB,2), round(testCase.Channel.ChannelModel.TempSignalVariables.RxSNRdB,2))
 					testCase.verifyEqual(round(testCase.Users(1).Rx.SINR,2), round(testCase.Users(1).Rx.SNR,2))
-					testCase.verifyEqual(round(testCase.Users(1).Rx.SINRdB,2), round(testCase.Users(1).Rx.SNRdB,2))
+					testCase.verifyEqual(round(testCase.Users(1).Rx.SINRdB.wideBand,2), round(testCase.Users(1).Rx.SNRdB,2))
 					
 					
 				 end
@@ -288,7 +288,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.verifyEqual(testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSINR, testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSNR)
 					testCase.verifyEqual(testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSINRdB, testCase.ChannelNoInterference.ChannelModel.TempSignalVariables.RxSNRdB)
 					testCase.verifyEqual(testCase.Users(1).Rx.SINR, testCase.Users(1).Rx.SNR)
-					testCase.verifyEqual(testCase.Users(1).Rx.SINRdB, testCase.Users(1).Rx.SNRdB)
+					testCase.verifyEqual(testCase.Users(1).Rx.SINRdB.wideBand, testCase.Users(1).Rx.SNRdB)
 				
 				
 				end
