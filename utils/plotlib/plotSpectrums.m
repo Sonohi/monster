@@ -15,7 +15,7 @@ function plotSpectrums(Users,Cells, Config)
         
 		if ~isempty(Users(user).Rx.Waveform)
 			Fs = Cells([Cells.NCellID] == Users(user).ENodeBID).Tx.WaveformInfo.SamplingRate;
-			sig = setPower(Users(user).Rx.Waveform,Users(user).Rx.RxPwdBm);
+			sig = setPower(Users(user).Rx.Waveform,Users(user).Rx.ChannelConditions.RxPwdBm);
 			F = fft(sig)./length(sig);
 			Fpsd = 10*log10(fftshift(abs(F).^2))+30;
 			nfft=length(sig);

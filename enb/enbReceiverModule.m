@@ -28,7 +28,32 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function createRecievedSignalStruct(obj, id)
-			obj.ReceivedSignals{id} = struct('Waveform', [], 'WaveformInfo', [], 'RxPwdBm', [], 'SNR', [], 'PathFilters', [], 'PathGains', []);
+			obj.ReceivedSignals{id} = struct('Waveform', [], 'WaveformInfo', [],'RxPw', [], 'RxPwdBm', [], 'SNR', [], 'SNRdB', [], 'SINR', [], 'SINRdB', [], 'PathFilters', [], 'PathGains', []);
+		end
+
+		function obj = setWaveform(obj, id, Waveform, WaveformInfo)
+			obj.ReceivedSignals{id}.Waveform = Waveform;
+			obj.ReceivedSignals{id}.WaveformInfo = WaveformInfo;
+		end
+
+		function obj = setRxPw(obj, id, RxPw)
+			obj.ReceivedSignals{id}.RxPw = RxPw;
+			obj.ReceivedSignals{id}.RxPwdBm = 10*log10(RxPw)+30;
+		end
+
+		function obj = setSNR(obj, id, SNR)
+			obj.ReceivedSignals{id}.SNR = SNR;
+			obj.ReceivedSignals{id}.SNRdB = 10*log10(SNR);
+		end
+
+		function obj = setSINR(obj, id, SINR)
+			obj.ReceivedSignals{id}.SINR = SINR;
+			obj.ReceivedSignals{id}.SINRdB = 10*log10(SINR);
+		end
+
+		function obj = setPathConditions(obj, id, PathGains, PathFilters)
+			obj.ReceivedSignals{id}.PathGains = PathGains;
+			obj.ReceivedSignals{id}.PathFilters = PathFilters;
 		end
 
 		function foundSignals = anyReceivedSignals(obj)
