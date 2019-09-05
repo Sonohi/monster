@@ -72,9 +72,9 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation traffic', 'DBG');
 			[Traffic, Users] = setupTraffic(Users, obj.Config, obj.Logger);
             
-            %Setup backhaul
-            obj.Logger.log('(MONSTER - setupSimulation) setting up simulation backhaul','DBG');
-            Traffic = applyBackhaulDelay(Traffic, obj.Config);
+      %Setup backhaul
+      obj.Logger.log('(MONSTER - setupSimulation) setting up simulation backhaul','DBG');
+      Traffic = applyBackhaulDelay(Traffic, obj.Config);
 
 			% Setup results
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'DBG');

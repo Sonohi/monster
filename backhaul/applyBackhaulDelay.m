@@ -40,6 +40,8 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
                dataQueue = dataQueue -bitRate/Config.Ue.number;
                while ~dataQueue(dataQueue < 0)
                   %Redistribute where the data should go.
+                  %TODO: redistribute data to make sure it goes where it is supposed to.
+
                   break;
                end
                transDelay = 10^(-3);
@@ -51,7 +53,7 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
         %Add traffic
         TrafficSource(iRound , 2 ,:) = data;
         %Add delay times
-        TrafficSource(iRound , 1 ,:) = propDelay + transDelay + t;
+        TrafficSource(iRound , 1 ,:) = propDelay + transDelay + Config.Backhaul.switchDelay + t;
         t = t+10^(-3);
     end
     

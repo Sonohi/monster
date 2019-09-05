@@ -138,6 +138,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Backhaul.lengthOfMedium = 1000; % [m]
 			Backhaul.bandwidth = 10^9; % [bps] 
 			Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
+			Backhaul.switchDelay = 10^(-4); %[ms]
 			obj.Backhaul = Backhaul;
 
 			% Properties related to the traffic 

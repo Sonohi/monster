@@ -4,6 +4,11 @@ disp('Testing Channel functions...');
 suite = TestSuite.fromFolder('channel', 'IncludingSubfolders', true);
 result = run(suite);
 
+% Test Backhaul
+%disp();
+%suite = TestSuite.fromFolder('backhaul','IncludingSubfolders', true);
+%result = run(suite);
+
 % Test eNB
 disp('Testing eNB functions...');
 suite = TestSuite.fromFolder('enb', 'IncludingSubfolders', true);
