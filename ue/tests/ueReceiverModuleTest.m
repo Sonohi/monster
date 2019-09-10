@@ -41,7 +41,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 					
 
 			% Schedule user for downlink transmission
-			testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+			testCase.Cells(1).associateUser(testCase.Users(1));
 			testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 			
 			% Setup transport block downlink
