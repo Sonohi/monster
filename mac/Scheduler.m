@@ -9,7 +9,11 @@ classdef Scheduler < matlab.mixin.Copyable
 	
 	methods
 		% Constructor
-        function obj = Scheduler(enbObj, Logger, Config)
+				function obj = Scheduler(enbObj, Logger, Config)
+						if ~isa(enbObj, 'EvolvedNodeB')
+							Logger.log('The parent object is not of type EvolvedNodeB','ERR', 'Scheduler:NotEvolvedNodeB')
+						end
+
             obj.enbObj = enbObj;
 						obj.Logger = Logger;
             obj.SchedulerType = Config.Scheduling.type;
@@ -38,7 +42,7 @@ classdef Scheduler < matlab.mixin.Copyable
         end
 
         function obj = updateUsers(obj)
-            % Check newly inputted users against list kept in the scheduler 
+            % Synchronize the list of scheduled users to that of the associated users of the eNodeB.
 						associatedUsers = obj.enbObj.AssociatedUsers;
 						
 						% If the list of scheduled users is empty, add all associated users
@@ -57,10 +61,10 @@ classdef Scheduler < matlab.mixin.Copyable
 						end
 						
 						% Check if any associated Users are no longer associated, thus remove them from the scheduler
-						if ~ismember([obj.ScheduledUsers.UeId], [associatedUsers.UeId])
+						if any(~ismember([obj.ScheduledUsers.UeId], [associatedUsers.UeId]))
 							toRemove = obj.ScheduledUsers(~ismember([obj.ScheduledUsers.UeId], [associatedUsers.UeId]));
 							for UeIdx = 1:length(toRemove)
-								obj.removeUser(toRemove(UeId).UeId)
+								obj.removeUser(toRemove(UeIdx).UeId)
 							end
 						end
 				end
@@ -71,7 +75,7 @@ classdef Scheduler < matlab.mixin.Copyable
 				end
 
 				function obj = removeUser(obj, UserId)
-					obj.ScheduledUsers([obj.ScheduledUsers.UeId] == UserId);
+					obj.ScheduledUsers = obj.ScheduledUsers([obj.ScheduledUsers.UeId] ~= UserId);
 				end
 
         function obj = updateActivePRBs(obj, AbsMask)
