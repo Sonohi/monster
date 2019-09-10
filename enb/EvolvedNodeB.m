@@ -111,7 +111,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% check if user is in the list
 			if ismember(User.NCellID, [obj.AssociatedUsers.UeId])
 				% If it is, just update CQI
-				obj.updateUserCQI(obj, User, CQI);
+				obj.updateUserCQI(User, CQI);
 			else
 				% Add user to the list
 				obj.AssociatedUsers = [obj.AssociatedUsers struct('UeId', User.NCellID, 'CQI', CQI)];

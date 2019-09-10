@@ -161,7 +161,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				function testTraverseDownlink(testCase)
 
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					testCase.Cells(1).Tx.Waveform = [];
@@ -205,7 +205,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			   function testTraverseUplink(testCase)
 
 					% Assign user and schedule user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Cells(1).setScheduleUL(testCase.Config);
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
@@ -247,7 +247,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				 function testOneCellCase(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					% Assign waveform and waveinfo to tx module
@@ -264,7 +264,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				function testNoInterference(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
 					% Assign waveform and waveinfo to tx module
@@ -286,7 +286,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				function testDownlinkAndUplink(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					for iCell = 1:length(testCase.Cells)

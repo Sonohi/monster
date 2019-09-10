@@ -103,8 +103,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
 			end
 			
-			% Filter stations and users
-			[FilteredCells,~] = obj.getAssociated(Cells,Users);
+			% Filter stations 
+			FilteredCells = obj.getAssociated(Cells);
 			
 			% Propagate waveforms
 			if ~isempty(FilteredCells)
@@ -485,7 +485,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 		
 		
-		function [cells, users] = getAssociated(Cells,Users)
+		function [cells] = getAssociated(Cells)
 			% Returns cells and users that are associated
 			cells = [];
 			for iCell = 1:length(Cells)
@@ -496,13 +496,6 @@ classdef MonsterChannel < matlab.mixin.Copyable
 					cells = [cells, Cells(iCell)];
 				end
 			end
-			
-			%UsersAssociated = [Cells.Users];
-			UsersAssociated = [Cells.AssociatedUsers];
-			UserIds = [UsersAssociated.UeId];
-			UserIds = unique(UserIds);
-			UserIds = UserIds(UserIds ~= -1);
-			users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
 		function Pairing = getPairing(Cells, type)
