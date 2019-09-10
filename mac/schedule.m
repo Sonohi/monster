@@ -10,7 +10,7 @@ function [Cell, Users] = schedule(Cell, Users, Config)
 	%
 
 % Set a flag for the overall number of valid UE attached
-sz = length(extractUniqueIds([Cell.Users.UeId]));
+sz = length(extractUniqueIds([Cell.AssociatedUsers.UeId]));
 
 % Set initially the number of available PRBs to the entire set
 prbsAv = Cell.NDLRB;
@@ -46,11 +46,9 @@ switch Config.Scheduling.type
 		iUser = Cell.RoundRobinDLNext.Index;
 		while (iUser <= sz && maxRounds > 0)
 			% First off check if we are in an unused position or out
-			iUser = checkIndexPosition(Cell, iUser, sz);
-			
 			% find user in main list
 			for ixUser = 1:length(Users)
-				if Users(ixUser).NCellID == Cell.Users(iUser).UeId
+				if Users(ixUser).NCellID == Cell.AssociatedUsers(iUser).UeId
 					iCurrUe = ixUser;
 					break;
 				end
@@ -142,10 +140,7 @@ switch Config.Scheduling.type
 					
 					% Increment the user counter to serve the next one
 					iUser = iUser + 1;
-					
-					% Check the index of the user to handle a possible reset
-					iUser = checkIndexPosition(Cell, iUser, sz);
-					
+
 				end
 				maxRounds = maxRounds - 1;
 				
@@ -154,8 +149,7 @@ switch Config.Scheduling.type
 				% in the next round.
 				% Check first whether we went too far in the list and we need to restart
 				% from the beginning
-				iUser = checkIndexPosition(Cell, iUser, sz);
-				Cell.RoundRobinDLNext.UeId = Cell.Users(iUser).UeId;
+				Cell.RoundRobinDLNext.UeId = Cell.AssociatedUsers(iUser).UeId;
 				Cell.RoundRobinDLNext.Index = iUser;
 				
 				% in both cases, stop the loop
@@ -164,14 +158,6 @@ switch Config.Scheduling.type
 		end
 end
 
-	function validIndex = checkIndexPosition(Cell, iUser, sz)
-		if iUser > sz || Cell.Users(iUser).UeId == -1
-			% In this case we need to reset to the first active and valid UE
-			validUeIndexes = find([Cell.Users.UeId] ~= -1);
-			validIndex = validUeIndexes(1);
-		else
-			validIndex = iUser;
-		end
-	end
+
 
 end

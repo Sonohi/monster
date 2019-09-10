@@ -108,7 +108,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			
 			% Propagate waveforms
 			if ~isempty(FilteredCells)
-				obj.callChannelModel(Cells, Users, Mode);
+				obj.callChannelModel(FilteredCells, Users, Mode);
 			else
 				obj.Logger.log('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
@@ -489,14 +489,16 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Returns cells and users that are associated
 			cells = [];
 			for iCell = 1:length(Cells)
-				UsersAssociated = [Cells(iCell).Users.UeId];
-				UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
+				%UsersAssociated = [Cells(iCell).Users.UeId];
+				UsersAssociated = [Cells(iCell).AssociatedUsers];
+				%UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
 				if ~isempty(UsersAssociated)
 					cells = [cells, Cells(iCell)];
 				end
 			end
 			
-			UsersAssociated = [Cells.Users];
+			%UsersAssociated = [Cells.Users];
+			UsersAssociated = [Cells.AssociatedUsers];
 			UserIds = [UsersAssociated.UeId];
 			UserIds = unique(UserIds);
 			UserIds = UserIds(UserIds ~= -1);
@@ -518,8 +520,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				
 				switch type
 					case 'downlink'
-						association = [Cells(i).Users];
-						users = extractUniqueIds([association.UeId]);
+						association = [Cells(i).AssociatedUsers];
+						users = [association.UeId];
 					case 'uplink'	
 						scheduledUL = Cells(i).getUserIDsScheduledUL;
 						users = scheduledUL;

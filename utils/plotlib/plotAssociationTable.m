@@ -25,9 +25,9 @@ function plotAssociationTable(Users, Cells, Config)
 		end
 
 		% Plot all associated users (available in Users)
-		associatedusers = [Cell.Users.UeId];
-		associatedusers = associatedusers(associatedusers ~= -1);
+		associatedusers = [Cell.AssociatedUsers];
 		if ~isempty(associatedusers)
+			associatedusers = [associatedusers.UeId];
 			associatedusers = associatedusers(~ismember(associatedusers,scheduledusers));
 			for user = 1:length(associatedusers)
 				rxObj = Users(find([Users.NCellID] == associatedusers(user)));

@@ -16,7 +16,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		TotSubframes;
 		OCNG;
 		Windowing;
-		Users = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
+		AssociatedUsers = [];
 		ScheduleDL;
 		ScheduleUL;
 		RoundRobinDLNext;
@@ -41,6 +41,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		ShouldSchedule;
 		Utilisation;
 		Logger;
+		Schedulers;
 	end
 	
 	methods
@@ -54,6 +55,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.Position = CellConfig.position;
 			obj.NCellID = cellId;
 			obj.Seed = cellId*Config.Runtime.seed;
+			obj.Schedulers = struct('downlink', Scheduler(obj, Logger, Config));
 			switch obj.BsClass
 				case 'macro'
 					obj.NDLRB = Config.MacroEnb.numPRBs;
@@ -92,11 +94,49 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			end
 			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
-			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
+		end
+
+		function obj = associateUser(obj, User)
+			% Add user to list of users associated
+			
+			CQI = User.Rx.CQI;
+
+			if isempty(obj.AssociatedUsers)
+					obj.AssociatedUsers = [struct('UeId', User.NCellID, 'CQI', CQI)];
+			else
+			% check if user is in the list
+			if ismember(User.NCellID, [obj.AssociatedUsers.UeId])
+				% If it is, just update CQI
+				obj.updateUserCQI(obj, User, CQI);
+			else
+				% Add user to the list
+				obj.AssociatedUsers = [obj.AssociatedUsers struct('UeId', User.NCellID, 'CQI', CQI)];
+
+			end
+			end
+
+		end
+
+		function obj = deassociateUser(obj, User)
+			% Remove user from list of users
+			if isempty(obj.AssociatedUsers)
+				obj.Logger.log('No users associated, cannot deassociate','ERR','EvolvedNodeB:DeassociationOfUser');
+			end
+
+			if ~ismember(User.NCellID, [obj.AssociatedUsers.UeId])
+				obj.Logger.log('No user with that ID associated.','WRN');
+			end
+
+			obj.AssociatedUsers([obj.AssociatedUsers.UeId] == User.NCellID) = [];
+		end
+
+		function obj = updateUserCQI(obj, User, CQI)
+			% Update CQI of user associated
+			obj.AssociatedUsers([obj.AssociatedUsers.UeId] == User.NCellID).CQI = CQI;
 		end
 		
 		function s = struct(obj)
@@ -323,9 +363,9 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		% set uplink static scheduling
 		function obj = setScheduleUL(obj, Config)
 			% Check the number of users associated with the eNodeB and initialise to all
-			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
-			if ~isempty(associatedUEs)
+			if ~isempty(obj.AssociatedUsers)
+				associatedUEs = [obj.AssociatedUsers.UeId];
 				prbQuota = floor(Config.Ue.numPRBs/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
@@ -368,7 +408,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					if prbAvailable >= prbQuota
 						iStart = (iUser - 1)*prbQuota;
 						iStop = iStart + prbQuota;
-						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
+						scheduledUEs(iStart + 1:iStop) = associatedUEs(iUser);
 						prbAvailable = prbAvailable - prbQuota;
 					else
 						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
@@ -423,7 +463,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			%
 			
 			schFlag = false;
-			if ~isempty(find([obj.Users.UeId] ~= -1, 1))
+			if ~isempty(obj.AssociatedUsers)
 				% There are users connected, filter them from the Users list and check the queue
 				enbUsers = Users(find([Users.ENodeBID] == obj.NCellID));
 				usersQueues = [enbUsers.Queue];
