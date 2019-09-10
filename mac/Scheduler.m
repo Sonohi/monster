@@ -2,10 +2,10 @@ classdef Scheduler < matlab.mixin.Copyable
 	properties
         ScheduledUsers; % List of user objects
         enbObj; % Parent enodeB EvolvedNodeB object
-        PRBsActive = [];
-				PRBSet;
+        PRBsActive = []; % List of users and the respective PRBs allocated with MCS and NDI
+				PRBSet; % PRBs used for user data, these can be allocated
         Logger;
-        SchedulerType;
+        SchedulerType; % Type of scheduling algorithm used.
 	end
 	
 	methods
@@ -57,7 +57,8 @@ classdef Scheduler < matlab.mixin.Copyable
 							obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1);
 							
 							% Run scheduling algorithm
-							obj = obj.allocateResources();
+							obj.allocateResources();
+
 						else
 							obj.Logger.log('No Users associated, nothing to schedule.','WRN');
 						end
