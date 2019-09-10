@@ -14,7 +14,7 @@ classdef schedulerTest < matlab.unittest.TestCase
 			Config.Ue.number = 2;
 			Logger = MonsterLog(Config);
 			testCase.Monster = Monster(Config, Logger);
-			testCase.BaseScheduler = Scheduler(testCase.Monster.Cells(1), testCase.Monster.Logger, testCase.Monster.Config);
+			testCase.BaseScheduler = Scheduler(testCase.Monster.Cells(1), testCase.Monster.Logger, testCase.Monster.Config, 50);
 			
 		end
 	end
@@ -32,7 +32,7 @@ classdef schedulerTest < matlab.unittest.TestCase
 			% Not the correct parent object (e.g. eNB)
 			testCase.verifyError(@() Scheduler([], testCase.Monster.Logger, testCase.Monster.Config),'Scheduler:NotEvolvedNodeB')
 		
-			scheduler = Scheduler(testCase.Monster.Cells(1), testCase.Monster.Logger, testCase.Monster.Config);
+			scheduler = Scheduler(testCase.Monster.Cells(1), testCase.Monster.Logger, testCase.Monster.Config, 50);
 			testCase.verifyTrue(isa(scheduler,'Scheduler'));
 		end
 		

@@ -55,7 +55,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.Position = CellConfig.position;
 			obj.NCellID = cellId;
 			obj.Seed = cellId*Config.Runtime.seed;
-			obj.Schedulers = struct('downlink', Scheduler(obj, Logger, Config));
+			
 			switch obj.BsClass
 				case 'macro'
 					obj.NDLRB = Config.MacroEnb.numPRBs;
@@ -70,6 +70,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 			end
+			obj.Schedulers = struct('downlink', Scheduler(obj, Logger, Config, obj.NDLRB));
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;

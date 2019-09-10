@@ -3,13 +3,14 @@ classdef Scheduler < matlab.mixin.Copyable
         ScheduledUsers; % List of user objects
         enbObj; % Parent enodeB EvolvedNodeB object
         PRBsActive = [];
+				PRBSet;
         Logger;
         SchedulerType;
 	end
 	
 	methods
 		% Constructor
-				function obj = Scheduler(enbObj, Logger, Config)
+				function obj = Scheduler(enbObj, Logger, Config, NRB)
 						if ~isa(enbObj, 'EvolvedNodeB')
 							Logger.log('The parent object is not of type EvolvedNodeB','ERR', 'Scheduler:NotEvolvedNodeB')
 						end
@@ -17,28 +18,49 @@ classdef Scheduler < matlab.mixin.Copyable
             obj.enbObj = enbObj;
 						obj.Logger = Logger;
             obj.SchedulerType = Config.Scheduling.type;
-    end
+						obj.PRBSet = 1:NRB;
+						
+						
+				end
+				
+				function obj = allocateResources(obj)
+					% Given the type of the scheduler, allocate the resources to the
+					% users
+					
+					switch obj.SchedulerType
+						case 'RoundRobin'
+							[Mapping, NextRound] = obj.RoundRobinAlgorithm();
+							
+					
+					
+					end
+				
+				end
+				
+				function [Mapping, NextRound] = RoundRobinAlgorithm(obj)
+					% Classic implementation of the Roundrobin algorithm.
+					% :Mapping: A list of PRBs is returned with corresponding UeId
+					% :NextRound: A list of UeIds which have not been allocated
+					% resources
+					
+				end
         
-        function PRBList = scheduleUsers(obj, subframe)
-
-
+        function obj = scheduleUsers(obj)
 						% Given the scheduler type and the users for scheduled, turn a list of PRBs for each user ID
 
-			
 						% If no users are associated, nothing to do.
 						if ~isempty(obj.enbObj.AssociatedUsers)
 							% update users
 							obj.updateUsers();
-
+							
+							% Initialize the structure
+							obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1);
+							
+							% Run scheduling algorithm
+							obj = obj.allocateResources();
 						else
 							obj.Logger.log('No Users associated, nothing to schedule.','WRN');
 						end
-
-						
-					
-
-            
-
         end
 
         function obj = updateUsers(obj)
