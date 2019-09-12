@@ -10,8 +10,8 @@ classdef backhaulTests < matlab.unittest.TestCase
         function setupObjects(testCase)
             %setup
             testCase.Config = MonsterConfig;
-            testCase.Logger = MonsterLog(testCase.Config);
-            testCase.Simulation = Monster(testCase.Config, testCase.Logger);
+            %testCase.Logger = MonsterLog(testCase.Config);
+            %testCase.Simulation = Monster(testCase.Config, testCase.Logger);
         end
     end
 
@@ -25,9 +25,11 @@ classdef backhaulTests < matlab.unittest.TestCase
             testCase.Config.Backhaul.bandwidth = 10^9; % [bps] 
             testCase.Config.Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
             testCase.Config.Backhaul.switchDelay = 10^(-4); %[ms]
+            testCase.Config.Backhaul.errorRate = 0;
             testCase.Config.Ue.number = 1;
             testCase.Config.Traffic.primary = 'fullBuffer';
             testCase.Config.Traffic.arrivalDistribution = 'Static';
+            testCase.Config.Traffic.mix = 0;
             testCase.Config.Traffic.static = 0;
             testCase.Config.Runtime.totalRounds = 100;
             testCase.Logger = MonsterLog(testCase.Config);
