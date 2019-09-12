@@ -118,10 +118,10 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.verifyTrue(mean(testCase.Simulation.Results.ber(2:end)) < 0.2 ); %Should be less than a certain threshhold. With good signal strength retransmission should be 0
 			testCase.verifyTrue(mean(testCase.Simulation.Results.bler(2:end))< 0.2 ); %TODO: verify this statement
 			%verify CQI
-			arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.cqi); %TODO: find a more narrow range and confirm
+			arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.wideBandCqi); %TODO: find a more narrow range and confirm
 			%Verify SNR and SINR. With only 1 Enb they should be the same
-			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB)) < 1e-4 )==1);
-			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.estsinrdB)) < 2 )==1);
+			testCase.verifyTrue( mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.wideBandSinrdB)) < 2)==1);
+			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.worstCaseSinrdB)) < 1e-4 )==1);
 			%TODO: find a more appropiate range and/or verify current
 			testCase.verifyTrue( 15 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
 			%Verify difference between pre and post Evm
