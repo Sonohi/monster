@@ -134,6 +134,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to backhaul
 			Backhaul = struct();
+			Backhaul.backhaulOn = 1;
 			Backhaul.propagationSpeed = 2*10^8; % [m/s] (usual speed of light in a fiber optic cable is approx. 2*10^8 m/s)
 			Backhaul.lengthOfMedium = 1000; % [m]
 			Backhaul.bandwidth = 10^9; % [bps] 
