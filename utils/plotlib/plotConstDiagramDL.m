@@ -1,4 +1,4 @@
-function plotConstDiagramDL(Stations,Users, Config)
+function plotConstDiagramDL(Cells,Users, Config)
 	for user = 1:length(Users)
 
 		rxTag = sprintf('user%iRxConstDL',user);
@@ -24,8 +24,8 @@ function plotConstDiagramDL(Stations,Users, Config)
 		dims = size(Users(user).Rx.Subframe);
 		sps = 1;
 		if dims ~= [0 0]
-			iServingStation = find([Stations.NCellID] == Users(user).ENodeBID);
-			[indPdsch, info] = Stations(iServingStation).getPDSCHindicies;
+			iServingCell = find([Cells.NCellID] == Users(user).ENodeBID);
+			[indPdsch, info] = Cells(iServingCell).getPDSCHindicies;
 			rxSubFrame = Users(user).Rx.Subframe(indPdsch);
 			eqSubFrame = Users(user).Rx.EqSubframe(indPdsch);
 			plot(axRx, rxSubFrame,'.');

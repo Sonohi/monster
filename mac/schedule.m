@@ -1,29 +1,29 @@
-function [Station, Users] = schedule(Station, Users, Config)
+function [Cell, Users] = schedule(Cell, Users, Config)
 	% schedule links UEs to a eNodeB
 	%
-	% :Station: EvolvedNodeB instance
+	% :Cell: EvolvedNodeB instance
 	% :Users: Array<UserEquipment> instances
 	% :Config: MonsterConfig instance
 	%
-	% :Station: EvolvedNodeB instance with updated scheduling
+	% :Cell: EvolvedNodeB instance with updated scheduling
 	% :Users: Array<UserEquipment> instances with scheduling slots
 	%
 
 % Set a flag for the overall number of valid UE attached
-sz = length(extractUniqueIds([Station.Users.UeId]));
+sz = length(extractUniqueIds([Cell.Users.UeId]));
 
 % Set initially the number of available PRBs to the entire set
-prbsAv = Station.NDLRB;
+prbsAv = Cell.NDLRB;
 
 % get ABS info
 % current subframe
-currentSubframe = Station.NSubframe;
-absValue = Station.AbsMask(currentSubframe + 1); % get a 0 or 1 that corresponds to the mask of this subframe
+currentSubframe = Cell.NSubframe;
+absValue = Cell.AbsMask(currentSubframe + 1); % get a 0 or 1 that corresponds to the mask of this subframe
 
-% if the policy is simpleABS, we use the fixed ABS mask from the Station
+% if the policy is simpleABS, we use the fixed ABS mask from the Cell
 % properties
 if (strcmp(Config.Scheduling.icScheme, 'simpleABS'))
-	if(~strcmp(Station.BsClass, 'macro'))
+	if(~strcmp(Cell.BsClass, 'macro'))
 		% the behavior of the micro is the opposite of that of the macro
 		absValue = ~absValue;
 	end
@@ -31,7 +31,7 @@ if (strcmp(Config.Scheduling.icScheme, 'simpleABS'))
 	% zero when the absValue is 1, i.e., when we have an almost blank
 	% subframe
 elseif (strcmp(Config.Scheduling.icScheme, 'fullReuseABS'))
-	if(strcmp(Station.BsClass, 'macro')) % micros can always transmit
+	if(strcmp(Cell.BsClass, 'macro')) % micros can always transmit
 		prbsAv = (1 - absValue) * prbsAv;
 		% set the number of available PRBs to
 		% zero when the absValue is 1, i.e., when we have an almost blank
@@ -43,14 +43,14 @@ switch Config.Scheduling.type
 	case 'roundRobin'
 		
 		maxRounds = sz;
-		iUser = Station.RoundRobinDLNext.Index;
+		iUser = Cell.RoundRobinDLNext.Index;
 		while (iUser <= sz && maxRounds > 0)
 			% First off check if we are in an unused position or out
-			iUser = checkIndexPosition(Station, iUser, sz);
+			iUser = checkIndexPosition(Cell, iUser, sz);
 			
 			% find user in main list
 			for ixUser = 1:length(Users)
-				if Users(ixUser).NCellID == Station.Users(iUser).UeId
+				if Users(ixUser).NCellID == Cell.Users(iUser).UeId
 					iCurrUe = ixUser;
 					break;
 				end
@@ -60,12 +60,12 @@ switch Config.Scheduling.type
 			rtxInfo = struct('proto', [], 'identifier', [], 'iUser', -1);
 			if Config.Harq.active
 				% RLC queue check
-				iUserRlc = find([Station.Rlc.ArqTxBuffers.rxId] == Users(iCurrUe).NCellID);
-				arqRtxInfo = Station.Rlc.ArqTxBuffers(iUserRlc).getRetransmissionState();
+				iUserRlc = find([Cell.Rlc.ArqTxBuffers.rxId] == Users(iCurrUe).NCellID);
+				arqRtxInfo = Cell.Rlc.ArqTxBuffers(iUserRlc).getRetransmissionState();
 
 				% MAC queues check
-				iUserMac = find([Station.Mac.HarqTxProcesses.rxId] == Users(iCurrUe).NCellID);
-				harqRtxInfo = Station.Mac.HarqTxProcesses(iUserMac).getRetransmissionState();
+				iUserMac = find([Cell.Mac.HarqTxProcesses.rxId] == Users(iCurrUe).NCellID);
+				harqRtxInfo = Cell.Mac.HarqTxProcesses(iUserMac).getRetransmissionState();
 
 				% HARQ retransmissions have the priority 
 				if harqRtxInfo.flag
@@ -99,9 +99,9 @@ switch Config.Scheduling.type
 						tb = [];
 						switch rtxInfo.proto
 							case 1
-								tb = Station.Mac.HarqTxProcesses(rtxInfo.iUser).processes(rtxInfo.identifier).tb;
+								tb = Cell.Mac.HarqTxProcesses(rtxInfo.iUser).processes(rtxInfo.identifier).tb;
 							case 2
-								tb = Station.Rlc.ArqTxBuffers(rtxInfo.iUser).tbBuffer(rtxInfo.identifier).tb;
+								tb = Cell.Rlc.ArqTxBuffers(rtxInfo.iUser).tbBuffer(rtxInfo.identifier).tb;
 						end
 						prbsNeed = ceil(length(tb)/(modOrd * Config.Phy.prbSymbols));
 					end
@@ -117,20 +117,20 @@ switch Config.Scheduling.type
 					if rtxSchedulingFlag
 						switch rtxInfo.proto
 							case 1
-								Station.Mac.HarqTxProcesses(rtxInfo.iUser) = ...
-									setRetransmissionState(Station.Mac.HarqTxProcesses(rtxInfo.iUser), rtxInfo.identifier);
+								Cell.Mac.HarqTxProcesses(rtxInfo.iUser) = ...
+									setRetransmissionState(Cell.Mac.HarqTxProcesses(rtxInfo.iUser), rtxInfo.identifier);
 							case 2
-								Station.Rlc.ArqTxBuffers(rtxInfo.iUser) = ...
-									setRetransmissionState(Station.Rlc.ArqTxBuffers(rtxInfo.iUser), rtxInfo.identifier);
+								Cell.Rlc.ArqTxBuffers(rtxInfo.iUser) = ...
+									setRetransmissionState(Cell.Rlc.ArqTxBuffers(rtxInfo.iUser), rtxInfo.identifier);
 						end
 					end
 
 					% write to schedule struct and indicate also in the struct whether this is new data or RTX
-					for iPrb = 1:Station.NDLRB
-						if Station.ScheduleDL(iPrb).UeId == -1
+					for iPrb = 1:Cell.NDLRB
+						if Cell.ScheduleDL(iPrb).UeId == -1
 							mcs = Config.Phy.mcsTable(Users(iCurrUe).Rx.CQI + 1, 1);
 							for iSch = 0:prbsSch-1
-								Station.ScheduleDL(iPrb + iSch) = struct(...
+								Cell.ScheduleDL(iPrb + iSch) = struct(...
 									'UeId', Users(iCurrUe).NCellID,...
 									'Mcs', mcs,...
 									'ModOrd', modOrd,...
@@ -144,7 +144,7 @@ switch Config.Scheduling.type
 					iUser = iUser + 1;
 					
 					% Check the index of the user to handle a possible reset
-					iUser = checkIndexPosition(Station, iUser, sz);
+					iUser = checkIndexPosition(Cell, iUser, sz);
 					
 				end
 				maxRounds = maxRounds - 1;
@@ -154,9 +154,9 @@ switch Config.Scheduling.type
 				% in the next round.
 				% Check first whether we went too far in the list and we need to restart
 				% from the beginning
-				iUser = checkIndexPosition(Station, iUser, sz);
-				Station.RoundRobinDLNext.UeId = Station.Users(iUser).UeId;
-				Station.RoundRobinDLNext.Index = iUser;
+				iUser = checkIndexPosition(Cell, iUser, sz);
+				Cell.RoundRobinDLNext.UeId = Cell.Users(iUser).UeId;
+				Cell.RoundRobinDLNext.Index = iUser;
 				
 				% in both cases, stop the loop
 				iUser = sz + 1;
@@ -164,10 +164,10 @@ switch Config.Scheduling.type
 		end
 end
 
-	function validIndex = checkIndexPosition(Station, iUser, sz)
-		if iUser > sz || Station.Users(iUser).UeId == -1
+	function validIndex = checkIndexPosition(Cell, iUser, sz)
+		if iUser > sz || Cell.Users(iUser).UeId == -1
 			% In this case we need to reset to the first active and valid UE
-			validUeIndexes = find([Station.Users.UeId] ~= -1);
+			validUeIndexes = find([Cell.Users.UeId] ~= -1);
 			validIndex = validUeIndexes(1);
 		else
 			validIndex = iUser;

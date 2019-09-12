@@ -1,13 +1,12 @@
 
 *.m~
 *.asv
-/sonohiLog.txt
-/torResults
-/torResults16.08
 /results/*.mat
+/results/*/
 /dbg/*.mat
 /.vscode
 /logs/*.txt
+/logs/*.log
 /html
 /doctrees
 /utils/coverage/*.mat

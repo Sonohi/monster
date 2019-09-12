@@ -1,7 +1,7 @@
 classdef Monster3GPP38901 < matlab.mixin.Copyable
 	% Monster3GPP38901 defines a class for the 3GPP channel model specified in 38.901
 	%
-	% :StationConfigs:
+	% :CellConfigs:
 	% :Channel:
 	% :TempSignalVariables:
 	% :Pairings:
@@ -9,263 +9,432 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 	%
 	
 	properties
-		StationConfigs;
+		CellConfigs;
 		Channel;
-		TempSignalVariables = struct();
 		Pairings = [];
 		LinkConditions = struct();
+		SignalPadding = 200;
 	end
 	
 	methods
-		function obj = Monster3GPP38901(MonsterChannel, Stations)
+		function obj = Monster3GPP38901(MonsterChannel, Cells)
 			obj.Channel = MonsterChannel;
-			obj.setupStationConfigs(Stations);
+			obj.setupCellConfigs(Cells);
 			obj.createSpatialMaps();
 			obj.LinkConditions.downlink = [];
 			obj.LinkConditions.uplink = [];
 		end
 		
-		function setupStationConfigs(obj, Stations)
-			% Setup structure for Station configs
-			% 
-			% :obj:
-			% :Stations
+		function setupCellConfigs(obj, Cells)
+			% Setup structure for Cell configs
 			%
+			% :obj:
+			% :Cells
+			%
+			
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				cellString = sprintf('Cell%i',Cell.NCellID);
+				obj.CellConfigs.(cellString) = struct();
+				obj.CellConfigs.(cellString).Tx = Cell.Tx;
+				obj.CellConfigs.(cellString).Position = Cell.Position;
+				obj.CellConfigs.(cellString).Seed = Cell.Seed;
+				obj.CellConfigs.(cellString).LSP = lsp3gpp38901(obj.Channel.getAreaType(Cell));
+			end
+		end
 
-			for stationIdx = 1:length(Stations)
-				station = Stations(stationIdx);
-				stationString = sprintf('station%i',station.NCellID);
-				obj.StationConfigs.(stationString) = struct();
-				obj.StationConfigs.(stationString).Tx = station.Tx;
-				obj.StationConfigs.(stationString).Position = station.Position;
-				obj.StationConfigs.(stationString).Seed = station.Seed;
-				obj.StationConfigs.(stationString).LSP = lsp3gpp38901(obj.Channel.getAreaType(station));
+		function tempVar = propagateWaveform(obj, Cell, User, Cells, Users, Mode)
+			tempVar = obj.TempVariables();
+			% Set waveform to be manipulated
+			switch Mode
+				case 'downlink'
+					tempVar = obj.setWaveform(Cell, tempVar);
+				case 'uplink'
+					tempVar = obj.setWaveform(User, tempVar);
+			end
+			
+			% Calculate recieved power between Cell and User
+			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Cell, User, Mode);
+			tempVar.RxPower = receivedPower;
+			tempVar.RxPowerWatt = receivedPowerWatt;
+			
+			% Calculate SNR using thermal noise
+			[SNR, SNRdB, noisePower] = obj.Channel.calculateSNR(tempVar.Waveform, tempVar.WaveformInfo.SamplingRate, tempVar.RxPower);
+			tempVar.RxSNR = SNR;
+			tempVar.RxSNRdB = SNRdB;
+			tempVar.noisePower = noisePower;
+			
+			% If Interference is assumed to be worst case, e.g. 'Power' or 'None', the SINR
+			% define how much noise is to be added
+			if ~strcmp(obj.Channel.InterferenceType, 'Frequency')
+				[tempVar] = obj.computeSINR(Cell, User, Cells, Users, Mode, tempVar);
+				SNR = tempVar.RxSINR;
+			end
+			
+			% Compute N0
+			N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft);
+			
+			% Add AWGN
+			noise = N0*complex(randn(size(tempVar.Waveform)), randn(size(tempVar.Waveform)));
+			rxSig = tempVar.Waveform + noise;
+			tempVar.RxWaveform = rxSig;
+			
+			% Add fading
+			if obj.Channel.enableFading
+				tempVar = obj.addFading(Cell, User, Mode, tempVar);
 			end
 		end
 		
-		function propagateWaveforms(obj, Stations, Users, Mode)
+		function propagateWaveforms(obj, Cells, Users, Mode)
 			% propagateWaveforms
 			%
 			% :onj:
-			%	:Stations:
+			%	:Cells:
 			% :Users:
 			% :Mode:
 			%
 			
-			Pairing = obj.Channel.getPairing(Stations, Mode);
+			Pairing = obj.Channel.getPairing(Cells, Mode);
 			obj.Pairings = Pairing;
 			numLinks = length(Pairing(1,:));
 			
+			% Store link conditions
 			obj.LinkConditions.(Mode) = cell(numLinks,1);
-				
+			
 			for i = 1:numLinks
-				obj.clearTempVariables()
+				
 				% Local copy for mutation
-				station = Stations([Stations.NCellID] == Pairing(1,i));
-				user = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
-				
-				% Set waveform to be manipulated
-				switch Mode
-					case 'downlink'
-						obj.setWaveform(station)
-					case 'uplink'
-						obj.setWaveform(user)
+				Cell = Cells([Cells.NCellID] == Pairing(1,i));
+				User = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
+
+				% Propagate waveform and write received waveform to struct
+				tempVar = obj.propagateWaveform(Cell, User, Cells, Users, Mode);
+		
+				% Sum waveforms from interfering stations and compute SINR, if
+				% frequency type interference is wanted.
+				if strcmp(obj.Channel.InterferenceType,'Frequency')
+					tempVar = obj.computeSINR(Cell, User, Cells, Users, Mode, tempVar);
 				end
 				
-				% Calculate recieved power between station and user
-				[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(station, user, Mode);
-				obj.TempSignalVariables.RxPower = receivedPower;
-
-				% Calculate SNR using thermal noise
-				[SNR, SNRdB, noisePower] = obj.computeSNR();
-				obj.TempSignalVariables.RxSNR = SNR;
-				obj.TempSignalVariables.RxSNRdB = SNRdB;
-
-				% Add/compute interference
-				SINR = obj.computeSINR(station, user, Stations, receivedPowerWatt, noisePower, Mode);
-				obj.TempSignalVariables.RxSINR = SINR;
-				obj.TempSignalVariables.RxSINRdB = 10*log10(SINR);
-
-				% Compute N0
-				N0 = obj.computeSpectralNoiseDensity(station, Mode);
-
-				% Add AWGN
-				noise = N0*complex(randn(size(obj.TempSignalVariables.RxWaveform)), randn(size(obj.TempSignalVariables.RxWaveform)));
-				rxSig = obj.TempSignalVariables.RxWaveform + noise;
-				obj.TempSignalVariables.RxWaveform = rxSig;
-
-				% Add fading
-				if obj.Channel.enableFading
-					obj.addFading(station, user, Mode);
-				end
-
 				% Receive signal at Rx module
 				switch Mode
 					case 'downlink'
-						obj.setReceivedSignal(user);
+						obj.setReceivedSignal(User,  tempVar);
 					case 'uplink'
-						obj.setReceivedSignal(station, user);
+						obj.setReceivedSignal(Cell, tempVar, User);
 				end
+			
 
+				
 				% Store in channel variable
-				obj.storeLinkCondition(i, Mode)
+				obj.storeLinkCondition(i, Mode, tempVar)
 				
 			end
 		end
-
-		function rxSig = addAWGNdl(obj, Station, User, SINR)
-			Mode = 'downlink';
-			obj.clearTempVariables();
-			obj.setWaveform(Station);
-
-			% Calculate recieved power between station and user
-			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Station, User, Mode);
-			obj.TempSignalVariables.RxPower = receivedPower;
-
-			% Set SINR 
-			obj.TempSignalVariables.RxSINR = SINR;
-			obj.TempSignalVariables.RxSINRdB = 10*log10(SINR);
-
-			% Compute N0
-			N0 = obj.computeSpectralNoiseDensity(Station, Mode);
-
-			% Add AWGN
-			noise = N0*complex(randn(size(obj.TempSignalVariables.RxWaveform)), randn(size(obj.TempSignalVariables.RxWaveform)));
-			rxSig = obj.TempSignalVariables.RxWaveform + noise;
-			obj.TempSignalVariables.RxWaveform = rxSig;
-
-			% Add fading
-			if obj.Channel.enableFading
-				obj.addFading(Station, User, Mode);
-			end
-
-			% Receive signal at Rx module
-			obj.setReceivedSignal(User);
-
-			% Store in channel variable
-			obj.storeLinkCondition(1, Mode)
-		end
+	
 		
-		function N0 = computeSpectralNoiseDensity(obj, Station, Mode)
-			% Compute spectral noise density NO	
+		function receivedPower = getreceivedPowerMatrix(obj, Cell, User, sampleGrid)
+			% Used for obtaining a Matrix of received power given a grid of
+			% positions.
 			%
 			% :param obj:
-			% :param Station:
-			% :param Mode:
-			% :returns N0:
-			%
-			% TODO: Find citation for this computation. It's partly taken from matworks - however there is a theoretical equation for the symbol energy of OFDM signals.
-			%
-
-			switch Mode
-				case 'downlink'
-					Es = sqrt(2.0*Station.CellRefP*double(obj.TempSignalVariables.RxWaveformInfo.Nfft));
-					N0 = 1/(Es*sqrt(obj.TempSignalVariables.RxSINR));
-				case 'uplink'
-					N0 = 1/(sqrt(obj.TempSignalVariables.RxSINR)  * sqrt(double(obj.TempSignalVariables.RxWaveformInfo.Nfft)))/sqrt(2);
-			end
-
-		end 
-
-		function [SNR, SNRdB, thermalNoise] = computeSNR(obj)
-			% Calculate SNR using thermal noise. Thermal noise is bandwidth dependent.
-			%
-			% :param obj:
-			% :returns SNR:
-			% :returns SNRdB:
-			% :returns thermalNoise: 
-			%
-
-			[thermalLossdBm, thermalNoise] = thermalLoss(obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxWaveformInfo.SamplingRate);
-			rxNoiseFloor = thermalLossdBm;
-			SNRdB = obj.TempSignalVariables.RxPower-rxNoiseFloor;
-			SNR = 10.^((SNRdB)./10);
-		end
-
-
-		function receivedPower = getreceivedPowerMatrix(obj, station, user, sampleGrid)
-			% Used for obtaining a SINR estimation of a given position
-			%
-			% :param obj:
-			% :param station:
-			% :param user:
+			% :param Cell:
+			% :param User:
 			% :param sampleGrid:
 			% :returns receivedPower:
 			%
-
-			obj.TempSignalVariables.RxWaveform = station.Tx.Waveform; % Temp variable for BW indication
-			obj.TempSignalVariables.RxWaveformInfo = station.Tx.WaveformInfo; % Temp variable for BW indication
-			[receivedPower, receivedPowerWatt] = obj.computeLinkBudgetMatrix(station, user, 'downlink', sampleGrid);
-			%obj.TempSignalVariables.RxPower = receivedPower;
-			%[SNR, ~, noisePower] = obj.computeSNR();
-			%TODO: make computeSINR matrix compatible
-			%SINR = obj.computeSINR(station, user, Stations, receivedPowerWatt, noisePower, 'downlink');
-			obj.clearTempVariables();
+			
+			[receivedPower, ~] = obj.computeLinkBudget(Cell, User, 'downlink', sampleGrid);
+			receivedPower = reshape(receivedPower, length(sampleGrid), []);
 		end
+		
 
-		function [SINR] = computeSINR(obj, station, user, Stations, receivedPowerWatt, noisePower, Mode)
+		function [interferesList, powerList] = getInterferes(obj, Cell, User, Cells, Users, Mode)
+			% Get a list of interferes given the mode of transmission.
+			% The interferers are for Cells based on the class of operations.
+			% Thus all Macros' interfere with each other.
+			% All users associated to the same class of stations also interfere
+			% with each other.
+			switch Mode
+				case 'downlink'
+					interferesList = obj.Channel.getInterferingCells(Cell, Cells);
+					powerList = obj.listCellPower(User, interferesList);
+				case 'uplink'
+					interferesList = obj.Channel.getInterferingUsers(User, Cell, Users, Cells);
+					powerList = obj.listUserPower(Cell, interferesList);
+			end
+		end
+		
+		function tempVar = powerInterference(obj, powerList, Mode, tempVar)
+			% Power profile type interference.
+			% SINR is computed based on the power profile and nothing else.
+
+			switch Mode
+				case 'downlink'
+					% Sum power from interfering cells
+					intPower = MonsterChannel.sumReceivedPower(powerList);
+				case 'uplink'
+					% Sum power from interfering users
+					intPower = MonsterChannel.sumReceivedPower(powerList);
+			end
+
+			[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, intPower, tempVar.noisePower);
+
+			
+		end
+		
+		function [tempVar] = frequencyInterference(obj, Cell, User, Cells, Users, Mode, interferesList, tempVar)
+					% Compute interference based on the waveform of the signals. 
+					% The interfering waveforms are computed and added (with correct
+					% scaling in power and frequency) to the received signal of the
+					% link propagated. The SINRdB computed is based on the power
+					% profile and thus the worst case SINR expected if the frequency
+					% components are all used. The estimated SINR is computed at the
+					% receiver.
+					%
+					% for each interfering waveform, compute channel impairments and get waveform
+					% Sum the waveforms to get combined interfering waveform
+					% Sum power to get estimated power
+					% TODO: Refactorize the uplink and downlink sum of waveforms
+					interferingPower = 0;
+					switch Mode
+						case 'downlink'
+							interferingWaveform = zeros(length(tempVar.RxWaveform),1);
+							for intCell = 1:length(interferesList)
+								tempIntVar = obj.propagateWaveform(interferesList(intCell), User, Cells, Users, Mode);
+								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
+								interferingWaveform = interferingWaveform + circshift(tempIntVar.RxWaveform, randi(length(interferingWaveform)/2-1));
+								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
+							end
+						case 'uplink'
+							% Compute the longest waveform transmitted
+
+							intWaveformSize = [interferesList.Tx];
+							intWaveformSize = cellfun(@length,{intWaveformSize.Waveform}, 'UniformOutput', false);
+							intWaveformSize = max([intWaveformSize{:}])+obj.SignalPadding;
+
+							interferingWaveform = zeros(intWaveformSize,1);
+							for intUser = 1:length(interferesList)
+								tempIntVar = obj.propagateWaveform(Cell, interferesList(intUser), Cells, Users, Mode);
+								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
+								interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
+								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
+							end
+					end
+
+					debug = false; % Debugging plots
+
+					% option 1.
+					% Add relative power to received waveform
+					% Set power of RxWaveform based on link budget
+					Waveform = setPower(tempVar.RxWaveform, tempVar.RxPower);
+
+					if debug
+						figure
+						hold on
+					end
+
+					% Add interfering waveform
+					% If longer, truncate the rest
+					if length(interferingWaveform) > length(Waveform)
+						rxWaveform = Waveform + interferingWaveform(1:length(Waveform),1);
+					elseif length(interferingWaveform) < length(Waveform)
+						rxWaveform = Waveform + [interferingWaveform; complex(zeros(length(Waveform)-length(interferingWaveform),1))];
+					else
+						rxWaveform = Waveform + interferingWaveform;
+					end
+
+
+					if debug
+
+						Fint = fft(interferingWaveform)./length(interferingWaveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						Fint = fft(rxWaveform)./length(rxWaveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						Fint = fft(Waveform)./length(Waveform);
+						Fpsd = 10*log10(fftshift(abs(Fint).^2))+30;
+						plot(Fpsd)
+
+						legend('Interfering waveform', 'With interference', 'No inteference')
+					end
+					% Normalize waveform 
+					tempVar.RxWaveform = setPower(rxWaveform, 10*log10(bandpower(tempVar.RxWaveform))+30);
+
+					% Compute worstcase SINR based on power profile. This assumes
+					% constant power on all subcarriers and is thus the worst expected
+					% SINR.
+					[tempVar.RxSINR, tempVar.RxSINRdB] = obj.Channel.calculateSINR(tempVar.RxPowerWatt, interferingPower, tempVar.noisePower);
+
+		end
+		
+		function [tempVar] = computeSINR(obj, Cell, User, Cells, Users, Mode, tempVar)
 			% Compute SINR using received power and the noise power.
-			% Interference is given as the power of the received signal, given the power of the associated base station, over the power of the neighboring base stations.
-			% 
+			% Interference is given as the power of the received signal, given the power of the associated Cell, over the power of the neighboring cells.
+			%
 			% :param obj:
-			% :param station:
-			% :param user:
-			% :param Stations:
+			% :param Cell:
+			% :param User:
+			% :param Cells:
+			% :param Users:
 			% :param receivedPowerWatt:
 			% :param noisePower:
 			% :param Mode:
 			% :returns SINR:
 			%
-			% v1. InterferenceType Full assumes full power, thus the SINR computation can be done using just the link budget.
-			% TODO: Add waveform type interference. 
-			% TODO: clean up function arguments.
-			%
+			% v1. InterferenceType Power assumes full power, thus the SINR computation can be done using just the link budget.
+			%	v2. Adds power from interfering waveforms.
+			% TODO: Add uplink interference
 
-			if strcmp(obj.Channel.InterferenceType,'Full')
-				interferingStations = obj.Channel.getInterferingStations(station, Stations);
-				listCellPower = obj.listCellPower(user, interferingStations, Mode);
-				
-				intStations  = fieldnames(listCellPower);
-				intPower = 0;
-				% Sum power from interfering stations
-				for intStation = 1:length(fieldnames(listCellPower))
-					intPower = intPower + listCellPower.(intStations{intStation}).receivedPowerWatt;
+			[interferesList, powerList] = obj.getInterferes(Cell, User, Cells, Users, Mode);
+			if ~isempty(interferesList)
+				switch obj.Channel.InterferenceType
+					case 'Power'
+						tempVar = obj.powerInterference(powerList, Mode, tempVar);
+					case 'Frequency'
+						tempVar = obj.frequencyInterference(Cell, User, Cells, Users, Mode, interferesList, tempVar);
+					otherwise
+						tempVar.RxSINR = tempVar.RxSNR;
 				end
-
-				SINR = obj.Channel.calculateSINR(receivedPowerWatt, intPower, noisePower);
 			else
-				SINR = obj.TempSignalVariables.RxSNR;
+				% No interferes, SNR equal SINR
+				tempVar.RxSINR = tempVar.RxSNR;
 			end
 		end
-
-		function list = listCellPower(obj, User, Stations, Mode)
-			% Get list of recieved power from all stations
+		
+		function SINR = listSINR(obj, User, Cells, Mode)
+			% Get list of SINR for all cells, assuming they all interfere.
+			%
+			% :param User: One User
+			% :param Cells: Multiple eNB's
+			% :param Mode: Mode of transmission.
+			% :returns SINR: List of SINR for each Cell
+			
+			obj.Channel.Logger.log('func listSINR: Interference is considered intra-class eNB cells','WRN')
+			
+			
+			% Get received power for each Cell
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				[~, receivedPower(iCell)] = obj.computeLinkBudget(Cell, User, Mode);
+			end
+			
+			% Compute SINR from each Cell
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				cellPower = receivedPower(iCell);
+				interferingPower = sum(receivedPower(1:end ~= iCell));
+				[~, thermalNoise] = thermalLoss();
+				SINR(iCell) = 10*log10(obj.Channel.calculateSINR(cellPower, interferingPower, thermalNoise));
+			end
+			
+		end
+		
+		function list = listCellPower(obj, User, Cells)
+			% Get list of recieved power from all cells
 			%
 			% :param obj:
 			% :param User:
-			% :param Stations:
+			% :param Cells:
 			% :param Mode:
 			% :returns list:
 			%
-
+			
 			list = struct();
-			for iStation = 1:length(Stations)
-				station = Stations(iStation);
-				stationStr = sprintf('stationNCellID%i',station.NCellID);
-				list.(stationStr).receivedPowerdBm = obj.computeLinkBudget(station, User, Mode);
-				list.(stationStr).receivedPowerWatt = 10^((list.(stationStr).receivedPowerdBm-30)/10);
-				list.(stationStr).NCellID = station.NCellID;
+			for iCell = 1:length(Cells)
+				Cell = Cells(iCell);
+				cellStr = sprintf('NCellID%i',Cell.NCellID);
+				list.(cellStr).receivedPowerdBm = obj.computeLinkBudget(Cell, User, 'downlink');
+				list.(cellStr).receivedPowerWatt = 10^((list.(cellStr).receivedPowerdBm-30)/10);
+				list.(cellStr).NCellID = Cell.NCellID;
 			end
 			
 		end
 
 
-		
-		function [receivedPower, receivedPowerWatt] = computeLinkBudget(obj, Station, User, mode)
+		function list = listUserPower(obj, Cell, Users)
+
+			list = struct();
+			for iUser = 1:length(Users)
+				User = Users(iUser);
+				userStr = sprintf('NCellIDID%i', User.NCellID);
+				list.(userStr).receivedPowerdBm = obj.computeLinkBudget(Cell, User, 'uplink');
+				list.(userStr).receivedPowerWatt = 10^((list.(userStr).receivedPowerdBm-30)/10);
+				list.(userStr).NCellID = User.NCellID;
+			end
+
+		end
+
+		function [txConfig, userConfig] = getLinkParameters(obj, Cell, User, mode, varargin)
+			% Function acts like a wrapper between lower layer physical computations (usually matrix operations) and the Monster API of Cell and User objects
+			% construct a structure for handling variables
+			%
+			% :param Cell: Cell object
+			% :param User: User object
+			% :param mode: 'downlink' or 'uplink' % Currently only difference is frequency
+			% :param varargin: (optional) 2xN array of positions for which the link budget is wanted.
+			userConfig = struct();
+			txConfig = struct();
+			
+			txConfig.position = Cell.Position;
+
+			if ~isempty(varargin{1})
+				[X, Y] = meshgrid(varargin{1}{1}(1,:), varargin{1}{1}(2,:));
+				Z = User.Position(3)*ones(length(X),length(Y));
+			else
+				X = User.Position(1);
+				Y = User.Position(2);
+				Z = User.Position(3);
+			end
+			userConfig.positions = [reshape(X,[],1)  reshape(Y,[],1) reshape(Z,[],1)];
+			
+			userConfig.Indoor = User.Mobility.Indoor;
+						
+			userConfig.d2d = arrayfun(@(x, y) obj.Channel.getDistance(Cell.Position(1:2),[x y]), userConfig.positions(:,1), userConfig.positions(:,2));
+			userConfig.d3d = arrayfun(@(x, y, z) obj.Channel.getDistance(Cell.Position(1:3),[x y z]), userConfig.positions(:,1), userConfig.positions(:,2), userConfig.positions(:,3));
+			switch mode
+				case 'downlink'
+					txConfig.hBs = Cell.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Cell);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Cell);
+					txConfig.freq = Cell.Tx.Freq;
+					userConfig.hUt = User.Position(3);
+					
+					
+				case 'uplink'
+					txConfig.hBs = Cell.Position(3);
+					txConfig.areaType = obj.Channel.getAreaType(Cell);
+					txConfig.seed = obj.Channel.getLinkSeed(User, Cell);
+					txConfig.freq = User.Tx.Freq;
+					userConfig.hUt = User.Position(3);
+			end
+
+		end
+	
+
+		function [userConfig] = computeLOS(obj, Cell, txConfig, userConfig)
+			% Compute LOS situation
+			% If a probability based LOS method is used, the LOSprop is realized with spatial consistency
+
+			if userConfig.Indoor
+				userConfig.LOS = 0;
+				userConfig.LOSprop = NaN;
+			else
+				[userConfig.LOS, userConfig.LOSprop] = obj.Channel.isLinkLOS(txConfig, userConfig, false);
+				if ~isnan(userConfig.LOSprop) % If a probablistic LOS model is used, the LOS state needs to be realized with spatial consistency
+					userConfig.LOS = obj.spatialLOSstate(Cell, userConfig.positions(:,1:2), userConfig.LOSprop);
+				end
+			end
+		end
+
+		function [receivedPower, receivedPowerWatt] = computeLinkBudget(obj, Cell, User, mode, varargin)
 			% Compute link budget for Tx -> Rx
-			% 
+			%
 			% :param obj:
-			% :param Station:
+			% :param Cell:
 			% :param User:
 			% :param mode:
 			% :returns receivedPower:
@@ -276,132 +445,66 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% The channel is reciprocal in terms of received power, thus the path
 			% loss is extracted from channel conditions provided by
 			%
+			
+
+			[txConfig, userConfig] = obj.getLinkParameters(Cell, User, mode, varargin);
+			
+			userConfig = obj.computeLOS(Cell, txConfig, userConfig);
+		
+			if obj.Channel.enableShadowing
+				xCorr = arrayfun(@(x,y,z) obj.computeShadowingLoss(Cell, [x y], z), reshape(userConfig.positions(:,1),size(userConfig.LOS)), reshape(userConfig.positions(:,2),size(userConfig.LOS)), userConfig.LOS );
+			else
+				xCorr = 0;
+			end
+
+			if userConfig.Indoor
+				indoorLoss = obj.computeIndoorLoss(txConfig, userConfig);
+			else
+				indoorLoss = 0;
+			end
+
+			
+			EIRPdBm = arrayfun(@(x,y, z) Cell.Tx.getEIRPdBm(Cell.Position, [x y z]), userConfig.positions(:,1), userConfig.positions(:,2), userConfig.positions(:,3));
+			lossdB = obj.computePathLoss(txConfig, userConfig);
+			
+			% Add possible shadowing loss and indoor loss
+			lossdB = lossdB + xCorr + indoorLoss;
+			
 			switch mode
 				case 'downlink'
-					lossdB = obj.computePathLoss(Station, User, Station.Tx.Freq);
-					EIRPdBm = Station.Tx.getEIRPdBm(Station.Position, User.Position);
-					receivedPower = EIRPdBm-lossdB+User.Rx.getLoss(Station.Position, User.Position); %dBm
+					DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Cell.Position, [x y]), userConfig.positions(:,1), userConfig.positions(:,2));
+					receivedPower = EIRPdBm-lossdB+DownlinkUeLoss; %dBm
 				case 'uplink'
-					lossdB = obj.computePathLoss(Station, User, User.Tx.Freq);
 					EIRPdBm = User.Tx.getEIRPdBm;
-					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
+					receivedPower = EIRPdBm-lossdB-Cell.Rx.NoiseFigure; %dBm 
 			end
-			receivedPowerWatt = 10^((receivedPower-30)/10);
-		end
-
-		function [receivedPower, receivedPowerWatt] = computeLinkBudgetMatrix(obj, Station, User, mode, sampleGrid)
-			% computeLinkBudgetMatrix
-			%
-			% :param obj:
-			% :param Station:
-			% :param User:
-			% :param mode:
-			% :param sampleGrid:
-			% :returns receivedPower:
-			% :returns receivedPowerWatt:
-			% 
-			% Matrix edition: Create 2d an 3d distances from sampleGrid.
-			% TODO: reformat this function to work with computeLinkBudget
 			
-
-			
-			[X, Y] = meshgrid(sampleGrid(1,:), sampleGrid(2,:));
-			d2 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:2),[x y]), X, Y);
-			d3 = arrayfun(@(x,y) obj.Channel.getDistance(Station.Position(1:3),[x y User.Position(3)]), X, Y);
-			EIRPdBm = arrayfun(@(x,y) Station.Tx.getEIRPdBm(Station.Position, [x y]), X, Y);
-			DownlinkUeLoss = arrayfun(@(x,y) User.Rx.getLoss(Station.Position, [x y]), X, Y);
-
-			switch mode
-				case 'downlink'
-					lossdB = obj.computePathLossMatrix(Station, User, Station.Tx.Freq, d2, d3);
-					%EIRPdBm = Station.Tx.getEIRPdBm(Station.Position, User.Position);
-					%TODO: make Station.Tx.getEIRPdBm produce matrix output instead of work around
-					%Work around found above in double for loop
-
-					receivedPower = EIRPdBm-lossdB-DownlinkUeLoss; %dBm
-				case 'uplink'
-					lossdB = obj.computePathLossMatrix(Station, User, User.Tx.Freq, d2, d3);
-					
-					EIRPdBm = User.Tx.getEIRPdBm;
-					
-					receivedPower = EIRPdBm-lossdB-Station.Rx.NoiseFigure; %dBm
-			end
-			receivedPowerWatt = 10^((receivedPower-30)./10);
+			receivedPowerWatt = 10.^((receivedPower-30)./10);
 		end
 		
-
-		function [lossdB] = computePathLossMatrix(obj,TxNode, RxNode, Freq, d2, d3)
-			% computePathLossMatrix
-			%
-			% :param obj:
-			% :param TxNode:
-			% :param RxNode:
-			% :param Freq: 
-			% :param d2:
-			% :param d3:
-			% :returns lossdB:
-			%
-			% TODO: refactorize the functionality of this with computePathLoss
-			f = Freq/10e2; % Frequency in GHz
-			hBs = TxNode.Position(3);
-			hUt = RxNode.Position(3);
-
-			areatype = obj.Channel.getAreaType(TxNode);
+		
+		function [indoorLoss] = computeIndoorLoss(txConfig, userConfig)
 			
-			shadowing = obj.Channel.enableShadowing;
-			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
-			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
-
+			% Low loss model consists of LOS
+			materials = {'StandardGlass', 'Concrete'; 0.3, 0.7};
+			sigma_P = 4.4;
 			
-			[LOS, prop] = obj.Channel.isLinkLOSMatrix(TxNode, RxNode, false, d2);
-			%TODO make LOS function work for spatialLOSstate
-			%if ~isnan(prop)
-				% LOS state is determined by comparing with spatial map of
-				% random variables, if the probability of determining LOS
-				% is used.
-				%LOS = obj.spatialLOSstate(TxNode, RxNode.Position, prop);
-			%end
-
-			try
-					lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-				catch ME
-					if strcmp(ME.identifier,'Pathloss3GPP:Range')
-							
-							d2(d2<10) = 10;
-							lossdB = loss3gpp38901(areatype, d2, d3, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
-					else
-						monsterLog('A pathloss calculation failed','ERR')
-					end
-			end
-
-			%TODO: make this part matrix compatible
-			% if RxNode.Mobility.Indoor
-			% 	% Low loss model consists of LOS
-			% 	materials = {'StandardGlass', 'Concrete'; 0.3, 0.7};
-			% 	sigma_P = 4.4;
-				
-			% 	% High loss model consists of
-			% 	%materials = {'IIRGlass', 'Concrete'; 0.7, 0.3}
-			% 	%sigma_P = 6.5;
-				
-			% 	PL_tw = buildingloss3gpp38901(materials, f);
-				
-			% 	% If indoor depth can be computed
-			% 	%PL_in = indoorloss3gpp38901('', 2d_in);
-			% 	% Otherwise sample from uniform
-			% 	PL_in  = indoorloss3gpp38901(areatype);
-			% 	indoorLosses = PL_tw + PL_in + randn(1, 1)*sigma_P;
-			% 	lossdB = lossdB + indoorLosses;
-			% end
+			% High loss model consists of
+			%materials = {'IIRGlass', 'Concrete'; 0.7, 0.3}
+			%sigma_P = 6.5;
 			
-			%TODO: make computeShadowingLoss compatible with matrices.
-			%if shadowing
-			%	XCorr = obj.computeShadowingLoss(TxNode, RxNode.Position, LOS);
-			%	lossdB = lossdB + XCorr;
-			%end
+			PL_tw = buildingloss3gpp38901(materials, txConfig.freq/10e2);
+			
+			% If indoor depth can be computed
+			%PL_in = indoorloss3gpp38901('', 2d_in);
+			% Otherwise sample from uniform
+			PL_in  = indoorloss3gpp38901(userConfig.areaType);
+			indoorLoss = PL_tw + PL_in + randn(1, 1)*sigma_P;
+			
+			
 		end
 		
-		function [lossdB] = computePathLoss(obj, TxNode, RxNode, Freq)
+		function [lossdB] = computePathLoss(obj, txConfig, userConfig)
 			% Computes path loss. uses the following parameters
 			% TODO revise function documentation format
 			% ..todo:: Compute indoor depth from mobility class
@@ -415,101 +518,83 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% * `shadowing` - Boolean for enabling/disabling shadowing using log-normal distribution
 			% * `avgBuilding` - Average height of buildings
 			% * `avgStreetWidth` - Average width of the streets
-			f = Freq/10e2; % Frequency in GHz
-			hBs = TxNode.Position(3);
-			hUt = RxNode.Position(3);
-			distance2d =  obj.Channel.getDistance(TxNode.Position(1:2),RxNode.Position(1:2));
-			distance3d = obj.Channel.getDistance(TxNode.Position,RxNode.Position);
+			% * `varargin` -matrix forms of distance 2D, 3D and grid of positions
 			
-			areatype = obj.Channel.getAreaType(TxNode);
-			seed = obj.Channel.getLinkSeed(RxNode, TxNode);
-			[LOS, prop] = obj.Channel.isLinkLOS(TxNode, RxNode, false );
-			if ~isnan(prop)
-				% LOS state is determined by comparing with spatial map of
-				% random variables, if the probability of determining LOS
-				% is used.
-				LOS = obj.spatialLOSstate(TxNode, RxNode.Position, prop);
+			% Extract transmitter configurations. All scalar values.
+			hBs = txConfig.hBs;
+			freq = txConfig.freq/10e2; % Convert to GHz
+			areaType = txConfig.areaType;
+			
+			% Extract receiver configuration, can be arrays.
+			hUt = userConfig.hUt;
+			distance2d = userConfig.d2d;
+			distance3d = userConfig.d3d;
+			LOS = userConfig.LOS;
+			
+			% Check whether we have buildings in the scenario
+			if ~isempty(obj.Channel.BuildingFootprints)
+				avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
+				avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
+			else
+				avgBuilding = 0;
+				avgStreetWidth = 0;
 			end
 			
-			shadowing = obj.Channel.enableShadowing;
-			avgBuilding = mean(obj.Channel.BuildingFootprints(:,5));
-			avgStreetWidth = obj.Channel.BuildingFootprints(2,2)-obj.Channel.BuildingFootprints(1,4);
 			try
-				lossdB = loss3gpp38901(areatype, distance2d, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+				lossdB = loss3gpp38901(areaType, distance2d, distance3d, freq, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
 			catch ME
 				if strcmp(ME.identifier,'Pathloss3GPP:Range')
 						minRange = 10;
-						lossdB = loss3gpp38901(areatype, minRange, distance3d, f, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+		 				lossdB = loss3gpp38901(areaType, minRange, distance3d, freq, hBs, hUt, avgBuilding, avgStreetWidth, LOS);
+				else
+					obj.Channel.Logger.log('Pathloss computation error', 'ERR')
 				end
 			end
 			
-			if RxNode.Mobility.Indoor
-				% Low loss model consists of LOS
-				materials = {'StandardGlass', 'Concrete'; 0.3, 0.7};
-				sigma_P = 4.4;
-				
-				% High loss model consists of
-				%materials = {'IIRGlass', 'Concrete'; 0.7, 0.3}
-				%sigma_P = 6.5;
-				
-				PL_tw = buildingloss3gpp38901(materials, f);
-				
-				% If indoor depth can be computed
-				%PL_in = indoorloss3gpp38901('', 2d_in);
-				% Otherwise sample from uniform
-				PL_in  = indoorloss3gpp38901(areatype);
-				indoorLosses = PL_tw + PL_in + randn(1, 1)*sigma_P;
-				lossdB = lossdB + indoorLosses;
-			end
-		
-			if shadowing
-				XCorr = obj.computeShadowingLoss(TxNode, RxNode.Position, LOS);
-				lossdB = lossdB + XCorr;
-			end			
 		end
 		
-
-		function addFading(obj, station, user, mode)
+		
+		function tempVar = addFading(obj, Cell, User, mode, tempVar)
 			% addFading
 			%
 			% :param obj:
-			% :param station:
-			% :param user:
+			% :param Cell:
+			% :param User:
 			% :param mode:
 			%
 			% TODO: Add possibility to change the fading model used from parameters.
 			%
-
+			
 			fadingmodel = 'tdl';
 			% UT velocity in km/h
-			v = user.Mobility.Velocity * 3.6;          
-
+			v = User.Mobility.Velocity * 3.6;
+			
 			% Determine channel randomness/correlation
 			if obj.Channel.enableReciprocity
-				seed = obj.Channel.getLinkSeed(user, station);
+				seed = obj.Channel.getLinkSeed(User, Cell);
 			else
 				switch mode
 					case 'downlink'
-						seed = obj.Channel.getLinkSeed(user, station)+2;
+						seed = obj.Channel.getLinkSeed(User, Cell)+2;
 					case 'uplink'
-						seed = obj.Channel.getLinkSeed(user, station)+3;
-				end	
+						seed = obj.Channel.getLinkSeed(User, Cell)+3;
+				end
 			end
-
+			
 			% Extract carrier frequncy and sampling rate
 			switch mode
 				case 'downlink'
-					fc = station.Tx.Freq*10e5;          % carrier frequency in Hz
-					samplingRate = station.Tx.WaveformInfo.SamplingRate;
+					fc = Cell.Tx.Freq*10e5;          % carrier frequency in Hz
+					samplingRate = Cell.Tx.WaveformInfo.SamplingRate;
 				case 'uplink'
-					fc = user.Tx.Freq*10e5;          % carrier frequency in Hz
-					samplingRate = user.Tx.WaveformInfo.SamplingRate;
+					fc = User.Tx.Freq*10e5;          % carrier frequency in Hz
+					samplingRate = User.Tx.WaveformInfo.SamplingRate;
 			end
-
+			
 			c = physconst('lightspeed'); % speed of light in m/s
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
-			sig = [obj.TempSignalVariables.RxWaveform;zeros(200,1)];
-
+			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
+			
 			switch fadingmodel
 				case 'cdl'
 					cdl = nrCDLChannel;
@@ -523,16 +608,16 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					cdl.ReceiveAntennaArray.Size = [1 1 1 1 1];
 					cdl.SampleDensity = 256;
 					cdl.Seed = seed;
-					obj.TempSignalVariables.RxWaveform = cdl(sig);
+					tempVar.RxWaveform = cdl(sig);
 				case 'tdl'
 					tdl = nrTDLChannel;
-
+					
 					% Set transmission direction for MIMO correlation
 					switch mode
 						case 'downlink'
-						tdl.TransmissionDirection = 'Downlink';
+							tdl.TransmissionDirection = 'Downlink';
 						case 'uplink'
-						tdl.TransmissionDirection = 'Uplink';
+							tdl.TransmissionDirection = 'Uplink';
 					end
 					% TODO: Add MIMO to fading channel
 					tdl.DelayProfile = 'TDL-E';
@@ -546,80 +631,80 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					tdl.Seed = seed;
 					%tdl.KFactorScaling = true;
 					%tdl.KFactor = 3;
-					[obj.TempSignalVariables.RxWaveform, obj.TempSignalVariables.RxPathGains, ~] = tdl(sig);
-					obj.TempSignalVariables.RxPathFilters = getPathFilters(tdl);
+					[tempVar.RxWaveform, tempVar.RxPathGains, ~] = tdl(sig);
+					tempVar.RxPathFilters = getPathFilters(tdl);
 			end
 		end
 		
 		%%% UTILITY FUNCTIONS
-		function config = findStationConfig(obj, station)
-			% findStationConfig finds the station config
-			% 
+		function config = findCellConfig(obj, Cell)
+			% findCellConfig finds the Cell config
+			%
 			% :param obj:
-			% :param station:
+			% :param Cell:
 			% :returns config:
 			%
-
-			stationString = sprintf('station%i',station.NCellID);
-			config = obj.StationConfigs.(stationString);
+			
+			cellString = sprintf('Cell%i',Cell.NCellID);
+			config = obj.CellConfigs.(cellString);
 		end
-
-		function h = getImpulseResponse(obj, Mode, Station, User)
+		
+		function h = getImpulseResponse(obj, Mode, Cell, User)
 			% Plotting of impulse response applied from TxNode to RxNode
 			%
 			% :param obj:
 			% :param Mode:
-			% :param Station:
-			% :param user:
+			% :param Cell:
+			% :param User:
 			% :returns h:
 			%
-
-			% Find pairing 
-
+			
+			% Find pairing
+			
 			% Find stored pathfilters
 			
 			% return plot of impulseresponse
 			h = sum(obj.TempSignalVariables.RxPathFilters,2);
 		end
-
+		
 		function h = getPathGains(obj)
 			% getPathGains
 			%
 			% :param obj:
 			% :returns h:
 			%
-
+			
 			h = sum(obj.TempSignalVariables.RxPathGains,2);
 		end
 		
-		function setWaveform(obj, TxNode)
+		function tempVar = setWaveform(obj, TxNode, tempVar)
 			% Copies waveform and waveform info from tx module to temp variables
-			% 
+			%
 			% :param obj:
 			% :param TxNode:
-			% 
-
+			%
+			
 			if isempty(TxNode.Tx.Waveform)
-				monsterLog('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
+				obj.Channel.Logger.log('Transmitter waveform is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveform')
 			end
 			
 			if isempty(TxNode.Tx.WaveformInfo)
-				monsterLog('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
+				obj.Channel.Logger.log('Transmitter waveform info is empty.', 'ERR', 'MonsterChannel:EmptyTxWaveformInfo')
 			end
 			
-			obj.TempSignalVariables.RxWaveform = TxNode.Tx.Waveform;
-			obj.TempSignalVariables.RxWaveformInfo =  TxNode.Tx.WaveformInfo;
+			tempVar.Waveform = TxNode.Tx.Waveform;
+			tempVar.WaveformInfo =  TxNode.Tx.WaveformInfo;
 		end
 		
-		function h = plotSFMap(obj, station)
+		function h = plotSFMap(obj, Cell)
 			% plotSFMap
-			% 
+			%
 			% :param obj:
-			% :param station:
+			% :param Cell:
 			% :returns h:
 			%
-
-			config = obj.findStationConfig(station);
+			
+			config = obj.findCellConfig(Cell);
 			h = figure;
 			contourf(config.SpatialMaps.axisLOS(1,:), config.SpatialMaps.axisLOS(2,:), config.SpatialMaps.LOS)
 			hold on
@@ -628,69 +713,66 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			ylabel('y [Meters]')
 		end
 		
-		function RxNode = setReceivedSignal(obj, RxNode, varargin)
+		function RxNode = setReceivedSignal(obj, RxNode, tempVar, varargin)
 			% Copies waveform and waveform info to Rx module, enables transmission.
 			% Based on the class of RxNode, uplink or downlink can be determined
-			% 
+			%
 			% :param obj:
 			% :param RxNode:
 			% :param varargin:
 			% :returns RxNode:
 			%
-
+			
 			if isa(RxNode, 'EvolvedNodeB')
 				userId = varargin{1}.NCellID;
 				RxNode.Rx.createRecievedSignalStruct(userId);
-				RxNode.Rx.ReceivedSignals{userId}.Waveform = obj.TempSignalVariables.RxWaveform;
-				RxNode.Rx.ReceivedSignals{userId}.WaveformInfo = obj.TempSignalVariables.RxWaveformInfo;
-				RxNode.Rx.ReceivedSignals{userId}.RxPwdBm = obj.TempSignalVariables.RxPower;
-				RxNode.Rx.ReceivedSignals{userId}.SNR = obj.TempSignalVariables.RxSNR;
-				RxNode.Rx.ReceivedSignals{userId}.PathGains = obj.TempSignalVariables.RxPathGains;
-				RxNode.Rx.ReceivedSignals{userId}.PathFilters = obj.TempSignalVariables.RxPathFilters;
+				RxNode.Rx.setWaveform(userId, tempVar.RxWaveform, tempVar.WaveformInfo);
+				RxNode.Rx.setRxPw(userId, tempVar.RxPowerWatt);
+				RxNode.Rx.setSNR(userId, tempVar.RxSNR);
+				RxNode.Rx.setSINR(userId, tempVar.RxSINR);
+				RxNode.Rx.setPathConditions(userId, tempVar.RxPathGains, tempVar.RxPathFilters);
 			elseif isa(RxNode, 'UserEquipment')
-				RxNode.Rx.Waveform = obj.TempSignalVariables.RxWaveform;
-				RxNode.Rx.WaveformInfo =  obj.TempSignalVariables.RxWaveformInfo;
-				RxNode.Rx.RxPwdBm = obj.TempSignalVariables.RxPower;
-				RxNode.Rx.SNR = obj.TempSignalVariables.RxSNR;
-				RxNode.Rx.SINR = obj.TempSignalVariables.RxSINR;
-				RxNode.Rx.PathGains = obj.TempSignalVariables.RxPathGains;
-				RxNode.Rx.PathFilters = obj.TempSignalVariables.RxPathFilters;
-			end			
+				RxNode.Rx.setWaveform(tempVar.RxWaveform, tempVar.WaveformInfo);
+				RxNode.Rx.setRxPw(tempVar.RxPowerWatt);
+				RxNode.Rx.setSNR(tempVar.RxSNR);
+				RxNode.Rx.setSINR(tempVar.RxSINR);
+				RxNode.Rx.setPathConditions(tempVar.RxPathGains, tempVar.RxPathFilters);
+			end
 		end
-
-		function storeLinkCondition(obj, index, mode)
+		
+		function storeLinkCondition(obj, index, mode, tempVar)
 			% storeLinkCondition
 			%
 			% :param obj:
 			% :param index:
 			% :param mode:
 			%
-
+			
 			linkCondition = struct();
-			linkCondition.Waveform = obj.TempSignalVariables.RxWaveform;
-			linkCondition.WaveformInfo =  obj.TempSignalVariables.RxWaveformInfo;
-			linkCondition.RxPwdBm = obj.TempSignalVariables.RxPower;
-			linkCondition.SNR = obj.TempSignalVariables.RxSNR;
-			linkCondition.SINR = obj.TempSignalVariables.RxSINR;
-			linkCondition.PathGains = obj.TempSignalVariables.RxPathGains;
-			linkCondition.PathFilters = obj.TempSignalVariables.RxPathFilters;
+			linkCondition.Waveform = tempVar.RxWaveform;
+			linkCondition.WaveformInfo =  tempVar.WaveformInfo;
+			linkCondition.RxPwdBm = tempVar.RxPower;
+			linkCondition.SNR = tempVar.RxSNR;
+			linkCondition.SINR = tempVar.RxSINR;
+			linkCondition.PathGains = tempVar.RxPathGains;
+			linkCondition.PathFilters = tempVar.RxPathFilters;
 			obj.LinkConditions.(mode){index} = linkCondition;
 		end
 		
-		function clearTempVariables(obj)
+		function tempVar = TempVariables(obj, tempVar)
 			% Clear temporary variables. These are used for waveform manipulation and power tracking
 			% The property TempSignalVariables is used, and is a struct of several parameters.
 			%
 			% :param obj:
 			%
-
-			obj.TempSignalVariables.RxPower = [];
-			obj.TempSignalVariables.RxSNR = [];
-			obj.TempSignalVariables.RxSINR = [];
-			obj.TempSignalVariables.RxWaveform = [];
-			obj.TempSignalVariables.RxWaveformInfo = [];
-			obj.TempSignalVariables.RxPathGains = [];
-			obj.TempSignalVariables.RxPathFilters = [];
+			tempVar = struct();
+			tempVar.RxPower = [];
+			tempVar.RxSNR = [];
+			tempVar.RxSINR = [];
+			tempVar.RxWaveform = [];
+			tempVar.RxWaveformInfo = [];
+			tempVar.RxPathGains = [];
+			tempVar.RxPathFilters = [];
 		end
 	end
 	
@@ -698,14 +780,14 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		
 		function createSpatialMaps(obj)
 			% createSpatialMaps
-			% 
+			%
 			% :param obj:
 			%
-
+			
 			% Construct structure for containing spatial maps
-			stationStrings = fieldnames(obj.StationConfigs);
-			for iStation = 1:length(stationStrings)
-				config = obj.StationConfigs.(stationStrings{iStation});
+			cellStrings = fieldnames(obj.CellConfigs);
+			for iCell = 1:length(cellStrings)
+				config = obj.CellConfigs.(cellStrings{iCell});
 				spatialMap = struct();
 				fMHz = config.Tx.Freq;  % Freqency in MHz
 				radius = obj.Channel.getAreaSize(); % Get range of grid
@@ -732,72 +814,56 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				spatialMap.LOSprop = mapLOSprop;
 				spatialMap.axisLOSprop = axisLOSprop;
 				
-				obj.StationConfigs.(stationStrings{iStation}).SpatialMaps = spatialMap;
+				obj.CellConfigs.(cellStrings{iCell}).SpatialMaps = spatialMap;
 			end
 		end
 		
-		function LOS = spatialLOSstate(obj, station, userPosition, LOSprop)
+		function LOS = spatialLOSstate(obj, Cell, userPosition, LOSprop)
 			% Determine spatial LOS state by realizing random variable from
 			% spatial correlated map and comparing to LOS probability. Done
 			% according to 7.6.3.3
 			%
 			% :param obj:
-			% :param station:
+			% :param Cell:
 			% :param userPosition:
 			% :param LOSprop:
 			% :returns LOS:
 			%
-
-			config = obj.findStationConfig(station);
-			map = config.SpatialMaps.LOSprop;
-			axisXY = config.SpatialMaps.axisLOSprop;
-			LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
-			if LOSrealize < LOSprop
-				LOS = 1;
-			else
-				LOS = 0;
-			end
 			
-		end
-
-		function LOS = spatialLOSstateMatrix(obj, station, userPosition, LOSprop)
-			% Determine spatial LOS state by realizing random variable from
-			% spatial correlated map and comparing to LOS probability. Done
-			% according to 7.6.3.3
-			%
-			% :param obj:
-			% :param station:
-			% :param userPosition:
-			% :param LOSprop:
-			% :returns LOS:
-			%
-
-			config = obj.findStationConfig(station);
+			config = obj.findCellConfig(Cell);
 			map = config.SpatialMaps.LOSprop;
 			axisXY = config.SpatialMaps.axisLOSprop;
-			LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
-			if LOSrealize < LOSprop
-				LOS = 1;
+			if length(LOSprop) >1
+				LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(:,1), userPosition(:,2), 'spline');
+				LOSrealize = reshape(LOSrealize, size(LOSprop));
 			else
-				LOS = 0;
+				LOSrealize = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
 			end
+			LOS = LOSprop;
+			LOS(LOSprop > LOSrealize) = 1;
+			LOS(LOSprop < LOSrealize) = 0;
+			%if LOSrealize < LOSprop
+			%	LOS = 1;
+			%else
+			%	LOS = 0;
+			%end
 			
 		end
 		
-		function XCorr = computeShadowingLoss(obj, station, userPosition, LOS)
+		function XCorr = computeShadowingLoss(obj, Cell, userPosition, LOS)
 			% Interpolation between the random variables initialized
 			% provides the magnitude of shadow fading given the LOS state.
 			%
 			% .. todo:: Compute this using the cholesky decomposition as explained in the WINNER II documents of all LSP.
 			%
 			% :param obj:
-			% :param station:
+			% :param Cell:
 			% :param userPosition:
 			% :param LOS:
 			% :returns XCorr:
-			%			
+			%
 			
-			config = obj.findStationConfig(station);
+			config = obj.findCellConfig(Cell);
 			if LOS
 				map = config.SpatialMaps.LOS;
 				axisXY = config.SpatialMaps.axisLOS;
@@ -806,11 +872,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				axisXY = config.SpatialMaps.axisNLOS;
 			end
 			
-			obj.checkInterpolationRange(axisXY, userPosition);
+			obj.checkInterpolationRange(axisXY, userPosition, obj.Channel.Logger);
 			XCorr = interp2(axisXY(1,:), axisXY(2,:), map, userPosition(1), userPosition(2), 'spline');
+			
+			
 		end
-
-
+		
+		
 	end
 	
 	methods (Static)
@@ -823,12 +891,12 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :param fMHz:
 			% :param radius:
 			% :param seed:
-			% :param distribution: 
+			% :param distribution:
 			% :returns map:
 			% :returns xaxis:
 			% :returns yaxis:
 			%
-
+			
 			lambdac=300/fMHz;   % wavelength in m
 			interprate=round(dCorr/lambdac);
 			Lcorr=lambdac*interprate;
@@ -845,13 +913,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		end
 		
 		
-		function checkInterpolationRange(axisXY, Position)
+		function checkInterpolationRange(axisXY, Position, Logger)
 			% Function used to check if the position can be interpolated
 			%
- 			% :param axisXY:
+			% :param axisXY:
 			% :param Position:
 			%
-
+			
 			extrapolation = false;
 			if Position(1) > max(axisXY(1,:))
 				extrapolation = true;
@@ -859,162 +927,35 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				extrapolation = true;
 			elseif Position(2) > max(axisXY(2,:))
 				extrapolation = true;
-			elseif Position(3) < min(axisXY(2,:))
+			elseif Position(2) < min(axisXY(2,:))
 				extrapolation = true;
 			end
 			
 			if extrapolation
 				pos = sprintf('(%s)',num2str(Position));
 				bound = sprintf('(%s)',num2str([min(axisXY(1,:)), min(axisXY(2,:)), max(axisXY(1,:)), max(axisXY(2,:))]));
-				sonohilog(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
+				Logger.log(sprintf('Position of Rx out of bounds. Bounded by %s, position was %s. Increase Channel.getAreaSize',bound,pos), 'ERR')
 			end
 		end
 		
-		function [LOS, varargout] = LOSprobability(Channel, Station, User)
+		function [LOS, prop] = LOSprobability(txConfig, userConfig)
 			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
 			%
-			% :param Channel:
-			% :param Station:
-			% :param User:
-			% :returns LOS:
-			% :returns varargout:
+			% :param txConfig:
+			% :param userConfig:
+			% :returns LOS: LOS boolean
+			% :returns prop: Probability
 			%
-
-			areaType = Channel.getAreaType(Station);
-			dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
+			prop = losProb3gpp38901(txConfig.areaType, userConfig.d2d, userConfig.hUt);
 			
-			% TODO: make this a simplified function 
-			switch areaType
-				case 'RMa'
-					if dist2d <= 10
-						prop = 1;
-					else
-						prop = exp(-1*((dist2d-10)/1000));
-					end
-					
-				case 'UMi'
-					if dist2d <= 18
-						prop = 1;
-					else
-						prop = 18/dist2d + exp(-1*((dist2d)/36))*(1-(18/dist2d));
-					end
-					
-				case 'UMa'
-					if dist2d <= 18
-						prop = 1;
-					else
-						if User.Position(3) <= 13
-							C = 0;
-						elseif (User.Position(3) > 13) && (User.Position(3) <= 23)
-							C = ((User.Position(3)-13)/10)^(1.5);
-						else
-							sonohilog('Error in computing LOS. Height out of range','ERR');
-						end
-						prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
-					end
-					
-				otherwise
-					monsterLog(sprintf('(Monster3GPP38901 - LOSprobability) AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
-			end
-			
-			x = rand;
-			if x > prop
-				LOS = 0;
-			else
-				LOS = 1;
-			end
-			
-			
-			if nargout > 1
-				varargout{1} = prop;
-				varargout{2} = x;
-				varargout{3} = dist2d;
-			end
-		end
-		
-		function [LOS, varargout] = LOSprobabilityMatrix(Channel, Station, User, dist2d)
-			% LOS probability using table 7.4.2-1 of 3GPP TR 38.901
-			%
-			% :param Channel:
-			% :param Station:
-			% :param User:
-			% :param dist2d:
-			% :returns LOS: 
-			% :returns varargout:
-			%
-
-			areaType = Channel.getAreaType(Station);
-			%dist2d = Channel.getDistance(Station.Position(1:2), User.Position(1:2));
-			
-			% TODO: make this a simplified function 
-			switch areaType
-				case 'RMa'
-					%if dist2d <= 10
-					%	prop = 1;
-					%else
-					%	prop = exp(-1*((dist2d-10)/1000));
-					%end
-
-					prop = dist2d;
-					prop(prop<=10)=1;
-					prop(prop~=1)= exp(-1*((prop(prop~=1)-10)/1000));
-					
-				case 'UMi'
-					%if dist2d <= 18
-					%	prop = 1;
-					%else
-					%	prop = 18/dist2d + exp(-1*((dist2d)/36))*(1-(18/dist2d));
-					%end
-
-					prop = dist2d;
-					prop(prop<=18)=1;
-					prop(prop~=1)=18./prop(prop~=1)+ exp(-1*((prop(prop~=1))/36)).*(1-(18./prop(prop~=1)));
-					
-				case 'UMa'
-					%if dist2d <= 18
-					%	prop = 1;
-					%else
-					%	if User.Position(3) <= 13
-					%		C = 0;
-					%	elseif (User.Position(3) > 13) && (User.Position(3) <= 23)
-					%		C = ((User.Position(3)-13)/10)^(1.5);
-					%	else
-					%		sonohilog('Error in computing LOS. Height out of range','ERR');
-					%	end
-					%	prop = (18/dist2d + exp(-1*((dist2d)/63))*(1-(18/dist2d)))*(1+C*(5/4)*(dist2d/100)^3*exp(-1*(dist2d/150)));
-					%end
-
-					if User.Position(3) >23
-						sonohilog('Error in computing LOS. Height out of range','ERR');
-					end
-
-					prop = dist2d;
-					prop(prop<=18)=1;
-					prop(prop~=1 & User.Position(3) <= 13) = (18./prop(prop~=1 & User.Position(3) <= 13) + exp(-1*((prop(prop~=1 & User.Position(3) <= 13))/63)).*(1-(18./prop(prop~=1 & User.Position(3) <= 13))));
-					prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23) = (18./prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23) + exp(-1*((prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23))/63)).*(1-(18./prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)))).*(1+((User.Position(3)-13)/10).^(1.5)*(5/4)*(prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)/100).^3.*exp(-1*(prop(prop~=1 & User.Position(3) > 13 & User.Position(3) <= 23)/150)));
-					
-				otherwise
-					sonohilog(sprintf('AreaType: %s not valid for the LOSMethod %s',areaType, Channel.LOSMethod),'ERR');
-					
-			end
-			
+			% Realize probability
 			x = rand(length(prop(:,1)),length(prop(1,:)));
-			if x > prop
-				LOS = 0;
-			else
-				LOS = 1;
-			end
-
 			LOS = prop;
 			LOS(x>LOS) = 0;
 			LOS(LOS~= 0) =1;
 			
-			
-			if nargout > 1
-				varargout{1} = prop;
-				varargout{2} = x;
-				varargout{3} = dist2d;
-			end
 		end
+		
+		
 	end
 end

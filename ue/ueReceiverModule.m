@@ -1,20 +1,16 @@
 classdef ueReceiverModule < matlab.mixin.Copyable
 	properties
+		ChannelConditions = struct();
+
 		NoiseFigure;
 		EstChannelGrid;
 		NoiseEst;
 		RSSIdBm;
 		RSRQdB;
 		RSRPdBm;
-		SINR;
-		SINRdB;
-		SNR;
-		SNRdB;
-		Waveform;
-  	WaveformInfo;
-		RxPwdBm; % Wideband
-		PathGains; % Used for perfect synchronization
-		PathFilters; % Used for perfect synchronization;
+		
+		Waveform; % Manipulated waveform after offset is applied
+
 		Subframe;
 		EqSubframe;
 		TransportBlock;
@@ -35,6 +31,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		Demod;
 		AntennaArray;
 		ueObj; % Parent UE handle
+		AntennaGain;
 	end
 
 	properties (Access = private)
@@ -51,43 +48,58 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
-			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, Config.Phy.downlinkFrequency*10e5);
+			obj.AntennaGain = Config.Ue.antennaGain;
+			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
 		end
 		
+		function obj = setSNR(obj, SNR)
+			obj.ChannelConditions.SNR = SNR;
+			obj.ChannelConditions.SNRdB = 10*log10(SNR);
+		end
+		
+		function obj = setSINR(obj, SINR)
+			obj.ChannelConditions.SINR = SINR;
+			obj.ChannelConditions.SINRdB = 10*log10(SINR);
+		end
+		
+		function obj = setRxPw(obj, RxPw)
+			obj.ChannelConditions.RxPw = RxPw; % Watt
+			obj.ChannelConditions.RxPwdBm = 10*log10(RxPw)+30;
+		end
+		
+		function obj = setPathConditions(obj, PathGains, PathFilters)
+			% Used for perfect synchronization
+			obj.ChannelConditions.PathGains = PathGains;
+			obj.ChannelConditions.PathFilters = PathFilters;
+		end
+		
+		function obj = setWaveform(obj, Waveform, WaveformInfo)
+			obj.Waveform = Waveform;
+			obj.ChannelConditions.WaveformInfo = WaveformInfo;
+		end
+			
 		function loss = getLoss(obj, TxPosition, RxPosition)
 			% Get loss of receiver module by combining noise figure with gain from antenna element
 			% In the case of an ideal omni directional (isotropic) antenna the loss is equal to the noise figure
 			AntennaGain = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
-			loss = obj.NoiseFigure + AntennaGain{1};
+			loss = -obj.NoiseFigure + AntennaGain{1}  + obj.AntennaGain;
 		end
 
-		function oldValues = getFromHistory(obj, field, stationID)
-			stationfield = strcat('NCellID',int2str(stationID));
-			path = {'HistoryStats', stationfield, field};
+		function oldValues = getFromHistory(obj, field, cellId)
+			cellField = strcat('NCellID',int2str(cellId));
+			path = {'HistoryStats', cellField, field};
 			oldValues = getfield(obj, path{:});
 		end
 		
-		function obj = addToHistory(obj, field, stationID)
-			oldValues = obj.getFromHistory(field, stationID);
-			stationfield = strcat('NCellID',int2str(stationID));
-			path = {'HistoryStats', stationfield, field};
+		function obj = addToHistory(obj, field, cellId)
+			oldValues = obj.getFromHistory(field, cellId);
+			cellField = strcat('NCellID',int2str(cellId));
+			path = {'HistoryStats', cellField, field};
 			newValue = getfield(obj, field);
 			newArray = [oldValues, newValue];
 			obj = setfield(obj, path{:}, newArray);		
 		end
-		
-		
-		function obj = set.SINR(obj,SINR,stationID)
-			% SINR given linear
-			obj.SINR = SINR;
-			obj.SINRdB = 10*log10(SINR);
-		end
-		
-		function obj = set.SNR(obj,SNR)
-			% SNR given linear
-			obj.SNR = SNR;
-			obj.SNRdB = 10*log10(SNR);
-		end
+
 			
 		function obj = set.PropDelay(obj,distance)
 			obj.PropDelay = distance/physconst('LightSpeed');
@@ -129,7 +141,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				% Log block reception
 				obj.logBlockReception();
 			else
-				monsterLog(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
+				obj.ueObj.Logger.log(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Cell(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.logNotDemodulated();
 				obj.CQI = 3;
 
@@ -146,7 +158,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			%
 
 			if isempty(obj.Waveform)
-				monsterLog('(UE RECEIVER MODULE - demodulateWaveform) No waveform detected.', 'ERR', 'MonsterUeReceiverModule:EmptyWaveform')
+				obj.ueObj.Logger.log('(UE RECEIVER MODULE - demodulateWaveform) No waveform detected.', 'ERR', 'MonsterUeReceiverModule:EmptyWaveform')
 			end
 
 			enb = struct(enbObj);
@@ -166,7 +178,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% :param obj: ueReceiverModule instance
 			% 
 			if isempty(obj.Subframe)
-				monsterLog('Empty subframe in receiver module. Did it demodulate?','ERR','MonsterUeReceiverModule:EmptySubframe')
+				obj.ueObj.Logger.log('Empty subframe in receiver module. Did it demodulate?','ERR','MonsterUeReceiverModule:EmptySubframe')
 			end	
 		end
 		
@@ -175,7 +187,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			%
 			% Sets obj.EstChannelGrid (H matrix) and obj.NoiseEst (Noise power variance).
 			enb = struct(enbObj);
-			obj.validateSubframe()
+			obj.validateSubframe();
 			[obj.EstChannelGrid, obj.NoiseEst] = lteDLChannelEstimate(enb, cec, obj.Subframe);
 		end
 		
@@ -187,7 +199,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% Sets obj.EqSubframe
 			obj.validateSubframe()
 			if isempty(obj.EstChannelGrid) || isempty(obj.NoiseEst)
-				monsterLog('Empty channel estimation and noise estimation.','ERR', 'MonsterUeReceiverModule:EmptyChannelEstimation')
+				obj.ueObj.Logger.log('Empty channel estimation and noise estimation.','ERR', 'MonsterUeReceiverModule:EmptyChannelEstimation')
 			end
 
 			obj.EqSubframe = lteEqualizeMMSE(obj.Subframe, obj.EstChannelGrid, obj.NoiseEst);
@@ -237,13 +249,13 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			EVM.AveragingDimensions = [1 2];
 			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
-			monsterLog(s,'NFO0')
+			obj.ueObj.Logger.log(s,'NFO0');
 			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
 			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
-			monsterLog(s,'NFO0')
+			obj.ueObj.Logger.log(s,'NFO0');
 		end
 		
 		% select CQI
@@ -251,7 +263,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			enb = struct(enbObj);
 			[obj.CQI, obj.SINRS] = lteCQISelect(enb, enbObj.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
 			if isnan(obj.CQI)
-				monsterLog('CQI is NaN - something went wrong in the selection.','ERR')
+				obj.ueObj.Logger.log('CQI is NaN - something went wrong in the selection.','ERR');
 			end
     end
     
@@ -278,7 +290,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			%		Note:
 			% 		Since the OFDM demodulator/reference is assuming power is in dBm, 
 			%       the factor of 30 dB which is used when converting to dBm needs to be removed, thus the -30
-			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.RxPwdBm-30)); %Apply recieved power to waveform.
+			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.ChannelConditions.RxPwdBm-30)); %Apply recieved power to waveform.
 			meas = hRSMeasurements(enb,Subframe);
 			obj.RSRPdBm = meas.RSRPdBm;
 			obj.RSSIdBm = meas.RSSIdBm;
@@ -291,8 +303,17 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% 2. Offset computation using xcorr and PSS/SSS signals
 			% 
 			% Updates obj.Waveform
-			if obj.PerfectSynchronization && ~isempty(obj.PathGains)
-				obj.Offset = nrPerfectTimingEstimate(obj.PathGains,obj.PathFilters);
+			PathGainsSet = false; % Stupid matlab
+			if ~isempty(fieldnames(obj.ChannelConditions))
+				if isfield(obj.ChannelConditions,'PathGains')
+					if ~isempty(obj.ChannelConditions.PathGains)
+						PathGainsSet = true;
+					end
+				end
+			end
+			
+			if obj.PerfectSynchronization && PathGainsSet
+				obj.Offset = nrPerfectTimingEstimate(obj.ChannelConditions.PathGains,obj.ChannelConditions.PathFilters);
 			else
 				obj.computeOffset(enbObj);
 			end
@@ -330,7 +351,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 					errEx = 0;
 					tot = length(tbTx);
 				else
-					monsterLog('(UE RECEIVER MODULE - logBlockReception) TBs sizes mismatch', 'WRN');
+					obj.ueObj.Logger.log('(UE RECEIVER MODULE - logBlockReception) TBs sizes mismatch', 'WRN');
 					% In this case, we do the xor between the minimum common set of bits
 					if sizeCheck > 0
 						% the original TB was bigger than the received one, so test on the
@@ -386,12 +407,8 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.RSSIdBm = [];
 			obj.RSRQdB = [];
 			obj.RSRPdBm = [];
-			obj.SINR = [];
-			obj.SINRdB = [];
-			obj.SNR = [];
-			obj.SNRdB = [];
+			obj.ChannelConditions = struct();
 			obj.Waveform = [];
-			obj.RxPwdBm = [];
 			obj.Subframe = [];
 			obj.EstChannelGrid = [];
 			obj.EqSubframe = [];

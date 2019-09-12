@@ -11,7 +11,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		powerState;
 		ber;
 		snrdB;
-		sinrdB
+		sinrdB;
+		estsinrdB;
 		bler;
 		cqi;
 		preEvm;
@@ -33,10 +34,10 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			obj.infoUtilLo = Config.Son.utilLow;
 			obj.infoUtilHi = Config.Son.utilHigh;
 			% Initialise for eNodeB
-			numEnodeBs = Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number;
+			numEnodeBs = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite + Config.MicroEnb.sitesNumber * Config.MicroEnb.cellsPerSite;
 			obj.util = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			obj.powerConsumed = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.subframes) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Config.Harq.active
 				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
@@ -48,6 +49,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.sinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.estsinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.cqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
@@ -60,73 +62,73 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Stations, Config)
+		function obj = recordEnbMetrics(obj, Cells, Config, Logger)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = Config.Runtime.currentRound + 1;
-			obj = obj.recordUtil(Stations, schRound);
-			obj = obj.recordPower(Stations, schRound, Config.Son.powerScale, Config.Son.utilLow);
-			obj = obj.recordSchedule(Stations, schRound);
-			obj = obj.recordPowerState(Stations, schRound);
+			obj = obj.recordUtil(Cells, schRound);
+			obj = obj.recordPower(Cells, schRound, Config.Son.powerScale, Config.Son.utilLow, Logger);
+			obj = obj.recordSchedule(Cells, schRound);
+			obj = obj.recordPowerState(Cells, schRound);
 			if Config.Harq.active
-				obj = obj.recordHarqRtx(Stations, schRound);
-				obj = obj.recordArqRtx(Stations, schRound);
+				obj = obj.recordHarqRtx(Cells, schRound);
+				obj = obj.recordArqRtx(Cells, schRound);
 			end
 		end
 		
-		function obj = recordUtil(obj, Stations, schRound)
-			for iStation = 1:length(Stations)
-				sch = find([Stations(iStation).ScheduleDL.UeId] ~= -1);
-				utilPercent = 100*find(sch, 1, 'last' )/length(Stations(iStation).ScheduleDL);
+		function obj = recordUtil(obj, Cells, schRound)
+			for iCell = 1:length(Cells)
+				sch = find([Cells(iCell).ScheduleDL.UeId] ~= -1);
+				utilPercent = 100*find(sch, 1, 'last' )/length(Cells(iCell).ScheduleDL);
 				
 				% check utilPercent and change to 0 if null
 				if isempty(utilPercent)
 					utilPercent = 0;
 				end
 				
-				obj.util(schRound, iStation) = utilPercent;
+				obj.util(schRound, iCell) = utilPercent;
 			end
 		end
 		
-		function obj = recordPower(obj, Stations, schRound, otaPowerScale, utilLo)
-			for iStation = 1:length(Stations)
-				if ~isempty(obj.util(schRound, iStation))
-					Stations(iStation) = Stations(iStation).calculatePowerIn(obj.util(schRound, iStation)/100, otaPowerScale, utilLo);
-					obj.powerConsumed(schRound, iStation) = Stations(iStation).PowerIn;
+		function obj = recordPower(obj, Cells, schRound, otaPowerScale, utilLo, Logger)
+			for iCell = 1:length(Cells)
+				if ~isempty(obj.util(schRound, iCell))
+					Cells(iCell) = Cells(iCell).calculatePowerIn(obj.util(schRound, iCell)/100, otaPowerScale, utilLo);
+					obj.powerConsumed(schRound, iCell) = Cells(iCell).PowerIn;
 				else
-					monsterLog('(METRICS RECORDER - recordPower) metric cannot be recorded. Please call recordUtil first.','ERR')
+					Logger.log('(METRICS RECORDER - recordPower) metric cannot be recorded. Please call recordUtil first.','ERR')
 				end
 			end
 		end
 		
-		function obj = recordSchedule(obj, Stations, schRound)
-			for iStation = 1:length(Stations)
-				numPrbs = length(Stations(iStation).ScheduleDL);
-				obj.schedule(schRound, iStation, 1:numPrbs) = Stations(iStation).ScheduleDL;
+		function obj = recordSchedule(obj, Cells, schRound)
+			for iCell = 1:length(Cells)
+				numPrbs = length(Cells(iCell).ScheduleDL);
+				obj.schedule(schRound, iCell, 1:numPrbs) = Cells(iCell).ScheduleDL;
 			end
 		end
 		
-		function obj = recordHarqRtx(obj, Stations, schRound)
-			for iStation = 1:length(Stations)
-				harqProcs = [Stations(iStation).Mac.HarqTxProcesses.processes];
-				obj.harqRtx(schRound, iStation) = sum([harqProcs.rtxCount]);
+		function obj = recordHarqRtx(obj, Cells, schRound)
+			for iCell = 1:length(Cells)
+				harqProcs = [Cells(iCell).Mac.HarqTxProcesses.processes];
+				obj.harqRtx(schRound, iCell) = sum([harqProcs.rtxCount]);
 			end
 		end
 		
-		function obj = recordArqRtx(obj, Stations, schRound)
-			for iStation = 1:length(Stations)
-				arqProcs = [Stations(iStation).Rlc.ArqTxBuffers.tbBuffer];
-				obj.arqRtx(schRound, iStation) = sum([arqProcs.rtxCount]);
+		function obj = recordArqRtx(obj, Cells, schRound)
+			for iCell = 1:length(Cells)
+				arqProcs = [Cells(iCell).Rlc.ArqTxBuffers.tbBuffer];
+				obj.arqRtx(schRound, iCell) = sum([arqProcs.rtxCount]);
 			end
 		end
 		
-		function obj = recordPowerState(obj, Stations, schRound)
-			for iStation = 1:length(Stations)
-				obj.powerState(schRound, iStation) = Stations(iStation).PowerState;
+		function obj = recordPowerState(obj, Cells, schRound)
+			for iCell = 1:length(Cells)
+				obj.powerState(schRound, iCell) = Cells(iCell).PowerState;
 			end
 		end
 		
 		% UE metrics
-		function obj = recordUeMetrics(obj, Users, schRound)
+		function obj = recordUeMetrics(obj, Users, schRound, Logger)
 			% Increment the scheduling round for Matlab's indexing
 			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
@@ -176,16 +178,19 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSnrdB(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.SNR)
-					obj.snrdB(schRound, iUser) = 10*log10(Users(iUser).Rx.SNR);
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
+					obj.snrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SNRdB;
 				end
 			end
 		end
 		
 		function obj = recordSinrdB(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.SINR)
-					obj.sinrdB(schRound, iUser) = 10*log10(Users(iUser).Rx.SINR);
+				if ~isempty(Users(iUser).Rx.SINRS)
+					obj.estsinrdB(schRound, iUser) = Users(iUser).Rx.SINRS;
+				end
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
+					obj.sinrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SINRdB;
 				end
 			end
 		end
@@ -221,8 +226,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordReceivedPowerdBm(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.RxPwdBm)
-					obj.receivedPowerdBm(schRound, iUser) = Users(iUser).Rx.RxPwdBm;
+				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
+					obj.receivedPowerdBm(schRound, iUser) = Users(iUser).Rx.ChannelConditions.RxPwdBm;
 				end
 			end
 		end

@@ -2,6 +2,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 	%   EVOLVED NODE B defines a value class for creating and working with eNodeBs
 	properties
 		NCellID;
+		SiteId;
+		MacroCellId;
 		DuplexMode;
 		Position;
 		NDLRB;
@@ -23,7 +25,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		NSubframe;
 		BsClass;
 		PowerState;
-		Neighbours;
 		HystCount;
 		SwitchCount;
 		Pmax;
@@ -39,34 +40,34 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		PowerIn;
 		ShouldSchedule;
 		Utilisation;
+		Logger;
 	end
 	
 	methods
 		% Constructor
-		function obj = EvolvedNodeB(Config, BsClass, cellId)
-			switch BsClass
+		function obj = EvolvedNodeB(Config, Logger, CellConfig, cellId, antennaBearing)
+			obj.Logger = Logger;
+			obj.SiteId = CellConfig.siteId;
+			obj.MacroCellId = CellConfig.macroCellId;
+			obj.BsClass = CellConfig.class;
+			% Set the cell position that corresponds to the site position
+			obj.Position = CellConfig.position;
+			obj.NCellID = cellId;
+			obj.Seed = cellId*Config.Runtime.seed;
+			switch obj.BsClass
 				case 'macro'
-					obj.NDLRB = Config.MacroEnb.subframes;
-					obj.Pmax = 20; % W
+					obj.NDLRB = Config.MacroEnb.numPRBs;
+					obj.Pmax = Config.MacroEnb.Pmax; % W
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
 				case 'micro'
-					obj.NDLRB = Config.MicroEnb.subframes;
-					obj.Pmax = 6.3; % W
+					obj.NDLRB = Config.MicroEnb.numPRBs;
+					obj.Pmax = Config.MicroEnb.Pmax; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
-				case 'pico'
-					obj.NDLRB = Config.PicoEnb.subframes;
-					obj.Pmax = 0.13; % W
-					obj.P0 = 6.8; % W
-					obj.DeltaP = 4.0;
-					obj.Psleep = 4.3; % W
 			end
-			obj.BsClass = BsClass;
-			obj.NCellID = cellId;
-			obj.Seed = cellId*Config.Runtime.seed;
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -82,7 +83,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.PowerState = 1;
-			obj.Neighbours = zeros(1, Config.MacroEnb.number + Config.MicroEnb.number + Config.PicoEnb.number - 1);
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
 			obj.DlFreq = Config.Phy.downlinkFrequency;
@@ -90,15 +90,13 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
 				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
-			obj.Tx = enbTransmitterModule(obj, Config);
+			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
 			obj.Users(1:Config.Ue.number) = struct('UeId', -1, 'CQI', -1, 'RSSI', -1);
 			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
 			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
-			% Should look up position based on class here, not outside
-			
 		end
 		
 		function s = struct(obj)
@@ -119,8 +117,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% TODO: Move this to TransmitterModule?
 			% Function computes transmission power based on NDLRB
 			% Return power per subcarrier. (OFDM symbol)
-			total_power = obj.Pmax;
-			TxPw = total_power/(12*obj.NDLRB);
+			totalPower = obj.Pmax;
+			TxPw = totalPower/(12*obj.NDLRB);
 		end
 		
 		% reset users
@@ -139,35 +137,10 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function [indPdsch, info] = getPDSCHindicies(obj)
+            enbObj = obj;
 			enb = struct(obj);
 			% get PDSCH indexes
-			[indPdsch, info] = ltePDSCHIndices(enb, enb.Tx.PDSCH, enb.Tx.PDSCH.PRBSet);
-		end
-		
-		% create list of neighbours
-		function obj = setNeighbours(obj, Stations, Config)
-			% the macro eNodeB has neighbours all the micro
-			if strcmp(obj.BsClass,'macro')
-				obj.Neighbours(1:Config.MicroEnb.number + Config.PicoEnb.number) = find([Stations.NCellID] ~= obj.NCellID);
-				% the micro eNodeBs only get the macro as neighbour and all the micro eNodeBs
-				% in a circle of radius Config.Son.neighbourRadius
-			else
-				for iStation = 1:length(Stations)
-					if strcmp(Stations(iStation).BsClass, 'macro')
-						% insert in array at lowest index with 0
-						ix = find(not(obj.Neighbours), 1 );
-						obj.Neighbours(ix) = Stations(iStation).NCellID;
-					elseif Stations(iStation).NCellID ~= obj.NCellID
-						pos = obj.Position(1:2);
-						nboPos = Stations(iStation).Position(1:2);
-						dist = pdist(cat(1, pos, nboPos));
-						if dist <= Config.Son.neighbourRadius
-							ix = find(not(obj.Neighbours), 1 );
-							obj.Neighbours(ix) = Stations(iStation).NCellID;
-						end
-					end
-				end
-			end
+			[indPdsch, info] = ltePDSCHIndices(enb, enbObj.Tx.PDSCH, enbObj.Tx.PDSCH.PRBSet);
 		end
 
 		function [minMCS, varargout] = getMCSDL(obj, ue)
@@ -177,8 +150,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Optional: returns list of MCS
 			idxUE = obj.getPRBSetDL(ue);
 			listMCS = [obj.ScheduleDL(idxUE).Mcs];
-            minMCS = min(listMCS);
-            varargout{1} = listMCS;
+			minMCS = min(listMCS);
+			varargout{1} = listMCS;
 		end
 		
 		function mod = getModulationDL(obj, ue)
@@ -192,7 +165,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Return list of PRBs assigned to a specific user
 			%
 			% Return PRB set of specific user
-            PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
+    	PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
 		end
 				
 		
@@ -234,7 +207,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						if length(cwd) ~= SymInfo.G
 							% In this case seomthing went wrong with the rate maching and in the
 							% creation of the codeword, so we need to flag it
-							monsterLog('(EVOLVED NODE B - setupPdsch) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
+							obj.Logger.log('(EVOLVED NODE B - setupPdsch) Something went wrong in the codeword creation and rate matching. Size mismatch','WRN');
 						end
 						
 						% error handling for symbol creation
@@ -243,7 +216,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						catch ME
 							fSpec = '(EVOLVED NODE B - setupPdsch) generation failed for codeword with length %i\n';
 							s=sprintf(fSpec, length(cwd));
-							monsterLog(s,'WRN')
+							obj.Logger.log(s,'WRN')
 							sym = [];
 						end
 						
@@ -273,12 +246,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			userIds = unique([obj.ScheduleUL]);
 		end
 		
-		function obj = evaluatePowerState(obj, Config, Stations)
+		function obj = evaluatePowerState(obj, Config, Cells)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
 			%
 			% :obj: EvolvedNodeB instance
 			% :Config: MonsterConfig instance
-			% :Stations: Array<EvolvedNodeB> instances in case neighbours are needed
+			% :Cells: Array<EvolvedNodeB> instances in case neighbours are needed
 			%
 			
 			% overload
@@ -288,21 +261,18 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				if obj.HystCount >= Config.Son.hysteresisTimer/10^-3
 					% The overload has exceeded the hysteresis timer, so find an inactive
 					% neighbour that is micro to activate
-					nboMicroIxs = find([obj.Neighbours] ~= Stations(1).NCellID);
+					nboMicroIxs = find([obj.Cells.NCellID] ~= Cells(1).NCellID);
 					
 					% Loop the neighbours to find an inactive one
 					for iNbo = 1:length(nboMicroIxs)
-						if nboMicroIxs(iNbo) ~= 0
-							% find this neighbour in the stations
-							nboIx = find([Stations.NCellID] == obj.Neighbours(nboMicroIxs(iNbo)));
-							
+						if nboMicroIxs(iNbo) ~= 0							
 							% Check if it can be activated
-							if (~isempty(nboIx) && Stations(nboIx).PowerState == 5)
+							if (~isempty(nboIx) && Cells(iNbo).PowerState == 5)
 								% in this case change the PowerState of the target neighbour to "boot"
 								% and reset the hysteresis and the switching on/off counters
-								Stations(nboIx).PowerState = 6;
-								Stations(nboIx).HystCount = 0;
-								Stations(nboIx).SwitchCount = 0;
+								Cells(nboIx).PowerState = 6;
+								Cells(nboIx).HystCount = 0;
+								Cells(nboIx).SwitchCount = 0;
 								break;
 							end
 						end
@@ -347,7 +317,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.PowerState = 1;
 				obj.HystCount = 0;
 				obj.SwitchCount = 0;
-				
 			end
 		end
 		
@@ -357,12 +326,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			associatedUEs = find([obj.Users.UeId] ~= -1);
 			% If the quota of PRBs is enough for all, then all are scheduled
 			if ~isempty(associatedUEs)
-				prbQuota = floor(Config.Ue.subframes/length(associatedUEs));
+				prbQuota = floor(Config.Ue.numPRBs/length(associatedUEs));
 				% Check if the quota is not below 6, in such case we need to rotate the users
 				if prbQuota < 6
 					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
 					prbQuota = 6;
-					ueMax = floor(Config.Ue.subframes/prbQuota);
+					ueMax = floor(Config.Ue.numPRBs/prbQuota);
 					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
 					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
 					iDiff = 0;
@@ -393,7 +362,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					% In this case, all connected UEs can be scheduled, so RR can be reset
 					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
 				end
-				prbAvailable = Config.Ue.subframes;
+				prbAvailable = Config.Ue.numPRBs;
 				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
 				for iUser = 1:length(associatedUEs)
 					if prbAvailable >= prbQuota
@@ -402,7 +371,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						scheduledUEs(iStart + 1:iStop) = obj.Users(associatedUEs(iUser)).UeId;
 						prbAvailable = prbAvailable - prbQuota;
 					else
-						monsterLog('Some UEs have not been scheduled in UL due to insufficient PRBs', 'NFO');
+						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
 						break;
 					end
 				end
@@ -510,7 +479,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
-				monsterLog(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'NFO');
+				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
 			else				
 				% IDs of users and their position in the Users struct correspond
 				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
@@ -542,10 +511,9 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		function obj = uplinkDataDecoding(obj, Users, Config)
 			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
 			%
-			% :obj: EvolvedNodeB instance
-			% :Users: Array<UserEquipment> UEs instances
-			% :Config: MonsterConfig instance
-			%
+			% :param obj: EvolvedNodeB instance
+			% :param Users: Array<UserEquipment> UEs instances
+			% :param Config: MonsterConfig instance
 			
 			% Filter UEs linked to this eNodeB
 			timeNow = Config.Runtime.currentTime;
@@ -567,7 +535,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 						[harqPid, harqAck] = obj.Mac.HarqTxProcesses(harqIndex).decodeHarqFeedback(obj.Rx.UeData(iUser).PUCCH);
 						
 						if ~isempty(harqPid)
-							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config);
+							[obj.Mac.HarqTxProcesses(harqIndex), state, sqn] = obj.Mac.HarqTxProcesses(harqIndex).handleReply(harqPid, harqAck, timeNow, Config, obj.Logger);
 							
 							% Contact ARQ based on the feedback
 							if Config.Arq.active && ~isempty(sqn)

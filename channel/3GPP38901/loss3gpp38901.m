@@ -4,7 +4,7 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 	%
 	% by Jakob Thrane, DTU Fotonik, 2018
 	%
-	% V1.1 - implementing matrix oprations for matrix of 2d and 3d positions
+	% V1.1 - implementing matrix operations for matrix of 2d and 3d positions
 	% By Markus Greve Bech, DTU Fotonik, 2019
 	% 
 	% Scenario =
@@ -67,7 +67,7 @@ function lossdB = loss3gpp38901(Scenario, d_2d, d_3d, f_c, h_bs, h_ut, h, W, LOS
 			end
 			
 			if (h_bs < 10) || (h_bs > 150)
-				error('Base station height not within range [5m, 150m]')
+				error('Cell height not within range [5m, 150m]')
 			end
 			
 			if (h_ut < 1) || (h_ut > 10)
