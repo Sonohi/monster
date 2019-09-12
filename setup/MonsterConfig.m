@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 150;
+			numRounds = 15;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -139,6 +139,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Backhaul.bandwidth = 10^9; % [bps] 
 			Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
 			Backhaul.switchDelay = 10^(-4); %[ms]
+			Backhaul.errorRate = 0.1; %fraction of errors
+			Backhaul.errorMagnitude = 0.5 %Magnitude of error, e.g. 0.5 deletes half the packet when the error occurs
 			obj.Backhaul = Backhaul;
 
 			% Properties related to the traffic 
@@ -146,7 +148,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Traffic = struct();
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0;
+			Traffic.mix = 0.5;
 			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];

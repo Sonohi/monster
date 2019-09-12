@@ -2,7 +2,7 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
     %Calculate the delayed arrival times at the eNB for each user. 
     %This assumes infinite queue at ingress
 
-    Traffic = TrafficIn;
+    Traffic = copy(TrafficIn);
     %Calculate propagation delay
     propDelay = Config.Backhaul.lengthOfMedium / Config.Backhaul.propagationSpeed;
     %Calculate maximum available bitrate [bits/ms]
@@ -13,17 +13,19 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
     t=0;
     %Delayed TrafficSource
     TrafficSource = zeros(Config.Runtime.totalRounds, 2, Config.Ue.number);
+    %Number of errors
+    numErrors = 0;
     for iRound = 1:Config.Runtime.totalRounds
         
         %Add incoming data to the queue
         for iUser = 1:Config.Ue.number
             %Find traffic source for the chosen ID
-            for iTraffic = 1:length(Traffic)
-                if Traffic(iTraffic).AssociatedUeIds(Traffic(iTraffic).AssociatedUeIds==iUser)
-                    for iArrivalTime = 1:length(Traffic(iTraffic).TrafficSource(:,1) )
-                        if Traffic(iTraffic).TrafficSource(iArrivalTime,1) <= t && Traffic(iTraffic).TrafficSource(iArrivalTime,1) > t-10^(-3)
-                            dataQueue(iUser) = dataQueue(iUser) + Traffic(iTraffic).TrafficSource(iArrivalTime,2);
-                        elseif Traffic(iTraffic).TrafficSource(iArrivalTime,1) > t
+            for iTraffic = 1:length(TrafficIn)
+                if TrafficIn(iTraffic).AssociatedUeIds(TrafficIn(iTraffic).AssociatedUeIds==iUser)
+                    for iArrivalTime = 1:length(TrafficIn(iTraffic).TrafficSource(:,1) )
+                        if TrafficIn(iTraffic).TrafficSource(iArrivalTime,1) <= t && TrafficIn(iTraffic).TrafficSource(iArrivalTime,1) > t-10^(-3)
+                            dataQueue(iUser) = dataQueue(iUser) + TrafficIn(iTraffic).TrafficSource(iArrivalTime,2);
+                        elseif TrafficIn(iTraffic).TrafficSource(iArrivalTime,1) > t
                            break; 
                         end
                     end
@@ -36,11 +38,12 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
         totalBits= sum(dataQueue);
         data = zeros(Config.Ue.number,1);
         if totalBits > bitRate %Congestion       
-               data = data + bitRate/Config.Ue.number;
-               dataQueue = dataQueue -bitRate/Config.Ue.number;
+               data(dataQueue >= bitRate/Config.Ue.number) =bitRate/Config.Ue.number;
+               data(dataQueue < bitRate/Config.Ue.number) = dataQueue(dataQueue < bitRate/Config.Ue.number);
+               dataQueue = dataQueue -data;
                while ~dataQueue(dataQueue < 0)
                   %Redistribute where the data should go.
-                  %TODO: redistribute data to make sure it goes where it is supposed to.
+                  %TODO: add scheduler to utilize full bandwidth
 
                   break;
                end
@@ -49,6 +52,12 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
             data = dataQueue;
             dataQueue = zeros(Config.Ue.number,1); %Reset dataQueue as all data is emptied from it.
             transDelay = totalBits/bitRate*10^(-3);
+        end
+        %Add errors - removes data for a user chosen at random
+        if rand <= Config.Backhaul.errorRate
+            randUser = randi([1 Config.Ue.number]);
+            data(randUser) = data(randUser)*Config.Backhaul.errorMagnitude;
+            numErrors = numErrors +1;
         end
         %Add traffic
         TrafficSource(iRound , 2 ,:) = data;
@@ -60,10 +69,16 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
     %Add new trafficSource to Traffic struct
     for iUser = 1:Config.Ue.number
         %Find traffic source for the chosen ID
-        for iTraffic = 1:length(Traffic)
-            if Traffic(iTraffic).AssociatedUeIds(Traffic(iTraffic).AssociatedUeIds==iUser)
-                
-                Traffic(iTraffic).TrafficSource = TrafficSource(:,:,iUser);
+        for iTraffic = 1:length(TrafficIn)
+            if TrafficIn(iTraffic).AssociatedUeIds(TrafficIn(iTraffic).AssociatedUeIds==iUser)
+                Traffic(iUser) = copy(TrafficIn(1));
+                Traffic(iUser).Id = iUser;
+                Traffic(iUser).TrafficType = TrafficIn(iTraffic).TrafficType;
+                Traffic(iUser).ArrivalMode = TrafficIn(iTraffic).ArrivalMode;
+                Traffic(iUser).TrafficSource = TrafficSource(:,:,iUser);
+                Traffic(iUser).AssociatedUeIds = iUser;
+                Traffic(iUser).ArrivalTimes = TrafficIn(iTraffic).ArrivalTimes(TrafficIn(iTraffic).AssociatedUeIds==iUser);
+                break;
             end
         end
     end
