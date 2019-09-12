@@ -1,184 +1,80 @@
 %clear all
 %close all
 
-Config = MonsterConfig();
+
+clear all
+close all
 
 % Make local changes
+Config = MonsterConfig();
 Config.SimulationPlot.runtimePlot = 0;
-Config.Ue.number = 1;
-Config.MacroEnb.number = 1;
-Config.MicroEnb.number = 0;
-Config.PicoEnb.number = 0;
-Config.Channel.shadowingActive = false;
-Config.Channel.losMethod = '3GPP38901-probability';
-Config.Traffic.primary = 'fullBuffer';
-Config.Traffic.mix = 0;
-Config.Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
+Config.Scenario = 'Single Cell';
+Config.MacroEnb.ISD = 300;
+Config.MacroEnb.sitesNumber = 1;
+Config.MacroEnb.cellsPerSite = 1;
+Config.MacroEnb.height = 35;
+Config.MicroEnb.sitesNumber = 0;
 Config.Channel.fadingActive = false;
-Config.Channel.perfectSynchronization = true;
-config.Runtime.totalRounds = 1;
+Config.Ue.number = 1;
+Config.Ue.height = 1.5;
+Config.Traffic.primary = 'fullBuffer';
+Config.Traffic.arrivalDistribution = 'Static';
+Config.Traffic.mix = 0;
 
-Config.setupNetworkLayout();
-%Create used objects
-Station = setupStations(Config);
-%Station.Tx.PDSCH.CSIMode = 'PUCCH 1-1';
-%Station.Tx.PDSCH.RVSeq = [0 0 1 2];
-User = setupUsers(Config);
+Logger = MonsterLog(Config);
+Monster = Monster(Config, Logger);
+Channel = Monster.Channel;
+User = Monster.Users(1);
 User.Position = [190, 295,1.5];
+Cell = Monster.Cells(1);
 
-Channel = setupChannel(Station, User, Config);
 
 %Choice of MCS and their SINR range of interrest [dB]
-MCSlevels=20;%[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
-SINRlevels=[12 ; 16];%[-5.2 -3.5 -2.5 -1 0.2 1.7 4.2 6 7.4 12 12.5 13 15 17.5 17;
-              %-4 -2.25 -1.5 0.2 1.2 2.7 5.2 7 9.5 16 17 18 20 30 30];
+MCSlevels=[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
 
-%Create a figure for plotting
-figure;
-hold on;
+SINRlevels = linspace(-10, 5, 30);
+nMeasurements = 10;
 
-%Run for a number of rounds
-nRounds = 1e2; 
-nMeasurements = 10; %number of SINR's to check.
-BERtemp = zeros(1,nRounds);
-BER = zeros(1, nMeasurements);
-BLERtemp = zeros(1,nRounds);
-BLER = zeros(1,nMeasurements);
-
-for iMCS=1:length(MCSlevels)
-    
-    SINRdB = linspace(SINRlevels(1,iMCS),SINRlevels(2,iMCS),nMeasurements);
-    SINR = 10.^((SINRdB)./10); %Convert to W
-    MCS = MCSlevels(iMCS); %Chosen MCS
-    Station.NSubframe = 1; %Starting subframe
-    %Check for data file for selected MCS level.
-    filestr = sprintf('MCS%d.mat',MCSlevels(iMCS));
-    if ~exist(filestr)
-        %Make new calculation
-        for iMeasurement = 1:nMeasurements
-            Config.Runtime.seed = iMeasurement;
-            [Traffic, User] = setupTraffic(User, Config);
+BLER = zeros(length(MCSlevels), length(SINRlevels),nMeasurements);
+for iMeas = 1:nMeasurements
+Config.Runtime.seed = iMeas;
+[Traffic, User] = setupTraffic(User, Config, Logger);
         
-            for iRound = 1:nRounds
-                Config.Runtime.currentRound = iRound;
-                Config.Runtime.currentTime = iRound*10e-3;  
-                Config.Runtime.remainingTime = (Config.Runtime.totalRounds - Config.Runtime.currentRound)*10e-3;
-                Config.Runtime.remainingRounds = Config.Runtime.totalRounds - Config.Runtime.currentRound - 1;
-                
-                % Update Channel property
-                Channel.setupRound(Config.Runtime.currentRound, Config.Runtime.currentTime);
+Monster.setupRound(0);
+for iMCS = 1:length(MCSlevels)
+% For each SINR value compute BLER
+	for iSINR = 1:length(SINRlevels)
+		SINRdB = SINRlevels(iSINR);
+		SINR = 10.^((SINRdB)./10);
+		%[Traffic, User] = setupTraffic(User, Config, Logger);
+		Monster.associateUsers();
 
-                %Associate user 
-                [User Station] = refreshUsersAssociation(User, Station, Channel, Config);
+		Monster.updateUsersQueues();
+		Monster.scheduleDL();
+		Monster.setupEnbTransmitters();
 
+		for i=1:50
+				Cell.ScheduleDL(i).Mcs = MCSlevels(iMCS);
+		end
 
-                %Set MCS
-                for i=1:50
-                    Station.ScheduleDL(i).Mcs = MCS;
-                end
-                
-                % updateUsersQueues
-                UeTrafficGenerator = Traffic([Traffic.Id] == User.Traffic.generatorId);
-                User.Queue = UeTrafficGenerator.updateTransmissionQueue(User, iRound);
+		% Set SINR
+		NoisySignal = MonsterChannel.AddAWGN(Cell, 'downlink', SINR, Cell.Tx.WaveformInfo.Nfft, Cell.Tx.Waveform);
+		User.Rx.Waveform = NoisySignal;
+		%User.Rx.Waveform = Cell.Tx.Waveform;
+		User.Rx.ChannelConditions.WaveformInfo = Cell.Tx.WaveformInfo;
+		User.Rx.ChannelConditions.RxPwdBm = -20;
 
-                %schedule
-                Station.evaluateScheduling(User);
-                Station.downlinkSchedule(User, Config);
+		% Log block error rate
+		Monster.downlinkUeReception();
+		BLER(iMCS, iSINR, iMeas)= User.Rx.Blocks.err;
+		BER(iMCS, iSINR, iMeas) = User.Rx.Bits.ratio;
 
-                %setupEnbTransmitters
-                User.generateTransportBlockDL(Station, Config);
-                User.generateCodewordDL();    
-                Station.Tx.setupGrid(iRound);
-                Station.setupPdsch(User);
-                Station.Tx.modulateTxWaveform();
-
-                %downlinkTraverse
-                %Changes are made as this is where the noise is added
-
-                %Add noise to waveform depending on SINR
-                %Channel.ChannelModel.addAWGNdl(Station, User, SINR(iMeasurement));
-
-                %downlinkUeReception
-                %User.Rx.computeOffset(Station);
-                %if User.Rx.Offset >=0
-                %    User.Rx.applyOffset(Station); 
-                %end
-                %User.Rx.referenceMeasurements(Station);
-
-
-                %copy waveform to receiver
-                User.Rx.Waveform = Station.Tx.Waveform;
-                User.Rx.WaveformInfo = Station.Tx.WaveformInfo;
-                User.Rx.RxPwdBm = -20;
-                
-                User.Rx.demodulateWaveform(Station);
-
-                if User.Rx.Demod 
-                    % Estimate the channel
-                    User.Rx.estimateChannel(Station, Channel.Estimator.Downlink);
-
-                    % Apply equalization
-                    User.Rx.equaliseSubframe();
-
-                    % Select CQI
-                    User.Rx.selectCqi(Station);
-                    %If CQI returns 0, even though it is demodulated set CQI to 1
-                    if User.Rx.CQI == 0
-                        User.Rx.CQI = 1;
-                    end
-
-                    % Extract PDSCH
-                    User.Rx.estimatePdsch(Station);
-
-                    % Calculate EVM
-                    User.Rx.calculateEvm(Station);
-
-                    % Log block reception
-                    User.Rx.logBlockReception();
-                else
-                    %monsterLog(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Station(%i) -> User(%i)...',Station.NCellID, User.NCellID),'WRN');
-                    User.Rx.logNotDemodulated();
-                    User.Rx.CQI = 3;
-
-                end
-
-                %Data decoding
-                User.downlinkDataDecoding(Config);
-
-                %Find BLER
-                BLERtemp(iRound) = User.Rx.Blocks.err;
-
-                %Compare the transmitted and original data to find errors
-
-                tbRx = User.Rx.TransportBlock;
-                tbTx = User.TransportBlock;
-                if ~isempty(tbRx) && ~isempty(tbTx)
-                    [diff, BERtemp(iRound)] = biterr(tbRx, tbTx);
-                end
-            
-                Station.NSubframe = mod(iRound +1,10);
-                User.reset();
-            end
-            %Record average BLER
-            BER(iMeasurement) = mean(BERtemp);
-            BLER(iMeasurement)=mean(BLERtemp);
-
-        end
-        %Plot
-        semilogy(SINRdB,BLER);
-        hold on;
-        %Save to save time.
-        save(strcat('examples/resultsSINRBLER/',filestr),'SINRdB','BLER');
-    else
-
-        load(filestr);
-        %load and plot
-        semilogy(SINRdB,BLER);
-        hold on;
-    end
-
+	end
 
 end
+end
+figure
+semilogy(SINRlevels,mean(BLER,3))
 xlabel('SNR [dB]');
 ylabel('BLER');
 %Add legend

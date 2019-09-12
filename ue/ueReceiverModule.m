@@ -36,6 +36,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 
 	properties (Access = private)
 		PerfectSynchronization;
+		FadingActive;
 	end
 	
 	methods
@@ -48,6 +49,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
+			obj.FadingActive = Config.Channel.fadingActive;
 			obj.AntennaGain = Config.Ue.antennaGain;
 			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
 		end
@@ -109,7 +111,9 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% Apply the receiver chain for subframe recovery
 			
 			% Find synchronization, apply offset
-			obj.applyOffset(enb);
+			if obj.FadingActive
+				obj.applyOffset(enb);
+			end
 			
 			% Conduct reference measurements
 			obj.referenceMeasurements(enb);
@@ -377,6 +381,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				obj.Bits.tot = tot;
 				obj.Bits.err = diff + errEx;
 				obj.Bits.ok = tot - diff;
+				obj.Bits.ratio = ratio;
 			end
 		end
 			

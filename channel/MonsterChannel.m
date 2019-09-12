@@ -416,6 +416,18 @@ classdef MonsterChannel < matlab.mixin.Copyable
 	
 	methods(Static)
 
+		function noisySignal = AddAWGN(Cell, Mode, SNR, Nfft, Waveform)
+			% Adds AWGN to a waveform based on the magnitude of SNR
+
+			% Compute N0
+			N0 = MonsterChannel.computeSpectralNoiseDensity(Cell, Mode, SNR, Nfft);
+			
+			% Add AWGN
+			noise = N0*complex(randn(size(Waveform)), randn(size(Waveform)));
+			noisySignal = Waveform + noise;
+
+		end
+
 		function N0 = computeSpectralNoiseDensity(Cell, Mode, SNR, Nfft)
 			% Compute spectral noise density NO
 			%
@@ -436,6 +448,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 			
 		end
+
+
 		
 
 		function [SINR, SINRdB] = calculateSINR(receivedPower, inteferingPower, noisePower)

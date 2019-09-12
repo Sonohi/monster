@@ -71,13 +71,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				SNR = tempVar.RxSINR;
 			end
 			
-			% Compute N0
-			N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft);
-			
-			% Add AWGN
-			noise = N0*complex(randn(size(tempVar.Waveform)), randn(size(tempVar.Waveform)));
-			rxSig = tempVar.Waveform + noise;
-			tempVar.RxWaveform = rxSig;
+			noisySignal = obj.Channel.AddAWGN(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft, tempVar.Waveform);
+			tempVar.RxWaveform = noisySignal;
 			
 			% Add fading
 			if obj.Channel.enableFading
