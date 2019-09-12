@@ -7,6 +7,10 @@ classdef Scheduler < matlab.mixin.Copyable
         Logger;
         SchedulerType; % Type of scheduling algorithm used.
 	end
+
+	properties(Access=Private)
+		RoundRobinQueue = []; % Prioritized list of users (FIFO)
+	end
 	
 	methods
 		% Constructor
@@ -42,6 +46,65 @@ classdef Scheduler < matlab.mixin.Copyable
 					% :Mapping: A list of PRBs is returned with corresponding UeId
 					% :NextRound: A list of UeIds which have not been allocated
 					% resources
+
+
+					% Compute the number of resources available
+					numPRBs = length(obj.PRBsActive);
+
+					% Compute the number of users required for scheduling (including those not scheduled previous round)
+					numUsers = length(obj.ScheduledUsers)+length(obj.RoundRobinQueue);
+
+					% Get user Ids from previous round
+					queueIds = [obj.RoundRobinQueue.UeId]; 
+					userIds = [obj.ScheduledUsers.UeId];
+
+					% Removed queued Ids from list of all scheduled users
+					userIds = userIds(userIds ~= queueIds);
+
+					% Compute the minimum number of resources per user
+					minPRBSUser = 10;
+					usedPRBS = 0;
+
+					% Set PRBs per user (prioritize those not scheduled previous round)
+					% Loop through users
+					for iUser = 1:length(queueIds)
+						if usedPRBS >= numPRBs
+							break;
+						end
+						obj.PRBsActive(1+usedPRBS:minPRBSUser+usedPRBS) = struct('UeId', queueIds(iUser));
+						usedPRBS = usedPRBS + 10;
+						% TODO: Remove from queue
+
+					end
+
+					for iUser = 1:length(userIds)
+						if usedPRBS >= numPRBs
+							break;
+						end
+						obj.PRBsActive(1+usedPRBS:minPRBSUser+usedPRBS) = struct('UeId', userIds(iUser));
+						usedPRBS = usedPRBS + 10;
+					end
+
+
+					if usedPRBS < numPRBs
+						obj.Logger.log('Not all resources allocated','WRN')
+					end
+
+					% Update queue for next round
+					scheduled = [obj.PRBsActive.UeId];
+					notscheduled = obj.ScheduledUsers([obj.ScheduledUsers.UeId] ~= scheduled);
+
+					for iUser = 1:length(notscheduled)
+						obj.RoundRobinQueue = [obj.RoundRobinQueue notscheduled(iUser)];
+					end
+
+					
+
+					
+
+					
+
+					
 					
 				end
         
