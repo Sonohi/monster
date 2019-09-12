@@ -254,11 +254,9 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					testCase.Cells(1).Tx.createReferenceSubframe();
 					testCase.Cells(1).Tx.assignReferenceSubframe();
 					
-					testCase.Channel.traverse(testCase.Cells(1), testCase.Users, 'downlink')
+					testCase.Channel.traverse(testCase.Cells(1), testCase.Users, 'downlink');
 					testCase.verifyEqual(round(testCase.Users(1).Rx.ChannelConditions.SINR,2), round(testCase.Users(1).Rx.ChannelConditions.SNR,2))
-					testCase.verifyEqual(round(testCase.Users(1).Rx.ChannelConditions.SINRdB,2), round(testCase.Users(1).Rx.ChannelConditions.SNRdB,2))
-					
-					
+					testCase.verifyEqual(round(testCase.Users(1).Rx.ChannelConditions.SINRdB,2), round(testCase.Users(1).Rx.ChannelConditions.SNRdB,2))				
 				 end
 				
 

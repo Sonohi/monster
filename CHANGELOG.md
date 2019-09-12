@@ -1,7 +1,17 @@
 ## Unreleased
-- Subcarrier-based interference calculation.
 - Simple backhaul network.
 - Uplink PUSCH generation and channel estimation from SRS
+
+## 1.0.1 - 2019-09-12
+
+### Added
+- Added method for calculating the interference from cells in the same tier based on frequency subcarriers.
+- Added method for calculating and recording SINR and CQI both at wide-band and at sub-band level.
+
+### Changed
+- Revised `Channel.interferenceType` attribute in `MonsterConfig` to allow for additional frequency-based interference calculation.
+- Revised CQI and SINRdB properties in `ueReceiverModule` to account for wide-band and sub-band measurements.
+- Revised metric recordings and tests variable names to reflect wide-band and sub-band measurements.
 
 ## 1.0.0 - 2019-08-29
 
