@@ -4,9 +4,6 @@
 MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in MATLAB.
 It uses functions from the toolbox to perform complete DL and UL processing of the main data channel.
 It also simulates a multi-UE and multi-eNodeB scenario.
-The entire framework has just been largely re-factored to adopt a class-based structure that provides better scalability and flexibility.
-It should be considered in **alpha** stage and updated frequently.
-If you encounter bugs or some unexpected behaviour, please open an issue.
 Contributors are welcome and encouraged! 
 We have an always-growing number of feature requests, so feel free to pick or just go ahead with your own, following the style and philosophy of the existing modules.
 
@@ -114,10 +111,11 @@ Once the installation is completed and you are in a virtual environment as per d
 ## Usage 
 Usage of _pyecharts_ can be done in several ways. One option is to rely on [Jupyter notebook](https://jupyter.org/) that is already included in the Anaconda distribution and an integration is also provided when installing _pyecharts_.
 
-# Docs
-Detailed documentation for the project, the various classes mentioned above and more is generated from in-code comments and available [here](https://sonohi.github.io/monster/). 
+# Reference
+If **MONSTeR** turns out to be useful for your investigations, it would be really appreciated if you could cite it in your work, so that other people can find it and hopefully find it useful as well.
+**MONSTeR** is linked with [Zenodo](https://zenodo.org/) to easily generate a **DOI** for each release of the repository. 
+Follow the Zenodo/DOI badge in the repository page to generate a reference in several common formats.
 
-As of June 2019 the docs are being largely revised due to the major changes applied to the project to the more scalable class-based structure.
 
 # Licence
 **MONSTer** is release under **MIT** licence available in copy at the root of the repository.
