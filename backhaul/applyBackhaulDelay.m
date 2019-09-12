@@ -56,7 +56,7 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
         %Add errors - removes data for a user chosen at random
         if rand <= Config.Backhaul.errorRate
             randUser = randi([1 Config.Ue.number]);
-            data(randUser) = data(randUser)*Config.Backhaul.errorMagnitude;
+            data(randUser) = floor(data(randUser)-data(randUser)*Config.Backhaul.errorMagnitude);
             numErrors = numErrors +1;
         end
         %Add traffic
