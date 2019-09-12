@@ -3,6 +3,9 @@ classdef Monster < matlab.mixin.Copyable
 	% An instance of the class Monster has the following properties
 	% 
 	% :Config: (MonsterConfig) simulation config class instance
+	% :Runtime: (Struct) runtime attributes to control the time evolution of the simulation
+	% :Layout: (NetworkLayout) network layout class instance
+	% :Plot: (Struct) properties for runtime plotting 
 	% :Sites: (Array<Site>) simulation cell sites class instances
 	% :Cells: (Array<EvolvedNodeB>) reference to network cells
 	% :Users: (Array<UserEquipment>) simulation UEs class instances
@@ -11,6 +14,9 @@ classdef Monster < matlab.mixin.Copyable
 
 	properties 
 		Config;
+		Runtime;
+		Layout;
+		Plot;
 		Sites;
 		Cells;
 		Users;
@@ -37,10 +43,8 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Logger.log('(MONSTER) simulation setup completed', 'DBG');
 
 			if obj.Config.SimulationPlot.runtimePlot
-				% Draw the eNodeBs
-				obj.Config.Plot.Layout.drawScenario(obj.Config, obj.Sites);
-				% Draw the UEs
-				obj.Config.Plot.Layout.drawUes(obj.Users, obj.Config, obj.Logger);
+				obj.drawSimulationScenario();
+				
 			end
 		end
 
@@ -51,10 +55,22 @@ classdef Monster < matlab.mixin.Copyable
 			% :returns obj: initialised Monster instance
 			%
 
-			% Create network layout
-			obj.Logger.log('(MONSTER - setupSimulation) setting up network layout', 'DBG');
-			obj.Config.setupNetworkLayout(obj.Logger);
+			% Setup runtime
+			Runtime = struct(...
+				'totalRounds', obj.Config.Runtime.simulationRounds,...
+				'remainingRounds', obj.Config.Runtime.simulationRounds, ...
+				'currentRound', 0, ...
+				'currentTime', 0, ...
+				'remainingTime', obj.Config.Runtime.simulationRounds*10e-3, ...
+				'realTimeElaspsed', 0, ...
+				'realTimeRemaining', obj.Config.Runtime.simulationRounds * 10, 
+				'seed', obj.Config.Runtime.seed ...
+			);
 
+			% Setup network layout
+			obj.Logger.log('(MONSTER - setupSimulation) setting up network layout', 'DBG');
+			Layout = setupNetworkLayout(obj.Config, obj.Logger);
+			
 			% Setup eNodeBs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation sites', 'DBG');
 			Sites = setupSites(obj.Config, obj.Logger);
@@ -76,14 +92,41 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation metrics recorder', 'DBG');
 			Results = setupResults(obj.Config, obj.Logger);
 
+			% Setup plots
+			Plot = struct(...
+				'LayoutFigure', 0, ...
+				'LayoutAxes', 0,...
+				'PHYFigure', 0, ...
+				'PHYAxes', 0,...
+			);
+			if Config.SimulationPlot.runtimePlot
+				obj.Logger.log('(MONSTER - setupSimulation) setting up runtime plots', 'DBG');
+				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(Config);
+				[Plot.PHYFigure, Plot.PHYAxes] = createPHYplot(Config);
+			end
+
 			% Assign the properties to the Monster object
-			
+			obj.Runtime = Runtime;
+			obj.Layout = Layout;
 			obj.Sites = Sites;
 			obj.Cells = Cells;
 			obj.Users = Users;
 			obj.Channel = Channel;
 			obj.Traffic = Traffic;
 			obj.Results = Results;			
+			obj.Plot = Plot;
+		end
+
+		function obj = drawSimulationScenario(obj)
+			% drawSimulationScenario - initialises the simulation plots and draws the scenario
+			%
+			% :param obj: Monster instance
+			% :returns obj: Updated Monster instance
+			
+			% Draw the eNodeBs
+			obj.Layout.drawScenario(obj.Config, obj.Sites);
+			% Draw the UEs
+			obj.Layout.drawUes(obj.Users, obj.Config, obj.Logger);
 		end
 		
 		function obj = setupRound(obj, iRound)
