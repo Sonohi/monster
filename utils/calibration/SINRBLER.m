@@ -1,7 +1,6 @@
-%clear all
-%close all
-
-
+% This script is very time consuming. A .mat file with results are saved in
+% the root folder of this script termed BLER_BER_MCS.mat
+% 
 clear all
 close all
 
@@ -32,30 +31,33 @@ Cell = Monster.Cells(1);
 %Choice of MCS and their SINR range of interrest [dB]
 MCSlevels=[1 3 4 6 7 9 11 13 15 20 21 22 24 26 28];
 
-SINRlevels = linspace(-10, 5, 30);
-nMeasurements = 10;
+SINRlevels = linspace(-7, 20, 20);
+nMeasurements = 200;
 
 BLER = zeros(length(MCSlevels), length(SINRlevels),nMeasurements);
 for iMeas = 1:nMeasurements
 Config.Runtime.seed = iMeas;
 [Traffic, User] = setupTraffic(User, Config, Logger);
         
-Monster.setupRound(0);
+
+
 for iMCS = 1:length(MCSlevels)
+	Monster.setupRound(0);
+	Monster.associateUsers();
+
+
+	Monster.updateUsersQueues();
+	Monster.scheduleDL();
+	for i=1:50
+			Cell.ScheduleDL(i).Mcs = MCSlevels(iMCS);
+	end
+	
+
+	Monster.setupEnbTransmitters();
 % For each SINR value compute BLER
 	for iSINR = 1:length(SINRlevels)
 		SINRdB = SINRlevels(iSINR);
 		SINR = 10.^((SINRdB)./10);
-		%[Traffic, User] = setupTraffic(User, Config, Logger);
-		Monster.associateUsers();
-
-		Monster.updateUsersQueues();
-		Monster.scheduleDL();
-		Monster.setupEnbTransmitters();
-
-		for i=1:50
-				Cell.ScheduleDL(i).Mcs = MCSlevels(iMCS);
-		end
 
 		% Set SINR
 		NoisySignal = MonsterChannel.AddAWGN(Cell, 'downlink', SINR, Cell.Tx.WaveformInfo.Nfft, Cell.Tx.Waveform);
@@ -70,11 +72,21 @@ for iMCS = 1:length(MCSlevels)
 		BER(iMCS, iSINR, iMeas) = User.Rx.Bits.ratio;
 
 	end
+	
+	Monster.clean();
 
 end
+if ~mod(iMeas,20)
+	fprintf('Measurement %i/%i \n',iMeas, nMeasurements)
 end
+end
+
+% Save to file
+save('SINR_BLER_BER.mat','BLER', 'BER');
+
 figure
-semilogy(SINRlevels,mean(BLER,3))
+semilogy(SINRlevels,mean(BER,3))
+%semilogy(SINRlevels,BER(:,:,1))
 xlabel('SNR [dB]');
 ylabel('BLER');
 %Add legend
