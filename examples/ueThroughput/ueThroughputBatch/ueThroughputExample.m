@@ -4,16 +4,18 @@
 %
 
 % Assert whether a folder for the daily results exists, otherwise create it
-folderPath = strcat('examples/results/ueThroughput/', datestr(datetime, 'yyyy.mm.dd'));
+folderPath = strcat('examples/ueThroughput/results/', datestr(datetime, 'yyyy.mm.dd'));
 if ~exist(folderPath, 'dir')
 	mkdir(folderPath);
 	mkdir(strcat(folderPath, '/baseline'));
 	mkdir(strcat(folderPath, '/bandwidth'));
   mkdir(strcat(folderPath, '/fewUsers'));
   mkdir(strcat(folderPath, '/withMicro'));
+  mkdir(strcat(folderPath, '/withoutBackhaul'));
+  mkdir(strcat(folderPath, '/withBackhaul'));
 end
 
-simulationChoice = 1:4;
+simulationChoice = 1:6;
 
 for iSimulation = simulationChoice
   try

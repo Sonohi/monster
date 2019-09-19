@@ -4,24 +4,29 @@
 clear all;
 
 % create filestrings
-basePath = strcat('examples/results/ueThroughput/', datestr(datetime, 'yyyy.mm.dd'));
+basePath = strcat('examples/ueThroughput/results/', datestr(datetime, 'yyyy.mm.dd'));
 baselinePath = strcat(basePath, '/baseline');
 bandwidthPath = strcat(basePath, '/bandwidth');
 fewUsersPath = strcat(basePath, '/fewUsers');
 withMicroPath = strcat(basePath, '/withMicro');
+withoutBackhaulPath = strcat(basePath, '/withoutBackhaul');
+withBackhaulPath = strcat(basePath, '/withBackhaul');
 
 
 baselineTotal = plotThroughput(baselinePath, 'Baseline');
 bandwidthTotal = plotThroughput(bandwidthPath, 'Bandwidth');
 fewUsersTotal = plotThroughput(fewUsersPath, 'Few Users');
 withMicroTotal = plotThroughput(withMicroPath, 'With Micro');
+withoutBackhaulTotal = plotThroughput(withoutBackhaulPath, 'Without Backhaul');
+withBackhaulTotal = plotThroughput(withBackhaulPath, 'With Backhaul');
 
 
 %Compare results
 CompareTotalThroughput = figure('Name','Overview: Total throughput');
 plot(baselineTotal(1,:),baselineTotal(2,:),bandwidthTotal(1,:),bandwidthTotal(2,:),...
-      fewUsersTotal(1,:),fewUsersTotal(2,:),withMicroTotal(1,:),withMicroTotal(2,:));
-legend({'Baseline','Bandwidth','Few Users','With Micro'},'Location','southeast')
+	  fewUsersTotal(1,:),fewUsersTotal(2,:),withMicroTotal(1,:),withMicroTotal(2,:),...
+	  withoutBackhaulTotal(1,:),withoutBackhaulTotal(2,:),withBackhaulTotal(1,:),withBackhaulTotal(2,:));
+legend({'Baseline','Bandwidth','Few Users','With Micro','Without Backhaul','With Backhaul'},'Location','southeast')
 xlabel('avg throughput [Mbps]');
 ylabel('CDF');
 

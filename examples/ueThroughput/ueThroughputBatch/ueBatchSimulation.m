@@ -15,6 +15,10 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		choice = 'fewUsers';
 	elseif simulationChoice == 4
 		choice = 'withMicro';
+	elseif simulationChoice == 5
+		choice = 'withoutBackhaul';
+	elseif simulationChoice == 6
+		choice = 'withBackhaul';
 	end
 
 	% Get configuration
@@ -36,7 +40,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	if simulationChoice == 3
 		Config.Ue.number = 5;
 	else
-		Config.Ue.number = 20;
+		Config.Ue.number = 25;
 	end
 	%Setup number of Macro eNodeB
 	Config.MacroEnb.sitesNumber = 1;
@@ -57,6 +61,17 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	Config.Traffic.arrivalDistribution = 'Static';
 	Config.Traffic.primary = 'fullBuffer';
 	Config.Traffic.mix = 0;
+	if simulationChoice == 5
+		Config.Backhaul.backhaulOn = 0;
+	else
+		Config.Backhaul.backhaulOn = 1;
+	end
+
+	if simulationChoice == 6
+		Config.Backhaul.bandwidth = 10^6;
+	else
+		Config.Backhaul.bandwidth = 10^9;
+	end
 
 	Config.Mobility.scenario = 'pedestrian';
 
