@@ -73,7 +73,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
-			obj.TotSubframes = Config.Runtime.totalRounds;
+			obj.TotSubframes = Config.Runtime.simulationRounds;
 			obj.NSubframe = 0;
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
@@ -508,7 +508,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 		end
 		
-		function obj = uplinkDataDecoding(obj, Users, Config)
+		function obj = uplinkDataDecoding(obj, Users, Config, timeNow)
 			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
 			%
 			% :param obj: EvolvedNodeB instance
@@ -516,7 +516,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :param Config: MonsterConfig instance
 			
 			% Filter UEs linked to this eNodeB
-			timeNow = Config.Runtime.currentTime;
 			ueGroup = find([Users.ENodeBID] == enb.NCellID);
 			enbUsers = Users(ueGroup);
 			

@@ -18,17 +18,17 @@ Simulation = Monster(Config, Logger);
 Simulation.Logger.log('(MAIN) main simulation instance created', 'NFO');
 
 % Main simulation loop
-for iRound = 0:(Config.Runtime.totalRounds - 1)
+for iRound = 0:(Simulation.Runtime.totalRounds - 1)
 	Simulation.setupRound(iRound);
 
 	Simulation.Logger.log(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
-		Simulation.Config.Runtime.remainingTime ), 'NFO');	
+		Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+		Simulation.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
 
 	Simulation.Logger.log(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
+		Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
 
 	Simulation.collectResults();
 
@@ -36,7 +36,7 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 
 	Simulation.clean();
 
-	if iRound ~= Config.Runtime.totalRounds - 1
+	if iRound ~= Simulation.Runtime.totalRounds - 1
 		Simulation.Logger.log('(MAIN) cleaned parameters for next round', 'NFO');
 	else
 		Simulation.Logger.log('(MAIN) simulation completed', 'NFO');

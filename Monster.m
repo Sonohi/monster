@@ -63,7 +63,7 @@ classdef Monster < matlab.mixin.Copyable
 				'currentTime', 0, ...
 				'remainingTime', obj.Config.Runtime.simulationRounds*10e-3, ...
 				'realTimeElaspsed', 0, ...
-				'realTimeRemaining', obj.Config.Runtime.simulationRounds * 10, 
+				'realTimeRemaining', obj.Config.Runtime.simulationRounds * 10,... 
 				'seed', obj.Config.Runtime.seed ...
 			);
 
@@ -73,7 +73,7 @@ classdef Monster < matlab.mixin.Copyable
 			
 			% Setup eNodeBs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation sites', 'DBG');
-			Sites = setupSites(obj.Config, obj.Logger);
+			Sites = setupSites(obj.Config, obj.Logger, Layout);
 			Cells = [Sites.Cells];
 
 			% Setup UEs
@@ -97,8 +97,7 @@ classdef Monster < matlab.mixin.Copyable
 				'LayoutFigure', 0, ...
 				'LayoutAxes', 0,...
 				'PHYFigure', 0, ...
-				'PHYAxes', 0,...
-			);
+				'PHYAxes', 0);
 			if Config.SimulationPlot.runtimePlot
 				obj.Logger.log('(MONSTER - setupSimulation) setting up runtime plots', 'DBG');
 				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(Config);
@@ -137,12 +136,12 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			% Update Config property
-			obj.Config.Runtime.currentRound = iRound;
-			obj.Config.Runtime.currentTime = iRound*10e-3;  
-			obj.Config.Runtime.remainingTime = (obj.Config.Runtime.totalRounds - obj.Config.Runtime.currentRound)*10e-3;
-			obj.Config.Runtime.remainingRounds = obj.Config.Runtime.totalRounds - obj.Config.Runtime.currentRound - 1;
+			obj.Runtime.currentRound = iRound;
+			obj.Runtime.currentTime = iRound*10e-3;  
+			obj.Runtime.remainingTime = (obj.Runtime.totalRounds - obj.Runtime.currentRound)*10e-3;
+			obj.Runtime.remainingRounds = obj.Runtime.totalRounds - obj.Runtime.currentRound - 1;
 			% Update Channel property
-			obj.Channel.setupRound(obj.Config.Runtime.currentRound, obj.Config.Runtime.currentTime);
+			obj.Channel.setupRound(obj.Runtime.currentRound, obj.Runtime.currentTime);
 		
 		end
 
@@ -202,10 +201,10 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			obj.Logger.log('(MONSTER - collectResults) eNodeB metrics recording', 'DBG');
-			obj.Results = obj.Results.recordEnbMetrics(obj.Cells, obj.Config, obj.Logger);
+			obj.Results = obj.Results.recordEnbMetrics(obj.Cells, obj.Runtime.currentRound, obj.Config, obj.Logger);
 
 			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'DBG');
-			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Config.Runtime.currentRound, obj.Logger);
+			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Runtime.currentRound, obj.Logger);
 		
 		end
 
@@ -216,7 +215,7 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
-			arrayfun(@(x)x.reset(obj.Config.Runtime.currentRound + 1), obj.Cells);
+			arrayfun(@(x)x.reset(obj.Runtime.currentRound + 1), obj.Cells);
 
 			obj.Logger.log('(MONSTER - clean) eNodeB end of round cleaning', 'DBG');
 			arrayfun(@(x)x.reset(), obj.Users);		
@@ -231,7 +230,7 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			% :obj: Monster instanceo
 
-			arrayfun(@(x)x.move(obj.Config.Runtime.currentRound), obj.Users);
+			arrayfun(@(x)x.move(obj.Runtime.currentRound), obj.Users);
 		end
 
 		function obj = associateUsers(obj)
@@ -239,9 +238,9 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			% :obj: Monster instance
 
-			if mod(obj.Config.Runtime.currentTime, obj.Config.Scheduling.refreshAssociationTimer) == 0
+			if mod(obj.Runtime.currentTime, obj.Config.Scheduling.refreshAssociationTimer) == 0
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs re-associating', 'DBG');
-				refreshUsersAssociation(obj.Users, obj.Cells, obj.Channel, obj.Config);
+				refreshUsersAssociation(obj.Users, obj.Cells, obj.Channel, obj.Config, obj.Runtime.currentTime);
 			else
 				obj.Logger.log('(MONSTER - associateUsers) UEs-eNodeBs not re-associated', 'DBG');
 			end			
@@ -253,7 +252,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			for iUser = 1: obj.Config.Ue.number
 				UeTrafficGenerator = obj.Traffic([obj.Traffic.Id] == obj.Users(iUser).Traffic.generatorId);
-				obj.Users(iUser).Queue = UeTrafficGenerator.updateTransmissionQueue(obj.Users(iUser), obj.Config.Runtime.currentTime);
+				obj.Users(iUser).Queue = UeTrafficGenerator.updateTransmissionQueue(obj.Users(iUser), obj.Runtime.currentTime);
 			end
 		end
 
@@ -299,13 +298,13 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			
 			% Create the transport blocks for all the UEs
-			arrayfun(@(x)x.generateTransportBlockDL(obj.Cells, obj.Config), obj.Users);
+			arrayfun(@(x)x.generateTransportBlockDL(obj.Cells, obj.Config, obj.Runtime.currentTime), obj.Users);
 
 			% Create the codewords for all the UEs
 			arrayfun(@(x)x.generateCodewordDL(), obj.Users);
 
 			% Setup the reference signals at the eNB transmitters 
-			arrayfun(@(x)x.setupGrid(obj.Config.Runtime.currentRound), [obj.Cells.Tx]);
+			arrayfun(@(x)x.setupGrid(obj.Runtime.currentRound), [obj.Cells.Tx]);
 
 			% Create the symbols for all the UEs' codewords at the eNodeBs
 			arrayfun(@(x)x.setupPdsch(obj.Users), obj.Cells);
@@ -339,7 +338,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 
-			arrayfun(@(x)x.downlinkDataDecoding(obj.Config), obj.Users);
+			arrayfun(@(x)x.downlinkDataDecoding(obj.Config, obj.Runtime.currentTime), obj.Users);
 		end
 
 		function obj = setupUeTransmitters(obj)
@@ -366,7 +365,7 @@ classdef Monster < matlab.mixin.Copyable
 			% :obj: Monster instance
 			%
 			arrayfun(@(x)x.createReceivedSignal(), [obj.Cells.Rx]);
-			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Config.Runtime.currentTime, obj.Channel.Estimator), obj.Cells);			
+			arrayfun(@(x)x.uplinkReception(obj.Users, obj.Runtime.currentTime, obj.Channel.Estimator), obj.Cells);			
 		
 		end 
 
@@ -375,7 +374,8 @@ classdef Monster < matlab.mixin.Copyable
 			%
 			% :obj: Monster instance
 			%
-			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config), obj.Cells);
+			currentTime = obj.Runtime.currentTime;
+			arrayfun(@(x)x.uplinkDataDecoding(obj.Users, obj.Config, currentTime), obj.Cells);
 		
         end
         

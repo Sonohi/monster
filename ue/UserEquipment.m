@@ -104,12 +104,13 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Mac.HarqReport = struct('pid', [0 0 0], 'ack', -1);
 		end
 
-		function obj = generateTransportBlockDL(obj, Cells, Config)
+		function obj = generateTransportBlockDL(obj, Cells, Config, timeNow)
 			% generateTransportBlockDL is used to create a TB with dummy data for the UE
 			%
 			% :param obj: UserEquipment instance
 			% :param Cells: Array<EvolvedNodeB> instances
 			% :param Config: MonsterConfig instance
+			% :param timeNow: Int current simulation time
 			% :returns obj: UserEquipment instance
 			%
 
@@ -161,10 +162,10 @@ classdef UserEquipment < matlab.mixin.Copyable
 					tb = cat(1, ctrlBits, tbPayload);
 					if newTb
 						% Set TB in the ARQ buffer
-						enbObjHandle.Rlc.ArqTxBuffers(iArqBuf) = enbObjHandle.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, Config.Runtime.currentTime, tb);	
+						enbObjHandle.Rlc.ArqTxBuffers(iArqBuf) = enbObjHandle.Rlc.ArqTxBuffers(iArqBuf).handleTbInsert(sqnDec, timeNow, tb);	
 
 						% Set TB in the HARQ process
-						enbObjHandle.Mac.HarqTxProcesses(iHarqProc) = enbObjHandle.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, Config.Runtime.currentTime, tb);	
+						enbObjHandle.Mac.HarqTxProcesses(iHarqProc) = enbObjHandle.Mac.HarqTxProcesses(iHarqProc).handleTbInsert(harqPidDec, timeNow, tb);	
 					end
 				else
 					tb = randi([0 1], TbInfo.tbSize, 1);
@@ -217,11 +218,12 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Rx.receiveDownlink(enb, ChannelEstimator);	
 		end
 
-		function obj = downlinkDataDecoding(obj, Config)
+		function obj = downlinkDataDecoding(obj, Config, timeNow)
 			% downlinkDataDecoding performs the decoding of the demodulated waveform
 			% 
-			% :obj: UserEquipment instance
-			% :Config: MonsterConfig instance
+			% :param obj: UserEquipment instance
+			% :param Config: MonsterConfig instance
+			% :param timeNow: Int current simulation time
 			%
 
 			% Currently data decoding is only used for retransmissions
@@ -235,13 +237,13 @@ classdef UserEquipment < matlab.mixin.Copyable
 
 				if ~isempty(iProc)
 					% Handle HARQ TB reception
-					[obj.Mac.HarqRxProcesses, state] = obj.Mac.HarqRxProcesses.handleTbReception(iProc,obj.Rx.TransportBlock, obj.Rx.Crc, Config.Runtime.currentTime);
+					[obj.Mac.HarqRxProcesses, state] = obj.Mac.HarqRxProcesses.handleTbReception(iProc,obj.Rx.TransportBlock, obj.Rx.Crc, timeNow);
 
 					% Depending on the state the process is, contact ARQ
 					if state == 0
 						sqn = obj.Rlc.ArqRxBuffer.decodeSqn(obj.Rx.TransportBlock);
 						if ~isempty(sqn)
-							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, Config.Runtime.currentTime, obj.Logger);
+							obj.Rlc.ArqRxBuffer = obj.Rlc.ArqRxBuffer.handleTbReception(sqn, obj.Rx.TransportBlock, timeNow, obj.Logger);
 						end	
 						% Set ACK and PID information for this UE to report back to the serving eNodeB 
 						obj.Mac.HarqReport.pid = harqPidBits;

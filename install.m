@@ -25,7 +25,7 @@ end
 
 addpath(root);
 
-dirs = {'examples','utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'results', 'rlc', ...
+dirs = {'examples','utils', 'channel', 'enb', 'layout','mac', 'mobility', 'phy', 'results', 'rlc', ...
 	'setup', 'scenarios', 'tests', 'traffic', 'ue', 'validator', 'logs'};
 
 for i=1:numel(dirs)

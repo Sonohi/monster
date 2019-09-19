@@ -57,7 +57,7 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Scenario = scenario;
 			obj.Velocity = velocity;
 			obj.Seed = seed;
-			obj.Rounds = Config.Runtime.totalRounds;
+			obj.Rounds = Config.Runtime.simulationRounds;
 			if strcmp(scenario, 'maritime')
 				obj.buildingFootprints = [];
 			else
