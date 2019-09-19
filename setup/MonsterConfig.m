@@ -39,6 +39,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Arq = struct();
 		Plot = struct();
 		Scenario = struct();
+		Backhaul = struct();
 		SRS = struct();
 	end
 
@@ -131,6 +132,18 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Terrain = struct();
 			Terrain.type = 'city'; % city | maritime
 			obj.Terrain = Terrain;
+
+			% Properties related to backhaul
+			Backhaul = struct();
+			Backhaul.backhaulOn = 1;
+			Backhaul.propagationSpeed = 2*10^8; % [m/s] (usual speed of light in a fiber optic cable is approx. 2*10^8 m/s)
+			Backhaul.lengthOfMedium = 1000; % [m]
+			Backhaul.bandwidth = 10^9; % [bps] 
+			Backhaul.utilizationLimit = 0.8; %A value of 1 gives 100% of the medium can be used for dataplane traffic.
+			Backhaul.switchDelay = 10^(-4); %[ms]
+			Backhaul.errorRate = 0.1; %fraction of errors
+			Backhaul.errorMagnitude = 0.5; %Magnitude of error, e.g. 0.5 deletes half the packet when the error occurs
+			obj.Backhaul = Backhaul;
 
 			% Properties related to the traffic 
 			% Traffic types: fullBuffer | videoStreaming | webBrowsing 

@@ -44,7 +44,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 				obj.arqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			end
 			obj.powerState = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			
+
 			% Initialise for UE
 			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
 			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
@@ -125,7 +125,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			for iCell = 1:length(Cells)
 				obj.powerState(schRound, iCell) = Cells(iCell).PowerState;
 			end
-		end
+        end
 		
 		% UE metrics
 		function obj = recordUeMetrics(obj, Users, schRound, Logger)
@@ -230,8 +230,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 					obj.receivedPowerdBm(schRound, iUser) = Users(iUser).Rx.ChannelConditions.RxPwdBm;
 				end
 			end
-		end
-		
+        end
 		
 	end
 end
