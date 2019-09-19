@@ -33,7 +33,16 @@ function [Traffic, Users] = setupTraffic (Users, Config, Logger)
 	for iUser = 1: length(Users)
 		Users(iUser).Traffic.generatorId = trafficGenAllocation(iUser);
 		Users(iUser).Traffic.startTime = Traffic(trafficGenAllocation(iUser)).getStartingTime(Users(iUser).NCellID, Logger);
-	end
+  end
+  
+  % Add backhaul 
+  if Config.Backhaul.backhaulOn
+    Traffic = applyBackhaulDelay(Traffic, Config);
+    for iUser = 1: length(Users)
+      Users(iUser).Traffic.generatorId = iUser;
+      Users(iUser).Traffic.startTime = Traffic(iUser).getStartingTime(Users(iUser).NCellID, Logger);
+    end
+  end
 	
 end
 	
