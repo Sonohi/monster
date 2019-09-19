@@ -38,6 +38,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Harq = struct();
 		Arq = struct();
 		Scenario = struct();
+		SRS = struct();
 	end
 
 	methods
@@ -196,6 +197,11 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Arq.maxBufferSize = 1024;
 			Arq.timeout = 20;
 			obj.Arq = Arq;
+			
+			% Properties related to SRS
+			SRS = struct();
+			SRS.active = true;
+			obj.SRS = SRS;
 		end
 
 		function assertConfig(obj)

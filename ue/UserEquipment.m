@@ -85,7 +85,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 		
 		function s = struct(obj)
 			% Struct needed for MATLAB LTE Library functions.
-			s = struct('NCellID', obj.NCellID, 'NULRB', obj.NULRB, 'NSubframe', obj.NSubframe, 'NFrame', obj.NFrame, 'RNTI', obj.RNTI);
+			s = struct('NCellID', obj.NCellID, 'NULRB', obj.NULRB, 'NSubframe', obj.NSubframe, 'NFrame', obj.NFrame, 'RNTI', obj.RNTI, 'PUSCH', obj.Tx.PUSCH);
 		end
 
 		function obj = move(obj, round)
