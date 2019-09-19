@@ -18,7 +18,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = MonsterChannel(Cells, Users, Config, Logger)
+		function obj = MonsterChannel(Cells, Users, Layout, Config, Logger)
 			% MonsterChannel
 			%
 			% :param Cells:
@@ -35,11 +35,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
 			obj.LOSMethod = Config.Channel.losMethod;
 			if strcmp(Config.Terrain.type, 'city')
-				obj.BuildingFootprints = Config.Terrain.buildings;
+				obj.BuildingFootprints = Layout.Terrain.buildings;
 			else 
 				obj.BuildingFootprints = [];
 			end
-			obj.area = Config.Terrain.area;
+			obj.area = Layout.Terrain.area;
 			obj.setupChannel(Cells, Users);
 			obj.createChannelEstimator();
 		end

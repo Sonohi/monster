@@ -78,11 +78,11 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Setup UEs
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation UEs', 'DBG');
-			Users = setupUsers(obj.Config, obj.Logger);
+			Users = setupUsers(obj.Config, obj.Logger, Layout);
 
 			% Setup channel
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation channel', 'DBG');
-			Channel = setupChannel(Cells, Users, obj.Config, obj.Logger);
+			Channel = setupChannel(Cells, Users, Layout, obj.Config, obj.Logger);
 
 			% Setup traffic
 			obj.Logger.log('(MONSTER - setupSimulation) setting up simulation traffic', 'DBG');
@@ -98,10 +98,10 @@ classdef Monster < matlab.mixin.Copyable
 				'LayoutAxes', 0,...
 				'PHYFigure', 0, ...
 				'PHYAxes', 0);
-			if Config.SimulationPlot.runtimePlot
+			if obj.Config.SimulationPlot.runtimePlot
 				obj.Logger.log('(MONSTER - setupSimulation) setting up runtime plots', 'DBG');
-				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(Config);
-				[Plot.PHYFigure, Plot.PHYAxes] = createPHYplot(Config);
+				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(obj.Config, Layout);
+				[Plot.PHYFigure, Plot.PHYAxes] = createPHYplot(obj.Config);
 			end
 
 			% Assign the properties to the Monster object
@@ -123,9 +123,9 @@ classdef Monster < matlab.mixin.Copyable
 			% :returns obj: Updated Monster instance
 			
 			% Draw the eNodeBs
-			obj.Layout.drawScenario(obj.Config, obj.Sites);
+			obj.Layout.drawScenario(obj.Config, obj.Sites, obj.Plot);
 			% Draw the UEs
-			obj.Layout.drawUes(obj.Users, obj.Config, obj.Logger);
+			obj.Layout.drawUes(obj.Users, obj.Config, obj.Logger, obj.Plot);
 		end
 		
 		function obj = setupRound(obj, iRound)
@@ -201,10 +201,10 @@ classdef Monster < matlab.mixin.Copyable
 			%
 
 			obj.Logger.log('(MONSTER - collectResults) eNodeB metrics recording', 'DBG');
-			obj.Results = obj.Results.recordEnbMetrics(obj.Cells, obj.Runtime.currentRound, obj.Config, obj.Logger);
+			obj.Results = obj.Results.recordEnbMetrics(obj.Cells, obj.Runtime.currentRound + 1, obj.Config, obj.Logger);
 
 			obj.Logger.log('(MONSTER - collectResults) UE metrics recording', 'DBG');
-			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Runtime.currentRound, obj.Logger);
+			obj.Results = obj.Results.recordUeMetrics(obj.Users, obj.Runtime.currentRound + 1, obj.Logger);
 		
 		end
 
@@ -385,10 +385,9 @@ classdef Monster < matlab.mixin.Copyable
            % :obj: Monster instance
 					 %
 					 if obj.Config.SimulationPlot.runtimePlot
-						plotSpectrums(obj.Users, obj.Cells, obj.Config);
-						plotConstDiagramDL(obj.Cells, obj.Users, obj.Config);
-						%plotLinks(obj.Users, obj.Cells, obj.Config.Plot.LayoutAxes, 'downlink');
-						plotAssociationTable(obj.Users, obj.Cells, obj.Config);
+						plotSpectrums(obj.Users, obj.Cells, obj.Config, obj.Plot);
+						plotConstDiagramDL(obj.Users, obj.Cells, obj.Config, obj.Plot);
+						plotAssociationTable(obj.Users, obj.Cells, obj.Config, obj.Plot);
 					 end
         end
 	end

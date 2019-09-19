@@ -37,7 +37,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Son = struct();
 		Harq = struct();
 		Arq = struct();
-		Plot = struct();
 		Scenario = struct();
 	end
 
@@ -197,10 +196,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Arq.maxBufferSize = 1024;
 			Arq.timeout = 20;
 			obj.Arq = Arq;
-            
-			% Properties related to plotting
-			Plot = struct();
-			obj.Plot = Plot;
 		end
 
 		function assertConfig(obj)

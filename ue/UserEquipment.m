@@ -43,7 +43,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 	
 	methods
 		% Constructor
-		function obj = UserEquipment(Config, userId, Logger)
+		function obj = UserEquipment(Config, userId, Logger, Layout)
 			obj.Logger = Logger;
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
@@ -61,7 +61,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 				'edgeColour', [0.1 0.1 0.1], ...
 				'markerSize', 8, ...
 				'lineWidth', 2);
-			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config, obj.Logger);
+			obj.Mobility = Mobility(Config.Mobility.scenario, 1, Config.Mobility.seed * userId, Config, obj.Logger, Layout);
 			obj.Position = obj.Mobility.Trajectory(1,:);
 			obj.TLast = 0;
 			obj.PLast = [1 1];

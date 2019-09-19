@@ -63,7 +63,6 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		% eNodeB metrics
 		function obj = recordEnbMetrics(obj, Cells, schRound, Config, Logger)
-			% Increment the scheduling round for Matlab's indexing
 			obj = obj.recordUtil(Cells, schRound);
 			obj = obj.recordPower(Cells, schRound, Config.Son.powerScale, Config.Son.utilLow, Logger);
 			obj = obj.recordSchedule(Cells, schRound);
@@ -128,8 +127,6 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		% UE metrics
 		function obj = recordUeMetrics(obj, Users, schRound, Logger)
-			% Increment the scheduling round for Matlab's indexing
-			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
 			obj = obj.recordBler(Users, schRound);
 			obj = obj.recordSnr(Users, schRound);
