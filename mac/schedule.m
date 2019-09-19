@@ -91,7 +91,9 @@ switch Config.Scheduling.type
 			% If there are still PRBs available, then we can schedule either a new TB or a RTX
 			if prbsAv > 0
 				if schedulingFlag && (noRtxSchedulingFlag || rtxSchedulingFlag)
-					modOrd = Config.Phy.modOrdTable(Users(iCurrUe).Rx.CQI);
+					% TODO: currently the scheduler has only access to the wideband CQI reporting
+					wideBandCqi = Users(iCurrUe).Rx.CQI.wideBand;
+					modOrd = Config.Phy.modOrdTable(wideBandCqi);
 					if noRtxSchedulingFlag
 						prbsNeed = ceil(double(Users(iCurrUe).Queue.Size)/(modOrd * Config.Phy.prbSymbols));
 					else
@@ -128,7 +130,7 @@ switch Config.Scheduling.type
 					% write to schedule struct and indicate also in the struct whether this is new data or RTX
 					for iPrb = 1:Cell.NDLRB
 						if Cell.ScheduleDL(iPrb).UeId == -1
-							mcs = Config.Phy.mcsTable(Users(iCurrUe).Rx.CQI + 1, 1);
+							mcs = Config.Phy.mcsTable(wideBandCqi + 1, 1);
 							for iSch = 0:prbsSch-1
 								Cell.ScheduleDL(iPrb + iSch) = struct(...
 									'UeId', Users(iCurrUe).NCellID,...

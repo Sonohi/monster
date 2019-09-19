@@ -49,8 +49,8 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.verifyTrue(isnan(testCase.MetricRecorder.ber(1,1)));
 			testCase.verifyTrue(isnan(testCase.MetricRecorder.bler(1,1)));%Is this even doing anything?!?
 			testCase.verifyTrue(testCase.MetricRecorder.snrdB(1,1)==0);
-			testCase.verifyTrue(testCase.MetricRecorder.sinrdB(1,1)==0);
-			testCase.verifyTrue(testCase.MetricRecorder.cqi(1,1)==3);
+			testCase.verifyTrue(testCase.MetricRecorder.wideBandSinrdB(1,1)==0);
+			testCase.verifyTrue(testCase.MetricRecorder.wideBandCqi(1,1)==3);
 			testCase.verifyTrue(testCase.MetricRecorder.preEvm(1,1)==0);
 			testCase.verifyTrue(testCase.MetricRecorder.postEvm(1,1)==0);
 			testCase.verifyTrue(isnan(testCase.MetricRecorder.throughput(1,1)));

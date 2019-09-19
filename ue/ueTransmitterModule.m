@@ -13,6 +13,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		Gain = 4; % Antenna gain
 		UeObj;
 		HarqActive;
+		SRSActive;
 	end
 	
 	methods
@@ -29,12 +30,14 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			obj.PRACH.PreambleIdx = 32;    % Preamble index: TS36.141, Table A.6-1
 			obj.PRACHInfo = ltePRACHInfo(UeObj, obj.PRACH);
 			obj.PUSCH = struct(...
-				'Active', 0,...
+				'Active', 1,...
 				'Modulation', 'QPSK',...
-				'PRBSet', [],...
-				'NLayers', 1);
+				'PRBSet', [0:5].',...
+				'NLayers', 1,...
+				'TrBlkSizes',1);
 			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
+			obj.SRSActive = Config.SRS.active;
 			%TODO: make configureable
 			obj.TxPwdBm = 23;
 			obj.resetRef();
@@ -69,10 +72,35 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				obj.setupControlSignals();
 
 				% TODO: add actual data here
+				if obj.PUSCH.Active == 1
+					obj.setupPUSCH();
+				end
 
 				% Modulate the resource grid
 				obj.modulateResourceGrid();
 			end
+		end
+
+		function bits = generatePUSCHBits(obj)
+
+			% Get transport block size
+			bits = randi([0,1],obj.PUSCH.TrBlkSizes(1),1);
+
+
+		end
+
+		function obj = setupPUSCH(obj)
+
+			% 1. Generate information bits for the PUSCH
+			%bits = obj.generatePUSCHBits();
+
+			% 2. Apply coding chain
+			%cw = lteULSCH(struct(obj.UeObj), obj.PUSCH, bits);
+
+			% 3. Generate PUSCH symbols
+			%puschSym = ltePUSCH(struct(obj.UeObj),obj.pusch,cw);
+
+			% 4. Add to resource grid
 		end
 
 		function obj = setupResourceGrid(obj)
@@ -96,9 +124,11 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% SRS
 			%
 			% Returns updated :obj.ReGrid:
-			cqiBits = de2bi(obj.UeObj.Rx.CQI, 4, 'left-msb')';
+			% Prepare payload with the latest CQI reporting.
+			% Currently that only includes the wideband reporting
+			cqiBits = de2bi(obj.UeObj.Rx.CQI.wideBand, 4, 'left-msb')';
 			zeroPad = zeros(11,1);
-			if obj.HarqActive && isempty(obj.UeObj.Rx.TransportBlock) || ~obj.HarqActive
+			if (obj.HarqActive && isempty(obj.UeObj.Rx.TransportBlock)) || ~obj.HarqActive
 				reportHarqBit = 0;
 				harqBits = int8(zeros(4,1));
 			elseif obj.HarqActive
@@ -128,7 +158,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			obj.Ref.pucchDRSIdx = pucchDRSIdx;
 
 			obj.setupPUSCHDRS();
-			obj.setupSRS();
+			if obj.SRSActive
+				obj.setupSRS();
+			end
 
 		end
 		
