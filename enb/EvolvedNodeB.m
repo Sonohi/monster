@@ -246,6 +246,26 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			userIds = unique([obj.ScheduleUL]);
 		end
 		
+		function Users = getUsersScheduledUL(obj, Users)
+			% Helper function for returning a list of user objects that are scheduled in UL for a given Cell
+			%
+			% :obj: eNB instance
+			%	:Users: Users
+
+			UserIds = obj.getUserIDsScheduledUL();
+			Users = Users(ismember([Users.NCellID],UserIds));
+		end
+
+		function Users = getUsersScheduledDL(obj, Users)
+			% Helper function for returning a list of user objects that are scheduled in DL for a given Cell
+			%
+			% :obj: eNB instance
+			%	:Users: Users
+
+			UserIds = obj.getUserIDsScheduledDL();
+			Users = Users(ismember([Users.NCellID],UserIds));
+		end
+		
 		function obj = evaluatePowerState(obj, Config, Cells)
 			% evaluatePowerState checks the utilisation of an EvolvedNodeB to evaluate the power state
 			%
@@ -481,13 +501,10 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			if isempty(obj.Rx.Waveform)
 				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
 			else				
-				% IDs of users and their position in the Users struct correspond
-				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
-				scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
-				enbUsers = Users(scheduledUEsIds);
+				enbUsers = obj.getUsersScheduledUL(Users);
 				
 				% Parse received waveform
-				obj.Rx.parseWaveform(obj);
+				obj.Rx.parseWaveform();
 				
 				% Demodulate received waveforms
 				obj.Rx.demodulateWaveforms(enbUsers);

@@ -9,6 +9,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 		Users;
 		Logger;
 		Monster;
+		MonsterSRSdisabled;
 	end
 	
 	methods (TestClassSetup)
@@ -17,9 +18,13 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.number = 1;
 			testCase.Config.MicroEnb.number = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SRS.active = true;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Monster = Monster(testCase.Config, testCase.Logger);
 		
+			% Disabled SRS Monster instance
+			testCase.Config.SRS.active = false;
+			testCase.MonsterSRSdisabled = Monster(testCase.Config, testCase.Logger);
 			
 		end
 	end
@@ -115,15 +120,21 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.verifyEqual(double(srsInfo.CellPeriod), 2);
 			
 		end
+
+		function testSRSdisabled(testCase)
+			% Test that SRS is not generated
+			ue = testCase.MonsterSRSdisabled.Users(1);
+			ue.Tx.setupTransmission();
+
+			testCase.verifyEmpty(ue.Tx.Ref.srsIdx);
+		end
 		
 		function testSRSisStored(testCase)
 			% Test SRS sequence is stored in reference structure
 			ue = testCase.Monster.Users(1);
 			ue.Tx.setupTransmission();
-			
 			testCase.verifyNotEmpty(ue.Tx.Ref.srsIdx);
 			testCase.verifyNotEmpty(ue.Tx.Ref.Grid(ue.Tx.Ref.srsIdx));
-			
 		end
 		
 		function testPUSCHDRSisStored(testCase)
@@ -139,6 +150,15 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			end
 			
 		end
+		
+		function testPUSCHBitGeneration(testCase)
+			ue = testCase.Monster.Users(1);
+			ue.Tx.setupResourceGrid();
+			ue.Tx.setupControlSignals();
+			%ue.Tx.generatePUSCHBits();
+			
+			
+		end 
 		
 		function testPUCCHDRSisStored(testCase)
 			ue = testCase.Monster.Users(1);

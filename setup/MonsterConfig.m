@@ -40,6 +40,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Plot = struct();
 		Scenario = struct();
 		Backhaul = struct();
+		SRS = struct();
 	end
 
 	methods
@@ -51,7 +52,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 15;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -107,7 +108,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 5;
+			Ue.number = 10;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
@@ -149,8 +150,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Traffic = struct();
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0.5;
-			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
+			Traffic.mix = 0;
+			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
@@ -217,6 +218,11 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Arq.maxBufferSize = 1024;
 			Arq.timeout = 20;
 			obj.Arq = Arq;
+			
+			% Properties related to SRS
+			SRS = struct();
+			SRS.active = true;
+			obj.SRS = SRS;
             
 			% Properties related to plotting
 			Plot = struct();

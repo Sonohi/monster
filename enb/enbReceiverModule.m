@@ -108,8 +108,8 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		
 		% Used to split the received waveform into the different portions of the different
 		% UEs scheduled in the UL
-		function parseWaveform(obj, enbObj)
-			uniqueUes = unique([enbObj.ScheduleUL]);
+		function parseWaveform(obj)
+			uniqueUes = unique([obj.enbObj.ScheduleUL]);
 			for iUser = 1:length(uniqueUes)
 				ueId = uniqueUes(iUser);
 				obj.UeData(iUser).UeId = ueId;
@@ -138,12 +138,17 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		end
 		
 		function obj = estimateChannels(obj, ueObjs, cec)
+			
+			if isempty(obj.UeData)
+				obj.enbObj.Logger.log('No UE Data to estimate channels on','ERR','MonstereNBReceiverModule:NoWaveformParsed');
+			end
+			
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
 				ue = ueObjs(iUser);
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
-						lteULChannelEstimate(struct(ue), cec, obj.UeData(localIndex).Subframe);
+						lteULChannelEstimate(struct(ue), struct(ue).PUSCH, cec, obj.UeData(localIndex).Subframe, ue.Tx.Ref.Grid);
 				end
 			end
 		end
@@ -203,7 +208,9 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		function obj = reset(obj)
 			obj.UeData = [];
 			obj.Waveform = [];
+			obj.Waveforms = [];
 			obj.RxPwdBm = [];
+			obj.ReceivedSignals = cell(length(obj.ReceivedSignals),1);
 		end
 		
 	end
