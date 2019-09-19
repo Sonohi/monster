@@ -26,7 +26,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		Config.Logs.dateFormat), '_choice_', choice, '.log');
 	Config.Logs.logLevel = 'NFO';
 	%Set number of rounds
-	Config.Runtime.totalRounds = 10;
+	Config.Runtime.totalRounds = 100;
 	Config.Runtime.remainingRounds = Config.Runtime.totalRounds;
 	Config.Runtime.remainingTime = Config.Runtime.totalRounds*10e-3;
 	Config.Runtime.realTimeRemaining = Config.Runtime.totalRounds*10;
@@ -34,9 +34,9 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	Config.SimulationPlot.runtimePlot = 0;
 	%Setup numbers of UEs
 	if simulationChoice == 3
-		Config.Ue.number = 1;
+		Config.Ue.number = 5;
 	else
-		Config.Ue.number = 10;
+		Config.Ue.number = 20;
 	end
 	%Setup number of Macro eNodeB
 	Config.MacroEnb.sitesNumber = 1;
