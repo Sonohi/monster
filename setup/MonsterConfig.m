@@ -51,7 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 15;
+			numRounds = 10;
 			Runtime.totalRounds = numRounds;
 			Runtime.remainingRounds = numRounds;
 			Runtime.currentRound = 0;
@@ -74,13 +74,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.runtimePlot = 1;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
 			MacroEnb.sitesNumber = 1;
-			MacroEnb.cellsPerSite = 1;
+			MacroEnb.cellsPerSite = 3;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -92,7 +92,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.sitesNumber = 0;
+			MicroEnb.sitesNumber = 3;
 			MicroEnb.cellsPerSite = 1;
 			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
@@ -107,7 +107,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 5;
+			Ue.number = 10;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
@@ -149,8 +149,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Traffic = struct();
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
-			Traffic.mix = 0.5;
-			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
+			Traffic.mix = 0;
+			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
