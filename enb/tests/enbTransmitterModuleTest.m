@@ -10,6 +10,7 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createTransmitters(testCase)
 			testCase.Config  = MonsterConfig();
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Config.setupNetworkLayout(testCase.Logger);
 			Sites = setupSites(testCase.Config, testCase.Logger);

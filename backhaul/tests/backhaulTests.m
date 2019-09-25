@@ -23,6 +23,7 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.Config.Traffic.arrivalDistribution = 'Static';
       testCase.Config.Traffic.mix = 0;
       testCase.Config.Traffic.static = 0;
+      testCase.Config.SimulationPlot.runtimePlot = 0;
       testCase.Config.Runtime.totalRounds = 100;
       testCase.Logger = MonsterLog(testCase.Config);
       

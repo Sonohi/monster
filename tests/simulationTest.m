@@ -8,6 +8,7 @@ classdef simulationTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config = MonsterConfig();
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Simulation = Monster(testCase.Config, testCase.Logger);
 		end
