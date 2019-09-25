@@ -40,6 +40,13 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Arrivaltime should now be 0 and the first data should be 1e+07
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,1) == 0);
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,2) == 1e+07);
+      %Trafficsource and TrafficSourceNoBackhaul should be identical
+      arrayfun(@(x,y) testCase.verifyTrue(x==y),...
+        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,1),...
+        testCase.Simulation.Traffic.TrafficSource(:,1));
+      arrayfun(@(x,y) testCase.verifyTrue(x==y),...
+        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,2),...
+        testCase.Simulation.Traffic.TrafficSource(:,2));
     end
     
     function testDelay(testCase)
@@ -52,7 +59,14 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(end,1) > (testCase.Config.Runtime.totalRounds-1)*10^(-3))
       %Verify that no traffic is lost
       testCase.verifyTrue(sum(testCase.Simulation.Traffic.TrafficSource(:,2)) == 1e+07);
-      
+      %Verify that the Trafficsource and Trafficsource with no backhaul are not equal
+      nRounds= testCase.Simulation.Config.Runtime.totalRounds;
+      arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
+      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,1),...
+      testCase.Simulation.Traffic.TrafficSource(1:nRounds,1));
+      arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
+      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,2),...
+      testCase.Simulation.Traffic.TrafficSource(1:nRounds,2));
     end
     
     function testMultiUes(testCase)
