@@ -28,10 +28,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		Config.Logs.dateFormat), '_choice_', choice, '.log');
 	Config.Logs.logLevel = 'NFO';
 	%Set number of rounds
-	Config.Runtime.totalRounds = 100;
-	Config.Runtime.remainingRounds = Config.Runtime.totalRounds;
-	Config.Runtime.remainingTime = Config.Runtime.totalRounds*10e-3;
-	Config.Runtime.realTimeRemaining = Config.Runtime.totalRounds*10;
+	Config.Runtime.simulationRounds = 100; 
 	%Disable plotting
 	Config.SimulationPlot.runtimePlot = 0;
 	%Setup numbers of UEs
@@ -47,24 +44,24 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	end 
 	%Set number of micro basestation
 	if simulationChoice == 3
-		Config.MicroEnb.sitesNumber = 3;
+		Config.MicroEnb.sitesNumber = 3; %1 per cell
 	else
-		Config.MicroEnb.sitesNumber = 0;
+		Config.MicroEnb.sitesNumber = 0; %baseline
 	end
 	%Set traffic to fullbuffer
 	Config.Traffic.arrivalDistribution = 'Static';
 	Config.Traffic.primary = 'fullBuffer';
 	Config.Traffic.mix = 0;
 	if simulationChoice == 4
-		Config.Backhaul.backhaulOn = 0;
+		Config.Backhaul.backhaulOn = 0; % Backhaul off
 	else
-		Config.Backhaul.backhaulOn = 1;
+		Config.Backhaul.backhaulOn = 1; % Backhaul on
 	end
 
 	if simulationChoice == 5
-		Config.Backhaul.bandwidth = 10^6;
+		Config.Backhaul.bandwidth = 10^6; %backhaul bottleneck
 	else
-		Config.Backhaul.bandwidth = 10^9;
+		Config.Backhaul.bandwidth = 10^9; %Backhaul not a bottleneck
 	end
 
 	Config.Mobility.scenario = 'pedestrian';
