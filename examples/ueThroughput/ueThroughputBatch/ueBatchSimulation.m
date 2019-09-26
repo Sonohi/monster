@@ -1,5 +1,5 @@
 function ueBatchSimulation(simulationChoice, folderPath)
-	% Single instance of simulation for the maritime batch scenario
+	% Single instance of simulation for the UE throughput example
 	%
 	% :param simulationSeed: integer that sets the seed for the simulation instance
 	% :param sweepEnabled: boolean that toggles whether the sweeping algorithm should be enabled in this instance
@@ -11,13 +11,11 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		choice = 'baseline';
 	elseif simulationChoice ==2
 		choice = 'bandwidth';
-	elseif simulationChoice ==3
-		choice = 'fewUsers';
-	elseif simulationChoice == 4
+	elseif simulationChoice == 3
 		choice = 'withMicro';
-	elseif simulationChoice == 5
+	elseif simulationChoice == 4
 		choice = 'withoutBackhaul';
-	elseif simulationChoice == 6
+	elseif simulationChoice == 5
 		choice = 'withBackhaul';
 	end
 
@@ -37,11 +35,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	%Disable plotting
 	Config.SimulationPlot.runtimePlot = 0;
 	%Setup numbers of UEs
-	if simulationChoice == 3
-		Config.Ue.number = 5;
-	else
-		Config.Ue.number = 25;
-	end
+	Config.Ue.number = 25;
 	%Setup number of Macro eNodeB
 	Config.MacroEnb.sitesNumber = 1;
 	Config.MacroEnb.cellsPerSite = 3;
@@ -52,7 +46,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		Config.MacroEnb.numPRBs = 50; %baseline
 	end 
 	%Set number of micro basestation
-	if simulationChoice == 4
+	if simulationChoice == 3
 		Config.MicroEnb.sitesNumber = 3;
 	else
 		Config.MicroEnb.sitesNumber = 0;
@@ -61,13 +55,13 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	Config.Traffic.arrivalDistribution = 'Static';
 	Config.Traffic.primary = 'fullBuffer';
 	Config.Traffic.mix = 0;
-	if simulationChoice == 5
+	if simulationChoice == 4
 		Config.Backhaul.backhaulOn = 0;
 	else
 		Config.Backhaul.backhaulOn = 1;
 	end
 
-	if simulationChoice == 6
+	if simulationChoice == 5
 		Config.Backhaul.bandwidth = 10^6;
 	else
 		Config.Backhaul.bandwidth = 10^9;
@@ -80,36 +74,35 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	% Create a simulation object 
 	Simulation = Monster(Config, Logger);
 
-	for iRound = 0:(Config.Runtime.totalRounds - 1)
-
+	for iRound = 0:(Simulation.Runtime.totalRounds - 1)
 		Simulation.setupRound(iRound);
-
-		Simulation.Logger.log(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
-		Simulation.Config.Runtime.remainingTime ), 'NFO');	
 	
+		Simulation.Logger.log(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
+			Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+			Simulation.Runtime.remainingTime ), 'NFO');	
+		
 		Simulation.run();
-
+	
 		Simulation.Logger.log(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
-
+			Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
+	
 		Simulation.collectResults();
-
+	
 		Simulation.Logger.log('(MAIN) collected simulation round results', 'NFO');
-
+	
 		Simulation.clean();
-
-		if iRound ~= Config.Runtime.totalRounds - 1
+	
+		if iRound ~= Simulation.Runtime.totalRounds - 1
 			Simulation.Logger.log('(MAIN) cleaned parameters for next round', 'NFO');
 		else
 			Simulation.Logger.log('(MAIN) simulation completed', 'NFO');
 			% Construct the export string
 			
-			fileName = strcat(datestr(datetime, 'HH.MM'), '_choice_', choice, '.mat');
+			fileName = strcat(datestr(datetime, 'HH.MM'), choice, '.mat');
 			resultsFileName = strcat(folderPath, '/', choice, '/', fileName);
-			storedResults = struct('results', Simulation.Results);
-			
-			save(resultsFileName, 'storedResults');
+			storedTraffic = struct('traffic',Simulation.Traffic);
+      storedResults = struct('results',Simulation.Results);
+      save(resultsFileName, 'storedResults','storedTraffic');
 		end
 	end
 

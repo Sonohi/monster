@@ -15,6 +15,7 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Monster = Monster(testCase.Config, testCase.Logger);
 			

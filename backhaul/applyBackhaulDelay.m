@@ -12,10 +12,10 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
     %Time
     t=0;
     %Delayed TrafficSource
-    TrafficSource = zeros(Config.Runtime.totalRounds, 2, Config.Ue.number);
+    TrafficSource = zeros(Config.Runtime.simulationRounds, 2, Config.Ue.number);
     %Number of errors
     numErrors = 0;
-    for iRound = 1:Config.Runtime.totalRounds
+    for iRound = 1:Config.Runtime.simulationRounds
         
         %Add incoming data to the queue
         for iUser = 1:Config.Ue.number
@@ -78,6 +78,7 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
                 Traffic(iUser).TrafficSource = TrafficSource(:,:,iUser);
                 Traffic(iUser).AssociatedUeIds = iUser;
                 Traffic(iUser).ArrivalTimes = TrafficIn(iTraffic).ArrivalTimes(TrafficIn(iTraffic).AssociatedUeIds==iUser);
+                Traffic(iUser).TrafficSourceNoBackhaul = TrafficIn(iTraffic).TrafficSource;
                 break;
             end
         end

@@ -23,7 +23,8 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.Config.Traffic.arrivalDistribution = 'Static';
       testCase.Config.Traffic.mix = 0;
       testCase.Config.Traffic.static = 0;
-      testCase.Config.Runtime.totalRounds = 100;
+      testCase.Config.SimulationPlot.runtimePlot = 0;
+      testCase.Config.Runtime.simulationRounds = 100;
       testCase.Logger = MonsterLog(testCase.Config);
       
     end
@@ -39,6 +40,13 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Arrivaltime should now be 0 and the first data should be 1e+07
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,1) == 0);
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,2) == 1e+07);
+      %Trafficsource and TrafficSourceNoBackhaul should be identical
+      arrayfun(@(x,y) testCase.verifyTrue(x==y),...
+        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,1),...
+        testCase.Simulation.Traffic.TrafficSource(:,1));
+      arrayfun(@(x,y) testCase.verifyTrue(x==y),...
+        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,2),...
+        testCase.Simulation.Traffic.TrafficSource(:,2));
     end
     
     function testDelay(testCase)
@@ -48,10 +56,18 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,1)>10^(-3));
       %Last arrival time is expected to be larger than the number of
       %round in ms
-      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(end,1) > (testCase.Config.Runtime.totalRounds-1)*10^(-3))
+      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(end,1) ...
+				> (testCase.Config.Runtime.simulationRounds-1)*10^(-3))
       %Verify that no traffic is lost
       testCase.verifyTrue(sum(testCase.Simulation.Traffic.TrafficSource(:,2)) == 1e+07);
-      
+      %Verify that the Trafficsource and Trafficsource with no backhaul are not equal
+      nRounds= testCase.Simulation.Config.Runtime.totalRounds;
+      arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
+      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,1),...
+      testCase.Simulation.Traffic.TrafficSource(1:nRounds,1));
+      arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
+      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,2),...
+      testCase.Simulation.Traffic.TrafficSource(1:nRounds,2));
     end
     
     function testMultiUes(testCase)
@@ -99,7 +115,7 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Setup to test functionality for error
       testCase.Config.Backhaul.errorRate = 0.5; %Half erros
       testCase.Config.Backhaul.errorMagnitude = 1; %Remove all data at errors
-      testCase.Config.Runtime.totalRounds = 10000; %Add enough rounds to stabalize result
+      testCase.Config.Runtime.simulationRounds = 10000; %Add enough rounds to stabilize result
       %Apply backhaul
       testCase.Simulation = Monster(testCase.Config, testCase.Logger);
       

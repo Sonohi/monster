@@ -9,15 +9,14 @@ if ~exist(folderPath, 'dir')
 	mkdir(folderPath);
 	mkdir(strcat(folderPath, '/baseline'));
 	mkdir(strcat(folderPath, '/bandwidth'));
-  mkdir(strcat(folderPath, '/fewUsers'));
   mkdir(strcat(folderPath, '/withMicro'));
   mkdir(strcat(folderPath, '/withoutBackhaul'));
   mkdir(strcat(folderPath, '/withBackhaul'));
 end
 
-simulationChoice = 1:6;
+simulationChoice = 1:5;
 
-for iSimulation = simulationChoice
+parfor iSimulation = simulationChoice %Change this "for" to "parfor" to enable parrelization for speed optimizing
   try
     ueBatchSimulation(iSimulation, folderPath);
   catch ME

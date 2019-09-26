@@ -8,6 +8,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 		Channel;
 		Users;
 		Logger;
+		Layout;
 	end
 
 	methods (TestClassSetup)
@@ -17,14 +18,15 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
-			testCase.Config.setupNetworkLayout(testCase.Logger);
-			Sites = setupSites(testCase.Config, testCase.Logger);
+			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
+			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.Cells = [Sites.Cells];
-			testCase.Users = setupUsers(testCase.Config, testCase.Logger);
+			testCase.Users = setupUsers(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.RxModule = [testCase.Users.Rx];
 			testCase.TxModule = [testCase.Cells.Tx];
-			testCase.Channel = setupChannel(testCase.Cells, testCase.Users, testCase.Config, testCase.Logger);
+			testCase.Channel = setupChannel(testCase.Cells, testCase.Users, testCase.Layout, testCase.Config, testCase.Logger);
 				
 		end
 	end

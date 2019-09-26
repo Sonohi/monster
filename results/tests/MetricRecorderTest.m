@@ -6,6 +6,7 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 		Cells;
 		Users;
 		Logger;
+		Layout;
 	end
 	
 	methods (TestClassSetup)
@@ -13,11 +14,12 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.Config = MonsterConfig();
 			%Set Harq active:
 			testCase.Config.Harq.active = true;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
-			testCase.Config.setupNetworkLayout(testCase.Logger);
-			Sites = setupSites(testCase.Config, testCase.Logger);
+			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
+			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.Cells = [Sites.Cells];
-			testCase.Users = setupUsers(testCase.Config, testCase.Logger);
+			testCase.Users = setupUsers(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.MetricRecorder = setupResults(testCase.Config, testCase.Logger);
 		end
 	end
@@ -30,7 +32,7 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 		end
 		
 		function testRecordEnbMetrics(testCase)
-			testCase.MetricRecorder.recordEnbMetrics(testCase.Cells, testCase.Config, testCase.Logger);
+			testCase.MetricRecorder.recordEnbMetrics(testCase.Cells, 1, testCase.Config, testCase.Logger);
 			%TODO: check for range and for all cells
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.util(1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.powerConsumed(1,1)));
@@ -44,7 +46,7 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 		end
 		
 		function testRecordUeMetrics(testCase)
-			testCase.MetricRecorder.recordUeMetrics(testCase.Users, 0);
+			testCase.MetricRecorder.recordUeMetrics(testCase.Users, 1, 0);
 			%TODO: check for range and for all users
 			testCase.verifyTrue(isnan(testCase.MetricRecorder.ber(1,1)));
 			testCase.verifyTrue(isnan(testCase.MetricRecorder.bler(1,1)));%Is this even doing anything?!?

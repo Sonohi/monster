@@ -5,14 +5,16 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 		TxModule;
 		Cells;
 		Logger;
+		Layout;
 	end
 
 	methods (TestClassSetup)
 		function createTransmitters(testCase)
 			testCase.Config  = MonsterConfig();
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
-			testCase.Config.setupNetworkLayout(testCase.Logger);
-			Sites = setupSites(testCase.Config, testCase.Logger);
+			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
+			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.Cells = [Sites.Cells];
 			testCase.TxModule = [testCase.Cells.Tx];
 

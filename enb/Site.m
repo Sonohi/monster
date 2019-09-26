@@ -10,13 +10,13 @@ classdef Site < matlab.mixin.Copyable
 
 	methods
 
-		function obj = Site(Config, Logger, iSite, existingSites, cellsClass)
+		function obj = Site(Config, Logger, Layout, iSite, existingSites, cellsClass)
 			% Get the site configuration 
 			switch cellsClass
 				case 'macro'
-					SiteConfig = Config.Plot.Layout.getMacroSiteConfig(Config, iSite);		
+					SiteConfig = Layout.getMacroSiteConfig(Config, iSite);		
 				case 'micro'
-					SiteConfig = Config.Plot.Layout.getMicroSiteConfig(Config, iSite, existingSites);
+					SiteConfig = Layout.getMicroSiteConfig(Config, iSite, existingSites);
 			end
 			obj.Logger = Logger;
 			obj.SiteId = SiteConfig.id;
