@@ -16,8 +16,8 @@ if ~isempty(fileNames)
 	Config = storedResults.config;
 	clear storedResults;
 	aggNoSweep = struct(...
-		'sinr', zeros(length(fileNames), Config.Runtime.totalRounds),...
-		'power', zeros(length(fileNames), Config.Runtime.totalRounds));
+		'sinr', zeros(length(fileNames), Config.Runtime.simulationRounds),...
+		'power', zeros(length(fileNames), Config.Runtime.simulationRounds));
 	for iFile = 1:length(fileNames)
 		load(fileNames{iFile});
 		aggNoSweep.sinr(iFile, :) = storedResults.sinr;
@@ -35,8 +35,8 @@ if ~isempty(fileNames)
 	Config = storedResults.config;
 	clear storedResults;
 	aggSweep = struct(...
-		'sinr', zeros(length(fileNames), Config.Runtime.totalRounds),...
-		'power', zeros(length(fileNames), Config.Runtime.totalRounds));
+		'sinr', zeros(length(fileNames), Config.Runtime.simulationRounds),...
+		'power', zeros(length(fileNames), Config.Runtime.simulationRounds));
 	for iFile = 1:length(fileNames)
 		load(fileNames{iFile});
 		aggSweep.sinr(iFile, :) = storedResults.sinr;

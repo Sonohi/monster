@@ -2,6 +2,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	%This is the class defining the layout for macro cells
 	
 	properties
+		Terrain;							% Info about the terrain properties
 		Center;             	% Center of the target area
 		ISD;             			% The ISD of macrocells
 		NumMacroSites;				% Number of macro sites
@@ -17,9 +18,12 @@ classdef NetworkLayout < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = NetworkLayout(xc, yc, Config, Logger)
-			%Constructor functions
-
+		function obj = NetworkLayout(Terrain, Config, Logger)
+			% Constructor 
+			obj.Terrain = Terrain;
+			xc = (Terrain.area(3) - Terrain.area(1))/2;
+			yc = (Terrain.area(4) - Terrain.area(2))/2;
+			
 			obj.Center = [xc yc];
 			obj.Logger = Logger;
 			obj.ISD = Config.MacroEnb.ISD;
@@ -29,34 +33,41 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			obj.computeMacroCoordinates(Config, obj.Logger);
 			obj.NumMicroSites = Config.MicroEnb.sitesNumber;
 			obj.MicroCellsPerSite = Config.MicroEnb.cellsPerSite;
-			[obj.MacroCells, obj.MicroCells] = obj.generateCells(Config);		
+			[obj.MacroCells, obj.MicroCells] = obj.generateCells(Config);
 		end
 		
-		function drawScenario(obj, Config, Sites)
+		function drawScenario(obj, Config, Sites, Plot)
+			% drawScenario plots the network and the cell sites in the layout
+			%
+			% :param obj: NetworkLayout instance
+			% :param Config: MonsterConfig instance
+			%	:param Sites: Array<Site> instances
+			% :param Plot: Struct plotting axes
+			%
 			enbLabelOffsetY = 0;
 			% Depending on the terrain type, draw either the buildings or the coastline
 			if strcmp(Config.Terrain.type, 'city')
 				enbLabelOffsetY = -20;
-				buildings = Config.Terrain.buildings;
+				buildings = obj.Terrain.buildings;
 				% Draw buildings
 				for i = 1:length(buildings(:,1))
 					x0 = buildings(i,1);
 					y0 = buildings(i,2);
 					x = buildings(i,3)-x0;
 					y = buildings(i,4)-y0;
-					rectangle(Config.Plot.LayoutAxes,'Position',[x0 y0 x y], ...
+					rectangle(Plot.LayoutAxes,'Position',[x0 y0 x y], ...
 						'FaceColor',[0.9 .9 .9 0.4],'EdgeColor',[1 1 1 0.6])
 				end
 			elseif strcmp(Config.Terrain.type, 'maritime')
 				enbLabelOffsetY = 30;
 				% draw coastline
-				plot(Config.Plot.LayoutAxes, Config.Terrain.coast.coastline(:,1), Config.Terrain.coast.coastline(:,2), ...
+				plot(Plot.LayoutAxes, Config.Terrain.coast.coastline(:,1), Config.Terrain.coast.coastline(:,2), ...
 					'Color', [0.62 0.21 0.04],...
 					'LineStyle', '-',...
 					'LineWidth', 2, ...
 					'DisplayName', 'Coastline');
 				% Draw a container for the scenario
-				rectangle(Config.Plot.LayoutAxes, 'Position', Config.Terrain.area, ...
+				rectangle(Plot.LayoutAxes, 'Position', Config.Terrain.area, ...
 					'FaceColor',[.99 .99 .99 .1],...
 					'EdgeColor',[0 0 0 0.1],...
 					'LineWidth', 1.2,...
@@ -64,7 +75,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			end
 			
 			% Draw the sites on the layout
-			% Load images 
+			% Load images
 			[macroImg, ~, macroAlpha] = imread('utils/images/macro.png');
 			% For some magical reason the image is rotated 180 degrees.
 			macroImg = imrotate(macroImg,180);
@@ -102,41 +113,42 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					cellsPerSite = Config.MicroEnb.cellsPerSite;
 					cellRadius = obj.MicroCells(1).Radius;
 				end
-				text(Config.Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
+				text(Plot.LayoutAxes, xc, yc + enbLabelOffsetY, ...
 					strcat(siteLabel, '(',num2str(round(xc)),', ',...
 					num2str(round(yc)),')'),'HorizontalAlignment','center');
 				% Position and set alpha from png image
-				f = imagesc(Config.Plot.LayoutAxes,[xc - siteImgLenghX xc + siteImgLenghX], ...
+				f = imagesc(Plot.LayoutAxes,[xc - siteImgLenghX xc + siteImgLenghX], ...
 					[yc - siteImgLenghY yc + siteImgLenghY], siteImg);
 				set(f, 'AlphaData', siteImgAlpha);
 				
 				% Now draw the cells boundaries for the site (only if macro
 				% site)
-                if strcmp(Sites(iSite).Class, 'macro')
-                    theta = pi/cellsPerSite;
-                    xyHex = zeros(7,2);
-                    for i=1:cellsPerSite
-                        cHex = [(xc + cellRadius * cos((i-1)*2*theta)) ...
-                            (yc + cellRadius * sin((i-1)*2*theta))];
-                        for j=1:7
-                            xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
-                            xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
-                        end
-                        l = line(Config.Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
-                        set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
-                    end
-                end
-			end		
+				if strcmp(Sites(iSite).Class, 'macro')
+					theta = pi/cellsPerSite;
+					xyHex = zeros(7,2);
+					for i=1:cellsPerSite
+						cHex = [(xc + cellRadius * cos((i-1)*2*theta)) ...
+							(yc + cellRadius * sin((i-1)*2*theta))];
+						for j=1:7
+							xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
+							xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
+						end
+						l = line(Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
+						set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
+					end
+				end
+			end
 			
 		end
 		
-		function drawUes(~, Users, Config, Logger)
+		function drawUes(~, Users, Config, Logger, Plot)
 			% drawUes plots the Users in the plot layout
 			%
 			% :param obj: NetworkLayout instance
 			%	:param Users: Array<UserEquipment> instances
 			% :param Config: MonsterConfig instance
 			% :param Logger: MonsterLog instance
+			% :param Plot: Struct plotting axes
 			%
 			
 			if strcmp(Config.Terrain.type, 'city')
@@ -145,7 +157,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					y0 = Users(iUser).Position(2);
 					
 					% UE in initial position
-					plot(Config.Plot.LayoutAxes,x0, y0, ...
+					plot(Plot.LayoutAxes,x0, y0, ...
 						'Marker', Users(iUser).PlotStyle.marker, ...
 						'MarkerFaceColor', Users(iUser).PlotStyle.colour, ...
 						'MarkerEdgeColor', Users(iUser).PlotStyle.edgeColour, ...
@@ -153,7 +165,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 						'DisplayName', strcat('UE ', num2str(Users(iUser).NCellID)));
 					
 					% Trajectory
-					plot(Config.Plot.LayoutAxes,Users(iUser).Mobility.Trajectory(:,1), Users(iUser).Mobility.Trajectory(:,2), ...
+					plot(Plot.LayoutAxes,Users(iUser).Mobility.Trajectory(:,1), Users(iUser).Mobility.Trajectory(:,2), ...
 						'Color', Users(iUser).PlotStyle.colour, ...
 						'LineStyle', '--', ...
 						'LineWidth', Users(iUser).PlotStyle.lineWidth,...
@@ -174,47 +186,41 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				for iUser = 1: length(Users)
 					x0 = Users(iUser).Position(1);
 					y0 = Users(iUser).Position(2);
-
-					text(x0, y0 + 20, strcat('Ship UE ', num2str(Users(iUser).NCellID),...
-							' (',num2str(round(x0)),', ',	num2str(round(y0)),')'),...
-							'HorizontalAlignment','center','FontSize',9);
 					
-					f = imagesc(Config.Plot.LayoutAxes, [x0 - shipLengthX x0 + shipLengthX],... 
+					text(x0, y0 + 20, strcat('Ship UE ', num2str(Users(iUser).NCellID),...
+						' (',num2str(round(x0)),', ',	num2str(round(y0)),')'),...
+						'HorizontalAlignment','center','FontSize',9);
+					
+					f = imagesc(Plot.LayoutAxes, [x0 - shipLengthX x0 + shipLengthX],...
 						[y0 - shipLengthY y0 + shipLengthY], shipImg);
 					set(f, 'AlphaData', alpha);
-
+					
 					% Trajectory
-					plot(Config.Plot.LayoutAxes, Users(iUser).Mobility.Trajectory(:,1), Users(iUser).Mobility.Trajectory(:,2), ...
+					plot(Plot.LayoutAxes, Users(iUser).Mobility.Trajectory(:,1), Users(iUser).Mobility.Trajectory(:,2), ...
 						'Color', [0.302 0.749 0.9294], ...
 						'LineStyle', ':', ...
 						'LineWidth', 1.6,...
 						'DisplayName', strcat('Ship UE ', num2str(Users(iUser).NCellID), ' trajectory'));
 					drawnow();
 				end
-
-			else 
+				
+			else
 				Logger.log('(NETWORK LAYOUT - drawUes) error, unsupported terrain type', 'ERR');
-
+				
 			end
 			% Toggle the legend
 			legend('Location','northeastoutside')
 		end
-
-		function Plot(obj, Simulation)
-			[Simulation.Config.Plot.LayoutFigure, Simulation.Config.Plot.LayoutAxes] = createLayoutPlot(Simulation.Config);
-			obj.drawScenario(Simulation.Config);
-			obj.drawUes(Simulation.Users, Simulation.Config);
-		end
-
+		
 		function SiteConfig = getMacroSiteConfig(obj, Config, siteId)
 			% Returns the configuration of a macro site and its cells for position and ID
 			%
 			% :param obj: NetworkLayout instance
 			% :param Config: MonsterConfig instance
 			% :param siteId: Integer site identifier
-			% 
+			%
 			% :returns SiteConfig: struct with the site configuration
-
+			
 			iSiteCells = find([obj.MacroCells.SiteID] == siteId);
 			siteCellsIds = [obj.MacroCells(iSiteCells).CellID];
 			sitePosition = [obj.MacroCoordinates(siteId,:), Config.MacroEnb.height];
@@ -225,7 +231,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				'macroCellId', -1,...
 				'cellsIds', siteCellsIds);
 		end
-
+		
 		function SiteConfig = getMicroSiteConfig(obj, Config, iSite, Sites)
 			% Returns the configuration of a micro site and its cells for position and ID
 			%
@@ -233,9 +239,9 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			% :param Config: MonsterConfig instance
 			% :param iSite: Integer index to generate site id
 			% :param Sites: Array<Site> sites created
-			% 
+			%
 			% :returns SiteConfig: struct with the site configuration
-
+			
 			% Find corresponding macro cell
 			totMacroCells = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite;
 			iMacroCell = iSite - floor(iSite/totMacroCells)*totMacroCells;
@@ -338,7 +344,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					end
 				end
 			elseif strcmp(Config.Terrain.type,'maritime')
-				% In this case, the macros are placed on the northern side of the coastline 
+				% In this case, the macros are placed on the northern side of the coastline
 				rng(Config.Runtime.seed);
 				northCoastLimit = max(Config.Terrain.coast.coastline(:,2));
 				minY = northCoastLimit + Config.Terrain.inlandDelta(2);
@@ -352,10 +358,10 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			else
 				Logger.log('(NETWORK LAYOUT - computeMacroCoordinates) unsupported terrain scenario');
 			end
-			% Set back in object			
+			% Set back in object
 			obj.MacroCoordinates = centers;
 		end
-
+		
 		% Generate the cells instances used to provide positioning info
 		function [macroCells, microCells] = generateCells(obj,Config)
 			% Initialise
@@ -390,7 +396,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				end
 			end
 		end
-
+		
 		% Calculates the position of the cell centres for groups of cells of the same site
 		function cellsCentres = calculateCellCentres(obj, siteCentre, numCells, ISD)
 			% Divide the circumference angle around the centre based on the number of cells
@@ -399,7 +405,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			cellRadius = ISD/numCells;
 			for iCell = 1:numCells
 				cellsCentres(iCell, 1) = siteCentre(1) + cellRadius * cos((iCell-1)*theta);
-				cellsCentres(iCell, 2) = siteCentre(2) + cellRadius * sin((iCell-1)*theta); 
+				cellsCentres(iCell, 2) = siteCentre(2) + cellRadius * sin((iCell-1)*theta);
 			end
 		end
 		

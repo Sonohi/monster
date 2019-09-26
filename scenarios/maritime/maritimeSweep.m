@@ -22,7 +22,7 @@ Config.Arq.active = false;
 Config.Channel.shadowingActive = 0;
 Config.Channel.losMethod = 'NLOS';
 Config.Traffic.arrivalDistribution = 'Static';
-Config.Traffic.static = Config.Runtime.totalRounds * 10e3; % No traffic
+Config.Traffic.static = Config.Runtime.simulationRounds * 10e3; % No traffic
 
 Logger = MonsterLog(Config);
 Logger.log('(MARITIME SWEEP) configured simulations and started initialisation', 'NFO');
@@ -40,12 +40,12 @@ sweepParameters = generateSweepParameters(Simulation, 'power');
 
 Simulation.Logger.log('(MARITIME SWEEP) sweep parameters initialised', 'NFO');
 
-for iRound = 0:(Config.Runtime.totalRounds - 1)
+for iRound = 0:(Simulation.Runtime.totalRounds - 1)
 	Simulation.setupRound(iRound);
 
 	Simulation.Logger.log(sprintf('(MARITIME SWEEP) simulation round %i, time elapsed %f s, time left %f s',...
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
-		Simulation.Config.Runtime.remainingTime ), 'NFO');	
+		Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+		Simulation.Runtime.remainingTime ), 'NFO');	
 	
 	Simulation.run();
 
@@ -54,7 +54,7 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 	sweepParameters = performAntennaSweep(Simulation, sweepParameters);
 
 	Simulation.Logger.log(sprintf('(MARITIME SWEEP) completed simulation round %i. %i rounds left' ,....
-		Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.remainingRounds), 'NFO');
+		Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
 
 	Simulation.collectResults();
 
@@ -62,7 +62,7 @@ for iRound = 0:(Config.Runtime.totalRounds - 1)
 
 	Simulation.clean();
 
-	if iRound ~= Config.Runtime.totalRounds - 1
+	if iRound ~= Simulation.Runtime.totalRounds - 1
 		Simulation.Logger.log('(MARITIME SWEEP) cleaned parameters for next round', 'NFO');
 	else
 		Simulation.Logger.log('(MARITIME SWEEP) simulation completed', 'NFO');

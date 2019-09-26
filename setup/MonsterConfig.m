@@ -37,7 +37,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Son = struct();
 		Harq = struct();
 		Arq = struct();
-		Plot = struct();
 		Scenario = struct();
 		Backhaul = struct();
 		SRS = struct();
@@ -52,14 +51,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Parameters related to simulation run time
 			Runtime = struct();
-			numRounds = 10;
-			Runtime.totalRounds = numRounds;
-			Runtime.remainingRounds = numRounds;
-			Runtime.currentRound = 0;
-			Runtime.currentTime = 0;
-			Runtime.remainingTime = Runtime.totalRounds*10e-3;
-			Runtime.realTimeElaspsed = 0;
-			Runtime.realTimeRemaining = numRounds * 10;
+			Runtime.simulationRounds = 10;
 			Runtime.seed = 126;
 			obj.Runtime = Runtime;
 
@@ -223,10 +215,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			SRS = struct();
 			SRS.active = true;
 			obj.SRS = SRS;
-            
-			% Properties related to plotting
-			Plot = struct();
-			obj.Plot = Plot;
 		end
 
 		function assertConfig(obj)
@@ -251,62 +239,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			assert(obj.Phy.pucchFormat == 2, errMsg);
 			errMsg = "(CONFIG - assertConfig) invalid value for Traffic.Mix. Only non negative values are allowed.";
 			assert(obj.Traffic.mix >= 0, errMsg);
-		end
-
-		function setupNetworkLayout(obj, Logger)
-			% Setup the layout given the config
-			%
-			% :param obj: (MonsterConfig) simulation config class instance
-			%	:param Logger: MonsterLog instance
-			% :sets obj.Plot.Layout: <NetworkLayout> network layout class instance
-
-			% Setup up needed terrain information given the terrain chosen
-			obj.setupTerrain()
-
-			xc = (obj.Terrain.area(3) - obj.Terrain.area(1))/2;
-			yc = (obj.Terrain.area(4) - obj.Terrain.area(2))/2;
-			% Plot
-			if obj.SimulationPlot.runtimePlot
-				[obj.Plot.LayoutFigure, obj.Plot.LayoutAxes] = createLayoutPlot(obj);
-				[obj.Plot.PHYFigure, obj.Plot.PHYAxes] = createPHYplot(obj);
-			end
-			obj.Plot.Layout = NetworkLayout(xc,yc,obj, Logger); 
-		end
-
-		function setupTerrain(obj)
-			Terrain = struct();
-			Terrain.type = obj.Terrain.type;
-			if strcmp(Terrain.type,'city')
-				% In the city scenario, a Manhattan city grid is generated based on a size parameter
-				Terrain.areaSize = 500;
-				Terrain.heightRange = [20,50];
-				Terrain.buildingWidth = 40;
-				Terrain.roadWidth = 10;
-				Terrain.buildings = generateManhattanGrid(...
-					Terrain.areaSize, Terrain.heightRange, Terrain.buildingWidth, Terrain.roadWidth);
-				Terrain.area = [...
-					min(Terrain.buildings(:, 1)), ...
-					min(Terrain.buildings(:, 2)), ...
-					max(Terrain.buildings(:, 3)), ...
-					max(Terrain.buildings(:, 4))];
-			elseif strcmp(Terrain.type,'maritime')
-				% In the maritime scenario, a coastline is generated based on a coordinate file within a square area
-				rng(obj.Runtime.seed);
-				Terrain.coast = struct('mean', 300, 'spread', 10, 'straightReach', 600, 'coastline', []);
-				Terrain.area = [0 0 Terrain.coast.straightReach Terrain.coast.straightReach];
-				% Compute the coastline
-				coastX = linspace(Terrain.area(1), Terrain.area(3), 50);
-				coastY = randi([Terrain.coast.mean - Terrain.coast.spread, Terrain.coast.mean + Terrain.coast.spread], 1, 50);
-				spreadX = linspace(Terrain.area(1), Terrain.area(3), 10000);
-				spreadY = interp1(coastX, coastY, spreadX, 'spline');
-				Terrain.coast.coastline(:,1) = spreadX(1,:);
-				Terrain.coast.coastline(:,2) = spreadY(1,:);				
-				Terrain.inlandDelta = [20,20]; % Minimum distance between the scenario edge and the coasline edge for placing the eNodeBs
-				Terrain.seaDelta = [50, 20]; % X and Y delta from the coast to the sea for the vessel trajectory
-			else
-				error('(MONSTER CONFIG - constructor) unsupported terrain scenario %s.', Terrain.type);
-			end
-			obj.Terrain = Terrain;
 		end
 
 		function storeConfig(obj, logName)
