@@ -35,36 +35,34 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			obj.infoUtilHi = Config.Son.utilHigh;
 			% Initialise for eNodeB
 			numEnodeBs = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite + Config.MicroEnb.sitesNumber * Config.MicroEnb.cellsPerSite;
-			obj.util = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			obj.powerConsumed = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			obj.util = zeros(Config.Runtime.simulationRounds, numEnodeBs);
+			obj.powerConsumed = zeros(Config.Runtime.simulationRounds, numEnodeBs);
+			temp(1:Config.Runtime.simulationRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Config.Harq.active
-				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
-				obj.arqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
+				obj.harqRtx = zeros(Config.Runtime.simulationRounds, numEnodeBs);
+				obj.arqRtx = zeros(Config.Runtime.simulationRounds, numEnodeBs);
 			end
-			obj.powerState = zeros(Config.Runtime.totalRounds, numEnodeBs);
-
+			obj.powerState = zeros(Config.Runtime.simulationRounds, numEnodeBs);
+			
 			% Initialise for UE
-			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.wideBandSinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.worstCaseSinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.wideBandCqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.postEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.throughput = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.receivedPowerdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rsrpdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rssidBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rsrqdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.ber = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.snrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.wideBandSinrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.worstCaseSinrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.bler = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.wideBandCqi = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.preEvm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.postEvm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.throughput = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.receivedPowerdBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rsrpdBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rssidBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rsrqdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Cells, Config, Logger)
-			% Increment the scheduling round for Matlab's indexing
-			schRound = Config.Runtime.currentRound + 1;
+		function obj = recordEnbMetrics(obj, Cells, schRound, Config, Logger)
 			obj = obj.recordUtil(Cells, schRound);
 			obj = obj.recordPower(Cells, schRound, Config.Son.powerScale, Config.Son.utilLow, Logger);
 			obj = obj.recordSchedule(Cells, schRound);
@@ -129,8 +127,6 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		% UE metrics
 		function obj = recordUeMetrics(obj, Users, schRound, Logger)
-			% Increment the scheduling round for Matlab's indexing
-			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
 			obj = obj.recordBler(Users, schRound);
 			obj = obj.recordSnr(Users, schRound);

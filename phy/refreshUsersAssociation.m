@@ -1,10 +1,11 @@
-function refreshUsersAssociation(Users, Cells, Channel, Config)
+function refreshUsersAssociation(Users, Cells, Channel, Config, timeNow)
 	% refreshUsersAssociation links UEs to a eNodeB
 	%
 	% :param Users: Array<UserEquipment> instances
 	% :param Cells: Array<EvolvedNodeB> instances
 	% :param Channel: Channel instance
 	% :param Config: MonsterConfig instance
+	% :param timeNow: Int current simulation time
 	
 	% Loop the users to get the association based on the signal attenuation
 	for iUser = 1:length(Users)
@@ -27,7 +28,7 @@ function refreshUsersAssociation(Users, Cells, Channel, Config)
 			Users(iUser).ENodeBID = targetEnbID;
 		else
 			% Call the handler for the handover that will take care of processing the change
-			[Users(iUser), Cells] = handleHangover(Users(iUser), Cells, targetEnbID, Config);
+			[Users(iUser), Cells] = handleHangover(Users(iUser), Cells, targetEnbID, Config, timeNow);
 		end
 	end
 	

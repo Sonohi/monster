@@ -12,7 +12,7 @@ function sweepParams = performAntennaSweep(Simulation, sweepParams)
 		ueSweep = sweepParams(sweepIndex);
 		% Evaluate that we are not waiting for an hysteresis timer to expire
 		Simulation.Logger.log('(MARITIME SWEEP - evaluateCurrentAngle) evaluating hysteresis for starting sweep', 'DBG');
-		if Simulation.Config.Runtime.currentTime - ueSweep.timeLastAssociation >= ueSweep.hysteresisTimer
+		if Simulation.Runtime.currentTime - ueSweep.timeLastAssociation >= ueSweep.hysteresisTimer
 			ueSweep = evaluateCurrentAngle(Simulation, ueSweep);
 		end
 
@@ -127,8 +127,8 @@ function ueSweep = evaluateCurrentAngle(Simulation, ueSweep)
 			if user.ENodeBID ~= targetEnb.eNodeBId
 				Simulation.Logger.log('(MARITIME SWEEP - evaluateCurrentAngle) associating with new target eNodeB', 'DBG');
 				% Call the handler for the handover that will take care of processing the change
-				[~, Simulation.Cells] = handleHangover(user, Simulation.Cells, targetEnb.eNodeBId, Simulation.Config);
-				ueSweep.timeLastAssociation = Simulation.Config.Runtime.currentTime;
+				[~, Simulation.Cells] = handleHangover(user, Simulation.Cells, targetEnb.eNodeBId, Simulation.Config, Simulation.Runtime.currentTime);
+				ueSweep.timeLastAssociation = Simulation.Runtime.currentTime;
 				ueSweep.currentAngle = targetEnb.angle;
 				ueSweep.startAngle = targetEnb.angle;
 				ueSweep.maxAngle = targetEnb.angle + 360;

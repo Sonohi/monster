@@ -1,13 +1,14 @@
-function [User, Cells] = handleHangover(User,Cells,targetEnbID, Config)
+function [User, Cells] = handleHangover(User,Cells,targetEnbID, Config, timeNow)
 	% handleHangover performs the steps of the handover procedure
 	%
-	% :User: UserEquipment
-	% :Cells: Array<EvolvedNodeB> instances
-	% :Channel: Integer NCellId of the target eNodeB after the handover
-	% :Config: MonsterConfig instance
+	% :param User: UserEquipment
+	% :param Cells: Array<EvolvedNodeB> instances
+	% :param Channel: Integer NCellId of the target eNodeB after the handover
+	% :param Config: MonsterConfig instance
+	% :param timeNow: Int current simulation time
 	%
-	% :User: UserEquipment instance with association updated to targetEnb
-	% :Cells: Array<EvolvedNodeB> instances with updated associations
+	% :returns User: UserEquipment instance with association updated to targetEnb
+	% :returns Cells: Array<EvolvedNodeB> instances with updated associations
 	%
 
 	% We handle the change only if the target eNodeB is not the current one
@@ -20,9 +21,9 @@ function [User, Cells] = handleHangover(User,Cells,targetEnbID, Config)
 			% in this case, we can initiate the HO procedure. This is the only case when we actually use the target eNodeB
 			User.Hangover.HoState = 1;
 			User.Hangover.TargetEnb = targetEnbID;
-			User.Hangover.HoStart = Config.Runtime.currentTime;
-			User.Hangover.HoComplete = Config.Runtime.currentTime + Config.Handover.x2Timer;
-		elseif User.Hangover.HoState == 1 && User.Hangover.HoComplete <= Config.Runtime.currentTime
+			User.Hangover.HoStart = timeNow;
+			User.Hangover.HoComplete = timeNow + Config.Handover.x2Timer;
+		elseif User.Hangover.HoState == 1 && User.Hangover.HoComplete <= timeNow
 			% perform hangover
 			% Get indices
 			iServingCell = find([Cells.NCellID] == User.ENodeBID);
