@@ -137,13 +137,8 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Update Config property
 			obj.Runtime.currentRound = iRound;
-<<<<<<< HEAD
-			obj.Runtime.currentTime = iRound*10e-3;  
-			obj.Runtime.remainingTime = (obj.Runtime.totalRounds - obj.Runtime.currentRound)*10e-3;
-=======
 			obj.Runtime.currentTime = iRound*10e-4;  
 			obj.Runtime.remainingTime = (obj.Runtime.totalRounds - obj.Runtime.currentRound)*10e-4;
->>>>>>> Backhaul
 			obj.Runtime.remainingRounds = obj.Runtime.totalRounds - obj.Runtime.currentRound - 1;
 			% Update Channel property
 			obj.Channel.setupRound(obj.Runtime.currentRound, obj.Runtime.currentTime);
