@@ -213,7 +213,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		function obj = recordThroughput(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(Users(iUser).Rx.Bits) && Users(iUser).Rx.Bits.tot ~= 0
-					obj.throughput(schRound, iUser) = Users(iUser).Rx.Bits.ok*10e3;
+					obj.throughput(schRound, iUser) = Users(iUser).Rx.Bits.ok;
 				else
 					obj.throughput(schRound, iUser) = NaN;
 				end
