@@ -20,6 +20,7 @@ classdef Scheduler < matlab.mixin.Copyable
 					switch obj.SchedulerType
 						case 'roundRobin'
 							obj.RoundRobinAlgorithm();
+						case ''
 							
 					
 					
