@@ -107,7 +107,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
 			Ue.antennaGain = 0;
-			Ue.antennaType = 'omni';
+			Ue.antennaType = 'omni'; % omni | vivaldi
 			obj.Ue = Ue;
 
 			% Properties related to mobility
