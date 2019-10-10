@@ -43,8 +43,18 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				case 'macro'
 					obj.Gain = Config.MacroEnb.antennaGain;
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
-					obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger);
 					obj.TxPwdBm = 10*log10(Config.MacroEnb.Pmax)+30;
+					if strcmp(Config.Mimo.transmissionMode, 'TxDiversity')
+						MimoConfig = struct(...
+							'panelCol', 1,...
+							'panelRow', 1,...
+							'elemPanelCol', 2,...
+							'elemPanelRow', 1,...
+							'polarizations',2);
+						obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger, MimoConfig);
+					else
+						obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger);
+					end
 					if ~strcmp(Config.MacroEnb.antennaType, 'omni')
 						obj.AntennaArray.Bearing = antennaBearing;
 					end

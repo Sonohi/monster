@@ -50,7 +50,17 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
 			obj.FadingActive = Config.Channel.fadingActive;
 			obj.AntennaGain = Config.Ue.antennaGain;
-			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
+			if strcmp(Config.Mimo.transmissionMode, 'TxDiversity')
+				MimoConfig = struct(...
+					'panelCol', 1,...
+					'panelRow', 1,...
+					'elemPanelCol', 2,...
+					'elemPanelRow', 1,...
+					'polarizations',2);
+				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, MimoConfig);
+			else
+				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger);
+			end
 		end
 		
 		function obj = setSNR(obj, SNR)

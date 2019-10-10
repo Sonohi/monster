@@ -220,7 +220,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to MIMO configuration
 			Mimo = struct();
-			Mimo.transmissionMode = "Port0"; % Supported Port0 | TxDiversity
+			Mimo.transmissionMode = "TxDiversity"; % Supported Port0 | TxDiversity
+			Mimo.rank = 2;
 			obj.Mimo = Mimo;
 		end
 

@@ -9,6 +9,7 @@ classdef AntennaArray < handle
 		Tilt;
 		Type; % 3GPP38901, Omni, Vivaldi
 		Logger;
+		Mimo;
 	end
 	
 	properties (Access = private)
@@ -20,10 +21,26 @@ classdef AntennaArray < handle
 		function obj = AntennaArray(type, Logger, varargin)
 			obj.Logger = Logger;
 			obj.Type = type;
+			% In the sectorised and omni cases, input arguments include the MIMO coniguration
+			% If empty, use default configuration
+			MimoConfig = struct(...
+				'panelCol', 1,...
+				'panelRow', 1,...
+				'elemPanelCol', 1,...
+				'elemPanelRow', 1,...
+				'polarizations',1);
 			switch type
 				case 'sectorised'
+					if ~isempty(varargin)
+						MimoConfig = varargin{1};
+					end
+					obj.Mimo = MimoConfig;
 					obj.config3gpp38901()
 				case 'omni'
+					if ~isempty(varargin)
+						MimoConfig = varargin{1};
+					end
+					obj.Mimo = MimoConfig;
 					obj.configOmniDirectional()
 				case 'vivaldi'
 					obj.configVivaldi(varargin{1})
@@ -51,7 +68,13 @@ classdef AntennaArray < handle
 			% Mg x Ng = Number of panels in rectangular grid
 			% M x N = Number of elements per panel in rectangular grid
 			% P = Number of polarizations per element.
-			arrayTuple = [1, 1, 1, 1, 1];
+			arrayTuple = [...
+				obj.Mimo.panelCol,...
+				obj.Mimo.panelRow,...
+				obj.Mimo.elemPanelCol,...
+				obj.Mimo.elemPanelRow,...
+				obj.Mimo.polarizations
+			];
 			bearing = 30;
 			tilt = 102;
 			obj.Panels = cell((arrayTuple(1)*arrayTuple(2)),1);
