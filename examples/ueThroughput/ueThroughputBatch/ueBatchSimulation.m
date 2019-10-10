@@ -36,6 +36,9 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	%Setup number of Macro eNodeB
 	Config.MacroEnb.sitesNumber = 1;
 	Config.MacroEnb.cellsPerSite = 3;
+	%Set channel conditions
+	Config.Channel.fadingActive = 'false';
+	Config.Channel.losMethod = 'NLOS';
 	%Set bandwidth
 	if simulationChoice == 2
 		Config.MacroEnb.numPRBs = 100; %Double prb
@@ -59,7 +62,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	end
 
 	if simulationChoice == 5
-		Config.Backhaul.bandwidth = 10^6; %backhaul bottleneck
+		Config.Backhaul.bandwidth = 10^7; %backhaul bottleneck
 	else
 		Config.Backhaul.bandwidth = 10^9; %Backhaul not a bottleneck
 	end
@@ -75,13 +78,13 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		Simulation.setupRound(iRound);
 	
 		Simulation.Logger.log(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
-			Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
-			Simulation.Runtime.remainingTime ), 'NFO');	
+		Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+		Simulation.Runtime.remainingTime ), 'NFO');	
 		
 		Simulation.run();
 	
 		Simulation.Logger.log(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
-			Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
+		Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
 	
 		Simulation.collectResults();
 	
@@ -98,8 +101,8 @@ function ueBatchSimulation(simulationChoice, folderPath)
 			fileName = strcat(datestr(datetime, 'HH.MM'), choice, '.mat');
 			resultsFileName = strcat(folderPath, '/', choice, '/', fileName);
 			storedTraffic = struct('traffic',Simulation.Traffic);
-      storedResults = struct('results',Simulation.Results);
-      save(resultsFileName, 'storedResults','storedTraffic');
+			storedResults = struct('results',Simulation.Results);
+     		save(resultsFileName, 'storedResults','storedTraffic');
 		end
 	end
 
