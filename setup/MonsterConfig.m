@@ -18,7 +18,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 	% :Scheduling: (struct) configuration for the eNodeB downlink schedulink algorithm
 	% :Son: (struct) configuration for SON-related parameters
 	% :Harq: (struct) configuration for the HARQ protocol (e.g. activation, etc.)
- 	% :Arq: (struct) configuration for the ARQ protocol (e.g activation, etc.)
+	% :Arq: (struct) configuration for the ARQ protocol (e.g activation, etc.)
+	% :Mimo: (struct) configuration for the global transmission mode for the simulation
 
 	properties 
 		Runtime = struct();
@@ -40,6 +41,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Scenario = struct();
 		Backhaul = struct();
 		SRS = struct();
+		Mimo = struct();
 	end
 
 	methods
@@ -215,6 +217,11 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			SRS = struct();
 			SRS.active = true;
 			obj.SRS = SRS;
+
+			% Properties related to MIMO configuration
+			Mimo = struct();
+			Mimo.transmissionMode = "Port0"; % Supported Port0 | TxDiversity
+			obj.Mimo = Mimo;
 		end
 
 		function assertConfig(obj)

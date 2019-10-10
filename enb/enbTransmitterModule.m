@@ -65,7 +65,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.resetReference();
 			obj.resetResourceGrid();
 			obj.setupGrid(0);
-			obj.initPDSCH();
+			obj.initPDSCH(Config);
 			obj.Freq = Config.Phy.downlinkFrequency;
 		end
 		
@@ -290,10 +290,11 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 		%
 		% TM1 is used (1 antenna) thus Rho is 0 dB, if MIMO change to 3 dB
 		% See 36.213 5.2
-		function obj = initPDSCH(obj)
+		function obj = initPDSCH(obj, Config)
 			NDLRB = obj.Enb.NDLRB;
+			txMode = Config.Mimo.transmissionMode;
 			ch = struct(...
-				'TxScheme', 'Port0',...
+				'TxScheme', txMode,...
 				'Modulation', {'QPSK'},...
 				'NLayers', 1, ...
 				'Rho', 0,...
