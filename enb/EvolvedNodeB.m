@@ -496,7 +496,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :Config: MonsterConfig instance
 			
 			if obj.ShouldSchedule
-				obj.Schedulers.downlink.scheduleUsers();
+				obj.Schedulers.downlink.scheduleUsers(Users);
 				[obj, Users] = schedule(obj, Users, Config);
 				% Check utilisation
 				sch = find([obj.ScheduleDL.UeId] ~= -1);

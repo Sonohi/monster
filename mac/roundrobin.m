@@ -1,57 +1,49 @@
-function [mapping, updatedqueue] = roundrobin(users, queue, prbs, harqActive)
+function [prbs, updatedqueue] = roundrobin(cell, users, scheduledIds, queueIds, prbs, harqActive, Config)
 
 	% <users> array of struct with the fields: UeId, arqRtxInfo, harqRtxInfo, Scheduled, Queue, ModOrder, CQI
+	% <queue> array of struct with fields: UeId, arqRtxInfo, harqRtxInfo, Scheduled, Queue, ModOrder, CQI
+	% <prbs> int: number of PRBs
+	% <harqActive> bool: if Harq is active
 
 
 	% Compute number of available resources
-	numPRBs = length(prbs);
+	PRBAvailable = length(prbs);
 
-	% TODO: add abs mask here
-
-	PRBAvailable = numPRBs;
-
-	% Get user Ids from previous round
-	userIds = [users.UeId];
-
-	if ~isempty(queue)
-		queueIds = [queue.UeId];
-		userIds = [queueIds userIds(userIds ~= queueIds)];
+	if ~isempty(queueIds)
+		userIds = [queueIds scheduledIds(scheduledIds ~= queueIds)];
 	else
-		queueIds = [];
+		userIds = scheduledIds;
 	end
 
 	% userIds is now a prioritized list of users, with queued users placed first
-
-	maxIterations = numPRBs;
+	resourcesAvailable = 1;
 	
-	while maxIterations > 0
+	while resourcesAvailable
 		iUserID = userIds(1); % Get first from userids
-		iUser = users(iUserID  == users.UeId);
+		iUser = users([users.NCellID] == iUserID);
 
 		% Condition cases
 		% check the users has been scheduled.
 
-		% pop user from list
-		userIds = userIds(2:end);
 
 		% If the retransmissions are on, check awaiting retransmissions
 		rtxInfo = struct('proto', [], 'identifier', [], 'iUser', -1);
 		if harqActive
-			% Get RLC queue
-			arqRtxInfo = iUser.arqRtxInfo;
-			arqTxProcesses = Cell.Rlc.ArqTxBuffers(iUser); % TODO: check that this is a shallow copy
+			% RLC queue check
+			iUserRlc = find([cell.Rlc.ArqTxBuffers.rxId] == iUserID);
+			arqRtxInfo = cell.Rlc.ArqTxBuffers(iUserRlc).getRetransmissionState();
 
-			% Get MAC queue
-			harqRtxInfo = iUser.harqRtxInfo;
-			harqTxProcesses = Cell.Mac.HarqTxProcesses(iUser);
+			% MAC queues check
+			iUserMac = find([cell.Mac.HarqTxProcesses.rxId] == iUserID);
+			harqRtxInfo = cell.Mac.HarqTxProcesses(iUserMac).getRetransmissionState();
 			if harqRtxInfo.flag
 				rtxInfo.proto = 1;
 				rtxInfo.identifier = harqRtxInfo.procIndex;
-				rtxInfo.iUser = iUser;
+				rtxInfo.iUser = iUserID;
 			elseif arqRtxInfo.flag
 				rtxInfo.proto = 2;
 				rtxInfo.identifier = arqRtxInfo.bufferIndex;
-				rtxInfo.iUser = iUser;
+				rtxInfo.iUser = iUserID;
 			else
 				rtxInfo.proto = 0;
 				rtxInfo.identifier = [];
@@ -65,7 +57,7 @@ function [mapping, updatedqueue] = roundrobin(users, queue, prbs, harqActive)
 
 		% If there are still PRBs available, then we can schedule either a new TB or a RTX
 		if PRBAvailable > 0
-			modOrd = iUser.ModOrd;
+			modOrd = Config.Phy.modOrdTable(iUser.Rx.CQI);
 
 			% If the user do no have any retransmissions. PRBS needed are primarily based on the queue size
 			if noRtxSchedulingFlag
@@ -104,29 +96,40 @@ function [mapping, updatedqueue] = roundrobin(users, queue, prbs, harqActive)
 			end
 
 			% write to schedule struct and indicate also in the struct whether this is new data or RTX
-			for iPrb = 1:Cell.NDLRB
-				if Cell.ScheduleDL(iPrb).UeId == -1
+			for iPrb = 1:length(prbs)
+				if prbs(iPrb).UeId == -1
 					mcs = Config.Phy.mcsTable(iUser.Rx.CQI + 1, 1);
-					for iSch = 0:prbsSch-1
-						Cell.ScheduleDL(iPrb + iSch) = struct(...
-							'UeId', iUser.NCellID,...
-							'Mcs', mcs,...
-							'ModOrd', modOrd,...
-							'NDI', noRtxSchedulingFlag);
+					for iSch = 0:PRBScheduled-1
+						prbs(iPrb + iSch).UeId = iUser.NCellID;
+						prbs(iPrb + iSch).MCS = mcs;
+						prbs(iPrb + iSch).ModOrd = modOrd;
+						prbs(iPrb + iSch).NDI = noRtxSchedulingFlag;
 					end
 					break;
 				end
 			end
-						
-		maxRounds = maxRounds - 1;
+			
+			
+			% pop user from list
+			if length(userIds) > 1
+				userIds = userIds(2:end);
+			else
+				userIds = [];
+				resourcesAvailable = 0; % No more users to schedule
+			end
+
+		
 			
 		else
 			% There are no more PRBs available, this will be the first UE to be scheduled
 			% in the next round.
-			% Check first whether we went too far in the list and we need to restart
-			% from the beginning
-			Cell.RoundRobinDLNext.UeId = iUser.NCellID;
+			resourcesAvailable = 0;
 
 		end
-	end	
+	end
+	
+	% Add remaining users to the queue
+	updatedqueue = userIds;
+	
+	
 end
