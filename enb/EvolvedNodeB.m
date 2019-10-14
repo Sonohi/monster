@@ -17,7 +17,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		OCNG;
 		Windowing;
 		AssociatedUsers = [];
-		ScheduleDL;
 		ScheduleUL;
 		RoundRobinDLNext;
 		RoundRobinULNext;
@@ -81,9 +80,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
-			obj.RoundRobinDLNext = struct('UeId',0,'Index',1);
 			obj.RoundRobinULNext = struct('UeId',0,'Index',1);
-			obj = resetScheduleDL(obj);
 			obj.ScheduleUL = [];
 			obj.PowerState = 1;
 			obj.HystCount = 0;
@@ -169,8 +166,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		
 		% reset schedule
 		function obj = resetScheduleDL(obj)
-			temp(1:obj.NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1, 'NDI', 1);
-			obj.ScheduleDL = temp;
+			obj.Schedulers.downlink.reset();
 		end
 		
 		function obj = resetScheduleUL(obj)
@@ -190,7 +186,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Returns minimum MCS 
 			% Optional: returns list of MCS
 			idxUE = obj.getPRBSetDL(ue);
-			listMCS = [obj.ScheduleDL(idxUE).Mcs];
+			listMCS = [obj.Schedulers.downlink.PRBsActive(idxUE).MCS];
 			minMCS = min(listMCS);
 			varargout{1} = listMCS;
 		end
@@ -206,7 +202,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Return list of PRBs assigned to a specific user
 			%
 			% Return PRB set of specific user
-    	PRBSet = find([obj.ScheduleDL.UeId] == ue.NCellID);
+    	PRBSet = find([obj.Schedulers.downlink.PRBsActive.UeId] == ue.NCellID);
 		end
 				
 		
@@ -280,7 +276,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function userIds = getUserIDsScheduledDL(obj)
-			userIds = unique([obj.ScheduleDL]);
+			userIds = unique([obj.Schedulers.downlink.ScheduledUsers]);
 		end
 		
 		function userIds = getUserIDsScheduledUL(obj)
@@ -446,7 +442,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.NSubframe = mod(nextSchRound,10);
 			
 			% Reset the DL schedule
-			obj = obj.resetScheduleDL();
+			obj.resetScheduleDL();
 			
 			% Reset the transmitter
 			obj.Tx.reset();
@@ -497,10 +493,9 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 			if obj.ShouldSchedule
 				obj.Schedulers.downlink.scheduleUsers(Users);
-				[obj, Users] = schedule(obj, Users, Config);
 				% Check utilisation
-				sch = find([obj.ScheduleDL.UeId] ~= -1);
-				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.ScheduleDL]);
+				sch = find([obj.Schedulers.downlink.PRBsActive.UeId] ~= -1);
+				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.Schedulers.downlink.PRBsActive]);
 				
 				if isempty(obj.Utilisation)
 					obj.Utilisation = 0;

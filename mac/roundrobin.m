@@ -10,7 +10,7 @@ function [prbs, updatedqueue] = roundrobin(cell, users, scheduledIds, queueIds, 
 	PRBAvailable = length(prbs);
 
 	if ~isempty(queueIds)
-		userIds = [queueIds scheduledIds(scheduledIds ~= queueIds)];
+		userIds = [queueIds scheduledIds(~ismember(scheduledIds,queueIds))];
 	else
 		userIds = scheduledIds;
 	end

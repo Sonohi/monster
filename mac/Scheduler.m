@@ -27,6 +27,8 @@ classdef Scheduler < matlab.mixin.Copyable
             obj.SchedulerType = Config.Scheduling.type;
 						obj.PRBSet = 1:NRB;
 						obj.PRBsActive = struct('UeId', {}, 'MCS', {}, 'NDI', {}, 'ModOrd', {});
+						% Initialize the structure
+						obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1, 'NDI', -1, 'ModOrd', -1);
 						obj.HarqActive = Config.Harq.active;
 						obj.Config = Config;
 						
@@ -43,8 +45,7 @@ classdef Scheduler < matlab.mixin.Copyable
 							% update userids for scheduling
 							obj.updateUsers();
 							
-							% Initialize the structure
-							obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1, 'NDI', -1, 'ModOrd', -1);
+							
 							
 							% Run scheduling algorithm
 							obj.allocateResources(Users);
@@ -60,11 +61,8 @@ classdef Scheduler < matlab.mixin.Copyable
 
 
         function obj = reset(obj)
-            
-            obj.ScheduledUsers = [];
-            obj.PRBsActive = [];
-
-	
+		       obj.ScheduledUsers = [];
+					 obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1, 'NDI', -1, 'ModOrd', -1);
 			end
 		
 	end	

@@ -37,7 +37,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			numEnodeBs = Config.MacroEnb.sitesNumber * Config.MacroEnb.cellsPerSite + Config.MicroEnb.sitesNumber * Config.MicroEnb.cellsPerSite;
 			obj.util = zeros(Config.Runtime.totalRounds, numEnodeBs);
 			obj.powerConsumed = zeros(Config.Runtime.totalRounds, numEnodeBs);
-			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'Mcs', NaN, 'ModOrd', NaN, 'NDI', NaN);
+			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'MCS', NaN, 'ModOrd', NaN, 'NDI', NaN);
 			obj.schedule = temp;
 			if Config.Harq.active
 				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
@@ -77,8 +77,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordUtil(obj, Cells, schRound)
 			for iCell = 1:length(Cells)
-				sch = find([Cells(iCell).ScheduleDL.UeId] ~= -1);
-				utilPercent = 100*find(sch, 1, 'last' )/length(Cells(iCell).ScheduleDL);
+				sch = find([Cells(iCell).Schedulers.downlink.PRBsActive.UeId] ~= -1);
+				utilPercent = 100*find(sch, 1, 'last' )/length(Cells(iCell).Schedulers.downlink.PRBsActive);
 				
 				% check utilPercent and change to 0 if null
 				if isempty(utilPercent)
@@ -102,8 +102,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSchedule(obj, Cells, schRound)
 			for iCell = 1:length(Cells)
-				numPrbs = length(Cells(iCell).ScheduleDL);
-				obj.schedule(schRound, iCell, 1:numPrbs) = Cells(iCell).ScheduleDL;
+				numPrbs = length(Cells(iCell).Schedulers.downlink.PRBsActive);
+				obj.schedule(schRound, iCell, 1:numPrbs) = Cells(iCell).Schedulers.downlink.PRBsActive;
 			end
 		end
 		

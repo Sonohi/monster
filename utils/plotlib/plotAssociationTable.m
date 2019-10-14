@@ -13,7 +13,7 @@ function plotAssociationTable(Users, Cells, Config)
 		Cell = Cells(iCell);
 		% Find all scheduled users in DL
 
-        scheduledusers = [Cell.ScheduleDL.UeId];
+        scheduledusers = [Cell.getUserIDsScheduledDL()];
         scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
 
 		for user = 1:length(scheduledusers)
