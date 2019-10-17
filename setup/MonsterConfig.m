@@ -169,6 +169,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel = struct();
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
+			Channel.FadingModel = 'TDL'; % TDL | CDL
 			Channel.interferenceType = 'Frequency'; % 'Power', 'Frequency' 
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
@@ -221,7 +222,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to MIMO configuration
 			Mimo = struct();
 			Mimo.transmissionMode = "TxDiversity"; % Supported Port0 | TxDiversity
-			Mimo.rank = 2;
+			Mimo.elementsPerPanel = [2, 2]; % panel configuration MxN as per 3GPP 38.901 
 			obj.Mimo = Mimo;
 		end
 

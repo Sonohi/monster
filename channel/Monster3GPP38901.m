@@ -557,17 +557,16 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		
 		
 		function tempVar = addFading(obj, Cell, User, mode, tempVar)
-			% addFading
+			% Applies fading to the channel model based on the type configured
 			%
-			% :param obj:
-			% :param Cell:
-			% :param User:
-			% :param mode:
-			%
-			% TODO: Add possibility to change the fading model used from parameters.
+			% :param obj: Monster3GPP38901 instance
+			% :param Cell: Cell instance
+			% :param User: UserEquipment instance
+			% :param mode: string direction mode downlink | uplink
+			% :param tempVar: struct temporary variables used to store impairments 
+			% :return tempVar: struct updated impairments
 			%
 			
-			fadingmodel = 'tdl';
 			% UT velocity in km/h
 			v = User.Mobility.Velocity * 3.6;
 			
@@ -597,8 +596,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
 			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
 			
-			switch fadingmodel
-				case 'cdl'
+			switch obj.FadingModel
+				case 'CDL'
 					cdl = nrCDLChannel;
 					cdl.DelayProfile = 'CDL-C';
 					cdl.DelaySpread = 300e-9;
@@ -606,13 +605,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					cdl.MaximumDopplerShift = fd;
 					cdl.SampleRate = TxNode.Tx.WaveformInfo.SamplingRate;
 					cdl.InitialTime = obj.Channel.simulationTime;
-					cdl.TransmitAntennaArray.Size = [1 1 1 1 1];
-					cdl.ReceiveAntennaArray.Size = [1 1 1 1 1];
+					cdl.TransmitAntennaArray.Size = obj.Mimo.arrayTuple;
+					cdl.ReceiveAntennaArray.Size = obj.Mimo.arrayTuple;
 					cdl.SampleDensity = 256;
 					cdl.Seed = seed;
 					tempVar.RxWaveform = cdl(sig);
-				case 'tdl'
-					tdl = nrTDLChannel;
+				case 'TDL'
+					tdl = nrTDLChannel;c
 					
 					% Set transmission direction for MIMO correlation
 					switch mode
@@ -628,8 +627,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					tdl.MaximumDopplerShift = fd;
 					tdl.SampleRate = samplingRate;
 					tdl.InitialTime = obj.Channel.simulationTime;
-					tdl.NumTransmitAntennas = 1;
-					tdl.NumReceiveAntennas = 1;
+					tdl.NumTransmitAntennas = obj.Mimo.numTxAntennas;
+					tdl.NumReceiveAntennas = obj.Mimo.numRxAntennas;
 					tdl.Seed = seed;
 					%tdl.KFactorScaling = true;
 					%tdl.KFactor = 3;
