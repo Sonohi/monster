@@ -17,14 +17,9 @@ function refreshUsersAssociation(Users, Cells, Channel, Config, timeNow)
 		if Users(iUser).ENodeBID == -1
 			% Find an empty slot and set the context and the new eNodeBID
 			iServingCell = find([Cells.NCellID] == targetEnbID);
-			iFree = find([Cells(iServingCell).Users.UeId] == -1);
-			iFree = iFree(1);
-			ueContext = struct(...
-				'UeId', Users(iUser).NCellID,...
-				'CQI', Users(iUser).Rx.CQI.wideBand,...
-				'RSSI', Users(iUser).Rx.RSSIdBm);
 				
-			Cells(iServingCell).Users(iFree) = ueContext;
+			%Cells(iServingCell).Users(iFree) = ueContext;
+			Cells(iServingCell).associateUser(Users(iUser));
 			Users(iUser).ENodeBID = targetEnbID;
 		else
 			% Call the handler for the handover that will take care of processing the change

@@ -104,7 +104,6 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			for i=2:testCase.Simulation.Runtime.totalRounds
 				for j=1:testCase.Config.MacroEnb.numPRBs
 					testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).UeId, 1); %Assert that UE 1 is scheduled all the time
-					testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).NDI, true); %Asssert that New Data Indicator indicates that there are more data.
 					%testCase.verifyTrue(testCase.Simulation.Results.schedule(i,1,j).ModOrd == 2 ||...
 					%testCase.Simulation.Results.schedule(i,1,j).ModOrd == 4 ||...
 					%testCase.Simulation.Results.schedule(i,1,j).ModOrd == 6 ); %TODO: examine how to assert this
