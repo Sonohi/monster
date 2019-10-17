@@ -11,10 +11,10 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		powerState;
 		ber;
 		snrdB;
-		sinrdB;
-		estsinrdB;
+		wideBandSinrdB
+		worstCaseSinrdB;
 		bler;
-		cqi;
+		wideBandCqi;
 		preEvm;
 		postEvm;
 		throughput;
@@ -40,31 +40,29 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			temp(1:Config.Runtime.totalRounds, numEnodeBs, 1:Config.MacroEnb.numPRBs) = struct('UeId', NaN, 'MCS', NaN, 'ModOrd', NaN);
 			obj.schedule = temp;
 			if Config.Harq.active
-				obj.harqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
-				obj.arqRtx = zeros(Config.Runtime.totalRounds, numEnodeBs);
+				obj.harqRtx = zeros(Config.Runtime.simulationRounds, numEnodeBs);
+				obj.arqRtx = zeros(Config.Runtime.simulationRounds, numEnodeBs);
 			end
-			obj.powerState = zeros(Config.Runtime.totalRounds, numEnodeBs);
+			obj.powerState = zeros(Config.Runtime.simulationRounds, numEnodeBs);
 			
 			% Initialise for UE
-			obj.ber = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.snrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.sinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.estsinrdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.bler = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.cqi = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.preEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.postEvm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.throughput = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.receivedPowerdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rsrpdBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rssidBm = zeros(Config.Runtime.totalRounds, Config.Ue.number);
-			obj.rsrqdB = zeros(Config.Runtime.totalRounds, Config.Ue.number);
+			obj.ber = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.snrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.wideBandSinrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.worstCaseSinrdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.bler = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.wideBandCqi = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.preEvm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.postEvm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.throughput = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.receivedPowerdBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rsrpdBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rssidBm = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
+			obj.rsrqdB = zeros(Config.Runtime.simulationRounds, Config.Ue.number);
 		end
 		
 		% eNodeB metrics
-		function obj = recordEnbMetrics(obj, Cells, Config, Logger)
-			% Increment the scheduling round for Matlab's indexing
-			schRound = Config.Runtime.currentRound + 1;
+		function obj = recordEnbMetrics(obj, Cells, schRound, Config, Logger)
 			obj = obj.recordUtil(Cells, schRound);
 			obj = obj.recordPower(Cells, schRound, Config.Son.powerScale, Config.Son.utilLow, Logger);
 			obj = obj.recordSchedule(Cells, schRound);
@@ -125,16 +123,14 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			for iCell = 1:length(Cells)
 				obj.powerState(schRound, iCell) = Cells(iCell).PowerState;
 			end
-		end
+        end
 		
 		% UE metrics
 		function obj = recordUeMetrics(obj, Users, schRound, Logger)
-			% Increment the scheduling round for Matlab's indexing
-			schRound = schRound + 1;
 			obj = obj.recordBer(Users, schRound);
 			obj = obj.recordBler(Users, schRound);
-			obj = obj.recordSnrdB(Users, schRound);
-			obj = obj.recordSinrdB(Users, schRound);
+			obj = obj.recordSnr(Users, schRound);
+			obj = obj.recordSinr(Users, schRound);
 			obj = obj.recordCqi(Users, schRound);
 			obj = obj.recordEvm(Users, schRound);
 			obj = obj.recordThroughput(Users, schRound);
@@ -176,7 +172,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = recordSnrdB(obj, Users, schRound)
+		function obj = recordSnr(obj, Users, schRound)
 			for iUser = 1:length(Users)
 				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
 					obj.snrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SNRdB;
@@ -184,21 +180,21 @@ classdef MetricRecorder < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = recordSinrdB(obj, Users, schRound)
+		function obj = recordSinr(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.SINRS)
-					obj.estsinrdB(schRound, iUser) = Users(iUser).Rx.SINRS;
+				if ~isempty(Users(iUser).Rx.SINRdB.wideBand)
+					obj.wideBandSinrdB(schRound, iUser) = Users(iUser).Rx.SINRdB.wideBand;
 				end
 				if ~isempty(fieldnames(Users(iUser).Rx.ChannelConditions))
-					obj.sinrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SINRdB;
+					obj.worstCaseSinrdB(schRound, iUser) = Users(iUser).Rx.ChannelConditions.SINRdB;
 				end
 			end
 		end
 		
 		function obj = recordCqi(obj, Users, schRound)
 			for iUser = 1:length(Users)
-				if ~isempty(Users(iUser).Rx.CQI)
-					obj.cqi(schRound, iUser) = Users(iUser).Rx.CQI;
+				if ~isempty(Users(iUser).Rx.CQI.wideBand)
+					obj.wideBandCqi(schRound, iUser) = Users(iUser).Rx.CQI.wideBand;
 				end
 			end
 		end
@@ -230,8 +226,7 @@ classdef MetricRecorder < matlab.mixin.Copyable
 					obj.receivedPowerdBm(schRound, iUser) = Users(iUser).Rx.ChannelConditions.RxPwdBm;
 				end
 			end
-		end
-		
+        end
 		
 	end
 end

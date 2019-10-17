@@ -23,10 +23,10 @@ classdef simulationTest < matlab.unittest.TestCase
 			%Setup simulation for round 0
 			iRound = 0;
 			testCase.Simulation.setupRound(iRound);
-			testCase.verifyTrue(testCase.Config.Runtime.currentRound == iRound);
-			testCase.verifyTrue(testCase.Config.Runtime.currentTime == iRound*10e-3);
-			testCase.verifyTrue(testCase.Config.Runtime.remainingTime == (testCase.Config.Runtime.totalRounds - testCase.Config.Runtime.currentRound)*10e-3);
-			testCase.verifyTrue(testCase.Config.Runtime.remainingRounds == testCase.Config.Runtime.totalRounds - testCase.Config.Runtime.currentRound - 1);
+			testCase.verifyTrue(testCase.Simulation.Runtime.currentRound == iRound);
+			testCase.verifyTrue(testCase.Simulation.Runtime.currentTime == iRound*10e-3);
+			testCase.verifyTrue(testCase.Simulation.Runtime.remainingTime == (testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound)*10e-3);
+			testCase.verifyTrue(testCase.Simulation.Runtime.remainingRounds == testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound - 1);
 			
 			%TODO: Test for channel setup as well?
 		end

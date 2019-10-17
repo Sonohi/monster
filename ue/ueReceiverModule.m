@@ -1,16 +1,13 @@
 classdef ueReceiverModule < matlab.mixin.Copyable
 	properties
 		ChannelConditions = struct();
-
 		NoiseFigure;
 		EstChannelGrid;
 		NoiseEst;
 		RSSIdBm;
 		RSRQdB;
 		RSRPdBm;
-		
 		Waveform; % Manipulated waveform after offset is applied
-
 		Subframe;
 		EqSubframe;
 		TransportBlock;
@@ -27,7 +24,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		PDSCH;
 		PropDelay;
 		HistoryStats;
-		SINRS;
+		SINRdB;
 		Demod;
 		AntennaArray;
 		ueObj; % Parent UE handle
@@ -36,6 +33,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 
 	properties (Access = private)
 		PerfectSynchronization;
+		FadingActive;
 	end
 	
 	methods
@@ -44,10 +42,13 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.Offset = 0;
 			obj.ueObj = ueObj;
 			obj.NoiseFigure = Config.Ue.noiseFigure;
-			obj.CQI = 3;
+			% TODO check sub band reporting size
+			obj.CQI = struct('wideBand', 3, 'subBand', 3*ones(9,1));
+			obj.SINRdB = struct('wideBand', [], 'subBand', []);
 			obj.Blocks = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.Bits = struct('ok', 0, 'err', 0, 'tot', 0);
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
+			obj.FadingActive = Config.Channel.fadingActive;
 			obj.AntennaGain = Config.Ue.antennaGain;
 			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
 		end
@@ -109,7 +110,9 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% Apply the receiver chain for subframe recovery
 			
 			% Find synchronization, apply offset
-			obj.applyOffset(enb);
+			if obj.FadingActive
+				obj.applyOffset(enb);
+			end
 			
 			% Conduct reference measurements
 			obj.referenceMeasurements(enb);
@@ -143,7 +146,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			else
 				obj.ueObj.Logger.log(sprintf('(UE RECEIVER MODULE - downlinkReception) not able to demodulate Cell(%i) -> User(%i)...',enb.NCellID, obj.NCellID),'WRN');
 				obj.logNotDemodulated();
-				obj.CQI = 3;
+				obj.CQI = struct('wideBand', 3, 'subBand', 3*ones(9,1));
 
 			end
 			% TODO: Select PMI, RI
@@ -261,9 +264,30 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		% select CQI
 		function obj = selectCqi(obj, enbObj)
 			enb = struct(enbObj);
-			[obj.CQI, obj.SINRS] = lteCQISelect(enb, enbObj.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
-			if isnan(obj.CQI)
-				obj.ueObj.Logger.log('CQI is NaN - something went wrong in the selection.','ERR');
+			% Depending on the PDSCH CSI mode parameter, the CQI and SINRS reported vary. 
+			[cqiValues, sinrValues] = lteCQISelect(enb, enbObj.Tx.PDSCH, obj.EstChannelGrid, obj.NoiseEst);
+			switch enbObj.Tx.PDSCH.CSIMode
+				case 'PUCCH 1-0' 
+					% In this case, only a single wideband value is returned for both CQI and SINR
+					obj.CQI.wideBand = cqiValues;
+					obj.CQI.subBand(1:length(obj.CQI.subBand)) = cqiValues;
+					obj.SINRdB.wideBand = sinrValues;
+					obj.SINRdB.subBand(1: length(obj.SINRdB.subBand)) = sinrValues;
+				case 'PUSCH 3-0'
+					% In this case, the returned values are in an array.
+					% The first element holds the wideband value.
+					% following elements are differential values from the wideband one for each sub band
+					obj.CQI.wideBand = cqiValues(1);
+					obj.SINRdB.wideBand = sinrValues(1);
+					for iValue = 2:length(cqiValues)
+						obj.CQI.subBand(iValue - 1) = obj.CQI.wideBand + cqiValues(iValue);
+						obj.SINRdB.subBand(iValue - 1) = sinrValues(iValue);
+					end
+				otherwise
+					obj.ueObj.Logger.log('(UE RECEIVER - selectCqi) selected PDSCH CSImode is not yet supported', 'ERR');
+				end
+			if isnan(obj.CQI.wideBand)
+				obj.ueObj.Logger.log('(UE RECEIVER - selectCqi) something went wrong, widbeand CQI is invalid','ERR');
 			end
     end
     
@@ -377,6 +401,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 				obj.Bits.tot = tot;
 				obj.Bits.err = diff + errEx;
 				obj.Bits.ok = tot - diff;
+				obj.Bits.ratio = ratio;
 			end
 		end
 			
@@ -390,7 +415,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		function obj = logNotDemodulated(obj)
 			obj.PostEvm = NaN;
       obj.PreEvm = NaN;
-      obj.CQI = NaN;
+      obj.CQI = struct('wideBand', -1, 'subBand', -1*ones(9,1));
       obj.Blocks = struct('tot',1,'err',1,'ok',0);
       obj.Bits = struct('tot',1,'err',1,'ok',0);
 		end

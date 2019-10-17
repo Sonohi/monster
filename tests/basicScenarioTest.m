@@ -10,7 +10,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config = MonsterConfig();
 			%Make sure config fits the selected scenario
 			%It should only be needed to change these in terms of runtime
-			testCase.Config.Runtime.totalRounds = 50;
+			testCase.Config.Runtime.simulationRounds = 50;
 			testCase.Config.Runtime.seed = 126;
 			%Skip plotting as values are going to be evaluated and not plots
 			testCase.Config.SimulationPlot.runtimePlot = 0;
@@ -87,7 +87,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 		
 		function testResults(testCase)
 			%Run simulation
-			for iRound = 0:(testCase.Config.Runtime.totalRounds - 1)
+			for iRound = 0:(testCase.Simulation.Runtime.totalRounds - 1)
 				testCase.Simulation.setupRound(iRound);
 				testCase.Simulation.run();
 				testCase.Simulation.collectResults();
@@ -101,7 +101,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			arrayfun(@(x) testCase.verifyTrue(x == 224), testCase.Simulation.Results.powerConsumed);
 			arrayfun(@(x) testCase.verifyEqual( x , 1), testCase.Simulation.Results.powerState); % powerState should be 1 in this case as it is always on
 			%verify scheduling
-			for i=2:testCase.Config.Runtime.totalRounds
+			for i=2:testCase.Simulation.Runtime.totalRounds
 				for j=1:testCase.Config.MacroEnb.numPRBs
 					testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).UeId, 1); %Assert that UE 1 is scheduled all the time
 					%testCase.verifyTrue(testCase.Simulation.Results.schedule(i,1,j).ModOrd == 2 ||...
@@ -117,10 +117,10 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.verifyTrue(mean(testCase.Simulation.Results.ber(2:end)) < 0.2 ); %Should be less than a certain threshhold. With good signal strength retransmission should be 0
 			testCase.verifyTrue(mean(testCase.Simulation.Results.bler(2:end))< 0.2 ); %TODO: verify this statement
 			%verify CQI
-			arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.cqi); %TODO: find a more narrow range and confirm
+			arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.wideBandCqi); %TODO: find a more narrow range and confirm
 			%Verify SNR and SINR. With only 1 Enb they should be the same
-			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.sinrdB)) < 1e-4 )==1);
-			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.estsinrdB)) < 2 )==1);
+			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.wideBandSinrdB)) < 2)==1);
+			testCase.verifyTrue( (mean(abs(testCase.Simulation.Results.snrdB - testCase.Simulation.Results.worstCaseSinrdB)) < 1e-4 )==1);
 			%TODO: find a more appropiate range and/or verify current
 			testCase.verifyTrue( 15 < mean(testCase.Simulation.Results.snrdB) && mean(testCase.Simulation.Results.snrdB) < 45 );
 			%Verify difference between pre and post Evm

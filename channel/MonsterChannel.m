@@ -18,7 +18,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = MonsterChannel(Cells, Users, Config, Logger)
+		function obj = MonsterChannel(Cells, Users, Layout, Config, Logger)
 			% MonsterChannel
 			%
 			% :param Cells:
@@ -35,11 +35,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
 			obj.LOSMethod = Config.Channel.losMethod;
 			if strcmp(Config.Terrain.type, 'city')
-				obj.BuildingFootprints = Config.Terrain.buildings;
+				obj.BuildingFootprints = Layout.Terrain.buildings;
 			else 
 				obj.BuildingFootprints = [];
 			end
-			obj.area = Config.Terrain.area;
+			obj.area = Layout.Terrain.area;
 			obj.setupChannel(Cells, Users);
 			obj.createChannelEstimator();
 		end
@@ -416,6 +416,18 @@ classdef MonsterChannel < matlab.mixin.Copyable
 	
 	methods(Static)
 
+		function noisySignal = AddAWGN(Cell, Mode, SNR, Nfft, Waveform)
+			% Adds AWGN to a waveform based on the magnitude of SNR
+
+			% Compute N0
+			N0 = MonsterChannel.computeSpectralNoiseDensity(Cell, Mode, SNR, Nfft);
+			
+			% Add AWGN
+			noise = N0*complex(randn(size(Waveform)), randn(size(Waveform)));
+			noisySignal = Waveform + noise;
+
+		end
+
 		function N0 = computeSpectralNoiseDensity(Cell, Mode, SNR, Nfft)
 			% Compute spectral noise density NO
 			%
@@ -436,6 +448,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 			
 		end
+
+
 		
 
 		function [SINR, SINRdB] = calculateSINR(receivedPower, inteferingPower, noisePower)

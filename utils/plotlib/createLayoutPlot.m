@@ -1,8 +1,8 @@
-function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
+function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config, Layout)
 	fig = figure('Name','Layout','Position',[100, 100, 1000, 1000]);
-	layout_axes = axes('parent', fig);
+	layoutAxes = axes('parent', fig);
 	%Find simulation area
-	area = Config.Terrain.area;
+	area = Layout.Terrain.area;
 	xc = (area(3) - area(1))/2;
 	yc = (area(4) - area(2))/2;
 	maxRadius = max(area(3)/2,area(4)/2);
@@ -20,13 +20,13 @@ function [LayoutFigure, LayoutAxes] = createLayoutPlot(Config)
 		maxRadius = Config.MacroEnb.ISD*3/2;
 	end
 	%Set axes accordingly
-	set(layout_axes,'XLim',[xc-maxRadius-10,xc+maxRadius+10],'YLim',[yc-maxRadius-10,yc+maxRadius+10]); %+/-10 for better looks
-	set(layout_axes,'XTick',[]);
-	set(layout_axes,'XTickLabel',[]);
-	set(layout_axes,'YTick',[]);
-	set(layout_axes,'YTickLabel',[]);
-	set(layout_axes,'Box','on');
-	hold(layout_axes,'on');
+	set(layoutAxes,'XLim',[xc-maxRadius-10,xc+maxRadius+10],'YLim',[yc-maxRadius-10,yc+maxRadius+10]); %+/-10 for better looks
+	set(layoutAxes,'XTick',[]);
+	set(layoutAxes,'XTickLabel',[]);
+	set(layoutAxes,'YTick',[]);
+	set(layoutAxes,'YTickLabel',[]);
+	set(layoutAxes,'Box','on');
+	hold(layoutAxes,'on');
 	LayoutFigure = fig;
 	LayoutAxes = findall(fig,'type','axes');
 end

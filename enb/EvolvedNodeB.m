@@ -73,7 +73,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
 			obj.Ng = 'Sixth';
-			obj.TotSubframes = Config.Runtime.totalRounds;
+			obj.TotSubframes = Config.Runtime.simulationRounds;
 			obj.NSubframe = 0;
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
@@ -279,6 +279,26 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		
 		function userIds = getUserIDsScheduledUL(obj)
 			userIds = unique([obj.ScheduleUL]);
+		end
+		
+		function Users = getUsersScheduledUL(obj, Users)
+			% Helper function for returning a list of user objects that are scheduled in UL for a given Cell
+			%
+			% :obj: eNB instance
+			%	:Users: Users
+
+			UserIds = obj.getUserIDsScheduledUL();
+			Users = Users(ismember([Users.NCellID],UserIds));
+		end
+
+		function Users = getUsersScheduledDL(obj, Users)
+			% Helper function for returning a list of user objects that are scheduled in DL for a given Cell
+			%
+			% :obj: eNB instance
+			%	:Users: Users
+
+			UserIds = obj.getUserIDsScheduledDL();
+			Users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
 		function obj = evaluatePowerState(obj, Config, Cells)
@@ -516,13 +536,10 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			if isempty(obj.Rx.Waveform)
 				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
 			else				
-				% IDs of users and their position in the Users struct correspond
-				scheduledUEsIndexes = [obj.ScheduleUL] ~= -1;
-				scheduledUEsIds = unique(obj.ScheduleUL(scheduledUEsIndexes));
-				enbUsers = Users(scheduledUEsIds);
+				enbUsers = obj.getUsersScheduledUL(Users);
 				
 				% Parse received waveform
-				obj.Rx.parseWaveform(obj);
+				obj.Rx.parseWaveform();
 				
 				% Demodulate received waveforms
 				obj.Rx.demodulateWaveforms(enbUsers);
@@ -543,7 +560,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 		end
 		
-		function obj = uplinkDataDecoding(obj, Users, Config)
+		function obj = uplinkDataDecoding(obj, Users, Config, timeNow)
 			% uplinkDataDecoding performs decoding of the demodoulated data in the waveform
 			%
 			% :param obj: EvolvedNodeB instance
@@ -551,13 +568,13 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :param Config: MonsterConfig instance
 			
 			% Filter UEs linked to this eNodeB
-			timeNow = Config.Runtime.currentTime;
 			ueGroup = find([Users.ENodeBID] == enb.NCellID);
 			enbUsers = Users(ueGroup);
 			
 			for iUser = 1:length(obj.Rx.UeData)
 				% If empty, no uplink UE data has been received in this round and skip
 				if ~isempty(obj.Rx.UeData(iUser).PUCCH)
+					% CQI reporting and PUCCH payload detection are simplified from TS36.212
 					cqiBits = obj.Rx.UeData(iUser).PUCCH(12:16,1);
 					cqi = bi2de(cqiBits', 'left-msb');
 					ueEnodeBIx= find([obj.Users.UeId] == obj.Rx.UeData(iUser).UeId);

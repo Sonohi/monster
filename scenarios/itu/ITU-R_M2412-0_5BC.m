@@ -69,7 +69,7 @@ Config.Ue.antennaGain = 0; %dBi
 % Setup objects
 Logger = MonsterLog(Config);
 Simulation = Monster(Config, Logger);
-for iRound = 0:(Config.Runtime.totalRounds - 1)
+for iRound = 0:(Config.Runtime.simulationRounds - 1)
 	Simulation.setupRound(iRound);
 	Simulation.run();
 	Simulation.collectResults();

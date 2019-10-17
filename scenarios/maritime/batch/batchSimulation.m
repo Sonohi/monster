@@ -33,7 +33,7 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 	Config.Channel.shadowingActive = 0;
 	Config.Channel.losMethod = 'NLOS';
 	Config.Traffic.arrivalDistribution = 'Static';
-	Config.Traffic.static = Config.Runtime.totalRounds * 10e3; % No traffic
+	Config.Traffic.static = Config.Runtime.simulationRounds * 10e3; % No traffic
 
 	Logger = MonsterLog(Config);
 	Logger.log('(MARITIME SWEEP) configured simulations and started initialisation', 'NFO');
@@ -50,12 +50,12 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 
 	Simulation.Logger.log('(MARITIME SWEEP) sweep parameters initialised', 'NFO');
 
-	for iRound = 0:(Config.Runtime.totalRounds - 1)
+	for iRound = 0:(Simulation.Runtime.totalRounds - 1)
 		Simulation.setupRound(iRound);
 
 		Simulation.Logger.log(sprintf('(MARITIME SWEEP) simulation round %i, time elapsed %f s, time left %f s',...
-			Simulation.Config.Runtime.currentRound, Simulation.Config.Runtime.currentTime, ...
-			Simulation.Config.Runtime.remainingTime ), 'NFO');	
+			Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+			Simulation.Runtime.remainingTime ), 'NFO');	
 		
 		Simulation.run();
 
@@ -74,19 +74,19 @@ function batchSimulation(simulationSeed, sweepEnabled, folderPath)
 
 		Simulation.clean();
 
-		if iRound ~= Config.Runtime.totalRounds - 1
+		if iRound ~= Simulation.Runtime.totalRounds - 1
 			Simulation.Logger.log('(MARITIME SWEEP) cleaned parameters for next round', 'NFO');
 		else
 			Simulation.Logger.log('(MARITIME SWEEP) simulation completed', 'NFO');
 			% Construct the export string
 			basePath = strcat('results/maritime/', datestr(datetime, 'yyyy.mm.dd'));
-			fileName = strcat(datestr(datetime, 'HH.MM'), '_seed_', num2str(Config.Runtime.seed), '.mat');
+			fileName = strcat(datestr(datetime, 'HH.MM'), '_seed_', num2str(Simulation.Runtime.seed), '.mat');
 			subFolder = 'no_sweep';
 			if sweepEnabled
 				subFolder = 'sweep';
 			end
 			resultsFileName = strcat(basePath, '/', subFolder, '/', fileName);
-			storedResults = struct('sinr', Simulation.Results.sinrdB, 'power', Simulation.Results.receivedPowerdBm, 'config', Simulation.Config);
+			storedResults = struct('sinr', Simulation.Results.wideBandSinrdB, 'power', Simulation.Results.receivedPowerdBm, 'config', Simulation.Config);
 			
 			if ~exist(folderPath, 'dir')
 				mkdir(folderPath);

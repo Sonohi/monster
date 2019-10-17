@@ -42,7 +42,7 @@ classdef Mobility < matlab.mixin.Copyable
 	end
 	
 	methods
-		function obj = Mobility(scenario, velocity, seed, Config, Logger)
+		function obj = Mobility(scenario, velocity, seed, Config, Logger, Layout)
 			obj.Logger = Logger;
 			% Constructor
 			if ~any(strcmp(scenario, obj.supportedScenarios))
@@ -57,11 +57,11 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Scenario = scenario;
 			obj.Velocity = velocity;
 			obj.Seed = seed;
-			obj.Rounds = Config.Runtime.totalRounds;
+			obj.Rounds = Config.Runtime.simulationRounds;
 			if strcmp(scenario, 'maritime')
 				obj.buildingFootprints = [];
 			else
-				obj.buildingFootprints = Config.Terrain.buildings;
+				obj.buildingFootprints = Layout.Terrain.buildings;
 			end
 			
 			% Produce parameters and compute movement.

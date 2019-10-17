@@ -71,13 +71,8 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				SNR = tempVar.RxSINR;
 			end
 			
-			% Compute N0
-			N0 = obj.Channel.computeSpectralNoiseDensity(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft);
-			
-			% Add AWGN
-			noise = N0*complex(randn(size(tempVar.Waveform)), randn(size(tempVar.Waveform)));
-			rxSig = tempVar.Waveform + noise;
-			tempVar.RxWaveform = rxSig;
+			noisySignal = obj.Channel.AddAWGN(Cell, Mode, SNR, tempVar.WaveformInfo.Nfft, tempVar.Waveform);
+			tempVar.RxWaveform = noisySignal;
 			
 			% Add fading
 			if obj.Channel.enableFading
@@ -86,9 +81,16 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		end
 		
 		function propagateWaveforms(obj, Cells, Users, Mode)
-			% propagateWaveforms
+			% Loop through all links given the mode of transmission.
+			% Interference is added depending on the interference type. 
+			% If 'Power' is selected, the interference is added as AWGN which is done in the first forward pass of `propagateWaveform`. 
+			% The noise is added before the fading channel
+			% 
+			% If 'Frequency' is selected, the interference is added as a sum of interfering waveforms, that have propagated the channel (call to propagateWaveform)
 			%
-			% :onj:
+			% All manipulations of wavefroms are stored in `tempVar` and overwritten for each link. 
+			% The manipulated waveform and power calculations are stored at the respective receiver objects
+			% :obj:
 			%	:Cells:
 			% :Users:
 			% :Mode:

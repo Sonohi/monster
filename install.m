@@ -25,8 +25,8 @@ end
 
 addpath(root);
 
-dirs = {'examples','utils', 'channel', 'enb', 'mac', 'mobility', 'phy', 'results', 'rlc', ...
-	'setup', 'scenarios', 'tests', 'traffic', 'ue', 'validator', 'logs'};
+dirs = {'examples','utils', 'channel', 'enb', 'layout','mac', 'mobility', 'phy', 'results', 'rlc', ...
+	'setup', 'scenarios', 'tests', 'traffic', 'ue', 'validator', 'logs', 'backhaul'};
 
 for i=1:numel(dirs)
 	add = [root filesep dirs{i}];
