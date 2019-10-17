@@ -12,21 +12,21 @@ classdef AntennaElement < handle
     
     methods
         function obj = AntennaElement(tilt, scenario)
-            % Construct single antenna element pr. ITU M.2412/3GPP 38.901
-            %
-            % TRxP BS antenna radiation pattern given by table 9 in ITU
-            % M.2412
-            %
-            % Indoor BS antenna radiation pattern given by table 10 in ITU
-            % M.2412
-            obj.tilt = tilt;
-            switch scenario
-                case 'indoor'
-                    obj.setIndoorConfigITU();
-                otherwise
-                    obj.setOutdoorConfig3GPP();
-            end
-            
+					% Construct single antenna element pr. ITU M.2412/3GPP 38.901
+					%
+					% TRxP BS antenna radiation pattern given by table 9 in ITU
+					% M.2412
+					%
+					% Indoor BS antenna radiation pattern given by table 10 in ITU
+					% M.2412
+					obj.tilt = tilt;
+					switch scenario
+						case 'indoor'
+							obj.setIndoorConfigITU();
+						otherwise
+							obj.setOutdoorConfig3GPP();
+					end
+					
         end
         
         function plotPattern(obj)
