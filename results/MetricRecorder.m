@@ -77,8 +77,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordUtil(obj, Cells, schRound)
 			for iCell = 1:length(Cells)
-				sch = find([Cells(iCell).Schedulers.downlink.PRBsActive.UeId] ~= -1);
-				utilPercent = 100*find(sch, 1, 'last' )/length(Cells(iCell).Schedulers.downlink.PRBsActive);
+				sch = find([Cells(iCell).Mac.Schedulers.downlink.PRBsActive.UeId] ~= -1);
+				utilPercent = 100*find(sch, 1, 'last' )/length(Cells(iCell).Mac.Schedulers.downlink.PRBsActive);
 				
 				% check utilPercent and change to 0 if null
 				if isempty(utilPercent)
@@ -102,8 +102,8 @@ classdef MetricRecorder < matlab.mixin.Copyable
 		
 		function obj = recordSchedule(obj, Cells, schRound)
 			for iCell = 1:length(Cells)
-				numPrbs = length(Cells(iCell).Schedulers.downlink.PRBsActive);
-				obj.schedule(schRound, iCell, 1:numPrbs) = Cells(iCell).Schedulers.downlink.PRBsActive;
+				numPrbs = length(Cells(iCell).Mac.Schedulers.downlink.PRBsActive);
+				obj.schedule(schRound, iCell, 1:numPrbs) = Cells(iCell).Mac.Schedulers.downlink.PRBsActive;
 			end
 		end
 		

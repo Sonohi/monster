@@ -172,7 +172,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Scheduling.type = 'roundRobin';
 			Scheduling.refreshAssociationTimer = 0.01;
 			Scheduling.icScheme = 'none';
-			Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
 			obj.Scheduling = Scheduling;
 
 			% Properties related to SON and power saving

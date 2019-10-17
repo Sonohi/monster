@@ -35,9 +35,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		Mac;
 		Rlc;
 		Seed;
-		AbsMask;
 		PowerIn;
-		ShouldSchedule;
 		Utilisation;
 		Logger;
 		Schedulers;
@@ -69,7 +67,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 			end
-			obj.Schedulers = struct('downlink', Scheduler(obj, Logger, Config, obj.NDLRB));
+			
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
@@ -90,11 +88,11 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
 				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
+			obj.Mac.Schedulers = struct('downlink', Scheduler(obj, Logger, Config, obj.NDLRB));
+			obj.Mac.ShouldSchedule = 0;
 			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
-			obj.AbsMask = Config.Scheduling.absMask; % 10 is the number of subframes per frame. This is the mask for the macro (0 == TX, 1 == ABS)
 			obj.PowerIn = 0;
-			obj.ShouldSchedule = 0;
 			obj.Utilisation = 0;
 		end
 
@@ -166,7 +164,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		
 		% reset schedule
 		function obj = resetScheduleDL(obj)
-			obj.Schedulers.downlink.reset();
+			obj.Mac.Schedulers.downlink.reset();
 		end
 		
 		function obj = resetScheduleUL(obj)
@@ -186,7 +184,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Returns minimum MCS 
 			% Optional: returns list of MCS
 			idxUE = obj.getPRBSetDL(ue);
-			listMCS = [obj.Schedulers.downlink.PRBsActive(idxUE).MCS];
+			listMCS = [obj.Mac.Schedulers.downlink.PRBsActive(idxUE).MCS];
 			minMCS = min(listMCS);
 			varargout{1} = listMCS;
 		end
@@ -202,7 +200,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% Return list of PRBs assigned to a specific user
 			%
 			% Return PRB set of specific user
-    	PRBSet = find([obj.Schedulers.downlink.PRBsActive.UeId] == ue.NCellID);
+    	PRBSet = find([obj.Mac.Schedulers.downlink.PRBsActive.UeId] == ue.NCellID);
 		end
 				
 		
@@ -276,7 +274,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function userIds = getUserIDsScheduledDL(obj)
-			userIds = unique([obj.Schedulers.downlink.ScheduledUsers]);
+			userIds = unique([obj.Mac.Schedulers.downlink.ScheduledUsers]);
 		end
 		
 		function userIds = getUserIDsScheduledUL(obj)
@@ -453,7 +451,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function obj = evaluateScheduling(obj, Users)
-			% evaluateScheduling sets the ShouldSchedule flag depending on attached UEs and their queues
+			% evaluateScheduling sets the Mac.ShouldSchedule flag depending on attached UEs and their queues
 			%
 			% :obj: EvolvedNodeB instance
 			% :Users: Array<UserEquipment> instances
@@ -481,7 +479,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			end
 			
 			% Finally, assign the result of the scheduling check to the object property
-			obj.ShouldSchedule = schFlag;
+			obj.Mac.ShouldSchedule = schFlag;
 		end
 		
 		function obj = downlinkSchedule(obj, Users, Config)
@@ -491,11 +489,11 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			% :Users: Array<UserEquipment> instances
 			% :Config: MonsterConfig instance
 			
-			if obj.ShouldSchedule
-				obj.Schedulers.downlink.scheduleUsers(Users);
+			if obj.Mac.ShouldSchedule
+				obj.Mac.Schedulers.downlink.scheduleUsers(Users);
 				% Check utilisation
-				sch = find([obj.Schedulers.downlink.PRBsActive.UeId] ~= -1);
-				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.Schedulers.downlink.PRBsActive]);
+				sch = find([obj.Mac.Schedulers.downlink.PRBsActive.UeId] ~= -1);
+				obj.Utilisation = 100*find(sch, 1, 'last' )/length([obj.Mac.Schedulers.downlink.PRBsActive]);
 				
 				if isempty(obj.Utilisation)
 					obj.Utilisation = 0;

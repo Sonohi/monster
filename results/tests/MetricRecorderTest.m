@@ -37,7 +37,6 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).UeId));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).MCS));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).ModOrd));
-			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).NDI));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.powerState(1,1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.harqRtx(1,1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.arqRtx(1,1)));

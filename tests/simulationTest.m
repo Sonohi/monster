@@ -52,7 +52,7 @@ classdef simulationTest < matlab.unittest.TestCase
 			for iCell = 1:length(testCase.Simulation.Cells)
 				clear temp;
 				temp(1,1:testCase.Simulation.Cells(iCell).NDLRB) = struct('UeId', -1, 'MCS', -1, 'ModOrd', -1);
-				testCase.verifyEqual(testCase.Simulation.Cells(iCell).Schedulers.downlink.PRBsActive  , temp );
+				testCase.verifyEqual(testCase.Simulation.Cells(iCell).Mac.Schedulers.downlink.PRBsActive  , temp );
 			end
 			
 			arrayfun(@(x) testCase.verifyEqual(x.Tx.Ref ,struct('ReGrid',[], 'Waveform',[], 'WaveformInfo',[],'PSSInd',[],'PSS', [],'SSS', [],'SSSInd',[],'PSSWaveform',[], 'SSSWaveform',[])), testCase.Simulation.Cells);
