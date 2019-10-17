@@ -1,6 +1,7 @@
 ## Unreleased
 - Uplink PUSCH generation and nonstatic UL scheduler
 - MIMO support 
+- Logic graph plotting of network entities
 
 ## 1.0.2 - 2019-10-17
 
