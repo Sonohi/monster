@@ -146,8 +146,8 @@ classdef Scheduler < matlab.mixin.Copyable
 					% Update list of PRBs
 					for iPrb = 1:length(prbs)
 						if prbs(iPrb).UeId == -1
-							mcs = MCSTable(iUser.Rx.CQI);
-							modOrd = ModOrdTable(iUser.Rx.CQI);
+							mcs = MCSTable(iUser.Rx.CQI.wideBand);
+							modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
 							for iSch = 0:PRBScheduled-1
 								prbs(iPrb + iSch).UeId = iUser.NCellID;
 								prbs(iPrb + iSch).MCS = mcs;
@@ -247,7 +247,7 @@ classdef Scheduler < matlab.mixin.Copyable
 			PRBNeed = zeros(length(Users),1);
 			for iUser = 1:length(Users)
 				user = Users(iUser);
-				modOrd = ModOrdTable(user.Rx.CQI);
+				modOrd = ModOrdTable(user.Rx.CQI.wideBand);
 				rtxSchedulingFlag = obj.HarqActive && rtxInfo(iUser).proto ~= 0;
 				
 				if ~rtxSchedulingFlag
