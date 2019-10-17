@@ -30,12 +30,8 @@ function [prbs, updatedqueue] = roundrobin(cell, userIds, users, prbs, prbsNeede
 			end
 				
 			PRBAvailable = PRBAvailable - PRBScheduled;
-			% Set the scheduled flag in the UE
-			% TODO: move this out of the function and set the retransmission state after the roundrobin algorithm
-			iUser.Scheduled.DL = true;
 
-
-			% write to schedule struct and indicate also in the struct whether this is new data or RTX
+			% Update list of PRBs
 			for iPrb = 1:length(prbs)
 				if prbs(iPrb).UeId == -1
 					mcs = Config.Phy.mcsTable(iUser.Rx.CQI + 1, 1);

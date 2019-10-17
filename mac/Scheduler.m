@@ -7,7 +7,7 @@ classdef Scheduler < matlab.mixin.Copyable
 		Logger;
 		SchedulerType; % Type of scheduling algorithm used.
 		HarqActive; % If Harq is enabled
-		Config;
+		PRBSymbols; % Number of symbols for each PRB
 	end
 	
 	properties(SetAccess='protected')
@@ -29,8 +29,7 @@ classdef Scheduler < matlab.mixin.Copyable
 			obj.PRBsActive = struct('UeId', {}, 'MCS', {}, 'ModOrd', {});
 			obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1, 'ModOrd', -1);
 			obj.HarqActive = Config.Harq.active;
-			obj.Config = Config;
-			
+			obj.PRBSymbols = Config.Phy.prbSymbols;
 			
 		end
 		
@@ -65,20 +64,7 @@ classdef Scheduler < matlab.mixin.Copyable
 	end
 	
 	methods(Access='private')
-		function obj = allocateResources(obj, Users)
-			% Given the type of the scheduler, allocate the resources to the
-			% users
-			%
-			% Array<Users> array of user objects.
-			switch obj.SchedulerType
-				case 'roundRobin'
-					obj.RoundRobinAlgorithm(Users);
-				otherwise
-					obj.Logger.log('Unknown scheduler pype','ERR','MonsterScheduler:UnknownSchedulerType');
-					
-			end
-			
-		end
+
 		
 		function queueIds = getQueue(obj)
 			
@@ -90,25 +76,110 @@ classdef Scheduler < matlab.mixin.Copyable
 			
 		end
 		
-		function obj = RoundRobinAlgorithm(obj, Users)
+		function obj = allocateResources(obj, Users)
 			% Call round robin scheduler script
 			%
 			% Array<Users> array of user objects.
 			
-			queueIds = obj.getQueue();
+			queueIds = obj.getQueue(); 
 			UserObjs = Users(ismember([Users.NCellID],queueIds));
 			if obj.HarqActive
 				rtxInfo = obj.getUserRetransmissionQueues(queueIds);
 			end
 			
 			PRBSNeeded = obj.getPRBSNeeded(UserObjs, rtxInfo);
-			
-			[obj.PRBsActive, obj.RoundRobinQueue] = roundrobin(obj.enbObj, queueIds, Users, obj.PRBsActive, PRBSNeeded, obj.Config);
-			
+
+			switch obj.SchedulerType
+				case 'roundRobin'
+					[obj.PRBsActive, obj.RoundRobinQueue] = obj.RoundRobinAlgorithm(queueIds, Users, PRBSNeeded);
+				otherwise
+					obj.Logger.log('Unknown scheduler pype','ERR','MonsterScheduler:UnknownSchedulerType');
+			end
+
+			obj.setUserDownlinkFlag(Users);
 			obj.setRetransmissionState(rtxInfo);
+		end
+
+		function obj = setUserDownlinkFlag(obj, Users)
+			% Set flag in the user object if the user is scheduled for downlink
+			scheduledUsers = unique([obj.PRBsActive.UeId]);
+			for iUser = scheduledUsers
+				user = Users([Users.NCellID] == iUser);
+				user.Scheduled.DL = true;
+			end
+
+		end
+
+		function [prbs, updatedqueue] = RoundRobinAlgorithm(obj, userIds, users, prbsNeeded)
+			% Standard implementation of the roundrobin algorithm. 
+			% It seeks to fill the resources available, serving the users first who has not been served in the last round of scheduling.
+			%
+			% <userIds> is a prioritized list of users, with queued users (from last round) placed first
+			% <users> is a list of the user objects
+			% <prbsNeeded> struct of prbs needed for each user in userIds
+
+			prbs = obj.PRBsActive; %Local copy
+			% Compute number of available resources
+			PRBAvailable = length(prbs);
+
+			
+			resourcesAvailable = 1;
+			
+			while resourcesAvailable
+				iUserID = userIds(1); % Get first from userids
+				iUser = users([users.NCellID] == iUserID);
+
+				% If there are still PRBs available, then we can schedule either a new TB or a RTX
+				if PRBAvailable > 0
+					
+					PRBNeed = prbsNeeded(1);
+
+					% Check if the PRBs needed are more than what is available
+					if PRBNeed >= PRBAvailable
+						PRBScheduled = PRBAvailable;
+					else
+						PRBScheduled = PRBNeed;
+					end
+						
+					PRBAvailable = PRBAvailable - PRBScheduled;
+
+					% Update list of PRBs
+					for iPrb = 1:length(prbs)
+						if prbs(iPrb).UeId == -1
+							mcs = MCSTable(iUser.Rx.CQI);
+							modOrd = ModOrdTable(iUser.Rx.CQI);
+							for iSch = 0:PRBScheduled-1
+								prbs(iPrb + iSch).UeId = iUser.NCellID;
+								prbs(iPrb + iSch).MCS = mcs;
+								prbs(iPrb + iSch).ModOrd = modOrd;
+							end
+							break;
+						end
+					end
+
+					% pop user from list
+					if length(userIds) > 1
+						userIds = userIds(2:end);
+						prbsNeeded = prbsNeeded(2:end);
+					else
+						userIds = [];
+						prbsNeeded = [];
+						resourcesAvailable = 0; % No more users to schedule
+					end
+
+				else
+					% There are no more PRBs available, this will be the first UE to be scheduled
+					% in the next round.
+					resourcesAvailable = 0;
+				end
+			end
+			
+			% Add remaining users to the queue
+			updatedqueue = userIds;
 		end
 		
 		function obj = setRetransmissionState(obj, rtxInfo)
+			% Update the retransmission state if either the harq or arq is scheduled for transmission
 			% Get unique scheduled users
 			scheduledUsers = unique([obj.PRBsActive.UeId]);
 			
@@ -116,23 +187,28 @@ classdef Scheduler < matlab.mixin.Copyable
 				% Find users rtx info
 				rtx = rtxInfo([rtxInfo.UeId] == iUser);
 				if ~isempty(rtx)
-				% set retransmission state if the scheduled is a retransmission
-				switch rtx.proto
-					case 1
-						obj.enbObj.Mac.HarqTxBuffers.setRetransmissionState(rtx.identifier);
-					case 2
-						obj.enbObj.Rlc.ArqTxBuffers.setRetransmissionState(rtx.identifier);
+					% set retransmission state if the scheduled is a retransmission
+					switch rtx.proto
+						case 1
+							obj.enbObj.Mac.HarqTxBuffers.setRetransmissionState(rtx.identifier);
+						case 2
+							obj.enbObj.Rlc.ArqTxBuffers.setRetransmissionState(rtx.identifier);
+					end
 				end
-				end
-
+				
 			end
-			
-			
-			
+
 		end
 		
 		function rtxInfo = getUserRetransmissionQueues(obj, UserIds)
-			
+			% Get the retransmission queues for each userid
+			% 
+			% <UserIds> List of userids 
+			% Returns
+			% rtxInfo with fields of
+			% rtxInfo.proto (Harq = 1, Arq = 2)
+			% rtxInfo.UeId (User ID)
+			% rtxInfo.identifier (buffer index)
 			
 			rtxInfo = struct('proto', [], 'identifier', [], 'UeId', []);
 			rtxInfo(1:length(UserIds)) = struct('proto', -1, 'identifier', -1, 'UeId', -1);
@@ -162,15 +238,20 @@ classdef Scheduler < matlab.mixin.Copyable
 		end
 		
 		function PRBNeed = getPRBSNeeded(obj, Users, rtxInfo)
-			
+			% Get the number of PRBS required for each user given either 1. the transmission queue or 2. HARQ/ARQ
+			%
+			% <Users> array of user objects
+			% <rtxInfo> Info of retransmission HARQ/ARQ queues. Requires fields of 
+			%									.proto (Harq = 1, Arq = 2),
+			%									.identifier (buffer index)
 			PRBNeed = zeros(length(Users),1);
 			for iUser = 1:length(Users)
 				user = Users(iUser);
-				modOrd = obj.Config.Phy.modOrdTable(user.Rx.CQI);
+				modOrd = ModOrdTable(user.Rx.CQI);
 				rtxSchedulingFlag = obj.HarqActive && rtxInfo(iUser).proto ~= 0;
 				
 				if ~rtxSchedulingFlag
-					PRBNeed(iUser) = ceil(double(user.Queue.Size)/(modOrd * obj.Config.Phy.prbSymbols));
+					PRBNeed(iUser) = ceil(double(user.Queue.Size)/(modOrd * obj.PRBSymbols));
 				else
 					% Otherwise, use the HARQ and ARQ queues for PRBS
 					tb = [];
@@ -180,7 +261,7 @@ classdef Scheduler < matlab.mixin.Copyable
 						case 2
 							tb = obj.enbObj.Mac.ArqTxProcesses.tbBuffer(rtxInfo.identifier).tb;
 					end
-					PRBNeed(iUser) = ceil(length(tb)/(modOrd * obj.Config.Phy.prbSymbols));
+					PRBNeed(iUser) = ceil(length(tb)/(modOrd * obj.PRBSymbols));
 				end
 			end
 			
