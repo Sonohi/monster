@@ -97,11 +97,14 @@ classdef Monster < matlab.mixin.Copyable
 				'LayoutFigure', 0, ...
 				'LayoutAxes', 0,...
 				'PHYFigure', 0, ...
-				'PHYAxes', 0);
+				'PHYAxes', 0, ...
+        'LogicLayoutFigure', 0,...
+        'LogicLayoutAxes',0);
 			if obj.Config.SimulationPlot.runtimePlot
 				obj.Logger.log('(MONSTER - setupSimulation) setting up runtime plots', 'DBG');
 				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(obj.Config, Layout);
 				[Plot.PHYFigure, Plot.PHYAxes] = createPHYplot(obj.Config);
+        [Plot.LogicLayoutFigure, Plot.LogicLayoutAxes] = createLogicLayoutPlot(obj.Config);
 			end
 
 			% Assign the properties to the Monster object
@@ -385,9 +388,10 @@ classdef Monster < matlab.mixin.Copyable
 				% :obj: Monster instance
 				%
 				if obj.Config.SimulationPlot.runtimePlot
-				plotSpectrums(obj.Users, obj.Cells, obj.Config, obj.Plot);
-				plotConstDiagramDL(obj.Users, obj.Cells, obj.Config, obj.Plot);
-				plotAssociationTable(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotSpectrums(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotConstDiagramDL(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotAssociationTable(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotLogicLayout(obj.Cells, obj.Config, obj.Plot);
 				end
 		end
 	end
