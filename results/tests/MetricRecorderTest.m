@@ -14,6 +14,7 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.Config = MonsterConfig();
 			%Set Harq active:
 			testCase.Config.Harq.active = true;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
 			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);

@@ -78,6 +78,7 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
                 Traffic(iUser).TrafficSource = TrafficSource(:,:,iUser);
                 Traffic(iUser).AssociatedUeIds = iUser;
                 Traffic(iUser).ArrivalTimes = TrafficIn(iTraffic).ArrivalTimes(TrafficIn(iTraffic).AssociatedUeIds==iUser);
+                Traffic(iUser).TrafficSourceNoBackhaul = TrafficIn(iTraffic).TrafficSource;
                 break;
             end
         end
