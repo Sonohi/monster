@@ -103,12 +103,12 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				obj.Logger.log('(MONSTER CHANNEL - traverse) Unknown type of users.','ERR', 'MonsterChannel:WrongUserClass');
 			end
 			
-			% Filter stations and users
-			[FilteredCells,~] = obj.getAssociated(Cells,Users);
+			% Filter stations 
+			FilteredCells = obj.getAssociated(Cells);
 			
 			% Propagate waveforms
 			if ~isempty(FilteredCells)
-				obj.callChannelModel(Cells, Users, Mode);
+				obj.callChannelModel(FilteredCells, Users, Mode);
 			else
 				obj.Logger.log('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
@@ -499,22 +499,17 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		end
 		
 		
-		function [cells, users] = getAssociated(Cells,Users)
+		function [cells] = getAssociated(Cells)
 			% Returns cells and users that are associated
 			cells = [];
 			for iCell = 1:length(Cells)
-				UsersAssociated = [Cells(iCell).Users.UeId];
-				UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
+				%UsersAssociated = [Cells(iCell).Users.UeId];
+				UsersAssociated = [Cells(iCell).AssociatedUsers];
+				%UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
 				if ~isempty(UsersAssociated)
 					cells = [cells, Cells(iCell)];
 				end
 			end
-			
-			UsersAssociated = [Cells.Users];
-			UserIds = [UsersAssociated.UeId];
-			UserIds = unique(UserIds);
-			UserIds = UserIds(UserIds ~= -1);
-			users = Users(ismember([Users.NCellID],UserIds));
 		end
 		
 		function Pairing = getPairing(Cells, type)
@@ -532,8 +527,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 				
 				switch type
 					case 'downlink'
-						association = [Cells(i).Users];
-						users = extractUniqueIds([association.UeId]);
+						association = [Cells(i).AssociatedUsers];
+						users = [association.UeId];
 					case 'uplink'	
 						scheduledUL = Cells(i).getUserIDsScheduledUL;
 						users = scheduledUL;

@@ -159,8 +159,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Phy.prbResourceElements = 168;
 			Phy.maxTbSize = 97896;
 			Phy.maxCwdSize = 10e5;
-			Phy.mcsTable = [0,1,3,4,6,7,9,11,13,15,20,21,22,24,26,28]';
-			Phy.modOrdTable = [2,2,2,2,2,2,4,4,4,6,6,6,6,6,6];
 			obj.Phy = Phy;
 
 			% Properties related to the channel
@@ -180,7 +178,6 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Scheduling.type = 'roundRobin';
 			Scheduling.refreshAssociationTimer = 0.01;
 			Scheduling.icScheme = 'none';
-			Scheduling.absMask = [1,0,1,0,0,0,0,0,0,0];
 			obj.Scheduling = Scheduling;
 
 			% Properties related to SON and power saving
