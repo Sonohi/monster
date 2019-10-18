@@ -96,16 +96,29 @@ classdef Scheduler < matlab.mixin.Copyable
 					obj.Logger.log('Unknown scheduler pype','ERR','MonsterScheduler:UnknownSchedulerType');
 			end
 			
-			obj.setUserDownlinkFlag(Users);
+			obj.setUserParam(Users);
 			obj.setRetransmissionState(rtxInfo);
 		end
+
 		
-		function obj = setUserDownlinkFlag(obj, Users)
-			% Set flag in the user object if the user is scheduled for downlink
+		function obj = setUserParam(obj, Users)
+			% Sets user specific parameters given the schedulers decisions
+			% 1. A flag for being scheduled is set
+			% 2. The traffic queue is updated
 			scheduledUsers = unique([obj.PRBsActive.UeId]);
+			scheduledUsers = scheduledUsers(scheduledUsers~=-1);
 			for iUser = scheduledUsers
 				user = Users([Users.NCellID] == iUser);
+
+				% Set downlink flag
 				user.Scheduled.DL = true;
+
+				% Update traffic queue
+				modOrd = ModOrdTable(user.Rx.CQI.wideBand);
+				numPRBS = length([obj.PRBsActive.UeId] == iUser);
+				numBits = numPRBS * (modOrd*obj.PRBSymbols);
+				user.Queue.Size = user.Queue.Size - numBits;
+
 			end
 			
 		end
@@ -182,7 +195,7 @@ classdef Scheduler < matlab.mixin.Copyable
 			% Update the retransmission state if either the harq or arq is scheduled for transmission
 			% Get unique scheduled users
 			scheduledUsers = unique([obj.PRBsActive.UeId]);
-			
+			scheduledUsers = scheduledUsers(scheduledUsers~=-1);
 			for iUser = scheduledUsers
 				% Find users rtx info
 				rtx = rtxInfo([rtxInfo.UeId] == iUser);
