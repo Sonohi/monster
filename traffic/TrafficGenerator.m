@@ -15,7 +15,8 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 		TrafficSource; 
 		AssociatedUeIds; 
 		ArrivalTimes;
-		TrafficSourceNoBackhaul;
+		TrafficSourceWithBackhaul;
+		BackhaulOn;
 	end
 	
 	methods
@@ -61,7 +62,8 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			obj.ArrivalMode = Config.Traffic.arrivalDistribution;
 			obj.AssociatedUeIds = AssociatedUeIds;
 			obj.ArrivalTimes = obj.setArrivalTimes(Config, Logger);
-			obj.TrafficSourceNoBackhaul = obj.TrafficSource;
+			obj.TrafficSourceWithBackhaul = obj.TrafficSource;
+			obj.BackhaulOn = Config.Backhaul.backhaulOn;
 		end
 		
 		function ArrivalTimes = setArrivalTimes(obj, Config, Logger)
