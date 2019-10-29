@@ -63,24 +63,22 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 3. Add data (missing)
 			% 4. Modulate resource grid into waveform
 			%
-			% Returns updated :obj.ReGrid:, :obj.Waveform:, :obj.WaveformInfo:
+			% Returns updated :obj.ReGrid:, :obj.Waveform:, :obj.WaveformInfo:	
 			
-			% Check whether this UE is scheduled in the UL
-			if obj.UeObj.Scheduled.UL
-				% Setup the dimensions for transmission
-				obj.setupResourceGrid();
+			% Setup the dimensions for transmission
+			obj.setupResourceGrid();
 
-				% Setup the control signals
-				obj.setupControlSignals();
+			% Setup the control signals
+			obj.setupControlSignals();
 
-				% TODO: add actual data here
-				if obj.PUSCH.Active == 1
-					obj.setupPUSCH();
-				end
-
-				% Modulate the resource grid
-				obj.modulateResourceGrid();
+			% TODO: add actual data here
+			if obj.UeObj.Scheduled.UL & obj.PUSCH.Active == 1
+				obj.setupPUSCH();
 			end
+
+			% Modulate the resource grid
+			obj.modulateResourceGrid();
+
 		end
 
 		function bits = generatePUSCHBits(obj)
