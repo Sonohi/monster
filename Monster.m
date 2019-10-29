@@ -288,13 +288,7 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Use the result of refreshUsersAssociation to setup the UL scheduling
 			arrayfun(@(x)x.resetScheduleUL(), obj.Cells);
-			arrayfun(@(x)x.setScheduleUL(obj.Config), obj.Cells);
-
-			for iUser = 1:length(obj.Users)
-				iServingCell = find([obj.Cells.NCellID] == obj.Users(iUser).ENodeBID);
-				obj.Users(iUser).setSchedulingSlots(obj.Cells(iServingCell));
-			end
-
+			arrayfun(@(x)x.uplinkSchedule(obj.Users), obj.Cells);
 		end
 
 		function obj = setupEnbTransmitters(obj)

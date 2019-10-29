@@ -69,10 +69,10 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			dl.InterpWinSize = 1;               % Interpolation window size
 
 			ul.PilotAverage = 'UserDefined';    % Type of pilot averaging
-			ul.FreqWindow = 13;                 % Frequency averaging windows in REs
+			ul.FreqWindow = 1;                 % Frequency averaging windows in REs
 			ul.TimeWindow = 1;                  % Time averaging windows in REs
-			ul.InterpType = 'cubic';            % Interpolation type
-			ul.Reference = 'Antennas';          % Reference for channel estimation
+			ul.InterpType = 'none';            % Interpolation type
+			ul.Reference = 'none';          % Reference for channel estimation
 
 			obj.Estimator.Downlink = dl;
 			obj.Estimator.Uplink = ul;
@@ -139,7 +139,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :returns seed:
 			%
 
-			seed = rxObj.Seed * txObj.Seed + 10* obj.simulationRound;
+			seed = rxObj.Seed * txObj.Seed;
 		end
 		
 		function areaType = getAreaType(obj,Cell)
@@ -530,8 +530,8 @@ classdef MonsterChannel < matlab.mixin.Copyable
 						association = [Cells(i).AssociatedUsers];
 						users = [association.UeId];
 					case 'uplink'	
-						scheduledUL = Cells(i).getUserIDsScheduledUL;
-						users = scheduledUL;
+						association = [Cells(i).AssociatedUsers];
+						users = [association.UeId];
 				end
 				
 				for ii = 1:length(users)

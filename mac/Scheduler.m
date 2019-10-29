@@ -8,6 +8,7 @@ classdef Scheduler < matlab.mixin.Copyable
 		SchedulerType; % Type of scheduling algorithm used.
 		HarqActive; % If Harq is enabled
 		PRBSymbols; % Number of symbols for each PRB
+		Mode; % Mode of operation (downlink or uplink)
 	end
 	
 	properties(SetAccess='protected')
@@ -17,7 +18,7 @@ classdef Scheduler < matlab.mixin.Copyable
 	
 	methods
 		% Constructor
-		function obj = Scheduler(enbObj, Logger, Config, NRB)
+		function obj = Scheduler(enbObj, Logger, Config, NRB, Mode)
 			if ~isa(enbObj, 'EvolvedNodeB')
 				Logger.log('The parent object is not of type EvolvedNodeB','ERR', 'Scheduler:NotEvolvedNodeB')
 			end
@@ -30,6 +31,7 @@ classdef Scheduler < matlab.mixin.Copyable
 			obj.PRBsActive(obj.PRBSet) = struct('UeId', -1, 'MCS', -1, 'ModOrd', -1);
 			obj.HarqActive = Config.Harq.active;
 			obj.PRBSymbols = Config.Phy.prbSymbols;
+			obj.Mode = Mode;
 			
 		end
 		
@@ -91,7 +93,14 @@ classdef Scheduler < matlab.mixin.Copyable
 			
 			switch obj.SchedulerType
 				case 'roundRobin'
-					[obj.PRBsActive, obj.RoundRobinQueue] = obj.RoundRobinAlgorithm(queueIds, Users, PRBSNeeded);
+					
+					switch obj.Mode
+						case 'downlink'
+							[obj.PRBsActive, obj.RoundRobinQueue] = obj.GreedyRoundRobinAlgorithm(queueIds, Users, PRBSNeeded);
+						case 'uplink'
+							[obj.PRBsActive, obj.RoundRobinQueue] = obj.MinimumRoundRobinAlgorithm(queueIds, Users, PRBSNeeded);
+							
+					end
 				otherwise
 					obj.Logger.log('Unknown scheduler pype','ERR','MonsterScheduler:UnknownSchedulerType');
 			end
@@ -111,19 +120,114 @@ classdef Scheduler < matlab.mixin.Copyable
 				user = Users([Users.NCellID] == iUser);
 
 				% Set downlink flag
-				user.Scheduled.DL = true;
+				switch obj.Mode
+					case 'downlink'
+						user.Scheduled.DL = true;
 
-				% Update traffic queue
-				modOrd = ModOrdTable(user.Rx.CQI.wideBand);
-				numPRBS = length([obj.PRBsActive.UeId] == iUser);
-				numBits = numPRBS * (modOrd*obj.PRBSymbols);
-				user.Queue.Size = user.Queue.Size - numBits;
+						% Update traffic queue
+						modOrd = ModOrdTable(user.Rx.CQI.wideBand);
+						numPRBS = length([obj.PRBsActive.UeId] == iUser);
+						numBits = numPRBS * (modOrd*obj.PRBSymbols);
+						user.Queue.Size = user.Queue.Size - numBits;
+					case 'uplink'
+						user.Scheduled.UL = true;
+						
+				end
 
 			end
 			
 		end
 		
-		function [prbs, updatedqueue] = RoundRobinAlgorithm(obj, userIds, users, prbsNeeded)
+		function [prbs, updatedqueue] = MinimumRoundRobinAlgorithm(obj, userIds, users, prbsNeeded)
+				minPRBS = 5; % Minimum PRBs per user
+				prbs = obj.PRBsActive; %Local copy
+				% Compute number of available resources
+				PRBAvailable = length(prbs);
+				
+				% Users needed to be scheduled
+				numUsers = length(userIds);
+				resourcesAvailable = 1;
+				
+				% Check if all users can be allocated given the minimum PRBs per
+				% user
+				if (numUsers*minPRBS) >= PRBAvailable
+					% Serve users until no PRBs are available
+					while resourcesAvailable
+							iUserID = userIds(1); % Get first from userids
+							iUser = users([users.NCellID] == iUserID);
+							PRBScheduled = minPRBS;
+							
+							% Allocate PRBs
+							% Update list of PRBs
+							for iPrb = 1:length(prbs)
+								if prbs(iPrb).UeId == -1
+									mcs = MCSTable(iUser.Rx.CQI.wideBand);
+									modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
+									for iSch = 0:PRBScheduled-1
+										prbs(iPrb + iSch).UeId = iUser.NCellID;
+										prbs(iPrb + iSch).MCS = mcs;
+										prbs(iPrb + iSch).ModOrd = modOrd;
+									end
+									break;
+								end
+							end
+					
+
+							
+							PRBAvailable = PRBAvailable - PRBScheduled;
+							if PRBAvailable == 0
+								resourcesAvailable = 0;
+								break;
+							end
+							
+							% pop user from list
+							if length(userIds) > 1
+								userIds = userIds(2:end);
+								prbsNeeded = prbsNeeded(2:end);
+							else
+								userIds = [];
+								prbsNeeded = [];
+							end
+							
+							
+					end
+				% Add remaining users to queue
+				updatedqueue = userIds;
+				
+				elseif (numUsers*minPRBS) < PRBAvailable
+					% compute how many extra resources can be allocated
+					minPRBS = floor(PRBAvailable/numUsers);
+					
+					% Get the remainder such it can be added to the PRBsets
+					remainderPRB = mod(PRBAvailable,minPRBS); 
+					PRBset  = 0:minPRBS:PRBAvailable;
+					PRBset(length(PRBset)) = PRBset(length(PRBset))+remainderPRB; % Add remaining resources to the last PRBset
+					
+					% Loop each PRB set, use +1 as the end of the PRBset
+					for iPRBset = 1:length(PRBset)-1
+						startPRB = PRBset(iPRBset);
+						endPRB = PRBset(iPRBset+1)-1; % exluding the last 
+						iUserID = userIds(iPRBset); % Get first from userids
+						iUser = users([users.NCellID] == iUserID);
+						mcs = MCSTable(iUser.Rx.CQI.wideBand);
+						modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
+						for iSch = startPRB:endPRB
+								prbs(iSch+1).UeId = iUser.NCellID;
+								prbs(iSch+1).MCS = mcs;
+								prbs(iSch+1).ModOrd = modOrd;
+						end
+					end
+					
+					updatedqueue = []; % All users can be served
+					
+				end
+				
+				
+				
+			
+		end
+		
+		function [prbs, updatedqueue] = GreedyRoundRobinAlgorithm(obj, userIds, users, prbsNeeded)
 			% Standard implementation of the roundrobin algorithm.
 			% It seeks to fill the resources available, serving the users first who has not been served in the last round of scheduling.
 			%
@@ -251,6 +355,27 @@ classdef Scheduler < matlab.mixin.Copyable
 		end
 		
 		function PRBNeed = getPRBSNeeded(obj, Users, rtxInfo)
+			switch obj.Mode
+				case 'downlink'
+					PRBNeed = obj.getPRBSNeededDownlink(Users, rtxInfo);
+				case 'uplink'
+					PRBNeed = obj.getPRBSNeededUplink(Users);	
+			end
+		end
+		
+		function PRBNeed = getPRBSNeededUplink(obj, Users)
+			% TODO: Make this dependent on a traffic generator
+			% Always PRBS needed for each user (fullbuffer)
+			
+			PRBNeed = zeros(length(Users),1);
+			
+			for iUser = 1:length(Users)
+				PRBNeed(iUser) = 100000;
+			end
+			
+		end
+		
+		function PRBNeed = getPRBSNeededDownlink(obj, Users, rtxInfo)
 			% Get the number of PRBS required for each user given either 1. the transmission queue or 2. HARQ/ARQ
 			%
 			% <Users> array of user objects

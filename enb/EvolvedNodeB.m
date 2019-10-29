@@ -7,6 +7,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		DuplexMode;
 		Position;
 		NDLRB;
+		NULRB;
 		CellRefP;
 		CyclicPrefix;
 		CFI;
@@ -17,9 +18,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		OCNG;
 		Windowing;
 		AssociatedUsers = [];
-		ScheduleUL;
-		RoundRobinDLNext;
-		RoundRobinULNext;
 		Channel;
 		NSubframe;
 		BsClass;
@@ -38,7 +36,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		PowerIn;
 		Utilisation;
 		Logger;
-		Schedulers;
 	end
 	
 	methods
@@ -67,6 +64,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
 			end
+			obj.NULRB = Config.Ue.numPRBs;
 			
 			obj.CellRefP = 1;
 			obj.CyclicPrefix = 'Normal';
@@ -78,8 +76,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.OCNG = 'On';
 			obj.Windowing = 0;
 			obj.DuplexMode = 'FDD';
-			obj.RoundRobinULNext = struct('UeId',0,'Index',1);
-			obj.ScheduleUL = [];
 			obj.PowerState = 1;
 			obj.HystCount = 0;
 			obj.SwitchCount = 0;
@@ -88,8 +84,12 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.Mac = struct('HarqTxProcesses', arrayfun(@(x) HarqTx(0, cellId, x, Config), 1:Config.Ue.number));
 				obj.Rlc = struct('ArqTxBuffers', arrayfun(@(x) ArqTx(cellId, x), 1:Config.Ue.number));
 			end
-			obj.Mac.Schedulers = struct('downlink', Scheduler(obj, Logger, Config, obj.NDLRB));
+			obj.Mac.Schedulers = struct();
+			obj.Mac.Schedulers.downlink = Scheduler(obj, Logger, Config, obj.NDLRB, 'downlink');
+			obj.Mac.Schedulers.uplink = Scheduler(obj, Logger, Config, obj.NULRB, 'uplink');
 			obj.Mac.ShouldSchedule = 0;
+
+
 			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
 			obj.PowerIn = 0;
@@ -168,7 +168,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function obj = resetScheduleUL(obj)
-			obj.ScheduleUL = [];
+			obj.Mac.Schedulers.uplink.reset();
 		end
 		
 		function [indPdsch, info] = getPDSCHindicies(obj)
@@ -278,7 +278,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		end
 		
 		function userIds = getUserIDsScheduledUL(obj)
-			userIds = unique([obj.ScheduleUL]);
+			userIds = unique([obj.Mac.Schedulers.uplink.ScheduledUsers]);
 		end
 		
 		function Users = getUsersScheduledUL(obj, Users)
@@ -374,65 +374,13 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				obj.SwitchCount = 0;
 			end
 		end
-		
-		% set uplink static scheduling
-		function obj = setScheduleUL(obj, Config)
-			% Check the number of users associated with the eNodeB and initialise to all
-			% If the quota of PRBs is enough for all, then all are scheduled
-			if ~isempty(obj.AssociatedUsers)
-				associatedUEs = [obj.AssociatedUsers.UeId];
-				prbQuota = floor(Config.Ue.numPRBs/length(associatedUEs));
-				% Check if the quota is not below 6, in such case we need to rotate the users
-				if prbQuota < 6
-					% In this case the maximum quota is 6 so we need to save the first UE not scheduled
-					prbQuota = 6;
-					ueMax = floor(Config.Ue.numPRBs/prbQuota);
-					% Now extract ueMax from the associatedUEs array, starting from the latest un-scheduled one
-					iMax = obj.RoundRobinULNext.Index + ueMax - 1;
-					iDiff = 0;
-					% Check that the upper bound does not exceed the length, if that's the case just restart
-					if iMax > length(associatedUEs)
-						iDiff = iMax - length(associatedUEs);
-						iMax = length(associatedUEs);
-					end
-					% Now extract 2 arrays from the associatedUEs and concatenate them
-					firstSlice = associatedUEs(obj.RoundRobinULNext.Index : iMax);
-					if iDiff ~= 0
-						secondSlice = associatedUEs(1:iDiff);
-					else
-						secondSlice = [];
-					end
-					finalSlice = cat(2, firstSlice, secondSlice);
-					% Finally, store the ID and the index of the first UE that has not been scheduled this round
-					iNext = iMax + 1;
-					if iNext > length(associatedUEs)
-						iNext = 1;
-					end
-					% Now get the ID an the index relative to the overall Users array
-					obj.RoundRobinULNext.UeId = obj.Users(associatedUEs(iNext)).UeId;
-					obj.RoundRobinULNext.Index = find([obj.Users.UeId] == obj.RoundRobinULNext.UeId);
-					% ensure uniqueness
-					associatedUEs = extractUniqueIds(finalSlice);
-				else
-					% In this case, all connected UEs can be scheduled, so RR can be reset
-					obj.RoundRobinULNext = struct('UeId',0,'Index',1);
-				end
-				prbAvailable = Config.Ue.numPRBs;
-				scheduledUEs = zeros(length(associatedUEs)*prbQuota, 1);
-				for iUser = 1:length(associatedUEs)
-					if prbAvailable >= prbQuota
-						iStart = (iUser - 1)*prbQuota;
-						iStop = iStart + prbQuota;
-						scheduledUEs(iStart + 1:iStop) = associatedUEs(iUser);
-						prbAvailable = prbAvailable - prbQuota;
-					else
-						obj.Logger.log('Some UEs have not been scheduled in UL due to insufficient PRBs', 'WRN');
-						break;
-					end
-				end
-				obj.ScheduleUL = scheduledUEs;
+
+		function obj = uplinkSchedule(obj, Users)
+			if obj.Mac.ShouldSchedule
+				obj.Mac.Schedulers.uplink.scheduleUsers(Users);
 			end
 		end
+	
 		
 		% used to calculate the power in based on the BS class
 		function obj = calculatePowerIn(obj, enbCurrentUtil, otaPowerScale, utilLoThr)
