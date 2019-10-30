@@ -488,7 +488,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Find all cells that share the same class as the one the user is associated with
 			interferingCells = MonsterChannel.getInterferingCells(AssociatedCell, Cells);
 			% Find all users scheduled/associated with that class of cells
-			Pairing = MonsterChannel.getPairing([interferingCells, AssociatedCell],'uplink');
+			Pairing = MonsterChannel.getPairing([interferingCells, AssociatedCell]);
 			Pairing = Pairing(2,Pairing(2,:) ~= SelectedUser.NCellID); % Remove the selected user
 			interferingUsers = Users(Pairing);
 		end
@@ -503,16 +503,14 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Returns cells and users that are associated
 			cells = [];
 			for iCell = 1:length(Cells)
-				%UsersAssociated = [Cells(iCell).Users.UeId];
 				UsersAssociated = [Cells(iCell).AssociatedUsers];
-				%UsersAssociated = UsersAssociated(UsersAssociated ~= -1);
 				if ~isempty(UsersAssociated)
 					cells = [cells, Cells(iCell)];
 				end
 			end
 		end
 		
-		function Pairing = getPairing(Cells, type)
+		function Pairing = getPairing(Cells)
 			% Output: [Nlinks x 2] sized vector with pairings
 			% where Nlinks is equal to the total number of associated users
 			% for Input Cells.
@@ -525,14 +523,9 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			nlink=1;
 			for i = 1:length(Cells)
 				
-				switch type
-					case 'downlink'
-						association = [Cells(i).AssociatedUsers];
-						users = [association.UeId];
-					case 'uplink'	
-						association = [Cells(i).AssociatedUsers];
-						users = [association.UeId];
-				end
+
+				association = [Cells(i).AssociatedUsers];
+				users = [association.UeId];
 				
 				for ii = 1:length(users)
 					Pairing(:,nlink) = [Cells(i).NCellID; users(ii)]; %#ok
