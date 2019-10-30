@@ -36,12 +36,14 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 	methods(TestMethodSetup)
 		function setUplinkWaveform(testCase)
 			testCase.Monster.associateUsers();
+			testCase.Monster.Cells.Mac.ShouldSchedule = 1;
 			testCase.Monster.scheduleUL();
 			testCase.Monster.setupUeTransmitters();
 			testCase.Monster.uplinkTraverse();
 			
 			
 			testCase.MonsterNoSRS.associateUsers();
+			testCase.MonsterNoSRS.Cells.Mac.ShouldSchedule = 1;
 			testCase.MonsterNoSRS.scheduleUL();
 			testCase.MonsterNoSRS.setupUeTransmitters();
 			testCase.MonsterNoSRS.uplinkTraverse();
