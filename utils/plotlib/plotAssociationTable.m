@@ -20,10 +20,10 @@ function plotAssociationTable(Users, Cells, Config, Plot)
 	for iCell = 1:length(Cells)
 		Cell = Cells(iCell);
 		% Find all scheduled users in DL
-		
-		scheduledusers = [Cell.ScheduleDL.UeId];
-		scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
-		
+
+        scheduledusers = [Cell.getUserIDsScheduledDL()];
+        scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
+
 		for user = 1:length(scheduledusers)
 			rxObj = Users(find([Users.NCellID] == scheduledusers(user)));
 			tableAssociation{tIndex,1} = strcat('UE ', num2str(rxObj.NCellID));
@@ -33,9 +33,9 @@ function plotAssociationTable(Users, Cells, Config, Plot)
 		end
 		
 		% Plot all associated users (available in Users)
-		associatedusers = [Cell.Users.UeId];
-		associatedusers = associatedusers(associatedusers ~= -1);
+		associatedusers = [Cell.AssociatedUsers];
 		if ~isempty(associatedusers)
+			associatedusers = [associatedusers.UeId];
 			associatedusers = associatedusers(~ismember(associatedusers,scheduledusers));
 			for user = 1:length(associatedusers)
 				rxObj = Users(find([Users.NCellID] == associatedusers(user)));

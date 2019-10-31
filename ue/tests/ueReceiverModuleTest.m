@@ -18,6 +18,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
 			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
@@ -42,7 +43,7 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 					
 
 			% Schedule user for downlink transmission
-			testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+			testCase.Cells(1).associateUser(testCase.Users(1));
 			testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 			
 			% Setup transport block downlink

@@ -119,11 +119,13 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		% Used to split the received waveform into the different portions of the different
 		% UEs scheduled in the UL
 		function parseWaveform(obj)
-			uniqueUes = unique([obj.enbObj.ScheduleUL]);
+			uniqueUes = unique([obj.enbObj.getUserIDsScheduledUL()]);
 			for iUser = 1:length(uniqueUes)
 				ueId = uniqueUes(iUser);
 				obj.UeData(iUser).UeId = ueId;
 				obj.UeData(iUser).Waveform = obj.ReceivedSignals{ueId}.Waveform;
+				obj.UeData(iUser).PathGains = obj.ReceivedSignals{ueId}.PathGains;
+				obj.UeData(iUser).PathFilters = obj.ReceivedSignals{ueId}.PathFilters;
 			end
 		end
 		
@@ -159,6 +161,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
 						lteULChannelEstimate(struct(ue), struct(ue).PUSCH, cec, obj.UeData(localIndex).Subframe, ue.Tx.Ref.Grid);
+					[obj.UeData(localIndex).perfectChannelEst] = nrPerfectChannelEstimate(obj.UeData(localIndex).PathGains, obj.UeData(localIndex).PathFilters, ue.NULRB, 15, 0);
 				end
 			end
 		end

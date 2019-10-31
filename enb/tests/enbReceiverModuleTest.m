@@ -15,6 +15,7 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
 			testCase.Config.Ue.number = 1;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Monster = Monster(testCase.Config, testCase.Logger);
 			
@@ -36,12 +37,14 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 	methods(TestMethodSetup)
 		function setUplinkWaveform(testCase)
 			testCase.Monster.associateUsers();
+			testCase.Monster.Cells.Mac.ShouldSchedule = 1;
 			testCase.Monster.scheduleUL();
 			testCase.Monster.setupUeTransmitters();
 			testCase.Monster.uplinkTraverse();
 			
 			
 			testCase.MonsterNoSRS.associateUsers();
+			testCase.MonsterNoSRS.Cells.Mac.ShouldSchedule = 1;
 			testCase.MonsterNoSRS.scheduleUL();
 			testCase.MonsterNoSRS.setupUeTransmitters();
 			testCase.MonsterNoSRS.uplinkTraverse();

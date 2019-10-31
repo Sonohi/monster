@@ -14,6 +14,7 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.Config = MonsterConfig();
 			%Set Harq active:
 			testCase.Config.Harq.active = true;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
 			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
@@ -36,9 +37,8 @@ classdef MetricRecorderTest < matlab.unittest.TestCase
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.util(1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.powerConsumed(1,1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).UeId));
-			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).Mcs));
+			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).MCS));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).ModOrd));
-			testCase.verifyTrue(~isnan(testCase.MetricRecorder.schedule(1, 1, 1).NDI));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.powerState(1,1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.harqRtx(1,1)));
 			testCase.verifyTrue(~isnan(testCase.MetricRecorder.arqRtx(1,1)));

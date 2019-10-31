@@ -8,6 +8,7 @@ classdef simulationTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config = MonsterConfig();
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Simulation = Monster(testCase.Config, testCase.Logger);
 		end
@@ -24,7 +25,7 @@ classdef simulationTest < matlab.unittest.TestCase
 			iRound = 0;
 			testCase.Simulation.setupRound(iRound);
 			testCase.verifyTrue(testCase.Simulation.Runtime.currentRound == iRound);
-			testCase.verifyTrue(testCase.Simulation.Runtime.currentTime == iRound*10e-3);
+			testCase.verifyTrue(testCase.Simulation.Runtime.currentTime == iRound*10e-4);
 			testCase.verifyTrue(testCase.Simulation.Runtime.remainingTime == (testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound)*10e-3);
 			testCase.verifyTrue(testCase.Simulation.Runtime.remainingRounds == testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound - 1);
 			
@@ -51,8 +52,8 @@ classdef simulationTest < matlab.unittest.TestCase
 			
 			for iCell = 1:length(testCase.Simulation.Cells)
 				clear temp;
-				temp(1:testCase.Simulation.Cells(iCell).NDLRB,1) = struct('UeId', -1, 'Mcs', -1, 'ModOrd', -1, 'NDI', 1);
-				testCase.verifyEqual(testCase.Simulation.Cells(iCell).ScheduleDL  , temp );
+				temp(1,1:testCase.Simulation.Cells(iCell).NDLRB) = struct('UeId', -1, 'MCS', -1, 'ModOrd', -1);
+				testCase.verifyEqual(testCase.Simulation.Cells(iCell).Mac.Schedulers.downlink.PRBsActive  , temp );
 			end
 			
 			arrayfun(@(x) testCase.verifyEqual(x.Tx.Ref ,struct('ReGrid',[], 'Waveform',[], 'WaveformInfo',[],'PSSInd',[],'PSS', [],'SSS', [],'SSSInd',[],'PSSWaveform',[], 'SSSWaveform',[])), testCase.Simulation.Cells);

@@ -91,13 +91,6 @@ classdef UserEquipment < matlab.mixin.Copyable
 		function obj = move(obj, round)
 			obj.Position(1:3) = obj.Mobility.Trajectory(round+1,:);
 		end
-			
-		% Find indexes in the serving eNodeB for the UL scheduling
-		function obj = setSchedulingSlots(obj, Cell)
-			obj.SchedulingSlots = find(Cell.ScheduleUL == obj.NCellID);
-			obj.NULRB = length(obj.SchedulingSlots);
-			obj.Scheduled.UL = obj.NULRB ~= 0;
-		end
 		
 		% Reset the HARQ report
 		function obj = resetHarqReport(obj)
