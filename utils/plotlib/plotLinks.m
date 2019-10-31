@@ -18,11 +18,9 @@ function plotLinks(Users, Cells, LayoutPlot, chtype)
 		% Plot all scheduled users
 		switch chtype
 			case 'downlink'
-				scheduledusers = [Cell.ScheduleDL.UeId];
-				scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
+				scheduledusers = Cell.getUserIDsScheduledDL();
 			case 'uplink'
-				scheduledusers = [Cell.ScheduleUL.UeId];
-				scheduledusers = unique(scheduledusers(scheduledusers ~= -1));
+				scheduledusers = Cell.getUserIDsScheduledUL();
 		end
 		for user = 1:length(scheduledusers)
 			rxObj = Users(find([Users.NCellID] == scheduledusers(user)));

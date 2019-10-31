@@ -109,7 +109,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		% Used to split the received waveform into the different portions of the different
 		% UEs scheduled in the UL
 		function parseWaveform(obj)
-			uniqueUes = unique([obj.enbObj.ScheduleUL]);
+			uniqueUes = unique([obj.enbObj.getUserIDsScheduledUL()]);
 			for iUser = 1:length(uniqueUes)
 				ueId = uniqueUes(iUser);
 				obj.UeData(iUser).UeId = ueId;
