@@ -14,6 +14,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		UeObj;
 		HarqActive;
 		SRSActive;
+		SRSConfig;
 	end
 	
 	methods
@@ -41,6 +42,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			%TODO: make configureable
 			obj.TxPwdBm = 23;
 			obj.resetRef();
+			obj.SRSConfig = struct('CSRS', 7, 'BSRS', 0, 'subframeConfig',9);
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)
@@ -212,6 +214,8 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 
 				% Insert into resource grid
 				obj.ReGrid(srsIdx) = SRSSymbols;
+			else
+				obj.Ref.srsIdx = [];
 			end
 
 		end
@@ -230,9 +234,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 3-8 = 5 ms
 			% 9-14 = 10 ms
 			% 15 = 1 ms
-			CSRS = 7;
-			BSRS = 0;
-			subframeConfig = 3;
+			CSRS = obj.SRSConfig.CSRS;
+			BSRS = obj.SRSConfig.BSRS;
+			subframeConfig = obj.SRSConfig.subframeConfig;
 			
 		end
 

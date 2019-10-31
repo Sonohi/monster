@@ -18,7 +18,6 @@ function refreshUsersAssociation(Users, Cells, Channel, Config, timeNow)
 			% Find an empty slot and set the context and the new eNodeBID
 			iServingCell = find([Cells.NCellID] == targetEnbID);
 				
-			%Cells(iServingCell).Users(iFree) = ueContext;
 			Cells(iServingCell).associateUser(Users(iUser));
 			Users(iUser).ENodeBID = targetEnbID;
 		else

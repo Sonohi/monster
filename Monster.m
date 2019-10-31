@@ -145,6 +145,12 @@ classdef Monster < matlab.mixin.Copyable
 			obj.Runtime.remainingRounds = obj.Runtime.totalRounds - obj.Runtime.currentRound - 1;
 			% Update Channel property
 			obj.Channel.setupRound(obj.Runtime.currentRound, obj.Runtime.currentTime);
+
+			% Update user property (SRS configuration)
+			for iUser = 1:length(obj.Users)
+				obj.Users(iUser).NSubframe = mod(iRound,10);
+				obj.Users(iUser).NFrame = floor((iRound+1)/10);
+			end
 		
 		end
 
