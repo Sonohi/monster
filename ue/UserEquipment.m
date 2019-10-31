@@ -38,6 +38,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 		Seed;
 		Mobility;
 		Traffic = struct('generatorId', 1, 'startTime', 0)
+		Mimo;
 		Logger;
 	end
 	
@@ -66,6 +67,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
+			obj.Mimo = generateMimoConfig(Config);
 			obj.Rx = ueReceiverModule(obj, Config);
 			obj.Tx = ueTransmitterModule(obj, Config);
 			obj.SymbolsInfo = [];

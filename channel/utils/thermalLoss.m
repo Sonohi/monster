@@ -1,4 +1,4 @@
-	function [lossdBm, thermalNoise] = thermalLoss(obj, varargin)
+	function [lossdBm, thermalNoise] = thermalLoss(varargin)
 		% Compute thermal loss based on bandwidth, at T = 290 K.
 		% Bandwidth is either given as MHz, or a waveform is supplied with the sampling rate.
 		% Worst case given by the number of resource blocks. Bandwidth is

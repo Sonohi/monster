@@ -51,7 +51,6 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				case 'micro'
 					obj.Gain = Config.MicroEnb.antennaGain;
 					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
-					obj.AntennaArray = AntennaArray(Config.MicroEnb.antennaType, obj.Enb.Logger, obj.Mimo);
 					obj.TxPwdBm = 10*log10(Config.MicroEnb.Pmax)+30;
 					if ~strcmp(Config.MicroEnb.antennaType, 'omni')
 						obj.AntennaArray.Bearing = antennaBearing;
@@ -62,7 +61,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.Mimo = enb.Mimo;
 			obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger, obj.Mimo);
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
-			obj.Waveform = zeros(Nfft, obj.Mimo.numTxAntennas);
+			obj.Waveform = zeros(Nfft, obj.Mimo.numAntennas);
 			obj.resetReference();
 			obj.resetResourceGrid();
 			obj.setupGrid(0);
@@ -148,7 +147,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.Ref.SSSInd = SSSInd;
 			[waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
 			% Replicate the waveform based on the number of TX antennas
-			completeWaveform = repmat(waveform, obj.Mimo.numTxAntennas);
+			completeWaveform = repmat(waveform, obj.Mimo.numAntennas);
 			obj.Ref.Waveform = completeWaveform;			
 		end
 		
@@ -247,7 +246,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Assume lossless transmitter
 			[waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);
 			% Replicate the waveform based on the number of TX antennas
-			completeWaveform = repmat(waveform, obj.Mimo.numTxAntennas);
+			completeWaveform = repmat(waveform, obj.Mimo.numAntennas);
 			obj.Ref.Waveform = completeWaveform;			
 			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
 			% for power scaling

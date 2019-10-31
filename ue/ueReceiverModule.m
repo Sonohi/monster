@@ -29,6 +29,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		AntennaArray;
 		ueObj; % Parent UE handle
 		AntennaGain;
+		Mimo;
 	end
 
 	properties (Access = private)
@@ -50,11 +51,11 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
 			obj.FadingActive = Config.Channel.fadingActive;
 			obj.AntennaGain = Config.Ue.antennaGain;
-			MimoConfig = generateMimoConfig(Config);
+			obj.Mimo = ueObj.Mimo;
 			if strcmp(Config.Ue.antennaType, 'vivaldi')
 				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
 			else
-				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, MimoConfig);	
+				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, obj.Mimo);	
 			end
 		end
 		

@@ -492,7 +492,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% Find all cells that share the same class as the one the user is associated with
 			interferingCells = MonsterChannel.getInterferingCells(AssociatedCell, Cells);
 			% Find all users scheduled/associated with that class of cells
-			Pairing = MonsterChannel.getPairing([interferingCells, AssociatedCell]);
+			Pairing = MonsterChannel.getPairing([interferingCells, AssociatedCell], Users);
 			Pairing = Pairing(2,Pairing(2,:) ~= SelectedUser.NCellID); % Remove the selected user
 			interferingUsers = Users(Pairing);
 		end
@@ -514,25 +514,25 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			end
 		end
 		
-		function Pairing = getPairing(Cells)
-			% Output: [Nlinks x 2] sized vector with pairings
+		function Pairing = getPairing(Cells, Users)
+			% Output: [Nlinks x 3] sized vector with pairings and number of antennas for the pairing
 			% where Nlinks is equal to the total number of associated users
 			% for Input Cells.
-			% E.g. Pairing(1,:) = All Cell ID's
-			% E.g. Pairing(2,:) = All user ID's
-			% and Pairing(1,1) = Describes the pairing of Cell and User
+			% E.g. Pairing(1,:,numLinkAntennas) = All Cell ID's
+			% E.g. Pairing(2,:,numLinkAntennas) = All user ID's
+			% and Pairing(1,1,numLinkAntennas) = Describes the pairing of Cell and User
 			
 			% Get number of links associated with the Cell.
-			
 			nlink=1;
-			for i = 1:length(Cells)
-				
-
-				association = [Cells(i).AssociatedUsers];
-				users = [association.UeId];
-				
-				for ii = 1:length(users)
-					Pairing(:,nlink) = [Cells(i).NCellID; users(ii)]; %#ok
+			for iCell = 1:length(Cells)
+				association = [Cells(iCell).AssociatedUsers];
+				associatedUeIds = [association.UeId];
+				for iUser = 1:length(associatedUeIds)
+					% Find the user with this ID
+					User = Users([Users.NCellID] == associatedUeIds(iUser));
+					cellAntennas = Cells(iCell).Mimo.numAntennas;
+					userAntennas = User.Mimo.numAntennas;
+					Pairing(:, nlink, :) = [Cells(iCell).NCellID; associatedUeIds(iUser); min(cellAntennas, userAntennas)];
 					nlink = nlink+1;
 				end
 			end

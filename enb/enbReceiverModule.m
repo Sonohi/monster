@@ -71,9 +71,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				end
 				
 				foundSignals = true;
-						
 			end
-			
 		end
 
 		function createReceivedSignal(obj)
@@ -98,6 +96,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 						obj.Waveforms(iUser,:, :) = ueWaveform;
 					else
 						obj.Waveforms(iUser, :) = ueWaveform;
+					end
 				end
 
 				% Create finalized waveform
@@ -110,10 +109,6 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 					obj.Waveform = compositeWaveform.';
 				end
 			end
-		end
-
-		function obj = set.UeData(obj,UeData)
-			obj.UeData = UeData;
 		end
 		
 		% Used to split the received waveform into the different portions of the different
