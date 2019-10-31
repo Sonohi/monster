@@ -112,7 +112,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			
 			% Propagate waveforms
 			if ~isempty(FilteredCells)
-				obj.callChannelModel(Cells, Users, Mode);
+				obj.callChannelModel(FilteredCells, Users, Mode);
 			else
 				obj.Logger.log('(MONSTER CHANNEL - traverse) No users found for any of the stations. Quitting traverse', 'ERR', 'MonsterChannel:NoUsersAssigned')
 			end
@@ -143,7 +143,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			% :returns seed:
 			%
 
-			seed = rxObj.Seed * txObj.Seed + 10* obj.simulationRound;
+			seed = rxObj.Seed * txObj.Seed;
 		end
 		
 		function areaType = getAreaType(obj,Cell)

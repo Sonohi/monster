@@ -43,6 +43,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 		end
 
+		% rename to propagate link and traverse for all waveforms in a link
 		function tempVar = propagateWaveform(obj, Cell, User, Cells, Users, Mode)
 			tempVar = obj.TempVariables();
 			% Set waveform to be manipulated
@@ -596,7 +597,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
 			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
 			
-			switch obj.FadingModel
+			switch obj.Channel.FadingModel
 				case 'CDL'
 					cdl = nrCDLChannel;
 					cdl.DelayProfile = 'CDL-C';
@@ -605,13 +606,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					cdl.MaximumDopplerShift = fd;
 					cdl.SampleRate = TxNode.Tx.WaveformInfo.SamplingRate;
 					cdl.InitialTime = obj.Channel.simulationTime;
-					cdl.TransmitAntennaArray.Size = obj.Mimo.arrayTuple;
-					cdl.ReceiveAntennaArray.Size = obj.Mimo.arrayTuple;
+					cdl.TransmitAntennaArray.Size = obj.Channel.Mimo.arrayTuple;
+					cdl.ReceiveAntennaArray.Size = obj.Channel.Mimo.arrayTuple;
 					cdl.SampleDensity = 256;
 					cdl.Seed = seed;
 					tempVar.RxWaveform = cdl(sig);
 				case 'TDL'
-					tdl = nrTDLChannel;c
+					tdl = nrTDLChannel;
 					
 					% Set transmission direction for MIMO correlation
 					switch mode
@@ -620,15 +621,14 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						case 'uplink'
 							tdl.TransmissionDirection = 'Uplink';
 					end
-					% TODO: Add MIMO to fading channel
 					tdl.DelayProfile = 'TDL-E';
 					tdl.DelaySpread = 300e-9;
 					%tdl.MaximumDopplerShift = 0;
 					tdl.MaximumDopplerShift = fd;
 					tdl.SampleRate = samplingRate;
 					tdl.InitialTime = obj.Channel.simulationTime;
-					tdl.NumTransmitAntennas = obj.Mimo.numTxAntennas;
-					tdl.NumReceiveAntennas = obj.Mimo.numRxAntennas;
+					tdl.NumTransmitAntennas = obj.Channel.Mimo.numTxAntennas;
+					tdl.NumReceiveAntennas = obj.Channel.Mimo.numRxAntennas;
 					tdl.Seed = seed;
 					%tdl.KFactorScaling = true;
 					%tdl.KFactor = 3;

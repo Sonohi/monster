@@ -29,26 +29,12 @@ classdef AntennaArray < handle
 
 			obj.Logger = Logger;
 			obj.Type = type;
-			% In the sectorised and omni cases, input arguments include the MIMO coniguration
-			% If empty, use default configuration
-			MimoConfig = struct(...
-				'panelCol', 1,...
-				'panelRow', 1,...
-				'elemPanelCol', 1,...
-				'elemPanelRow', 1,...
-				'polarizations',1);
 			switch type
 				case 'sectorised'
-					if ~isempty(varargin)
-						MimoConfig = varargin{1};
-					end
-					obj.Mimo = MimoConfig;
+					obj.Mimo = varargin{1};
 					obj.config3gpp38901()
 				case 'omni'
-					if ~isempty(varargin)
-						MimoConfig = varargin{1};
-					end
-					obj.Mimo = MimoConfig;
+					obj.Mimo = varargin{1};
 					obj.configOmniDirectional()
 				case 'vivaldi'
 					obj.configVivaldi(varargin{1})
@@ -67,7 +53,11 @@ classdef AntennaArray < handle
 			
 			switch obj.Type
 				case 'sectorised'
-					antennaGains = obj.compute3GPPAntennaGains(TxPosition, RxPosition, varargin);
+					iSelectedElement = [];
+					if ~isempty(varargin)
+						iSelectedElement = varargin{1};
+					end
+					antennaGains = obj.compute3GPPAntennaGains(TxPosition, RxPosition, iSelectedElement);
 				case 'omni'
 					antennaGains = {0}; %Ideal antenna pattern in all directions
 				case 'vivaldi'
@@ -140,18 +130,11 @@ classdef AntennaArray < handle
 			% :return obj: AntennaArray instance
 			%
 
-			arrayTuple = [...
-				obj.Mimo.panelCol,...
-				obj.Mimo.panelRow,...
-				obj.Mimo.elemPanelCol,...
-				obj.Mimo.elemPanelRow,...
-				obj.Mimo.polarizations
-			];
 			bearing = 30;
 			tilt = 102;
-			obj.Panels = cell((arrayTuple(1)*arrayTuple(2)),1);
-			obj.ElementsPerPanel = arrayTuple(3:4);
-			obj.Polarizations = arrayTuple(5);
+			obj.Panels = cell((obj.Mimo.arrayTuple(1)*obj.Mimo.arrayTuple(2)),1);
+			obj.ElementsPerPanel = obj.Mimo.arrayTuple(3:4);
+			obj.Polarizations = obj.Mimo.arrayTuple(5);
 			obj.Bearing = bearing;
 			obj.Tilt = tilt;
 			for iPanel = 1:length(obj.Panels)
@@ -200,13 +183,13 @@ classdef AntennaArray < handle
 			end
 		end
 
-		function antennaGains = compute3GPPAntennaGains(obj, TxPosition, RxPosition, varargin)
+		function antennaGains = compute3GPPAntennaGains(obj, TxPosition, RxPosition, iSelectedElement)
 			% Computes antenna gains for all elements given tx ad rx positions
 			% 
 			% :param obj: AntennaArray instance
 			% :param TxPosition: 3x1 array of double with the TX coordinates
 			% :param RxPosition: 3x1 array of double with the RX coordinates
-			% :param varargin: cell of optional extra parameters to select a specific element by index
+			% :param iSelectedPanel: optional selection of specific element by index
 			% :return antennaGains: cell of antenna gains
 			% 
 
@@ -220,9 +203,8 @@ classdef AntennaArray < handle
 			ElevationAngle = rad2deg(atan(deltaH/dist2d))+90;
 
 			% Check if a specific element gain is requested or not
-			if ~isempty(varargin)
-				iAntennaElement = varargin{1};
-				antennaGains = obj.Panels{iAntennaElement}.get3DGain(ElevationAngle, AzimuthAngle);
+			if ~isempty(iSelectedElement)
+				antennaGains = obj.Panels{iSelectedElement}.get3DGain(ElevationAngle, AzimuthAngle);
 			else
 				% In this case, defaults to calculating all the gains
 				antennaGains = cell([length(obj.Panels),obj.ElementsPerPanel]);
