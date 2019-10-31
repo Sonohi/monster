@@ -75,10 +75,10 @@ function Traffic = applyBackhaulDelay(TrafficIn, Config)
                 Traffic(iUser).Id = iUser;
                 Traffic(iUser).TrafficType = TrafficIn(iTraffic).TrafficType;
                 Traffic(iUser).ArrivalMode = TrafficIn(iTraffic).ArrivalMode;
-                Traffic(iUser).TrafficSource = TrafficSource(:,:,iUser);
+                Traffic(iUser).TrafficSource = TrafficIn(iTraffic).TrafficSource;
                 Traffic(iUser).AssociatedUeIds = iUser;
                 Traffic(iUser).ArrivalTimes = TrafficIn(iTraffic).ArrivalTimes(TrafficIn(iTraffic).AssociatedUeIds==iUser);
-                Traffic(iUser).TrafficSourceNoBackhaul = TrafficIn(iTraffic).TrafficSource;
+                Traffic(iUser).TrafficSourceWithBackhaul = TrafficSource(:,:,iUser);
                 break;
             end
         end
