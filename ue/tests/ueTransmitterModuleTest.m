@@ -19,6 +19,7 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 			testCase.Config.MicroEnb.number = 0;
 			testCase.Config.Ue.number = 1;
 			testCase.Config.SRS.active = true;
+			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Monster = Monster(testCase.Config, testCase.Logger);
 		

@@ -61,7 +61,7 @@ classdef Monster < matlab.mixin.Copyable
 				'remainingRounds', obj.Config.Runtime.simulationRounds, ...
 				'currentRound', 0, ...
 				'currentTime', 0, ...
-				'remainingTime', obj.Config.Runtime.simulationRounds*10e-3, ...
+				'remainingTime', obj.Config.Runtime.simulationRounds*10e-4, ...
 				'realTimeElaspsed', 0, ...
 				'realTimeRemaining', obj.Config.Runtime.simulationRounds * 10,... 
 				'seed', obj.Config.Runtime.seed ...
@@ -97,11 +97,14 @@ classdef Monster < matlab.mixin.Copyable
 				'LayoutFigure', 0, ...
 				'LayoutAxes', 0,...
 				'PHYFigure', 0, ...
-				'PHYAxes', 0);
+				'PHYAxes', 0, ...
+        'LogicLayoutFigure', 0,...
+        'LogicLayoutAxes',0);
 			if obj.Config.SimulationPlot.runtimePlot
 				obj.Logger.log('(MONSTER - setupSimulation) setting up runtime plots', 'DBG');
 				[Plot.LayoutFigure, Plot.LayoutAxes] = createLayoutPlot(obj.Config, Layout);
 				[Plot.PHYFigure, Plot.PHYAxes] = createPHYplot(obj.Config);
+        [Plot.LogicLayoutFigure, Plot.LogicLayoutAxes] = createLogicLayoutPlot(obj.Config);
 			end
 
 			% Assign the properties to the Monster object
@@ -137,8 +140,8 @@ classdef Monster < matlab.mixin.Copyable
 
 			% Update Config property
 			obj.Runtime.currentRound = iRound;
-			obj.Runtime.currentTime = iRound*10e-3;  
-			obj.Runtime.remainingTime = (obj.Runtime.totalRounds - obj.Runtime.currentRound)*10e-3;
+			obj.Runtime.currentTime = iRound*10e-4;  
+			obj.Runtime.remainingTime = (obj.Runtime.totalRounds - obj.Runtime.currentRound)*10e-4;
 			obj.Runtime.remainingRounds = obj.Runtime.totalRounds - obj.Runtime.currentRound - 1;
 			% Update Channel property
 			obj.Channel.setupRound(obj.Runtime.currentRound, obj.Runtime.currentTime);
@@ -385,9 +388,10 @@ classdef Monster < matlab.mixin.Copyable
 				% :obj: Monster instance
 				%
 				if obj.Config.SimulationPlot.runtimePlot
-				plotSpectrums(obj.Users, obj.Cells, obj.Config, obj.Plot);
-				plotConstDiagramDL(obj.Users, obj.Cells, obj.Config, obj.Plot);
-				plotAssociationTable(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotSpectrums(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotConstDiagramDL(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotAssociationTable(obj.Users, obj.Cells, obj.Config, obj.Plot);
+          plotLogicLayout(obj.Cells, obj.Config, obj.Plot);
 				end
 		end
 	end
