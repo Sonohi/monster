@@ -1,6 +1,19 @@
 ## Unreleased
-- Simple backhaul network.
-- Uplink PUSCH generation and channel estimation from SRS
+- Uplink PUSCH generation and nonstatic UL scheduler
+- MIMO support 
+- Logic graph plotting of network entities
+
+## 1.0.2 - 2019-10-17
+
+### Added
+- Added SRS channel estimation
+- Added backhaul functionalities for controlling the aggregation of traffic sources
+
+### Changed
+- Revised and improved user association structure between eNB and Users
+- Revised the scheduler in DL. Now stored under the Mac property in the eNB
+- Revised the Config to be read only and not changed during simulation
+- Revised plotting during simulation
 
 ## 1.0.1 - 2019-09-12
 

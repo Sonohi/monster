@@ -96,7 +96,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :Mode:
 			%
 			
-			Pairing = obj.Channel.getPairing(Cells, Mode);
+			Pairing = obj.Channel.getPairing(Cells);
 			obj.Pairings = Pairing;
 			numLinks = length(Pairing(1,:));
 			

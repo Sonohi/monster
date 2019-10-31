@@ -162,7 +162,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				function testTraverseDownlink(testCase)
 
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					testCase.Cells(1).Tx.Waveform = [];
@@ -206,8 +206,9 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 			   function testTraverseUplink(testCase)
 
 					% Assign user and schedule user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
-					testCase.Cells(1).setScheduleUL(testCase.Config);
+					testCase.Cells(1).Mac.ShouldSchedule = 1;
+					testCase.Cells(1).associateUser(testCase.Users(1));
+					testCase.Cells(1).uplinkSchedule(testCase.Users);
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
 					% Traverse channel downlink with no waveform assigned to
@@ -216,9 +217,8 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					
 					% Assign waveform and waveinfo to tx module
 					% Uplink
-					testCase.Users(1).Scheduled.UL = 1;
 					testCase.Users(1).Tx.setupTransmission();
-					testCase.Cells(1).setScheduleUL(testCase.Config);
+
 					
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink')
 					% Check that the linkConditions are stored
@@ -248,7 +248,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				 function testOneCellCase(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					% Assign waveform and waveinfo to tx module
@@ -263,7 +263,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				function testNoInterference(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 
 					% Assign waveform and waveinfo to tx module
@@ -285,7 +285,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				
 				function testDownlinkAndUplink(testCase)
 					% Assign user
-					testCase.Cells(1).Users = struct('UeId', testCase.Users(1).NCellID, 'CQI', -1, 'RSSI', -1);
+					testCase.Cells(1).associateUser(testCase.Users(1));
 					testCase.Users(1).ENodeBID = testCase.Cells(1).NCellID;
 					
 					for iCell = 1:length(testCase.Cells)
@@ -298,7 +298,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 					% Uplink
 					testCase.Users(1).Scheduled.UL = 1;
 					testCase.Users(1).Tx.setupTransmission();
-					testCase.Cells(1).setScheduleUL(testCase.Config);
+					testCase.Cells(1).uplinkSchedule(testCase.Users);
 					testCase.Channel.traverse(testCase.Cells, testCase.Users, 'uplink')
 					
 					testCase.verifyTrue(~isempty(testCase.Channel.ChannelModel.LinkConditions.downlink{1,1}))

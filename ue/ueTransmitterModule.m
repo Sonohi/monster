@@ -14,6 +14,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		UeObj;
 		HarqActive;
 		SRSActive;
+		SRSConfig;
 	end
 	
 	methods
@@ -41,6 +42,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			%TODO: make configureable
 			obj.TxPwdBm = 23;
 			obj.resetRef();
+			obj.SRSConfig = struct('CSRS', 7, 'BSRS', 0, 'subframeConfig',9);
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)
@@ -61,24 +63,22 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 3. Add data (missing)
 			% 4. Modulate resource grid into waveform
 			%
-			% Returns updated :obj.ReGrid:, :obj.Waveform:, :obj.WaveformInfo:
+			% Returns updated :obj.ReGrid:, :obj.Waveform:, :obj.WaveformInfo:	
 			
-			% Check whether this UE is scheduled in the UL
-			if obj.UeObj.Scheduled.UL
-				% Setup the dimensions for transmission
-				obj.setupResourceGrid();
+			% Setup the dimensions for transmission
+			obj.setupResourceGrid();
 
-				% Setup the control signals
-				obj.setupControlSignals();
+			% Setup the control signals
+			obj.setupControlSignals();
 
-				% TODO: add actual data here
-				if obj.PUSCH.Active == 1
-					obj.setupPUSCH();
-				end
-
-				% Modulate the resource grid
-				obj.modulateResourceGrid();
+			% TODO: add actual data here
+			if obj.UeObj.Scheduled.UL & obj.PUSCH.Active == 1
+				obj.setupPUSCH();
 			end
+
+			% Modulate the resource grid
+			obj.modulateResourceGrid();
+
 		end
 
 		function bits = generatePUSCHBits(obj)
@@ -212,6 +212,8 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 
 				% Insert into resource grid
 				obj.ReGrid(srsIdx) = SRSSymbols;
+			else
+				obj.Ref.srsIdx = [];
 			end
 
 		end
@@ -230,9 +232,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% 3-8 = 5 ms
 			% 9-14 = 10 ms
 			% 15 = 1 ms
-			CSRS = 7;
-			BSRS = 0;
-			subframeConfig = 3;
+			CSRS = obj.SRSConfig.CSRS;
+			BSRS = obj.SRSConfig.BSRS;
+			subframeConfig = obj.SRSConfig.subframeConfig;
 			
 		end
 
