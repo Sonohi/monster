@@ -128,7 +128,9 @@ classdef Scheduler < matlab.mixin.Copyable
 						modOrd = ModOrdTable(user.Rx.CQI.wideBand);
 						numPRBS = length([obj.PRBsActive.UeId] == iUser);
 						numBits = numPRBS * (modOrd*obj.PRBSymbols);
-						user.Queue.Size = user.Queue.Size - numBits;
+						% The number of bits to decrease the queue size has to be capped to 
+						% at most the current queue size, as PRBs have to be assigned whole
+						user.Queue.Size = max(user.Queue.Size - numBits, 0);
 					case 'uplink'
 						user.Scheduled.UL = true;
 						
@@ -436,7 +438,6 @@ classdef Scheduler < matlab.mixin.Copyable
 		
 		function obj = addUser(obj, UserId)
 			obj.ScheduledUsers = [obj.ScheduledUsers UserId];
-			
 		end
 		
 		function obj = removeUser(obj, UserId)
