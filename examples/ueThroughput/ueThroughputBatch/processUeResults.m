@@ -119,10 +119,18 @@ end
 function backhaulTraffic = loadBackhaulTraffic(file, nRounds)
   Traffic = file.storedTraffic.traffic(:);
   backhaulTraffic = zeros(nRounds,2);
-  backhaulTraffic(:,1) = Traffic(1).TrafficSource(1:nRounds,1);
-  for t = 1:length(Traffic)
-    backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSource(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+  if Traffic(1).BackhaulOn
+    backhaulTraffic(:,1) = Traffic(1).TrafficSourceWithBackhaul(1:nRounds,1);
+    for t = 1:length(Traffic)
+      backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSourceWithBackhaul(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+    end
+
+  else
+    backhaulTraffic(:,1) = Traffic(1).TrafficSource(1:nRounds,1);
+    for t = 1:length(Traffic)
+      backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSource(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+    end
   end
-  backhaulTraffic=backhaulTraffic(backhaulTraffic(:,1)<nRounds*0.001,:);
+    backhaulTraffic=backhaulTraffic(backhaulTraffic(:,1)<nRounds*0.001,:);  
 end
 

@@ -38,6 +38,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	Config.MacroEnb.cellsPerSite = 3;
 	%Set channel conditions
 	Config.Channel.fadingActive = 'false';
+	Config.Channel.shadowingActive = 'false';
 	Config.Channel.losMethod = 'NLOS';
 	%Set bandwidth
 	if simulationChoice == 2
