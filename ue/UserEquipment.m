@@ -48,6 +48,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.Logger = Logger;
 			obj.NCellID = userId;
 			obj.Seed = userId*Config.Runtime.seed;
+			obj.Mimo = generateMimoConfig(Config);
 			obj.ENodeBID = -1;
 			obj.NULRB = Config.Ue.numPRBs;
 			obj.RNTI = 1;
@@ -55,7 +56,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.CyclicPrefixUL = 'Normal';
 			obj.NSubframe = 0;
 			obj.NFrame = 0;
-			obj.NTxAnts = 1;
+			obj.NTxAnts = obj.Mimo.numAntennas;
 			obj.Queue = struct('Size', 0, 'Time', 0, 'Pkt', 1);
 			obj.PlotStyle = struct(	'marker', '^', ...
 				'colour', rand(1,3), ...
@@ -67,7 +68,6 @@ classdef UserEquipment < matlab.mixin.Copyable
 			obj.TLast = 0;
 			obj.PLast = [1 1];
 			obj.RxAmpli = 1;
-			obj.Mimo = generateMimoConfig(Config);
 			obj.Rx = ueReceiverModule(obj, Config);
 			obj.Tx = ueTransmitterModule(obj, Config);
 			obj.SymbolsInfo = [];
@@ -87,7 +87,14 @@ classdef UserEquipment < matlab.mixin.Copyable
 		
 		function s = struct(obj)
 			% Struct needed for MATLAB LTE Library functions.
-			s = struct('NCellID', obj.NCellID, 'NULRB', obj.NULRB, 'NSubframe', obj.NSubframe, 'NFrame', obj.NFrame, 'RNTI', obj.RNTI, 'PUSCH', obj.Tx.PUSCH);
+			s = struct(...
+				'NCellID', obj.NCellID, ...
+				'NULRB', obj.NULRB, ... 
+				'NSubframe', obj.NSubframe, ...
+				'NFrame', obj.NFrame, ...
+				'RNTI', obj.RNTI, ...
+				'NTxAnts', obj.NTxAnts, ...
+				'PUSCH', obj.Tx.PUSCH);
 		end
 
 		function obj = move(obj, round)

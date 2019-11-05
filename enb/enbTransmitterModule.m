@@ -145,10 +145,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.Ref.PSSInd = PSSInd;
 			obj.Ref.SSS = SSS;
 			obj.Ref.SSSInd = SSSInd;
-			[waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
-			% Replicate the waveform based on the number of TX antennas
-			completeWaveform = repmat(waveform, obj.Mimo.numAntennas);
-			obj.Ref.Waveform = completeWaveform;			
+			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);		
 		end
 		
 		function obj = assignReferenceSubframe(obj)
@@ -216,7 +213,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				% find which portion of the PBCH we need to send in this frame and insert
 				a = (obj.PBCH.unit - 1) * length(indPbch) + 1;
 				b = obj.PBCH.unit * length(indPbch);
-				pbch = fullPbch(a:b, 1);
+				pbch = fullPbch(a:b, :);
 				regrid(indPbch) = pbch;
 				
 				% finally update the unit counter
@@ -240,14 +237,11 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Add PDCCH and generate a random codeword to emulate the control info carried
 			pdcchParam = ltePDCCHInfo(enb);
 			ctrl = randi([0,1],pdcchParam.MTot,1);
-			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
+			[pdcchSym, ~] = ltePDCCH(enb,ctrl);
 			indPdcch = ltePDCCHIndices(enb);
 			obj.ReGrid(indPdcch) = pdcchSym;
 			% Assume lossless transmitter
-			[waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);
-			% Replicate the waveform based on the number of TX antennas
-			completeWaveform = repmat(waveform, obj.Mimo.numAntennas);
-			obj.Ref.Waveform = completeWaveform;			
+			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);			
 			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
 			% for power scaling
 			used = length(find(abs(obj.ReGrid) ~= 0));
@@ -279,7 +273,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Check that the indexes where these symbols should be instered are empty, otherwise throw an error
 			if sum(obj.ReGrid(symsIxs) == 0)
 				% pad for unused subcarriers
-				padding(1:length(symsIxs) - length(syms), 1) = 0;
+				padding(1:length(symsIxs) - length(syms), obj.Mimo.numAntennas) = 0;
 				syms = cat(1, syms, padding);
 				
 				% insert symbols into grid
@@ -301,7 +295,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			ch = struct(...
 				'TxScheme', txMode,...
 				'Modulation', {'QPSK'},...
-				'NLayers', 1, ...
+				'NLayers', obj.Mimo.numAntennas, ...
 				'Rho', 0,...
 				'RNTI', 1,...
 				'RVSeq', [0 1 2 3],...

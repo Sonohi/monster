@@ -121,6 +121,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			end
 			
 			% Conduct reference measurements
+			% TODO: revise sig power calculation using Es rather than bandpower 
 			obj.referenceMeasurements(enb);
 
 			% If UE is not scheduled reset the metrics for the round
@@ -256,13 +257,14 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
+			% Calculate the average EVM values across all the antennas in case they are multiple
+			obj.PreEvm = mean(EVM(enbObj.Tx.ReGrid,obj.Subframe));
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
 			obj.ueObj.Logger.log(s,'NFO0');
 			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
+			obj.PostEvm = mean(EVM(enbObj.Tx.ReGrid,obj.EqSubframe));
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
 			obj.ueObj.Logger.log(s,'NFO0');
 		end
@@ -347,7 +349,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			else
 				obj.computeOffset(enbObj);
 			end
-			obj.Waveform = obj.Waveform(obj.Offset+1:end);
+			obj.Waveform = obj.Waveform(obj.Offset+1:end,:);
 		end
 		
 		function obj  = logBlockReception(obj)

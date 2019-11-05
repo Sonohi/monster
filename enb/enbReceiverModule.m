@@ -85,14 +85,14 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 					waveformLengths(iUser) =  length(obj.ReceivedSignals{ueId}.Waveform);
 				end
 
-				obj.Waveform = zeros(max(waveformLengths), obj.Mimo.numRxAntennas);
+				obj.Waveform = zeros(max(waveformLengths), obj.Mimo.numAntennas);
 
 				for iUser = 1:length(uniqueUes)
 					ueId = uniqueUes(iUser);
 					% Add waveform with corresponding power
 					ueWaveform = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
 					% Depending on the MIMO configuration, the ueWaveform can be 1 or 2 dimensional
-					if obj.Mimo.numRxAntennas > 1
+					if obj.Mimo.numAntennas > 1
 						obj.Waveforms(iUser,:, :) = ueWaveform;
 					else
 						obj.Waveforms(iUser, :) = ueWaveform;
@@ -103,8 +103,8 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				compositeWaveform = sum(obj.Waveforms, 1);
 				
 				% Waveform is transposed due to the SCFDMA demodulator requiring a column vector.
-				if obj.Mimo.numRxAntennas > 1
-					obj.Waveform(1:max(waveformLengths), 1: obj.Mimo.numRxAntennas) = compositeWaveform(1, :, :).';
+				if obj.Mimo.numAntennas > 1
+					obj.Waveform(1:max(waveformLengths), 1: obj.Mimo.numAntennas) = squeeze(compositeWaveform(1, :, :));
 				else
 					obj.Waveform = compositeWaveform.';
 				end

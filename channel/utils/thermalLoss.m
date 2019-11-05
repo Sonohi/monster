@@ -12,7 +12,14 @@
 		elseif length(varargin) > 1
 			RxWaveform = varargin{1};
 			RxWaveformSamplingRate = varargin{2};
-			bw = obw(RxWaveform, RxWaveformSamplingRate);
+			occupiedBw = obw(RxWaveform, RxWaveformSamplingRate);
+			% In case the supplied waveform spans multiple antennas
+			% Take the first element of the obw output
+			if length(occupiedBw) > 1
+				bw = occupiedBw(1);
+			else 
+				bw = occupiedBw;
+			end
 		else
 			bw = 20e6; % Full bandwidth
 		end

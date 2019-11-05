@@ -113,9 +113,14 @@ classdef AntennaArray < handle
 			% :param obj: AntennaArray instance
 			% :return obj: AntennaArray instance
 			% 
-
-			arrayTuple = [1, 1, 1, 1, 1];
-			obj.Panels = cell((arrayTuple(1)*arrayTuple(2)),1);
+				
+			obj.Tilt = 102;
+			obj.Panels = cell((obj.Mimo.arrayTuple(1)*obj.Mimo.arrayTuple(2)),1);
+			obj.ElementsPerPanel = obj.Mimo.arrayTuple(3:4);
+			obj.Polarizations = obj.Mimo.arrayTuple(5);
+			for iPanel = 1:length(obj.Panels)
+				obj.Panels{iPanel} = obj.constructAntennaElements();
+			end
 		end
 
 		function config3gpp38901(obj)

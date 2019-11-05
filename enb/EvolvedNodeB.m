@@ -68,8 +68,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.Mimo = generateMimoConfig(Config, 'micro');
 			end
 			obj.NULRB = Config.Ue.numPRBs;
-			
-			obj.CellRefP = 1;
+			obj.CellRefP = obj.Mimo.numAntennas;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
@@ -91,8 +90,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.Mac.Schedulers.downlink = Scheduler(obj, Logger, Config, obj.NDLRB, 'downlink');
 			obj.Mac.Schedulers.uplink = Scheduler(obj, Logger, Config, obj.NULRB, 'uplink');
 			obj.Mac.ShouldSchedule = 0;
-
-
 			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
 			obj.PowerIn = 0;

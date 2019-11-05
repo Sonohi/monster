@@ -605,7 +605,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			c = physconst('lightspeed'); % speed of light in m/s
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
-			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
+			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,obj.Channel.Mimo.numAntennas)]; 
 			
 			switch obj.Channel.FadingModel
 				case 'CDL'

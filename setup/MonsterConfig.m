@@ -69,13 +69,13 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 1;
+			SimulationPlot.runtimePlot = 0;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
 			MacroEnb = struct();
 			MacroEnb.sitesNumber = 1;
-			MacroEnb.cellsPerSite = 3;
+			MacroEnb.cellsPerSite = 1;
 			MacroEnb.numPRBs = 50; %50 corresponds to a bandwidth of 10MHz
 			MacroEnb.height = 35;
 			MacroEnb.positioning = 'centre';
@@ -87,7 +87,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			obj.MacroEnb = MacroEnb;
 
 			MicroEnb = struct();
-			MicroEnb.sitesNumber = 3;
+			MicroEnb.sitesNumber = 0;
 			MicroEnb.cellsPerSite = 1;
 			MicroEnb.microPosPerMacroCell = 3; % standard from ITU-RM2412-0 scenario 8.3.2
 			MicroEnb.numPRBs = 25;
@@ -102,7 +102,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to the configuration of UEs
 			Ue = struct();
-			Ue.number = 10;
+			Ue.number = 1;
 			Ue.numPRBs = 25;
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
@@ -168,7 +168,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
 			Channel.FadingModel = 'TDL'; % TDL | CDL
-			Channel.interferenceType = 'Frequency'; % 'Power', 'Frequency' 
+			Channel.interferenceType = 'Power'; % 'Power', 'Frequency' 
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
