@@ -4,7 +4,7 @@
 
 % create filestrings
 %Set your own datestring here to go back, use "yyyy.mm.dd" format
-datestring = '';
+datestring = '2019.11.01';
 if strcmp(datestring,'')
   datestring= datestr(datetime, 'yyyy.mm.dd');
 end
@@ -75,10 +75,16 @@ function totalThroughputPerUe = plotThroughput(filepath, name, varargin)
     if isempty(varargin) 
       %Create new figure to plot on
       figure('Name', strcat(name,': Throughput'));
-      plot(backhaulTraffic(:,1),backhaulTraffic(:,2),rounds,totalThroughput);
       xlabel('Time [s]');
       ylabel('Throughput [b]');
-      legend('Backhaul throughput',strcat(name,' Ue Throughput'));
+      if strcmp(name,'Without Backhaul')
+        plot(rounds,totalThroughput);
+        legend(strcat(name,' Ue Throughput'));
+      else
+        plot(backhaulTraffic(:,1),backhaulTraffic(:,2),rounds,totalThroughput);
+        legend('Backhaul throughput',strcat(name,' Ue Throughput'));
+      end
+      
     else
       figure(varargin{1}); 
       %Plot on top of another figure

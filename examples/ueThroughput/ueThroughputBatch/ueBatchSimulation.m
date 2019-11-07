@@ -63,7 +63,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	end
 
 	if simulationChoice == 5
-		Config.Backhaul.bandwidth = 10^7; %backhaul bottleneck
+		Config.Backhaul.bandwidth = 3.5*10^7; %backhaul bottleneck
 	else
 		Config.Backhaul.bandwidth = 10^9; %Backhaul not a bottleneck
 	end
