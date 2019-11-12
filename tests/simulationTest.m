@@ -8,6 +8,8 @@ classdef simulationTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config = MonsterConfig();
+			testCase.Config.Mimo.transmissionMode = 'Port0';
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Simulation = Monster(testCase.Config, testCase.Logger);
@@ -26,7 +28,7 @@ classdef simulationTest < matlab.unittest.TestCase
 			testCase.Simulation.setupRound(iRound);
 			testCase.verifyTrue(testCase.Simulation.Runtime.currentRound == iRound);
 			testCase.verifyTrue(testCase.Simulation.Runtime.currentTime == iRound*10e-4);
-			testCase.verifyTrue(testCase.Simulation.Runtime.remainingTime == (testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound)*10e-3);
+			testCase.verifyTrue(testCase.Simulation.Runtime.remainingTime == (testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound)*10e-4);
 			testCase.verifyTrue(testCase.Simulation.Runtime.remainingRounds == testCase.Simulation.Runtime.totalRounds - testCase.Simulation.Runtime.currentRound - 1);
 			
 			%TODO: Test for channel setup as well?

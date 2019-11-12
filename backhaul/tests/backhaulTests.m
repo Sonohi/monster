@@ -57,11 +57,11 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Last arrival time is expected to be larger than the number of
       %round in ms
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(end,1) ...
-				> (testCase.Config.Runtime.simulationRounds-1)*10^(-3))
+				> (testCase.Simulation.Runtime.totalRounds-1)*10^(-3))
       %Verify that no traffic is lost
       testCase.verifyTrue(sum(testCase.Simulation.Traffic.TrafficSource(:,2)) == 1e+07);
       %Verify that the Trafficsource and Trafficsource with no backhaul are not equal
-      nRounds= testCase.Simulation.Config.Runtime.totalRounds;
+      nRounds= testCase.Simulation.Runtime.totalRounds;
       arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
       testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,1),...
       testCase.Simulation.Traffic.TrafficSource(1:nRounds,1));

@@ -145,7 +145,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
 			Traffic.mix = 0;
-			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
+			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
@@ -218,8 +218,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to MIMO configuration
 			Mimo = struct();
-			Mimo.transmissionMode = "TxDiversity"; % Supported Port0 | TxDiversity
-			Mimo.elementsPerPanel = [2, 2]; % panel configuration MxN as per 3GPP 38.901 
+			Mimo.transmissionMode = "Port0"; % Supported Port0 | TxDiversity
+			Mimo.elementsPerPanel = [1, 1]; % panel configuration MxN as per 3GPP 38.901 
 			obj.Mimo = Mimo;
 		end
 

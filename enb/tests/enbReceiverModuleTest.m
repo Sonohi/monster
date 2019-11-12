@@ -11,6 +11,8 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function setupObjects(testCase)
 			testCase.Config  = MonsterConfig();
+			testCase.Config.Mimo.transmissionMode = "Port0";
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.MacroEnb.sitesNumber = 1;
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
@@ -22,8 +24,6 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			% Testcase with no SRS
 			testCase.Config.SRS.active = false;
 			testCase.MonsterNoSRS = Monster(testCase.Config, testCase.Logger);
-			
-				
 		end
 	end
 
@@ -41,8 +41,6 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Monster.scheduleUL();
 			testCase.Monster.setupUeTransmitters();
 			testCase.Monster.uplinkTraverse();
-			
-			
 			testCase.MonsterNoSRS.associateUsers();
 			testCase.MonsterNoSRS.Cells.Mac.ShouldSchedule = 1;
 			testCase.MonsterNoSRS.scheduleUL();
@@ -53,9 +51,6 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 	end
 	
 	methods (Test)
-		
-
-
 		function testChannelEstimation(testCase)
 
 			% Create uplink waveform (with PUSCH)
@@ -83,17 +78,12 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			testCase.Monster.Cells.Rx.estimateChannels(enbUsers, testCase.Monster.Channel.Estimator.Uplink);
 			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.EstChannelGrid));
 			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.UeData.NoiseEst));
-			
 		end
 
-		function testReceivedSignals(testCase)
-			
+		function testReceivedSignals(testCase)			
 			testCase.verifyTrue(isempty(testCase.Monster.Cells.Rx.Waveforms));
 			testCase.Monster.Cells.Rx.createReceivedSignal();
 			testCase.verifyTrue(~isempty(testCase.Monster.Cells.Rx.Waveforms));
-			
-			
-
 		end
 		
 		function testChannelEstimationNoSRS(testCase)
@@ -105,8 +95,5 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 			testCase.verifyTrue(~isempty(testCase.MonsterNoSRS.Cells.Rx.UeData.EstChannelGrid));
 			testCase.verifyTrue(isempty(testCase.MonsterNoSRS.Users.Tx.Ref.srsIdx));
 		end
-		
 	end
-
-
 end
