@@ -10,7 +10,7 @@ Config.MacroEnb.sitesNumber = 7;
 Config.MacroEnb.cellsPerSite = 3;
 Config.MicroEnb.sitesNumber = 0;
 Config.Channel.shadowingActive = false;
-Config.Channel.losMethod = 'LOS'; % 'NLOS', '3GPP38901-probability', 'LOS'
+Config.Channel.losMethod = 'NLOS'; % 'NLOS', '3GPP38901-probability', 'LOS'
 Config.MacroEnb.antennaType = 'sectorised';
 
 resolution = 20;

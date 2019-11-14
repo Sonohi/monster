@@ -63,10 +63,10 @@ For the the SINR and power results, plots similar to these should be obtained:
 [comment]: <Turning on the shadowing produces some different plots. Turn on shadowing by setting `Config.Channel.shadowingActive = true;`. Now plots like these should be obtained:>
 
 
-![alt text](figures/SINR_7_sites_shadow.png "SINR map shadowing")
-![alt text](figures/power_7_sites_shadow.png "Power map shadowing")
+[comment]: <![alt text](figures/SINR_7_sites_shadow.png "SINR map shadowing")>
+[comment]: <![alt text](figures/power_7_sites_shadow.png "Power map shadowing")>
 
-When turning on shadowing...
+[comment]: <When turning on shadowing...>
 
 ## Resolution
 To closer inspect certain areas, the resolution can be increased at the cost of slower computation. Likewise if faster computations are desired lowering the resolution is recommended. Note that setting `resolution` to a smaller number will increase the resolution as the number describes the distance between each point.
