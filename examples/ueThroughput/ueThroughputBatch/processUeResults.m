@@ -4,7 +4,7 @@
 
 % create filestrings
 %Set your own datestring here to go back, use "yyyy.mm.dd" format
-datestring = '';
+datestring = '2019.11.01';
 if strcmp(datestring,'')
   datestring= datestr(datetime, 'yyyy.mm.dd');
 end
@@ -75,10 +75,16 @@ function totalThroughputPerUe = plotThroughput(filepath, name, varargin)
     if isempty(varargin) 
       %Create new figure to plot on
       figure('Name', strcat(name,': Throughput'));
-      plot(backhaulTraffic(:,1),backhaulTraffic(:,2),rounds,totalThroughput);
       xlabel('Time [s]');
       ylabel('Throughput [b]');
-      legend('Backhaul throughput',strcat(name,' Ue Throughput'));
+      if strcmp(name,'Without Backhaul')
+        plot(rounds,totalThroughput);
+        legend(strcat(name,' Ue Throughput'));
+      else
+        plot(backhaulTraffic(:,1),backhaulTraffic(:,2),rounds,totalThroughput);
+        legend('Backhaul throughput',strcat(name,' Ue Throughput'));
+      end
+      
     else
       figure(varargin{1}); 
       %Plot on top of another figure
@@ -119,10 +125,18 @@ end
 function backhaulTraffic = loadBackhaulTraffic(file, nRounds)
   Traffic = file.storedTraffic.traffic(:);
   backhaulTraffic = zeros(nRounds,2);
-  backhaulTraffic(:,1) = Traffic(1).TrafficSource(1:nRounds,1);
-  for t = 1:length(Traffic)
-    backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSource(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+  if Traffic(1).BackhaulOn
+    backhaulTraffic(:,1) = Traffic(1).TrafficSourceWithBackhaul(1:nRounds,1);
+    for t = 1:length(Traffic)
+      backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSourceWithBackhaul(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+    end
+
+  else
+    backhaulTraffic(:,1) = Traffic(1).TrafficSource(1:nRounds,1);
+    for t = 1:length(Traffic)
+      backhaulTraffic(:,2) = backhaulTraffic(:,2) + Traffic(t).TrafficSource(1:nRounds,2)*length(Traffic(t).AssociatedUeIds);
+    end
   end
-  backhaulTraffic=backhaulTraffic(backhaulTraffic(:,1)<nRounds*0.001,:);
+    backhaulTraffic=backhaulTraffic(backhaulTraffic(:,1)<nRounds*0.001,:);  
 end
 

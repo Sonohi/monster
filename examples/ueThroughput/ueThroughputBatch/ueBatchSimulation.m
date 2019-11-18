@@ -28,7 +28,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 		Config.Logs.dateFormat), '_choice_', choice, '.log');
 	Config.Logs.logLevel = 'NFO';
 	%Set number of rounds
-	Config.Runtime.simulationRounds = 100; 
+	Config.Runtime.simulationRounds = 200; 
 	%Disable plotting
 	Config.SimulationPlot.runtimePlot = 0;
 	%Setup numbers of UEs
@@ -37,7 +37,8 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	Config.MacroEnb.sitesNumber = 1;
 	Config.MacroEnb.cellsPerSite = 3;
 	%Set channel conditions
-	Config.Channel.fadingActive = 'false';
+	Config.Channel.fadingActive = true;
+	Config.Channel.shadowingActive = false;
 	Config.Channel.losMethod = 'NLOS';
 	%Set bandwidth
 	if simulationChoice == 2
@@ -62,7 +63,7 @@ function ueBatchSimulation(simulationChoice, folderPath)
 	end
 
 	if simulationChoice == 5
-		Config.Backhaul.bandwidth = 10^7; %backhaul bottleneck
+		Config.Backhaul.bandwidth = 3.5*10^7; %backhaul bottleneck
 	else
 		Config.Backhaul.bandwidth = 10^9; %Backhaul not a bottleneck
 	end
