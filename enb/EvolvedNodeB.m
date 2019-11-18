@@ -378,6 +378,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		function obj = uplinkSchedule(obj, Users)
 			if obj.Mac.ShouldSchedule
 				obj.Mac.Schedulers.uplink.scheduleUsers(Users);
+			else
+				obj.Logger.log('Could not schedule in uplinkSchedule since shouldSchedule flag was false','WRN');
 			end
 		end
 	
@@ -467,6 +469,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.Utilisation = 0;
 				end
 			else
+				obj.Logger.log('Could not schedule in downlinkSchedule since shouldSchedule flag was false','WRN');
 				obj.Utilisation = 0;
 			end
 		end
