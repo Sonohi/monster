@@ -44,7 +44,6 @@ classdef Monster < matlab.mixin.Copyable
 
 			if obj.Config.SimulationPlot.runtimePlot
 				obj.drawSimulationScenario();
-				
 			end
 		end
 

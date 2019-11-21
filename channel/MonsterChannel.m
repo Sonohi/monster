@@ -5,7 +5,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 		BuildingFootprints;
 		ChannelModel;
 		enableFading;
-		FadingModel;
+		fadingModel;
 		InterferenceType;
 		enableShadowing;
 		enableReciprocity;
@@ -32,7 +32,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.Mode = Config.Channel.mode;
 			obj.Region = Config.Channel.region;
 			obj.enableFading = Config.Channel.fadingActive;
-			obj.FadingModel = Config.Channel.FadingModel;
+			obj.fadingModel = Config.Channel.fadingModel;
 			obj.InterferenceType = Config.Channel.interferenceType;
 			obj.enableShadowing = Config.Channel.shadowingActive;
 			obj.enableReciprocity = Config.Channel.reciprocityActive;

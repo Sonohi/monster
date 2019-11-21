@@ -607,7 +607,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
 			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,obj.Channel.Mimo.numAntennas)]; 
 			
-			switch obj.Channel.FadingModel
+			switch obj.Channel.fadingModel
 				case 'CDL'
 					cdl = nrCDLChannel;
 					cdl.DelayProfile = 'CDL-C';

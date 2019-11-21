@@ -167,7 +167,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel = struct();
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
-			Channel.FadingModel = 'TDL'; % TDL | CDL
+			Channel.fadingModel = 'TDL'; % TDL | CDL
 			Channel.interferenceType = 'Power'; % 'Power', 'Frequency' 
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;

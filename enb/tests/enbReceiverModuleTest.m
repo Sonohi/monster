@@ -10,7 +10,7 @@ classdef enbReceiverModuleTest < matlab.unittest.TestCase
 
 	methods (TestClassSetup)
 		function setupObjects(testCase)
-			testCase.Config  = MonsterConfig();
+			testCase.Config = MonsterConfig();
 			testCase.Config.Mimo.transmissionMode = "Port0";
 			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.MacroEnb.sitesNumber = 1;
