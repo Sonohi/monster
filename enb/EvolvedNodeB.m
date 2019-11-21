@@ -378,8 +378,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		function obj = uplinkSchedule(obj, Users)
 			if obj.Mac.ShouldSchedule
 				obj.Mac.Schedulers.uplink.scheduleUsers(Users);
-			else
-				obj.Logger.log('Could not schedule in uplinkSchedule since shouldSchedule flag was false','WRN');
+			elseif length(obj.AssociatedUsers) > 0
+				obj.Logger.log('Could not schedule in uplinkSchedule: no data in associated users queues or cell sleeping','WRN');
 			end
 		end
 	
@@ -468,8 +468,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				if isempty(obj.Utilisation)
 					obj.Utilisation = 0;
 				end
-			else
-				obj.Logger.log('Could not schedule in downlinkSchedule since shouldSchedule flag was false','WRN');
+			elseif length(obj.AssociatedUsers) > 0
+				obj.Logger.log('Could not schedule in downlinkSchedule: no data in associated users queues or cell sleeping','WRN');
 				obj.Utilisation = 0;
 			end
 		end

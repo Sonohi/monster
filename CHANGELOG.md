@@ -1,7 +1,16 @@
 ## Unreleased
 - Uplink PUSCH generation and nonstatic UL scheduler
-- MIMO support 
 - Logic graph plotting of network entities
+
+## 1.0.3 - 2019-11-21
+
+### Added
+- Added basic support for multiple antennas.
+- Added configuration parameters in `MonsterConfig` to model MIMO scenarios.
+
+### Changed
+- Revised supported transmission modes to include transmission diversity.
+- Revised fading calculations in channel traversal to account for multiple waveforms.
 
 ## 1.0.2 - 2019-10-17
 
