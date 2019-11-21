@@ -128,7 +128,7 @@ classdef UserEquipment < matlab.mixin.Copyable
 			ueScheduleIndexes = enbObjHandle.getPRBSetDL(obj);
 
 			numPrb = length(ueScheduleIndexes);
-			if numPrb > 0 && obj.Queue.Size > 0
+			if numPrb > 0 
 
 				% the TB is created of a size that matches the allocation that the 
 				% PDSCH symbols will have on the grid and the rate matching for the CW

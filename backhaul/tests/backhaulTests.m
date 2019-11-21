@@ -42,10 +42,10 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,2) == 1e+07);
       %Trafficsource and TrafficSourceNoBackhaul should be identical
       arrayfun(@(x,y) testCase.verifyTrue(x==y),...
-        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,1),...
+        testCase.Simulation.Traffic.TrafficSourceWithBackhaul(:,1),...
         testCase.Simulation.Traffic.TrafficSource(:,1));
       arrayfun(@(x,y) testCase.verifyTrue(x==y),...
-        testCase.Simulation.Traffic.TrafficSourceNoBackhaul(:,2),...
+        testCase.Simulation.Traffic.TrafficSourceWithBackhaul(:,2),...
         testCase.Simulation.Traffic.TrafficSource(:,2));
     end
     
@@ -53,20 +53,20 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Apply backhaul
       testCase.Simulation = Monster(testCase.Config, testCase.Logger);
       %First arrival is expected to be after 1ms
-      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(1,1)>10^(-3));
+      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSourceWithBackhaul(1,1)>10^(-3));
       %Last arrival time is expected to be larger than the number of
       %round in ms
-      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSource(end,1) ...
-				> (testCase.Simulation.Runtime.totalRounds-1)*10^(-3))
+      testCase.verifyTrue(testCase.Simulation.Traffic.TrafficSourceWithBackhaul(end,1) ...
+				> (testCase.Config.Runtime.simulationRounds-1)*10^(-3))
       %Verify that no traffic is lost
-      testCase.verifyTrue(sum(testCase.Simulation.Traffic.TrafficSource(:,2)) == 1e+07);
-      %Verify that the Trafficsource and Trafficsource with no backhaul are not equal
-      nRounds= testCase.Simulation.Runtime.totalRounds;
+      testCase.verifyTrue(sum(testCase.Simulation.Traffic.TrafficSourceWithBackhaul(:,2)) == 1e+07);
+      %Verify that the Trafficsource and Trafficsource with backhaul are not equal
+      nRounds= testCase.Simulation.Config.Runtime.simulationRounds;
       arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
-      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,1),...
+      testCase.Simulation.Traffic.TrafficSourceWithBackhaul(1:nRounds,1),...
       testCase.Simulation.Traffic.TrafficSource(1:nRounds,1));
       arrayfun(@(x,y) testCase.verifyTrue(x~=y),...
-      testCase.Simulation.Traffic.TrafficSourceNoBackhaul(1:nRounds,2),...
+      testCase.Simulation.Traffic.TrafficSourceWithBackhaul(1:nRounds,2),...
       testCase.Simulation.Traffic.TrafficSource(1:nRounds,2));
     end
     
@@ -75,8 +75,7 @@ classdef backhaulTests < matlab.unittest.TestCase
       testCase.Config.Ue.number = 10;
       %Apply backhaul
       testCase.Simulation = Monster(testCase.Config, testCase.Logger);
-      
-      %Verify correctness
+
       %Number of traffic sources and Ues should be the same
       testCase.verifyTrue(length(testCase.Simulation.Traffic)== testCase.Config.Ue.number);
       %verify that the Trafficsource is assigned properly
@@ -90,13 +89,12 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Apply backhaul
       testCase.Simulation = Monster(testCase.Config, testCase.Logger);
       
-      %Verify correctness
       %Data should be different for the 1st timeslot
-      testCase.verifyTrue(testCase.Simulation.Traffic(1).TrafficSource(1,2) ~= testCase.Simulation.Traffic(2).TrafficSource(1,2));
+      testCase.verifyTrue(testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(1,2) ~= testCase.Simulation.Traffic(2).TrafficSourceWithBackhaul(1,2));
       %The video user should be done at the 2nd timeslot
-      testCase.verifyTrue(0 == testCase.Simulation.Traffic(2).TrafficSource(2,2));
+      testCase.verifyTrue(0 == testCase.Simulation.Traffic(2).TrafficSourceWithBackhaul(2,2));
       %The fullbuffer user should be transmitting the same
-      testCase.verifyTrue(testCase.Simulation.Traffic(1).TrafficSource(1,2) == testCase.Simulation.Traffic(1).TrafficSource(2,2));
+      testCase.verifyTrue(testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(1,2) == testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(2,2));
     end
     
     function testError(testCase)
@@ -106,9 +104,8 @@ classdef backhaulTests < matlab.unittest.TestCase
       %Apply backhaul
       testCase.Simulation = Monster(testCase.Config, testCase.Logger);
       
-      %Verify correctness
       %No data should be present
-      arrayfun(@(x) testCase.verifyTrue(x == 0), testCase.Simulation.Traffic(1).TrafficSource(:,2));
+      arrayfun(@(x) testCase.verifyTrue(x == 0), testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(:,2));
     end
     
     function testErrorRate(testCase)
@@ -121,8 +118,8 @@ classdef backhaulTests < matlab.unittest.TestCase
       
       %Verify correctness
       %Half data should be present plus/minus 5 percent
-      testCase.verifyTrue(sum(testCase.Simulation.Traffic(1).TrafficSource(:,2))*2 > 95e+07 &&...
-        sum(testCase.Simulation.Traffic(1).TrafficSource(:,2))*2 < 1.05e+09);
+      testCase.verifyTrue(sum(testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(:,2))*2 > 95e+07 &&...
+        sum(testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(:,2))*2 < 1.05e+09);
     end
     
     function testErrorMagnitude(testCase)
@@ -134,7 +131,7 @@ classdef backhaulTests < matlab.unittest.TestCase
       
       %Verify correctness
       %Half data should be present
-      testCase.verifyTrue(sum(testCase.Simulation.Traffic(1).TrafficSource(:,2))*2 == 10000000);
+      testCase.verifyTrue(sum(testCase.Simulation.Traffic(1).TrafficSourceWithBackhaul(:,2))*2 == 10000000);
     end
     
   end

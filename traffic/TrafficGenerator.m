@@ -15,7 +15,8 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 		TrafficSource; 
 		AssociatedUeIds; 
 		ArrivalTimes;
-		TrafficSourceNoBackhaul;
+		TrafficSourceWithBackhaul;
+		BackhaulOn;
 	end
 	
 	methods
@@ -61,7 +62,8 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			obj.ArrivalMode = Config.Traffic.arrivalDistribution;
 			obj.AssociatedUeIds = AssociatedUeIds;
 			obj.ArrivalTimes = obj.setArrivalTimes(Config, Logger);
-			obj.TrafficSourceNoBackhaul = obj.TrafficSource;
+			obj.TrafficSourceWithBackhaul = obj.TrafficSource;
+			obj.BackhaulOn = Config.Backhaul.backhaulOn;
 		end
 		
 		function ArrivalTimes = setArrivalTimes(obj, Config, Logger)
@@ -114,20 +116,26 @@ classdef TrafficGenerator < matlab.mixin.Copyable
 			% By default the queue is not updated
 			newQueue = User.Queue;
 			
+			if obj.BackhaulOn
+				Source = obj.TrafficSourceWithBackhaul;
+			else
+				Source = obj.TrafficSource;
+			end
+
 			% First, check whether the arrival time of this UE allows it to start
 			if User.Traffic.startTime <= simTime
 				% first off check the id/index of the next packet to be put into the queue
 				pktIx = User.Queue.Pkt;
-				if pktIx >= length(obj.TrafficSource)
+				if pktIx >= length(Source)
 					pktIx = 1;
 				end
 				
 				% Get all packets from the source portion that have a delivery time before the current simTime
-				for iPkt = pktIx:length(obj.TrafficSource)
-					if obj.TrafficSource(iPkt, 1) <= simTime
+				for iPkt = pktIx:length(Source)
+					if Source(iPkt, 1) <= simTime
 						% increase frame size and update frame delivery deadline
-						newQueue.Size = newQueue.Size + obj.TrafficSource(iPkt, 2);
-						newQueue.Time = obj.TrafficSource(iPkt, 1);
+						newQueue.Size = newQueue.Size + Source(iPkt, 2);
+						newQueue.Time = Source(iPkt, 1);
 					else
 						% all packets in this delivery window have been added, save the ID of the next
 						newQueue.Pkt = iPkt;

@@ -99,13 +99,13 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			end
 			%Verify results
 			%Verify utilization
-			testCase.verifyTrue( mean(testCase.Simulation.Results.util(2:end)) ==100); %First round util is 0, so that is omitted
+			testCase.verifyTrue( mean(testCase.Simulation.Results.util(3:end)) ==100); %First two rounds util is 0, so that is omitted
 			%verify power consumption and state
 			%Power is calculated as CellReffP*P0+DeltaP*Pmax. This is 224W.
 			arrayfun(@(x) testCase.verifyTrue(x == 224), testCase.Simulation.Results.powerConsumed);
 			arrayfun(@(x) testCase.verifyEqual( x , 1), testCase.Simulation.Results.powerState); % powerState should be 1 in this case as it is always on
 			%verify scheduling
-			for i=2:testCase.Simulation.Runtime.totalRounds
+			for i=3:testCase.Simulation.Runtime.totalRounds
 				for j=1:testCase.Config.MacroEnb.numPRBs
 					testCase.verifyEqual(testCase.Simulation.Results.schedule(i,1,j).UeId, 1); %Assert that UE 1 is scheduled all the time
 					%testCase.verifyTrue(testCase.Simulation.Results.schedule(i,1,j).ModOrd == 2 ||...
@@ -118,8 +118,8 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			arrayfun(@(x) testCase.verifyEqual(x ,0), testCase.Simulation.Results.harqRtx); %Should be 0. With good signal strength retransmission should be 0
 			arrayfun(@(x) testCase.verifyEqual(x ,0), testCase.Simulation.Results.arqRtx); %TODO: verify this statement
 			%verify BER and BLER
-			testCase.verifyTrue(mean(testCase.Simulation.Results.ber(2:end)) < 0.2 ); %Should be less than a certain threshhold. With good signal strength retransmission should be 0
-			testCase.verifyTrue(mean(testCase.Simulation.Results.bler(2:end))< 0.2 ); %TODO: verify this statement
+			testCase.verifyTrue(mean(testCase.Simulation.Results.ber(3:end)) < 0.2 ); %Should be less than a certain threshhold. With good signal strength retransmission should be 0
+			testCase.verifyTrue(mean(testCase.Simulation.Results.bler(3:end))< 0.2 ); %TODO: verify this statement
 			%verify CQI
 			arrayfun(@(x) testCase.verifyTrue(10 <= x && x <= 15) , testCase.Simulation.Results.wideBandCqi); %TODO: find a more narrow range and confirm
 			%Verify SNR and SINR. With only 1 Enb they should be the same
@@ -130,7 +130,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			%Verify difference between pre and post Evm
 			testCase.verifyTrue(mean(testCase.Simulation.Results.preEvm > testCase.Simulation.Results.postEvm)==1);
 			%Verify throughput
-			testCase.verifyTrue( mean( testCase.Simulation.Results.throughput(2:end) > 1e4) == 1 ); %With 50 PRBs the throughput is expected to be in the 100mb/s range
+			testCase.verifyTrue( mean( testCase.Simulation.Results.throughput(3:end) )> 1e4 ); %TODO: Check the expected range
 			%Verify receivedPowerdBm
 			testCase.verifyTrue( mean(-100 < testCase.Simulation.Results.receivedPowerdBm) && mean( testCase.Simulation.Results.receivedPowerdBm < -30) ); %TODO: narrow this range and verify
 			%Verify rsrqdB, rsrpdBm, rssidBm is not unreasonable.
