@@ -125,6 +125,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
 			Terrain.type = 'city'; % city | maritime
+			Terrain.roadsFile = 'layout/dk_2800_dtu_campus_roads.shp';
+			Terrain.buildingsFile = 'layout/dk_2800_dtu_campus_buildings.shp';
 			obj.Terrain = Terrain;
 
 			% Properties related to backhaul
