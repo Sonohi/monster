@@ -69,10 +69,11 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			dl.InterpWinSize = 1;               % Interpolation window size
 
 			ul.PilotAverage = 'UserDefined';    % Type of pilot averaging
-			ul.FreqWindow = 1;                 % Frequency averaging windows in REs
-			ul.TimeWindow = 1;                  % Time averaging windows in REs
-			ul.InterpType = 'none';            % Interpolation type
+			ul.FreqWindow = 13;                 % Frequency averaging windows in REs
+			ul.TimeWindow = 21;                  % Time averaging windows in REs
+			ul.InterpType = 'linear';            % Interpolation type
 			ul.Reference = 'none';          % Reference for channel estimation
+			ul.Window = 'Right';
 
 			obj.Estimator.Downlink = dl;
 			obj.Estimator.Uplink = ul;

@@ -219,7 +219,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 							for intUser = 1:length(interferesList)
 								tempIntVar = obj.propagateWaveform(Cell, interferesList(intUser), Cells, Users, Mode);
 								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
-								interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
+							  interferingWaveform = interferingWaveform + [tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))];
 								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
 							end
 					end

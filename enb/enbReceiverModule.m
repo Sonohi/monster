@@ -6,6 +6,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		ReceivedSignals; %Cells containing: waveform(s) from a user, and userID
 		Waveform;
 		Waveforms;
+		NSubframesHistory;
 	end
 	
 	properties (Access=private)
@@ -25,6 +26,18 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 					obj.enbObj.Logger.log(sprintf('(ENODEB RECEIVER - constructor) eNodeB %i has an invalid class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
 			obj.ReceivedSignals = cell(Config.Ue.number,1);
+			
+			obj.NSubframesHistory = struct([]);
+
+			% Setup structure for storing previous received subframes from users. Used for channel estimation
+			obj.NSubframesHistory = [];
+			for ii = 1:Config.Ue.number
+			 obj.NSubframesHistory(ii).NSubframeIdx = 0;
+			 obj.NSubframesHistory(ii).PreviousSubframes = [];
+			 obj.NSubframesHistory(ii).FullEstChannelGrid = randn(12*obj.enbObj.NULRB,14*10);
+			 obj.NSubframesHistory(ii).PerfectChannelEst = randn(12*obj.enbObj.NULRB,14*10);
+			end
+			
 		end
 		
 		function createRecievedSignalStruct(obj, id)
@@ -139,6 +152,41 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 			
 		end
 		
+		function obj = addToSubframeHistory(obj, iUser, Subframe, RefGrid)
+			
+				% Add to history of subframes as to perform better channel
+				% estimation given an interpolation over time
+				if obj.NSubframesHistory(iUser).NSubframeIdx >= 10
+					% Pop first from array and add
+					obj.NSubframesHistory(iUser).PreviousSubframes = [obj.NSubframesHistory(iUser).PreviousSubframes(:, 15 : end), Subframe];
+					obj.NSubframesHistory(iUser).PreviousRefSubframes = [obj.NSubframesHistory(iUser).PreviousRefSubframes(:, 15 : end), RefGrid];
+				else
+					% Append to array and increase counter
+					if obj.NSubframesHistory(iUser).NSubframeIdx == 0
+						obj.NSubframesHistory(iUser).PreviousSubframes = zeros(length(Subframe), 14*10);
+					end
+					obj.NSubframesHistory(iUser).PreviousSubframes(:, (obj.NSubframesHistory(iUser).NSubframeIdx*14)+1 : (obj.NSubframesHistory(iUser).NSubframeIdx+1)*14) = Subframe;
+					obj.NSubframesHistory(iUser).PreviousRefSubframes(:, (obj.NSubframesHistory(iUser).NSubframeIdx*14)+1 : (obj.NSubframesHistory(iUser).NSubframeIdx+1)*14) = RefGrid;
+					obj.NSubframesHistory(iUser).NSubframeIdx = obj.NSubframesHistory(iUser).NSubframeIdx + 1;
+
+				end
+			
+			
+		end
+		
+		function obj = addChannelEstimationHistory(obj, iUser, FullEstChannelGrid, PerfectChannelEst)
+			% Adds the estimated grid (over a full frame) to a history
+			% also adds the actual channel conditions to a list
+		
+				if obj.NSubframesHistory(iUser).NSubframeIdx >= 10
+					obj.NSubframesHistory(iUser).FullEstChannelGrid = [obj.NSubframesHistory(iUser).FullEstChannelGrid(:, 15:end), FullEstChannelGrid(:,end-13:end)];
+					obj.NSubframesHistory(iUser).PerfectChannelEst = [obj.NSubframesHistory(iUser).PerfectChannelEst(:, 15:end), PerfectChannelEst];
+				else
+					obj.NSubframesHistory(iUser).FullEstChannelGrid(:, (obj.NSubframesHistory(iUser).NSubframeIdx*14)+1 : (obj.NSubframesHistory(iUser).NSubframeIdx+1)*14) = FullEstChannelGrid(:,end-13:end);
+					obj.NSubframesHistory(iUser).PerfectChannelEst(:, (obj.NSubframesHistory(iUser).NSubframeIdx*14)+1 : (obj.NSubframesHistory(iUser).NSubframeIdx+1)*14)  = PerfectChannelEst;
+				end
+		end
+		
 		function obj = estimateChannels(obj, ueObjs, cec)
 			
 			if isempty(obj.UeData)
@@ -148,11 +196,27 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 			for iUser = 1:length(ueObjs)
 				localIndex = find([obj.UeData.UeId] == ueObjs(iUser).NCellID);
 				ue = ueObjs(iUser);
+				
+				% Add extracted subframe and reference signal to array of history.
+				% This is to enable interpolation over time
+				obj.addToSubframeHistory(iUser, obj.UeData(localIndex).Subframe, ue.Tx.Ref.Grid);
+				
+				[FullEstChannelGrid, obj.UeData(localIndex).FullNoiseEst] = ...
+						lteULChannelEstimate(struct(ue), struct(ue).PUSCH, cec, obj.NSubframesHistory(iUser).PreviousSubframes(:, 1:(obj.NSubframesHistory(iUser).NSubframeIdx*14)), obj.NSubframesHistory(iUser).PreviousRefSubframes(:, 1:(obj.NSubframesHistory(iUser).NSubframeIdx*14)));
+				
+				obj.UeData(localIndex).FullEstChannelGrid = FullEstChannelGrid;
+
 				if (ue.Tx.PUSCH.Active)
 					[obj.UeData(localIndex).EstChannelGrid, obj.UeData(localIndex).NoiseEst] = ...
 						lteULChannelEstimate(struct(ue), struct(ue).PUSCH, cec, obj.UeData(localIndex).Subframe, ue.Tx.Ref.Grid);
+					
 					[obj.UeData(localIndex).perfectChannelEst] = nrPerfectChannelEstimate(obj.UeData(localIndex).PathGains, obj.UeData(localIndex).PathFilters, ue.NULRB, 15, 0);
+					
 				end
+
+				% Add to grid of inteprolation
+				obj.addChannelEstimationHistory(iUser, FullEstChannelGrid, obj.UeData(localIndex).perfectChannelEst);
+
 			end
 		end
 		
