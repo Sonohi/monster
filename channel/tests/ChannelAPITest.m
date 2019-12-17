@@ -29,7 +29,7 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 				Config.MacroEnb.cellsPerSite = 1;
 				Config.MicroEnb.sitesNumber = 0;
 				Config.Ue.number = 5;
-				Config.Terrain.type = 'city';
+				Config.Terrain.type = 'manhattan';
 				Config.Mobility.scenario = 'pedestrian';
 				Config.Channel.shadowingActive = 1;
 				testCase.Logger = MonsterLog(Config);

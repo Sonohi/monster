@@ -63,14 +63,12 @@ for iBuilding = 1:length(buildings)
 		'z', (buildings(iBuilding).z - minZ) ./(maxZ-minZ));
 end
 
-
 %% Draw the roads and the buildings on a figure 
 figure;
 for iRoad = 1:length(normRoads)
 	hold on;
 	plot(normRoads(iRoad).y, normRoads(iRoad).x, 'k');
 end
-
 
 %% Position user in the normalised road layout
 rng(seed);
@@ -195,9 +193,5 @@ end
 	
 % Finally, mark the end of the trajectory
 plot(endPos(2), endPos(1), 'rv', 'MarkerSize', 8);
-
-
-
-
 
 end

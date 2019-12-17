@@ -37,7 +37,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Mobility.step = 0.01;
 			testCase.Config.Mobility.seed = 19;
 			%Set terrain
-			testCase.Config.Terrain.type = 'city';
+			testCase.Config.Terrain.type = 'manhattan';
 			%Set traffic to fullbuffer, to ensure that traffic is transmitted
 			testCase.Config.Traffic.primary = 'fullBuffer';
 			testCase.Config.Traffic.mix = 0;
