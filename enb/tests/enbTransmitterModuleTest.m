@@ -12,12 +12,13 @@ classdef enbTransmitterModuleTest < matlab.unittest.TestCase
 		function createTransmitters(testCase)
 			testCase.Config  = MonsterConfig();
 			testCase.Config.SimulationPlot.runtimePlot = 0;
+			testCase.Config.Mimo.transmissionMode = "Port0";
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Layout = setupNetworkLayout(testCase.Config, testCase.Logger);
 			Sites = setupSites(testCase.Config, testCase.Logger, testCase.Layout);
 			testCase.Cells = [Sites.Cells];
 			testCase.TxModule = [testCase.Cells.Tx];
-
 		end
 	end
 

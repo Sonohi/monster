@@ -43,9 +43,19 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			end
 		end
 
-		function tempVar = propagateWaveform(obj, Cell, User, Cells, Users, Mode)
+		function tempVar = propagateLink(obj, Cell, User, Cells, Users, Mode)
+			% Propagates a user-cell link for all the waveforms 
+			% The number of antennas used for the link is given in the pairing as the minimum
+			%
+			% :param obj: Monster3GPP38901 instance
+			% :param Cell: EvolvedNodeB instance of cell in the link
+			% :param User: UserEquipment instance of user in the link
+			% :param Cells: Array<EvolvedNodeB> instances of all cells
+			% :param Users: Array<UserEquipment> instances of all users
+			% :param Mode: string propagation direction
+
 			tempVar = obj.TempVariables();
-			% Set waveform to be manipulated
+			% Set in the tempVar the set of waveforms to be propagated
 			switch Mode
 				case 'downlink'
 					tempVar = obj.setWaveform(Cell, tempVar);
@@ -53,12 +63,13 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					tempVar = obj.setWaveform(User, tempVar);
 			end
 			
-			% Calculate recieved power between Cell and User
+			% Calculate received power between Cell and User
 			[receivedPower, receivedPowerWatt] = obj.computeLinkBudget(Cell, User, Mode);
 			tempVar.RxPower = receivedPower;
 			tempVar.RxPowerWatt = receivedPowerWatt;
 			
 			% Calculate SNR using thermal noise
+			% TODO check if multi columns give issues and in case pass only 1st col to calc SNR
 			[SNR, SNRdB, noisePower] = obj.Channel.calculateSNR(tempVar.Waveform, tempVar.WaveformInfo.SamplingRate, tempVar.RxPower);
 			tempVar.RxSNR = SNR;
 			tempVar.RxSNRdB = SNRdB;
@@ -83,10 +94,10 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		function propagateWaveforms(obj, Cells, Users, Mode)
 			% Loop through all links given the mode of transmission.
 			% Interference is added depending on the interference type. 
-			% If 'Power' is selected, the interference is added as AWGN which is done in the first forward pass of `propagateWaveform`. 
+			% If 'Power' is selected, the interference is added as AWGN which is done in the first forward pass of `propagateLink`. 
 			% The noise is added before the fading channel
 			% 
-			% If 'Frequency' is selected, the interference is added as a sum of interfering waveforms, that have propagated the channel (call to propagateWaveform)
+			% If 'Frequency' is selected, the interference is added as a sum of interfering waveforms, that have propagated the channel (call to propagateLink)
 			%
 			% All manipulations of wavefroms are stored in `tempVar` and overwritten for each link. 
 			% The manipulated waveform and power calculations are stored at the respective receiver objects
@@ -96,7 +107,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			% :Mode:
 			%
 			
-			Pairing = obj.Channel.getPairing(Cells);
+			Pairing = obj.Channel.getPairing(Cells, Users);
 			obj.Pairings = Pairing;
 			numLinks = length(Pairing(1,:));
 			
@@ -110,7 +121,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 				User = Users(find([Users.NCellID] == Pairing(2,i))); %#ok
 
 				% Propagate waveform and write received waveform to struct
-				tempVar = obj.propagateWaveform(Cell, User, Cells, Users, Mode);
+				tempVar = obj.propagateLink(Cell, User, Cells, Users, Mode);
 		
 				% Sum waveforms from interfering stations and compute SINR, if
 				% frequency type interference is wanted.
@@ -203,7 +214,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						case 'downlink'
 							interferingWaveform = zeros(length(tempVar.RxWaveform),1);
 							for intCell = 1:length(interferesList)
-								tempIntVar = obj.propagateWaveform(interferesList(intCell), User, Cells, Users, Mode);
+								tempIntVar = obj.propagateLink(interferesList(intCell), User, Cells, Users, Mode);
 								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
 								interferingWaveform = interferingWaveform + circshift(tempIntVar.RxWaveform, randi(length(interferingWaveform)/2-1));
 								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
@@ -217,7 +228,7 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 
 							interferingWaveform = zeros(intWaveformSize,1);
 							for intUser = 1:length(interferesList)
-								tempIntVar = obj.propagateWaveform(Cell, interferesList(intUser), Cells, Users, Mode);
+								tempIntVar = obj.propagateLink(Cell, interferesList(intUser), Cells, Users, Mode);
 								tempIntVar.RxWaveform = setPower(tempIntVar.RxWaveform, tempIntVar.RxPower);
 								interferingWaveform = interferingWaveform + circshift([tempIntVar.RxWaveform; complex(zeros(intWaveformSize-length(tempIntVar.RxWaveform),1))], randi(length(tempIntVar.RxWaveform)/2-1));
 								interferingPower  = interferingPower + tempIntVar.RxPowerWatt;
@@ -557,17 +568,16 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 		
 		
 		function tempVar = addFading(obj, Cell, User, mode, tempVar)
-			% addFading
+			% Applies fading to the channel model based on the type configured
 			%
-			% :param obj:
-			% :param Cell:
-			% :param User:
-			% :param mode:
-			%
-			% TODO: Add possibility to change the fading model used from parameters.
+			% :param obj: Monster3GPP38901 instance
+			% :param Cell: Cell instance
+			% :param User: UserEquipment instance
+			% :param mode: string direction mode downlink | uplink
+			% :param tempVar: struct temporary variables used to store impairments 
+			% :return tempVar: struct updated impairments
 			%
 			
-			fadingmodel = 'tdl';
 			% UT velocity in km/h
 			v = User.Mobility.Velocity * 3.6;
 			
@@ -595,10 +605,10 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 			
 			c = physconst('lightspeed'); % speed of light in m/s
 			fd = (v*1000/3600)/c*fc;     % UT max Doppler frequency in Hz
-			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,1)]; 
+			sig = [tempVar.RxWaveform;zeros(obj.SignalPadding,obj.Channel.Mimo.numAntennas)]; 
 			
-			switch fadingmodel
-				case 'cdl'
+			switch obj.Channel.fadingModel
+				case 'CDL'
 					cdl = nrCDLChannel;
 					cdl.DelayProfile = 'CDL-C';
 					cdl.DelaySpread = 300e-9;
@@ -606,12 +616,12 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 					cdl.MaximumDopplerShift = fd;
 					cdl.SampleRate = TxNode.Tx.WaveformInfo.SamplingRate;
 					cdl.InitialTime = obj.Channel.simulationTime;
-					cdl.TransmitAntennaArray.Size = [1 1 1 1 1];
-					cdl.ReceiveAntennaArray.Size = [1 1 1 1 1];
+					cdl.TransmitAntennaArray.Size = obj.Channel.Mimo.arrayTuple;
+					cdl.ReceiveAntennaArray.Size = obj.Channel.Mimo.arrayTuple;
 					cdl.SampleDensity = 256;
 					cdl.Seed = seed;
 					tempVar.RxWaveform = cdl(sig);
-				case 'tdl'
+				case 'TDL'
 					tdl = nrTDLChannel;
 					
 					% Set transmission direction for MIMO correlation
@@ -621,15 +631,14 @@ classdef Monster3GPP38901 < matlab.mixin.Copyable
 						case 'uplink'
 							tdl.TransmissionDirection = 'Uplink';
 					end
-					% TODO: Add MIMO to fading channel
 					tdl.DelayProfile = 'TDL-E';
 					tdl.DelaySpread = 300e-9;
 					%tdl.MaximumDopplerShift = 0;
 					tdl.MaximumDopplerShift = fd;
 					tdl.SampleRate = samplingRate;
 					tdl.InitialTime = obj.Channel.simulationTime;
-					tdl.NumTransmitAntennas = 1;
-					tdl.NumReceiveAntennas = 1;
+					tdl.NumTransmitAntennas = obj.Channel.Mimo.numAntennas;
+					tdl.NumReceiveAntennas = obj.Channel.Mimo.numAntennas;
 					tdl.Seed = seed;
 					%tdl.KFactorScaling = true;
 					%tdl.KFactor = 3;

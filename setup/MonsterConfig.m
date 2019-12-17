@@ -18,7 +18,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 	% :Scheduling: (struct) configuration for the eNodeB downlink schedulink algorithm
 	% :Son: (struct) configuration for SON-related parameters
 	% :Harq: (struct) configuration for the HARQ protocol (e.g. activation, etc.)
- 	% :Arq: (struct) configuration for the ARQ protocol (e.g activation, etc.)
+	% :Arq: (struct) configuration for the ARQ protocol (e.g activation, etc.)
+	% :Mimo: (struct) configuration for the global transmission mode for the simulation
 
 	properties 
 		Runtime = struct();
@@ -40,6 +41,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 		Scenario = struct();
 		Backhaul = struct();
 		SRS = struct();
+		Mimo = struct();
 	end
 
 	methods
@@ -67,7 +69,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 1;
+			SimulationPlot.runtimePlot = 0;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
@@ -105,7 +107,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Ue.height = 1.5;
 			Ue.noiseFigure = 9;
 			Ue.antennaGain = 0;
-			Ue.antennaType = 'omni';
+			Ue.antennaType = 'omni'; % omni | vivaldi
 			obj.Ue = Ue;
 
 			% Properties related to mobility
@@ -143,7 +145,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Traffic.primary = 'fullBuffer';
 			Traffic.secondary = 'videoStreaming';
 			Traffic.mix = 0;
-			Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
+			Traffic.arrivalDistribution = 'Static'; % Static | Uniform | Poisson
 			Traffic.poissonLambda = 5;
 			Traffic.uniformRange = [6, 10];
 			Traffic.static = 0; 
@@ -165,7 +167,8 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Channel = struct();
 			Channel.mode = '3GPP38901';
 			Channel.fadingActive = true;
-			Channel.interferenceType = 'Frequency'; % 'Power', 'Frequency' 
+			Channel.fadingModel = 'TDL'; % TDL | CDL
+			Channel.interferenceType = 'Power'; % 'Power', 'Frequency' 
 			Channel.shadowingActive = true;
 			Channel.reciprocityActive = true;
 			Channel.perfectSynchronization = true;
@@ -212,6 +215,12 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			SRS = struct();
 			SRS.active = true;
 			obj.SRS = SRS;
+
+			% Properties related to MIMO configuration
+			Mimo = struct();
+			Mimo.transmissionMode = "Port0"; % Supported Port0 | TxDiversity
+			Mimo.elementsPerPanel = [1, 1]; % panel configuration MxN as per 3GPP 38.901 
+			obj.Mimo = Mimo;
 		end
 
 		function assertConfig(obj)

@@ -15,12 +15,15 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		HarqActive;
 		SRSActive;
 		SRSConfig;
+		Mimo;
 	end
 	
 	methods
 		
 		function obj = ueTransmitterModule(UeObj, Config)
 			obj.Freq = Config.Phy.uplinkFrequency;
+			obj.UeObj = UeObj;
+			obj.Mimo = UeObj.Mimo;
 			obj.PUCCH.Format = Config.Phy.pucchFormat;
 			obj.PRACH.Interval = Config.Phy.prachInterval;
 			obj.PRACH.Format = 0;          % PRACH format: TS36.104, Table 8.4.2.1-1, CP length of 0.10 ms, typical cell range of 15km
@@ -29,14 +32,21 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			obj.PRACH.HighSpeed = 0;       % Normal mode: TS36.104, Table 8.4.2.1-1
 			obj.PRACH.FreqOffset = 0;      % Default frequency location
 			obj.PRACH.PreambleIdx = 32;    % Preamble index: TS36.141, Table A.6-1
-			obj.PRACHInfo = ltePRACHInfo(UeObj, obj.PRACH);
+			% Construct a ueConfig here as we cannot use the default from the UserEquipment class
+			% as it requires also an instance of the ueTransmitterModule
+			ueConfig = struct(...
+				'NULRB', UeObj.NULRB, ...
+				'DuplexMode', UeObj.DuplexMode, ...
+				'NSubframe', UeObj.NSubframe, ...
+				'NFrame', UeObj.NFrame, ...
+				'RNTI', UeObj.RNTI);
+			obj.PRACHInfo = ltePRACHInfo(ueConfig, obj.PRACH);
 			obj.PUSCH = struct(...
 				'Active', 1,...
 				'Modulation', 'QPSK',...
 				'PRBSet', [0:5].',...
 				'NLayers', 1,...
 				'TrBlkSizes',1);
-			obj.UeObj = UeObj;
 			obj.HarqActive = Config.Harq.active;
 			obj.SRSActive = Config.SRS.active;
 			%TODO: make configureable
@@ -173,7 +183,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% B_SRS defines the UE specific SRS bandwidth
 			% SubframeConfig defines the periodicity of the SRS sequence
 			srs = struct;
-			srs.NTxAnts = 1; % TODO: Get number of Tx antennas
+			srs.NTxAnts = obj.Mimo.numAntennas;
 			srs.HoppingBW = 0;      % SRS frequency hopping configuration
 			srs.TxComb =0;         % Even indices for comb transmission
 			srs.FreqPosition = 0;   % Frequency domain position

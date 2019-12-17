@@ -23,7 +23,11 @@ classdef ChannelAPITest < matlab.unittest.TestCase
 
 				Config = MonsterConfig();
 				Config.SimulationPlot.runtimePlot = 0;
-				Config.MacroEnb.number = 1;
+				Config.Mimo.transmissionMode = "Port0";
+				Config.Mimo.elementsPerPanel = [1, 1];
+				Config.MacroEnb.sitesNumber = 1;
+				Config.MacroEnb.cellsPerSite = 1;
+				Config.MicroEnb.sitesNumber = 0;
 				Config.Ue.number = 5;
 				Config.Terrain.type = 'city';
 				Config.Mobility.scenario = 'pedestrian';

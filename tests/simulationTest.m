@@ -8,6 +8,8 @@ classdef simulationTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config = MonsterConfig();
+			testCase.Config.Mimo.transmissionMode = 'Port0';
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.SimulationPlot.runtimePlot = 0;
 			testCase.Logger = MonsterLog(testCase.Config);
 			testCase.Simulation = Monster(testCase.Config, testCase.Logger);

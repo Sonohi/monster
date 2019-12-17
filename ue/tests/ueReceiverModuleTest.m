@@ -14,6 +14,8 @@ classdef ueReceiverModuleTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config  = MonsterConfig();
+			testCase.Config.Mimo.transmissionMode = 'Port0';
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.MacroEnb.sitesNumber = 1;
 			testCase.Config.MacroEnb.cellsPerSite = 1;
 			testCase.Config.MicroEnb.sitesNumber = 0;
