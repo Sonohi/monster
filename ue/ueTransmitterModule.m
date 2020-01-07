@@ -49,10 +49,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 				'TrBlkSizes',1);
 			obj.HarqActive = Config.Harq.active;
 			obj.SRSActive = Config.SRS.active;
-			%TODO: make configureable
 			obj.TxPwdBm = 23;
 			obj.resetRef();
-			obj.SRSConfig = struct('CSRS', 7, 'BSRS', 0, 'subframeConfig',9);
+			obj.SRSConfig = struct('CSRS', 7, 'BSRS', 0, 'subframeConfig',0, 'ConfigIdx', 15, 'FreqPosition', 0);
 		end
 		
 		function obj = setPRACH(obj, ueObj, NSubframe)
@@ -176,7 +175,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 		
 
 
-		function [srs, srsInfo] = setupSRSConfig(obj, C_SRS, B_SRS, SubframeConfig)
+		function [srs, srsInfo] = setupSRSConfig(obj, CSRS, BSRS, subframeConfig, ConfigIdx, FreqPosition)
 			% Config for SRS
 			%
 			% C_SRS defines the cell specific SRS bandwidth
@@ -184,23 +183,23 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			% SubframeConfig defines the periodicity of the SRS sequence
 			srs = struct;
 			srs.NTxAnts = obj.Mimo.numAntennas;
-			srs.HoppingBW = 0;      % SRS frequency hopping configuration
+			srs.HoppingBW = 3;      % SRS frequency hopping configuration
 			srs.TxComb =0;         % Even indices for comb transmission
-			srs.FreqPosition = 0;   % Frequency domain position
-			srs.ConfigIdx = 0;      % UE-specific SRS period = 10ms, offset = 0
+			srs.FreqPosition = FreqPosition;   % Frequency domain position
 			srs.CyclicShift = 0;    % UE-cyclic shift
-			srs.BWConfig = C_SRS;       % Cell-specific SRS bandwidth configuration C_SRS
-			srs.BW = B_SRS;             % UE-specific SRS bandwidth configuration  B_SRS
-			srs.SubframeConfig = SubframeConfig; 
-			srs.ConfigIdx = 0;
+			srs.BWConfig = CSRS;       % Cell-specific SRS bandwidth configuration C_SRS
+			srs.BW = BSRS;             % UE-specific SRS bandwidth configuration  B_SRS
+			srs.SubframeConfig = subframeConfig;
+			srs.ConfigIdx = ConfigIdx;
+			
 			srsInfo = lteSRSInfo(obj.UeObj, srs);     
 		end
 
 		function obj = setupSRS(obj)
 			% Add SRS symbols to the grid
-			[CSRS, BSRS, subframeConfig] = obj.selectSRSConfig();
+			[CSRS, BSRS, subframeConfig, ConfigIdx, FreqPosition] = obj.selectSRSConfig();
 			
-			[srs, srsInfo] = obj.setupSRSConfig(CSRS, BSRS, subframeConfig);
+			[srs, srsInfo] = obj.setupSRSConfig(CSRS, BSRS, subframeConfig, ConfigIdx, FreqPosition);
 			% Configure SRS sequence according to TS
 			% 36.211 Section 5.5.1.3 with group hopping disabled
 			srs.SeqGroup = mod(obj.UeObj.NCellID,30);
@@ -228,7 +227,7 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 
 		end
 	
-		function [CSRS, BSRS, subframeConfig] = selectSRSConfig(obj)
+		function [CSRS, BSRS, subframeConfig, ConfigIdx, FreqPosition] = selectSRSConfig(obj)
 			% Select configuration of SRS sequence
 			%
 			% TODO: Add scheme for selecting SRS configuration based on higher
@@ -245,6 +244,9 @@ classdef ueTransmitterModule < matlab.mixin.Copyable
 			CSRS = obj.SRSConfig.CSRS;
 			BSRS = obj.SRSConfig.BSRS;
 			subframeConfig = obj.SRSConfig.subframeConfig;
+			ConfigIdx = obj.SRSConfig.ConfigIdx;
+			FreqPosition = obj.SRSConfig.FreqPosition;
+			
 			
 		end
 
