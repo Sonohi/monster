@@ -26,6 +26,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 		Freq;
 		AntennaArray;
 		AntennaType;
+		Mimo;
 	end
 	
 	methods
@@ -38,12 +39,11 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			%
 			
 			obj.Enb = enb;
-
+			
 			switch enb.BsClass
 				case 'macro'
 					obj.Gain = Config.MacroEnb.antennaGain;
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
-					obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger);
 					obj.TxPwdBm = 10*log10(Config.MacroEnb.Pmax)+30;
 					if ~strcmp(Config.MacroEnb.antennaType, 'omni')
 						obj.AntennaArray.Bearing = antennaBearing;
@@ -51,7 +51,6 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				case 'micro'
 					obj.Gain = Config.MicroEnb.antennaGain;
 					obj.NoiseFigure = Config.MicroEnb.noiseFigure;
-					obj.AntennaArray = AntennaArray(Config.MicroEnb.antennaType, obj.Enb.Logger);
 					obj.TxPwdBm = 10*log10(Config.MicroEnb.Pmax)+30;
 					if ~strcmp(Config.MicroEnb.antennaType, 'omni')
 						obj.AntennaArray.Bearing = antennaBearing;
@@ -59,13 +58,14 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				otherwise
 					obj.Enb.Logger.log(sprintf('(ENODEB TRANSMITTER - constructor) eNodeB %i has an invalid class %s', enb.NCellID, enb.BsClass), 'ERR');
 			end
-
+			obj.Mimo = enb.Mimo;
+			obj.AntennaArray = AntennaArray(Config.MacroEnb.antennaType, obj.Enb.Logger, obj.Mimo);
 			Nfft = 2^ceil(log2(12*enb.NDLRB/0.85));
-			obj.Waveform = zeros(Nfft, 1);
+			obj.Waveform = zeros(Nfft, obj.Mimo.numAntennas);
 			obj.resetReference();
 			obj.resetResourceGrid();
 			obj.setupGrid(0);
-			obj.initPDSCH();
+			obj.initPDSCH(Config);
 			obj.Freq = Config.Phy.downlinkFrequency;
 		end
 		
@@ -145,9 +145,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			obj.Ref.PSSInd = PSSInd;
 			obj.Ref.SSS = SSS;
 			obj.Ref.SSSInd = SSSInd;
-			
-			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);
-			
+			[obj.Ref.Waveform, obj.Ref.WaveformInfo] = lteOFDMModulate(enb,grid);		
 		end
 		
 		function obj = assignReferenceSubframe(obj)
@@ -173,6 +171,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Antenna gain is the gain of the antenna element
 			%
 			% TODO: finalize antenna mapping and get gain from the correct panel/element
+			
 			AntennaGains = obj.AntennaArray.getAntennaGains(TxPosition, RxPosition);
 			EIRPdBm = obj.TxPwdBm + obj.Gain - obj.NoiseFigure + AntennaGains{1};
 		end
@@ -214,7 +213,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 				% find which portion of the PBCH we need to send in this frame and insert
 				a = (obj.PBCH.unit - 1) * length(indPbch) + 1;
 				b = obj.PBCH.unit * length(indPbch);
-				pbch = fullPbch(a:b, 1);
+				pbch = fullPbch(a:b, :);
 				regrid(indPbch) = pbch;
 				
 				% finally update the unit counter
@@ -238,11 +237,11 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Add PDCCH and generate a random codeword to emulate the control info carried
 			pdcchParam = ltePDCCHInfo(enb);
 			ctrl = randi([0,1],pdcchParam.MTot,1);
-			[pdcchSym, pdcchInfo] = ltePDCCH(enb,ctrl);
+			[pdcchSym, ~] = ltePDCCH(enb,ctrl);
 			indPdcch = ltePDCCHIndices(enb);
 			obj.ReGrid(indPdcch) = pdcchSym;
 			% Assume lossless transmitter
-			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);
+			[obj.Waveform, obj.WaveformInfo] = lteOFDMModulate(enb, obj.ReGrid);			
 			% set in the WaveformInfo the percentage of OFDM symbols used for this subframe
 			% for power scaling
 			used = length(find(abs(obj.ReGrid) ~= 0));
@@ -274,7 +273,7 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 			% Check that the indexes where these symbols should be instered are empty, otherwise throw an error
 			if sum(obj.ReGrid(symsIxs) == 0)
 				% pad for unused subcarriers
-				padding(1:length(symsIxs) - length(syms), 1) = 0;
+				padding(1:length(symsIxs) - length(syms), obj.Mimo.numAntennas) = 0;
 				syms = cat(1, syms, padding);
 				
 				% insert symbols into grid
@@ -290,12 +289,13 @@ classdef enbTransmitterModule < matlab.mixin.Copyable
 		%
 		% TM1 is used (1 antenna) thus Rho is 0 dB, if MIMO change to 3 dB
 		% See 36.213 5.2
-		function obj = initPDSCH(obj)
+		function obj = initPDSCH(obj, Config)
 			NDLRB = obj.Enb.NDLRB;
+			txMode = Config.Mimo.transmissionMode;
 			ch = struct(...
-				'TxScheme', 'Port0',...
+				'TxScheme', txMode,...
 				'Modulation', {'QPSK'},...
-				'NLayers', 1, ...
+				'NLayers', obj.Mimo.numAntennas, ...
 				'Rho', 0,...
 				'RNTI', 1,...
 				'RVSeq', [0 1 2 3],...

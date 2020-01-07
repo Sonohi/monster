@@ -35,6 +35,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		Seed;
 		PowerIn;
 		Utilisation;
+		Mimo;
 		Logger;
 	end
 	
@@ -57,16 +58,17 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 					obj.P0 = 130; % W
 					obj.DeltaP = 4.7;
 					obj.Psleep = 75; % W
+					obj.Mimo = generateMimoConfig(Config);
 				case 'micro'
 					obj.NDLRB = Config.MicroEnb.numPRBs;
 					obj.Pmax = Config.MicroEnb.Pmax; % W
 					obj.P0 = 56; % W
 					obj.DeltaP = 2.6;
 					obj.Psleep = 39.0; % W
+					obj.Mimo = generateMimoConfig(Config, 'micro');
 			end
 			obj.NULRB = Config.Ue.numPRBs;
-			
-			obj.CellRefP = 1;
+			obj.CellRefP = obj.Mimo.numAntennas;
 			obj.CyclicPrefix = 'Normal';
 			obj.CFI = 1;
 			obj.PHICHDuration = 'Normal';
@@ -88,8 +90,6 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			obj.Mac.Schedulers.downlink = Scheduler(obj, Logger, Config, obj.NDLRB, 'downlink');
 			obj.Mac.Schedulers.uplink = Scheduler(obj, Logger, Config, obj.NULRB, 'uplink');
 			obj.Mac.ShouldSchedule = 0;
-
-
 			obj.Tx = enbTransmitterModule(obj, Config, antennaBearing);
 			obj.Rx = enbReceiverModule(obj, Config);
 			obj.PowerIn = 0;
@@ -378,8 +378,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 		function obj = uplinkSchedule(obj, Users)
 			if obj.Mac.ShouldSchedule
 				obj.Mac.Schedulers.uplink.scheduleUsers(Users);
-			else
-				obj.Logger.log('Could not schedule in uplinkSchedule since shouldSchedule flag was false','WRN');
+			elseif length(obj.AssociatedUsers) > 0
+				obj.Logger.log('Could not schedule in uplinkSchedule: no data in associated users queues or cell sleeping','WRN');
 			end
 		end
 	
@@ -468,8 +468,8 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 				if isempty(obj.Utilisation)
 					obj.Utilisation = 0;
 				end
-			else
-				obj.Logger.log('Could not schedule in downlinkSchedule since shouldSchedule flag was false','WRN');
+			elseif length(obj.AssociatedUsers) > 0
+				obj.Logger.log('Could not schedule in downlinkSchedule: no data in associated users queues or cell sleeping','WRN');
 				obj.Utilisation = 0;
 			end
 		end
@@ -485,7 +485,7 @@ classdef EvolvedNodeB < matlab.mixin.Copyable
 			
 			% If the eNodeB has an empty received waveform, skip it (no UEs associated)
 			if isempty(obj.Rx.Waveform)
-				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception)eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
+				obj.Logger.log(sprintf('(EVOLVED NODE B - uplinkReception) eNodeB %i has an empty received waveform', obj.NCellID), 'DBG');
 			else				
 				enbUsers = obj.getUsersScheduledUL(Users);
 				

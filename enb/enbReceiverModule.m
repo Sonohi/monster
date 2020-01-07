@@ -7,6 +7,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		Waveform;
 		Waveforms;
 		NSubframesHistory;
+    Mimo;
 	end
 	
 	properties (Access=private)
@@ -17,6 +18,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 		
 		function obj = enbReceiverModule(enb, Config)
 			obj.enbObj = enb;
+			obj.Mimo = enb.Mimo;
 			switch enb.BsClass
 				case 'macro'
 					obj.NoiseFigure = Config.MacroEnb.noiseFigure;
@@ -82,9 +84,7 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 				end
 				
 				foundSignals = true;
-						
 			end
-			
 		end
 
 		function createReceivedSignal(obj)
@@ -98,25 +98,30 @@ classdef enbReceiverModule < matlab.mixin.Copyable
 					waveformLengths(iUser) =  length(obj.ReceivedSignals{ueId}.Waveform);
 				end
 
-				% This will break with MIMO
-
-				obj.Waveform = zeros(max(waveformLengths),1);
+				obj.Waveform = zeros(max(waveformLengths), obj.Mimo.numAntennas);
 
 				for iUser = 1:length(uniqueUes)
 					ueId = uniqueUes(iUser);
 					% Add waveform with corresponding power
-					obj.Waveforms(iUser,:) = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
+					ueWaveform = setPower(obj.ReceivedSignals{ueId}.Waveform, obj.ReceivedSignals{ueId}.RxPwdBm);
+					% Depending on the MIMO configuration, the ueWaveform can be 1 or 2 dimensional
+					if obj.Mimo.numAntennas > 1
+						obj.Waveforms(iUser,:, :) = ueWaveform;
+					else
+						obj.Waveforms(iUser, :) = ueWaveform;
+					end
 				end
 
 				% Create finalized waveform
-				obj.Waveform = sum(obj.Waveforms, 1).';
-
+				compositeWaveform = sum(obj.Waveforms, 1);
+				
 				% Waveform is transposed due to the SCFDMA demodulator requiring a column vector.
+				if obj.Mimo.numAntennas > 1
+					obj.Waveform(1:max(waveformLengths), 1: obj.Mimo.numAntennas) = squeeze(compositeWaveform(1, :, :));
+				else
+					obj.Waveform = compositeWaveform.';
+				end
 			end
-		end
-
-		function obj = set.UeData(obj,UeData)
-			obj.UeData = UeData;
 		end
 		
 		% Used to split the received waveform into the different portions of the different

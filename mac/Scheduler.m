@@ -32,7 +32,6 @@ classdef Scheduler < matlab.mixin.Copyable
 			obj.HarqActive = Config.Harq.active;
 			obj.PRBSymbols = Config.Phy.prbSymbols;
 			obj.Mode = Mode;
-			
 		end
 		
 		

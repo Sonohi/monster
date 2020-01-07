@@ -14,6 +14,9 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Runtime.seed = 126;
 			%Skip plotting as values are going to be evaluated and not plots
 			testCase.Config.SimulationPlot.runtimePlot = 0;
+			%Set a SISO scenario
+			testCase.Config.Mimo.transmissionMode = 'Port0';
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			%Set a single macroEnb
 			testCase.Config.MacroEnb.sitesNumber = 1;
 			testCase.Config.MacroEnb.cellsPerSite = 1;
@@ -22,7 +25,7 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.MacroEnb.noiseFigure = 7;
 			testCase.Config.MacroEnb.antennaGain = 0;
 			%set 0 micro and pico Enb
-			testCase.Config.MicroEnb.sitesNumber =0;
+			testCase.Config.MicroEnb.sitesNumber = 0;
 			%Set a single Ue
 			testCase.Config.Ue.number = 1;
 			testCase.Config.Ue.numPRBs = 25;
@@ -63,7 +66,6 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Son.utilLow = testCase.Config.Son.utilisationRange(1);
 			testCase.Config.Son.utilHigh = testCase.Config.Son.utilisationRange(end);
 			testCase.Config.Son.powerScale = 1;
-			
 			%Set HARQ and ARQ
 			testCase.Config.Harq.active = true;
 			testCase.Config.Harq.maxRetransmissions = 3;
@@ -74,6 +76,8 @@ classdef basicScenarioTest < matlab.unittest.TestCase
 			testCase.Config.Arq.maxRetransmissions = 1;
 			testCase.Config.Arq.maxBufferSize = 1024;
 			testCase.Config.Arq.timeout = 20;
+			% Set backhaul to perfect
+			testCase.Config.Backhaul.backhaulOn = 0;
 			
 			% Get a logger instance
 			testCase.Logger = MonsterLog(testCase.Config);

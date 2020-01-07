@@ -16,7 +16,7 @@ Tested versions of MATLAB are:
 * 2019a
 
 # Getting started
-When starting off with the project, it's important to navigate to the correct project folder in MATLAB and add the project folder and its subfolders to the path. 
+When starting off with the project, it's important to navigate to the correct project folder in MATLAB and add the project folder and its sub folders to the path. 
 This can also be achieved by running the `install.m` script at the root of the project.
 
 The project changelog is available in the `CHANGELOG.md` file at the root of the project. 

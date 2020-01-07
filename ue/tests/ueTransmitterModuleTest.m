@@ -15,6 +15,8 @@ classdef ueTransmitterModuleTest < matlab.unittest.TestCase
 	methods (TestClassSetup)
 		function createObjects(testCase)
 			testCase.Config  = MonsterConfig();
+			testCase.Config.Mimo.transmissionMode = 'Port0';
+			testCase.Config.Mimo.elementsPerPanel = [1, 1];
 			testCase.Config.MacroEnb.number = 1;
 			testCase.Config.MicroEnb.number = 0;
 			testCase.Config.Ue.number = 1;

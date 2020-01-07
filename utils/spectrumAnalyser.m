@@ -18,6 +18,6 @@ function [spectrumPlotTx] = spectrumAnalyser(sig, Fs)
 	spectrumPlotTx.SpectralAverages = 10;
 	spectrumPlotTx.YLimits = [-100 -60];
 	spectrumPlotTx.YLabel = 'PSD';
-	spectrumPlotTx.ShowLegend = false;
+	spectrumPlotTx.ShowLegend = true;
 	spectrumPlotTx(sig);
 end

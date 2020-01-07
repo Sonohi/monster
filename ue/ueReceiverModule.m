@@ -29,6 +29,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		AntennaArray;
 		ueObj; % Parent UE handle
 		AntennaGain;
+		Mimo;
 	end
 
 	properties (Access = private)
@@ -50,7 +51,12 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			obj.PerfectSynchronization = Config.Channel.perfectSynchronization;
 			obj.FadingActive = Config.Channel.fadingActive;
 			obj.AntennaGain = Config.Ue.antennaGain;
-			obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
+			obj.Mimo = ueObj.Mimo;
+			if strcmp(Config.Ue.antennaType, 'vivaldi')
+				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, Config.Phy.downlinkFrequency*10e5);
+			else
+				obj.AntennaArray = AntennaArray(Config.Ue.antennaType, obj.ueObj.Logger, obj.Mimo);	
+			end
 		end
 		
 		function obj = setSNR(obj, SNR)
@@ -115,6 +121,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			end
 			
 			% Conduct reference measurements
+			% TODO: revise sig power calculation using Es rather than bandpower 
 			obj.referenceMeasurements(enb);
 
 			% If UE is not scheduled reset the metrics for the round
@@ -250,13 +257,14 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 		function obj = calculateEvm(obj, enbObj)
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PreEvm = EVM(enbObj.Tx.ReGrid,obj.Subframe);
+			% Calculate the average EVM values across all the antennas in case they are multiple
+			obj.PreEvm = mean(EVM(enbObj.Tx.ReGrid,obj.Subframe));
 			s = sprintf('Percentage RMS EVM of Pre-Equalized signal: %0.3f%%\n', obj.PreEvm);
 			obj.ueObj.Logger.log(s,'NFO0');
 			
 			EVM = comm.EVM;
 			EVM.AveragingDimensions = [1 2];
-			obj.PostEvm = EVM(enbObj.Tx.ReGrid,obj.EqSubframe);
+			obj.PostEvm = mean(EVM(enbObj.Tx.ReGrid,obj.EqSubframe));
 			s = sprintf('Percentage RMS EVM of Post-Equalized signal: %0.3f%%\n', obj.PostEvm);
 			obj.ueObj.Logger.log(s,'NFO0');
 		end
@@ -315,7 +323,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			% 		Since the OFDM demodulator/reference is assuming power is in dBm, 
 			%       the factor of 30 dB which is used when converting to dBm needs to be removed, thus the -30
 			Subframe = lteOFDMDemodulate(enb, setPower(obj.Waveform,obj.ChannelConditions.RxPwdBm-30)); %Apply recieved power to waveform.
-			meas = hRSMeasurements(enb,Subframe);
+			meas = refMeasurements(enb,Subframe);
 			obj.RSRPdBm = meas.RSRPdBm;
 			obj.RSSIdBm = meas.RSSIdBm;
 			obj.RSRQdB = meas.RSRQdB;
@@ -341,7 +349,7 @@ classdef ueReceiverModule < matlab.mixin.Copyable
 			else
 				obj.computeOffset(enbObj);
 			end
-			obj.Waveform = obj.Waveform(obj.Offset+1:end);
+			obj.Waveform = obj.Waveform(obj.Offset+1:end,:);
 		end
 		
 		function obj  = logBlockReception(obj)

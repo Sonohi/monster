@@ -1,4 +1,4 @@
-	function [lossdBm, thermalNoise] = thermalLoss(obj, varargin)
+	function [lossdBm, thermalNoise] = thermalLoss(varargin)
 		% Compute thermal loss based on bandwidth, at T = 290 K.
 		% Bandwidth is either given as MHz, or a waveform is supplied with the sampling rate.
 		% Worst case given by the number of resource blocks. Bandwidth is
@@ -12,7 +12,14 @@
 		elseif length(varargin) > 1
 			RxWaveform = varargin{1};
 			RxWaveformSamplingRate = varargin{2};
-			bw = obw(RxWaveform, RxWaveformSamplingRate);
+			occupiedBw = obw(RxWaveform, RxWaveformSamplingRate);
+			% In case the supplied waveform spans multiple antennas
+			% Take the first element of the obw output
+			if length(occupiedBw) > 1
+				bw = occupiedBw(1);
+			else 
+				bw = occupiedBw;
+			end
 		else
 			bw = 20e6; % Full bandwidth
 		end
