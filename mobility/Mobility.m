@@ -58,7 +58,7 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Velocity = velocity;
 			obj.Seed = seed;
 			obj.Rounds = Config.Runtime.simulationRounds;
-			if strcmp(scenario, 'manhattan')
+			if strcmp(Layout.Terrain.type, 'manhattan')
 				obj.buildingFootprints = Layout.Terrain.buildings;
 			else
 				obj.buildingFootprints = [];
@@ -324,7 +324,34 @@ classdef Mobility < matlab.mixin.Copyable
 						pointB = [currentRoad.x(iNextPointRoad), currentRoad.y(iNextPointRoad)];
 						% calculate the length of this segment
 						segmentLength = sqrt((pointB(1) - pointA(1))^2 + (pointB(2) - pointA(2))^2);
-						lengthCovered = lengthCovered + segmentLength;
+						% Check that the length covered is still shorter or equal to
+						% the trajectory length and in case change pointB
+						if lengthCovered + segmentLength > trajectoryLength
+							% To get the new pointB, start by getting the angle of the 
+							% current distance triangle in radians
+							cosineAlpha = abs(pointB(1) - pointA(1))/segmentLength;
+							sinAlpha = abs(pointB(2) - pointA(2))/segmentLength;
+							% Now update the new segment length and length covered
+							segmentLength = trajectoryLength - lengthCovered;
+							lengthCovered = trajectoryLength;
+							% The new pointB has to be closer to pointA than the previous
+							% Check the relative positioning of the old points for the
+							% sign
+							if pointA(1) > pointB(1)
+								newPointBX = pointA(1) - segmentLength * cosineAlpha;
+							else 
+								newPointBX = pointA(1) + segmentLength * cosineAlpha;
+							end
+							if pointA(2) > pointB(2)
+								newPointBY = pointA(2) - segmentLength * sinAlpha;
+							else
+								newPointBY = pointA(2) + segmentLength * sinAlpha;
+							end
+							pointB = [newPointBX, newPointBY];
+						else
+							lengthCovered = lengthCovered + segmentLength;
+						end
+						
 						% Store in the trajectory a number of points that correspond to distance
 						% covered in 1 ms
 						numPoints = round(segmentLength/velocity/simStep);
@@ -397,10 +424,12 @@ classdef Mobility < matlab.mixin.Copyable
 						iCurrentPointRoad = 0;
 					end
 				end
-				obj.Trajectory = trajectory;
-
-
-
+				% For latitude and longitude conventions, swap X and Y arrays of
+				% points in the overall matrix
+				swTrj(:, 1) = trajectory(2, :);
+				swTrj(:, 2) = trajectory(1, :);
+				swTrj(:, 3) = trajectory(3, :);
+				obj.Trajectory = swTrj;
 			else
 				obj.Logger.log('Mobility scenario pedestrian not supported with terrain type different from manhattan or geo','ERR');
 			end
