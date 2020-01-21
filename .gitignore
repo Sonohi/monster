@@ -10,3 +10,5 @@
 /html
 /doctrees
 /utils/coverage/*.mat
+build/*
+!build/README.md
