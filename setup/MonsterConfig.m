@@ -66,6 +66,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
 			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logCount = 100; 
 			obj.Logs = Logs;
 
 			% Properties related to drawing and plotting
