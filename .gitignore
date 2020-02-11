@@ -12,3 +12,5 @@
 /utils/coverage/*.mat
 build/*
 !build/README.md
+/app/monster/
+/app/monster_resources/
