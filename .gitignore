@@ -13,4 +13,4 @@
 build/*
 !build/README.md
 /app/monster/
-/app/monster_resources/
+/examples/live/**/*.mat
