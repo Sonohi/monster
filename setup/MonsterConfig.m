@@ -69,7 +69,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to drawing and plotting
 			SimulationPlot = struct();
-			SimulationPlot.runtimePlot = 0;
+			SimulationPlot.runtimePlot = 1;
 			obj.SimulationPlot = SimulationPlot;
 
 			% Properties related to the configuration of eNodeBs
@@ -124,7 +124,9 @@ classdef MonsterConfig < matlab.mixin.Copyable
 
 			% Properties related to terrain and scenario, based on the terrain type
 			Terrain = struct();
-			Terrain.type = 'city'; % city | maritime
+			Terrain.type = 'geo'; % geo | manhattan | maritime
+			Terrain.roadsFile = 'layout/dk_2800_dtu_campus_roads.shp';
+			Terrain.averageElevation = 33; % in m
 			obj.Terrain = Terrain;
 
 			% Properties related to backhaul

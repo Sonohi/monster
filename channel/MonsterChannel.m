@@ -37,7 +37,7 @@ classdef MonsterChannel < matlab.mixin.Copyable
 			obj.enableShadowing = Config.Channel.shadowingActive;
 			obj.enableReciprocity = Config.Channel.reciprocityActive;
 			obj.LOSMethod = Config.Channel.losMethod;
-			if strcmp(Config.Terrain.type, 'city')
+			if strcmp(Config.Terrain.type, 'manhattan')
 				obj.BuildingFootprints = Layout.Terrain.buildings;
 			else 
 				obj.BuildingFootprints = [];

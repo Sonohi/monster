@@ -13,7 +13,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		NumMicroSites;				% Number of micro sites
 		MicroCellsPerSite;		% Number of micro cells per site
 		MicroCells;	        	% Array containing all micro cell obj
-		Scenario;
+		Scaling;							% Scaling values for min-max normalisation
 		Logger;
 	end
 	
@@ -46,7 +46,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			%
 			enbLabelOffsetY = 0;
 			% Depending on the terrain type, draw either the buildings or the coastline
-			if strcmp(Config.Terrain.type, 'city')
+			if strcmp(Config.Terrain.type, 'manhattan')
 				enbLabelOffsetY = -20;
 				buildings = obj.Terrain.buildings;
 				% Draw buildings
@@ -72,6 +72,10 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					'EdgeColor',[0 0 0 0.1],...
 					'LineWidth', 1.2,...
 					'LineStyle', '-.');
+			elseif strcmp(Config.Terrain.type, 'geo')
+				for iRoad = 1:length(obj.Terrain.roads)
+					plot(Plot.LayoutAxes, obj.Terrain.roads(iRoad).y, obj.Terrain.roads(iRoad).x, 'Color','#85adad');
+				end
 			end
 			
 			% Draw the sites on the layout
@@ -133,7 +137,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 							xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
 							xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
 						end
-						l = line(Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', 'k');
+						l = line(Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', '#293d3d');
 						set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
 					end
 				end
@@ -151,7 +155,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 			% :param Plot: Struct plotting axes
 			%
 			
-			if strcmp(Config.Terrain.type, 'city')
+			if strcmp(Config.Terrain.type, 'manhattan') || strcmp(Config.Terrain.type,'geo')
 				for iUser = 1:length(Users)
 					x0 = Users(iUser).Position(1);
 					y0 = Users(iUser).Position(2);
@@ -176,9 +180,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				[shipImg, ~, alpha] = imread('utils/images/ship.png');
 				% For some magical reason the image is flipped on both axes...
 				shipImg = flip(shipImg, 1);
-				%shipImg = flip(shipImg, 2);
 				alpha = flip(alpha, 1);
-				%alpha = flip(alpha, 2);
 				% Scale size of figure
 				scale = 10;
 				shipLengthY = length(shipImg(:,1,1))/scale;
@@ -280,7 +282,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 		
 		function obj = computeMacroCoordinates(obj, Config, Logger)
 			centers = zeros(obj.NumMacroSites,2);
-			if strcmp(Config.Terrain.type,'city')
+			if strcmp(Config.Terrain.type,'manhattan') || strcmp(Config.Terrain.type,'geo')
 				%Computes the center coordinates by walking in hexagons around the center
 				steps = 1;
 				rings =1;
@@ -305,7 +307,6 @@ classdef NetworkLayout < matlab.mixin.Copyable
 						stepTrack = stepTrack +1;
 						turn = false;
 						if stepTrack == rings-1
-							
 							turn = true;
 						end
 						if stepTrack == rings -1 && specialTrack
@@ -407,8 +408,6 @@ classdef NetworkLayout < matlab.mixin.Copyable
 				cellsCentres(iCell, 1) = siteCentre(1) + cellRadius * cos((iCell-1)*theta);
 				cellsCentres(iCell, 2) = siteCentre(2) + cellRadius * sin((iCell-1)*theta);
 			end
-		end
-		
+		end		
 	end
-	
 end

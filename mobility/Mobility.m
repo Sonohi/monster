@@ -58,15 +58,15 @@ classdef Mobility < matlab.mixin.Copyable
 			obj.Velocity = velocity;
 			obj.Seed = seed;
 			obj.Rounds = Config.Runtime.simulationRounds;
-			if strcmp(scenario, 'maritime')
-				obj.buildingFootprints = [];
-			else
+			if strcmp(Layout.Terrain.type, 'manhattan')
 				obj.buildingFootprints = Layout.Terrain.buildings;
+			else
+				obj.buildingFootprints = [];
 			end
 			
 			% Produce parameters and compute movement.
 			obj.setParameters(Config);
-			obj.createTrajectory();
+			obj.createTrajectory(Layout);
 		end
 		
 		
@@ -89,14 +89,14 @@ classdef Mobility < matlab.mixin.Copyable
 	
 	methods (Access = private)
 		
-		function obj = createTrajectory(obj)
+		function obj = createTrajectory(obj, Layout)
 			% Create vector of trajectory with length(rounds)
 			obj.Trajectory = zeros(obj.Rounds, 3); % x, y, z
 			switch obj.Scenario
 				case 'pedestrian'
-					obj.randomWalkPedestrian();
+					obj.randomWalkPedestrian(Layout);
 				case 'pedestrian-indoor'
-					obj.randomWalkPedestrianIndoor();
+					obj.randomWalkPedestrianIndoor(Layout);
 				case 'maritime'
 					obj.createMaritimeTrajectory();
 				otherwise
@@ -104,172 +104,336 @@ classdef Mobility < matlab.mixin.Copyable
 			end
 		end
 		
-		function obj = randomWalkPedestrianIndoor(obj)
-			% .. todo:: Create distribution of movement and still states
-			% .. todo:: Add turning inside building, turning is currently only done if the building boundaries are exceeded.
-			rng(obj.Seed)
-			% Get random building
-			[start, ~] = obj.getRandomBuilding();
-			
-			% Get random floor given the height of the building
-			bHeight = obj.buildingFootprints(start, 5);
-			bBoundaries = obj.buildingFootprints(start,1:4);
-			
-			% Limit height given the channel model
-			if bHeight > 22.5
-				numFloors = floor(22.5/obj.avgfloorHeight);
-			else
-				numFloors = floor(bHeight/obj.avgfloorHeight);
-			end
-			
-			randFloor = randi([0,numFloors]);
-			
-			xBoundaries = [bBoundaries(1)+obj.wallThickness, bBoundaries(3)-obj.wallThickness];
-			yBoundaries = [bBoundaries(2)+obj.wallThickness, bBoundaries(4)-obj.wallThickness];
-			% Pick random position inside building
-			x = (xBoundaries(2)-xBoundaries(1)).*rand(1,1) + xBoundaries(1);
-			y = (yBoundaries(2)-yBoundaries(1)).*rand(1,1) + yBoundaries(1);
-			
-			% Starting position
-			obj.Trajectory(1,:) = [x, y, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
-			
-			
-			% Pick random direction
-			currentDirection = randi([1,4]);
-			
-			nextState = 'moving';
-			for round = 2:obj.Rounds
+		function obj = randomWalkPedestrianIndoor(obj, Layout)
+			% Check that the layout type is "manhattan", the only currently supported
+			% for indood pedestrian
+			if strcmp(Layout.Terrain.type, 'manhattan')
+				% .. todo:: Create distribution of movement and still states
+				% .. todo:: Add turning inside building, turning is currently only done if the building boundaries are exceeded.
+				rng(obj.Seed)
+				% Get random building
+				[start, ~] = obj.getRandomBuilding();
 				
-				state = nextState;
-				switch state
-					case 'moving'
-						oldPos = obj.Trajectory(round-1,1:2);
-						newPos = obj.movement(currentDirection, oldPos);
-						
-						% check if the new position extends the boundaries of the
-						% building
-						changeDirection = false;
-						if newPos(1) <= xBoundaries(1)
-							changeDirection = true;
-							possibleDirections = [1, 3, 4];
-							currentDirection = possibleDirections(randi(length(possibleDirections)));
-						elseif newPos(1) >= xBoundaries(2)
-							changeDirection = true;
-							possibleDirections = [1, 2, 3];
-							currentDirection = possibleDirections(randi(length(possibleDirections)));
-						end
-						
-						if newPos(2) <= yBoundaries(1)
-							changeDirection = true;
-							possibleDirections = [1, 2, 4];
-							currentDirection = possibleDirections(randi(length(possibleDirections)));
-						elseif newPos(2) >= yBoundaries(2)
-							changeDirection = true;
-							possibleDirections = [2, 3, 4];
-							currentDirection = possibleDirections(randi(length(possibleDirections)));
-						end
-						
-						% If we change direction the new movement is not valid, thus we keep the old
-						% position
-						if changeDirection
-							newPos = oldPos;
-						end
-						
-						% Update position
-						obj.Trajectory(round,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
-						
+				% Get random floor given the height of the building
+				bHeight = obj.buildingFootprints(start, 5);
+				bBoundaries = obj.buildingFootprints(start,1:4);
+				
+				% Limit height given the channel model
+				if bHeight > 22.5
+					numFloors = floor(22.5/obj.avgfloorHeight);
+				else
+					numFloors = floor(bHeight/obj.avgfloorHeight);
 				end
+				
+				randFloor = randi([0,numFloors]);
+				
+				xBoundaries = [bBoundaries(1)+obj.wallThickness, bBoundaries(3)-obj.wallThickness];
+				yBoundaries = [bBoundaries(2)+obj.wallThickness, bBoundaries(4)-obj.wallThickness];
+				% Pick random position inside building
+				x = (xBoundaries(2)-xBoundaries(1)).*rand(1,1) + xBoundaries(1);
+				y = (yBoundaries(2)-yBoundaries(1)).*rand(1,1) + yBoundaries(1);
+				
+				% Starting position
+				obj.Trajectory(1,:) = [x, y, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
+				
+				
+				% Pick random direction
+				currentDirection = randi([1,4]);
+				
+				nextState = 'moving';
+				for iRound = 2:obj.Rounds
+					
+					state = nextState;
+					switch state
+						case 'moving'
+							oldPos = obj.Trajectory(iRound-1,1:2);
+							newPos = obj.movement(currentDirection, oldPos);
+							
+							% check if the new position extends the boundaries of the
+							% building
+							changeDirection = false;
+							if newPos(1) <= xBoundaries(1)
+								changeDirection = true;
+								possibleDirections = [1, 3, 4];
+								currentDirection = possibleDirections(randi(length(possibleDirections)));
+							elseif newPos(1) >= xBoundaries(2)
+								changeDirection = true;
+								possibleDirections = [1, 2, 3];
+								currentDirection = possibleDirections(randi(length(possibleDirections)));
+							end
+							
+							if newPos(2) <= yBoundaries(1)
+								changeDirection = true;
+								possibleDirections = [1, 2, 4];
+								currentDirection = possibleDirections(randi(length(possibleDirections)));
+							elseif newPos(2) >= yBoundaries(2)
+								changeDirection = true;
+								possibleDirections = [2, 3, 4];
+								currentDirection = possibleDirections(randi(length(possibleDirections)));
+							end
+							
+							% If we change direction the new movement is not valid, thus we keep the old
+							% position
+							if changeDirection
+								newPos = oldPos;
+							end
+							
+							% Update position
+							obj.Trajectory(iRound,:) = [newPos, randFloor*obj.avgfloorHeight+obj.pedestrianHeight];
+							
+					end
+				end
+			else
+				obj.Logger.log('Mobility scenario pedestrian-indoor not supported with terrain type different from manhattan','ERR');
 			end
 		end
 		
-		function obj = randomWalkPedestrian(obj)
-			% Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk.
-			% Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in :meth:`Mobility.setParameters`
-			rng(obj.Seed);
-			[start, startSide] = obj.getRandomBuilding();
-			startPos = zeros(1,2);
-			[startPos(1), startPos(2)] = obj.getExitPoint(start, startSide);
-			
-			
-			% User height is assumed constant.
-			obj.Trajectory(:,3) = ones(obj.Rounds,1)*obj.pedestrianHeight;
-			
-			% Add starting position to trajectory
-			obj.Trajectory(1,1:2) = startPos;
-			
-			% Given the starting side, chose a random direction
-			% e.g. if starting side of the building is north or south, user can only
-			% move west or east.
-			nextState = 'moving';
-			stateVar = obj.initializeStateVars(start, startSide);
-			for round = 2:obj.Rounds
-				state = nextState;
+		function obj = randomWalkPedestrian(obj, Layout)
+			% Differentiate the cases where the terrain type is generated or loaded
+			if strcmp(Layout.Terrain.type, 'manhattan')
+				% Computes a trajectory with pedestrian type movement. Uses a state machine approach to randomize the walk.
+				% Turns and crosses are based on turning and crossing times, as well as turn and crossing distances. These are set in :meth:`Mobility.setParameters`
+				rng(obj.Seed);
+				[start, startSide] = obj.getRandomBuilding();
+				startPos = zeros(1,2);
+				[startPos(1), startPos(2)] = obj.getExitPoint(start, startSide);
 				
-				switch state
-					case 'moving'
-						% Reset state variables
-						stateVar.turnOrCross = false;
-						stateVar.turn = false;
-						stateVar.cross = false;
-						
-						oldPos = obj.Trajectory(round-1,1:2);
-						newPos = obj.movement(stateVar.currentDirection, oldPos);
-						
-						% Check to see if the movement causes a turn or cross. However, if we just turned or cross the check is skipped.
-						if ~stateVar.justTurnedOrCrossed
-							stateVar.turnOrCross = obj.checkTurnOrCross(stateVar, newPos);
-						end
-						
-						% If we decide to turn or cross, execute logic.
-						if stateVar.turnOrCross
-							[stateVar.turn, stateVar.cross, stateVar.currentDirection] = obj.decideTurnOrCross(stateVar, newPos);
-							if stateVar.turn
-								obj.Trajectory(round,1:2) = oldPos;
-								nextState = 'turning';
-							elseif stateVar.cross
-								obj.Trajectory(round,1:2) = oldPos;
-								nextState = 'crossing';
-							end
-						else
-							obj.Trajectory(round,1:2) = newPos;
-						end
-						stateVar.justTurnedOrCrossed = false;
-						
-					case 'turning'
-						if stateVar.timeLeftForTurning > 0
-							stateVar.timeLeftForTurning = stateVar.timeLeftForTurning - obj.TimeStep;
-							obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
-						else
-							% Turning corner
-							oldPos = obj.Trajectory(round-1,1:2);
+				
+				% User height is assumed constant.
+				obj.Trajectory(:,3) = ones(obj.Rounds,1)*obj.pedestrianHeight;
+				
+				% Add starting position to trajectory
+				obj.Trajectory(1,1:2) = startPos;
+				
+				% Given the starting side, chose a random direction
+				% e.g. if starting side of the building is north or south, user can only
+				% move west or east.
+				nextState = 'moving';
+				stateVar = obj.initializeStateVars(start, startSide);
+				for iRound = 2:obj.Rounds
+					state = nextState;
+					
+					switch state
+						case 'moving'
+							% Reset state variables
+							stateVar.turnOrCross = false;
+							stateVar.turn = false;
+							stateVar.cross = false;
+							
+							oldPos = obj.Trajectory(iRound-1,1:2);
 							newPos = obj.movement(stateVar.currentDirection, oldPos);
-							obj.Trajectory(round,1:2) = newPos;
-							stateVar.turningDistance = stateVar.turningDistance - obj.distanceMoved;
-							if stateVar.turningDistance <= 0
-								stateVar = obj.setTurnedStateVars(stateVar, newPos);
-								nextState = 'moving';
+							
+							% Check to see if the movement causes a turn or cross. However, if we just turned or cross the check is skipped.
+							if ~stateVar.justTurnedOrCrossed
+								stateVar.turnOrCross = obj.checkTurnOrCross(stateVar, newPos);
 							end
 							
+							% If we decide to turn or cross, execute logic.
+							if stateVar.turnOrCross
+								[stateVar.turn, stateVar.cross, stateVar.currentDirection] = obj.decideTurnOrCross(stateVar, newPos);
+								if stateVar.turn
+									obj.Trajectory(iRound,1:2) = oldPos;
+									nextState = 'turning';
+								elseif stateVar.cross
+									obj.Trajectory(iRound,1:2) = oldPos;
+									nextState = 'crossing';
+								end
+							else
+								obj.Trajectory(iRound,1:2) = newPos;
+							end
+							stateVar.justTurnedOrCrossed = false;
+							
+						case 'turning'
+							if stateVar.timeLeftForTurning > 0
+								stateVar.timeLeftForTurning = stateVar.timeLeftForTurning - obj.TimeStep;
+								obj.Trajectory(iRound,1:2) = obj.Trajectory(iRound-1,1:2);
+							else
+								% Turning corner
+								oldPos = obj.Trajectory(iRound-1,1:2);
+								newPos = obj.movement(stateVar.currentDirection, oldPos);
+								obj.Trajectory(iRound,1:2) = newPos;
+								stateVar.turningDistance = stateVar.turningDistance - obj.distanceMoved;
+								if stateVar.turningDistance <= 0
+									stateVar = obj.setTurnedStateVars(stateVar, newPos);
+									nextState = 'moving';
+								end
+								
+							end
+							
+						case 'crossing'
+							if stateVar.timeLeftForCrossing > 0
+								stateVar.timeLeftForCrossing = stateVar.timeLeftForCrossing - obj.TimeStep;
+								obj.Trajectory(iRound,1:2) = obj.Trajectory(iRound-1,1:2);
+							else
+								% Crossing street
+								oldPos = obj.Trajectory(iRound-1,1:2);
+								newPos = obj.movement(stateVar.currentDirection, oldPos);
+								stateVar.crossingDistance = stateVar.crossingDistance - obj.distanceMoved;
+								streetIsCrossed = obj.checkStreetIsCrossed(stateVar);
+								obj.Trajectory(iRound,1:2) = newPos;
+								if streetIsCrossed
+									stateVar = obj.setCrossedStateVars(stateVar, newPos);
+									nextState = 'moving';
+								end
+							end
+					end
+				end
+			elseif strcmp(Layout.Terrain.type, 'geo')
+				% Get a random street index from the list of roads
+				roads = Layout.Terrain.roads;
+				iStartRoad = randi(length(roads));
+				startRoad(1, :) = roads(iStartRoad).x;
+				startRoad(2, :) = roads(iStartRoad).y;
+				startPos = [startRoad(1), startRoad(2)];
+				rng(obj.Seed);
+				% Construct user trajectory given a total time and average velocity
+				velocity = obj.Velocity;
+				simStep = 1e-3;
+				time = obj.Rounds * simStep;
+
+				trajectoryLength = velocity*time; % in m
+				lengthCovered = 0;
+				iTrajectory = 1;
+				iCurrentRoad = iStartRoad;
+				iCurrentPointRoad = 0;
+				trajectory = [];
+				trajectory(1, iTrajectory) = startPos(1);
+				trajectory(2, iTrajectory) = startPos(2);
+				usedRoads = [];
+				usedRoads(end + 1) = iCurrentRoad;
+				endPos = [];
+				
+				while lengthCovered < trajectoryLength
+					% calculate a possible segment for the next piece of the trajectory
+					% As first point, take the latest point inserted in the current trajectory 
+					% As second point, take the next one on the current road and evaluate
+					% crossroads
+					currentRoad = roads(iCurrentRoad);
+					pointA = [trajectory(1, iTrajectory), trajectory(2, iTrajectory)];
+					% Check whether the current road has a next point 
+					iCurrentPointRoad = iCurrentPointRoad + 1;
+					iNextPointRoad = iCurrentPointRoad + 1;
+					roadEnded = false;
+					if iNextPointRoad > length(currentRoad.x) || isnan(currentRoad.x(iNextPointRoad))
+						% We have reached the end of the current road
+						roadEnded = true;
+						% In this case we do not update the length traversed, but only look for
+						% crossings
+						pointB = pointA;
+					else
+						pointB = [currentRoad.x(iNextPointRoad), currentRoad.y(iNextPointRoad)];
+						% calculate the length of this segment
+						segmentLength = sqrt((pointB(1) - pointA(1))^2 + (pointB(2) - pointA(2))^2);
+						% Check that the length covered is still shorter or equal to
+						% the trajectory length and in case change pointB
+						if lengthCovered + segmentLength > trajectoryLength
+							% To get the new pointB, start by getting the angle of the 
+							% current distance triangle in radians
+							cosineAlpha = abs(pointB(1) - pointA(1))/segmentLength;
+							sinAlpha = abs(pointB(2) - pointA(2))/segmentLength;
+							% Now update the new segment length and length covered
+							segmentLength = trajectoryLength - lengthCovered;
+							lengthCovered = trajectoryLength;
+							% The new pointB has to be closer to pointA than the previous
+							% Check the relative positioning of the old points for the
+							% sign
+							if pointA(1) > pointB(1)
+								newPointBX = pointA(1) - segmentLength * cosineAlpha;
+							else 
+								newPointBX = pointA(1) + segmentLength * cosineAlpha;
+							end
+							if pointA(2) > pointB(2)
+								newPointBY = pointA(2) - segmentLength * sinAlpha;
+							else
+								newPointBY = pointA(2) + segmentLength * sinAlpha;
+							end
+							pointB = [newPointBX, newPointBY];
+						else
+							lengthCovered = lengthCovered + segmentLength;
 						end
 						
-					case 'crossing'
-						if stateVar.timeLeftForCrossing > 0
-							stateVar.timeLeftForCrossing = stateVar.timeLeftForCrossing - obj.TimeStep;
-							obj.Trajectory(round,1:2) = obj.Trajectory(round-1,1:2);
-						else
-							% Crossing street
-							oldPos = obj.Trajectory(round-1,1:2);
-							newPos = obj.movement(stateVar.currentDirection, oldPos);
-							stateVar.crossingDistance = stateVar.crossingDistance - obj.distanceMoved;
-							streetIsCrossed = obj.checkStreetIsCrossed(stateVar);
-							obj.Trajectory(round,1:2) = newPos;
-							if streetIsCrossed
-								stateVar = obj.setCrossedStateVars(stateVar, newPos);
-								nextState = 'moving';
-							end
+						% Store in the trajectory a number of points that correspond to distance
+						% covered in 1 ms
+						numPoints = round(segmentLength/velocity/simStep);
+						% Interpolate between the points A and B to generate trajectory points
+						interX = linspace(pointA(1), pointB(1), numPoints);
+						interY = linspace(pointA(2), pointB(2), numPoints);
+						iTrajectoryEnd = iTrajectory + numPoints - 1;
+						trajectory(1, iTrajectory:iTrajectoryEnd) = interX;
+						trajectory(2, iTrajectory:iTrajectoryEnd) = interY;
+						trajectory(3, iTrajectory: iTrajectoryEnd) = obj.pedestrianHeight;
+						iTrajectory = iTrajectoryEnd;
+						
+						% Check whether this is the last segment and save the terminus in
+						% endPos
+						if lengthCovered >= trajectoryLength
+							endPos = pointB;
 						end
+					end
+					% Check whether this point is at a crossroad
+					% add a tolerance to find a matching point at a crossroad
+					delta = 10e-10;
+					crossingRoads = struct('iRoad', {}, 'iPoint', {});
+					iCrossingRoad = [];
+					iCrossingRoadPoint = [];
+					for iRoad = 1: length(roads) 
+						road = roads(iRoad);
+						foundX = find([road.x] >= (pointB(1) - delta) & [road.x] <= (pointB(1) + delta));
+						foundY = find([road.y] >= (pointB(2) - delta) & [road.y] <= (pointB(2) + delta));
+						if ~isempty(foundX) && ~isempty(foundY)
+							% Add the crossing road to the list
+							crossingRoads(end + 1) = struct('iRoad', iRoad, 'iPoint', foundX(1));
+						end
+					end
+					% In case we have crossing roads, randomly choose to turn or remain on
+					% the current road
+					shouldTurn = rand > 0.5;
+					if ~isempty(crossingRoads) && (shouldTurn || roadEnded)
+						% Select the new road to use and prefer new unused roads
+						iNewRoads = setdiff([crossingRoads.iRoad], usedRoads);
+						if ~isempty(iNewRoads)
+							% Pick a random road from the new ones and save the index of the
+							% crossroad point
+							iCurrentRoad = iNewRoads(randi(length(iNewRoads)));
+							iCurrentPointRoad = crossingRoads(find([crossingRoads.iRoad] == iCurrentRoad)).iPoint - 1;
+							usedRoads(end + 1) = iCurrentRoad;
+						else
+							% No new roads, walk back a random old one
+							iRandomCrossingRoad = randi(length(crossingRoads));
+							iCurrentRoad = crossingRoads(iRandomCrossingRoad).iRoad;
+							newRoad = roads(iCurrentRoad);
+							% Get the point at the crossing to find it after flipping the road
+							crossingXBeforeFlip = newRoad.x(crossingRoads(iRandomCrossingRoad).iPoint);
+							iNotNaN = find(~isnan([newRoad.x]));
+							flipX = flip(newRoad.x(iNotNaN));
+							flipY = flip(newRoad.y(iNotNaN));
+							roads(iCurrentRoad) = struct('x', flipX, 'y', flipY);
+							iAfterFlip = find(flipX == crossingXBeforeFlip);
+							% In case we have a loop road and there is more than 1 match, pick a
+							% random point
+							iCurrentPointRoad = iAfterFlip(randi(length(iAfterFlip))) - 1;
+						end
+					elseif roadEnded && isempty(iCrossingRoad)
+						% In this case we reached a dead end
+						% Create a cleaned reverted road from the current one and traverse it 
+						% backwards
+						iNotNaN = find(~isnan([currentRoad.x]));
+						flipX = flip(currentRoad.x(iNotNaN));
+						flipY = flip(currentRoad.y(iNotNaN));
+						roads(iCurrentRoad) = struct('x', flipX, 'y', flipY);
+						iCurrentPointRoad = 0;
+					end
 				end
+				% For latitude and longitude conventions, swap X and Y arrays of
+				% points in the overall matrix
+				swTrj(:, 1) = trajectory(2, :);
+				swTrj(:, 2) = trajectory(1, :);
+				swTrj(:, 3) = trajectory(3, :);
+				obj.Trajectory = swTrj;
+			else
+				obj.Logger.log('Mobility scenario pedestrian not supported with terrain type different from manhattan or geo','ERR');
 			end
+			
 		end
 		
 		function obj = createMaritimeTrajectory(obj)
