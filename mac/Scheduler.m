@@ -35,7 +35,7 @@ classdef Scheduler < matlab.mixin.Copyable
 		end
 		
 		
-		function obj = scheduleUsers(obj, Users)
+		function obj = scheduleUsers(obj, AllUsers)
 			% Given the scheduler type and the users for scheduled, turn a list of PRBs for each user ID
 			% Need access to user specific variables, thus users are given as input parameter
 			
@@ -43,6 +43,9 @@ classdef Scheduler < matlab.mixin.Copyable
 			if ~isempty(obj.enbObj.AssociatedUsers)
 				% update userids for scheduling
 				obj.updateUsers();
+				% Filter AllUsers to only have eligible and associated Users
+				queueIds = obj.getQueue();
+				Users = AllUsers(ismember([AllUsers.NCellID],queueIds));
 				
 				% Run scheduling algorithm
 				obj.allocateResources(Users);
@@ -83,12 +86,11 @@ classdef Scheduler < matlab.mixin.Copyable
 			% Array<Users> array of user objects.
 			
 			queueIds = obj.getQueue();
-			UserObjs = Users(ismember([Users.NCellID],queueIds));
 			if obj.HarqActive
 				rtxInfo = obj.getUserRetransmissionQueues(queueIds);
 			end
 			
-			PRBSNeeded = obj.getPRBSNeeded(UserObjs, rtxInfo);
+			PRBSNeeded = obj.getPRBSNeeded(Users, rtxInfo);
 			
 			switch obj.SchedulerType
 				case 'roundRobin'
@@ -123,8 +125,10 @@ classdef Scheduler < matlab.mixin.Copyable
 					case 'downlink'
 						user.Scheduled.DL = true;
 
+						% Find latest available wideband CQI value for this UE at the eNodeB 
+						latestCqi = obj.getLatestUserCqi(user.NCellID);
 						% Update traffic queue
-						modOrd = ModOrdTable(user.Rx.CQI.wideBand);
+						modOrd = ModOrdTable(latestCqi);
 						numPRBS = length([obj.PRBsActive.UeId] == iUser);
 						numBits = numPRBS * (modOrd*obj.PRBSymbols);
 						% The number of bits to decrease the queue size has to be capped to 
@@ -155,17 +159,19 @@ classdef Scheduler < matlab.mixin.Copyable
 					% Serve users until no PRBs are available
 					while resourcesAvailable
 							iUserID = userIds(1); % Get first from userids
-							iUser = users([users.NCellID] == iUserID);
+							user = users([users.NCellID] == iUserID);
 							PRBScheduled = minPRBS;
 							
 							% Allocate PRBs
 							% Update list of PRBs
 							for iPrb = 1:length(prbs)
 								if prbs(iPrb).UeId == -1
-									mcs = MCSTable(iUser.Rx.CQI.wideBand);
-									modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
+									% Find latest available wideband CQI value for this UE at the eNodeB 
+									latestCqi = obj.getLatestUserCqi(user.NCellID);
+									mcs = MCSTable(latestCqi);
+									modOrd = ModOrdTable(latestCqi);
 									for iSch = 0:PRBScheduled-1
-										prbs(iPrb + iSch).UeId = iUser.NCellID;
+										prbs(iPrb + iSch).UeId = user.NCellID;
 										prbs(iPrb + iSch).MCS = mcs;
 										prbs(iPrb + iSch).ModOrd = modOrd;
 									end
@@ -209,23 +215,20 @@ classdef Scheduler < matlab.mixin.Copyable
 						startPRB = PRBset(iPRBset);
 						endPRB = PRBset(iPRBset+1)-1; % exluding the last 
 						iUserID = userIds(iPRBset); % Get first from userids
-						iUser = users([users.NCellID] == iUserID);
-						mcs = MCSTable(iUser.Rx.CQI.wideBand);
-						modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
+						user = users([users.NCellID] == iUserID);
+						% Find latest available wideband CQI value for this UE at the eNodeB 
+						latestCqi = obj.getLatestUserCqi(user.NCellID);
+						mcs = MCSTable(latestCqi);
+						modOrd = ModOrdTable(latestCqi);
 						for iSch = startPRB:endPRB
-								prbs(iSch+1).UeId = iUser.NCellID;
+								prbs(iSch+1).UeId = user.NCellID;
 								prbs(iSch+1).MCS = mcs;
 								prbs(iSch+1).ModOrd = modOrd;
 						end
 					end
 					
 					updatedqueue = []; % All users can be served
-					
 				end
-				
-				
-				
-			
 		end
 		
 		function [prbs, updatedqueue] = GreedyRoundRobinAlgorithm(obj, userIds, users, prbsNeeded)
@@ -245,7 +248,7 @@ classdef Scheduler < matlab.mixin.Copyable
 			
 			while resourcesAvailable
 				iUserID = userIds(1); % Get first from userids
-				iUser = users([users.NCellID] == iUserID);
+				user = users([users.NCellID] == iUserID);
 				
 				% If there are still PRBs available, then we can schedule either a new TB or a RTX
 				if PRBAvailable > 0
@@ -264,10 +267,12 @@ classdef Scheduler < matlab.mixin.Copyable
 					% Update list of PRBs
 					for iPrb = 1:length(prbs)
 						if prbs(iPrb).UeId == -1
-							mcs = MCSTable(iUser.Rx.CQI.wideBand);
-							modOrd = ModOrdTable(iUser.Rx.CQI.wideBand);
+							% Find latest available wideband CQI value for this UE at the eNodeB 
+							latestCqi = obj.getLatestUserCqi(user.NCellID);
+							mcs = MCSTable(latestCqi);
+							modOrd = ModOrdTable(latestCqi);
 							for iSch = 0:PRBScheduled-1
-								prbs(iPrb + iSch).UeId = iUser.NCellID;
+								prbs(iPrb + iSch).UeId = user.NCellID;
 								prbs(iPrb + iSch).MCS = mcs;
 								prbs(iPrb + iSch).ModOrd = modOrd;
 							end
@@ -386,7 +391,9 @@ classdef Scheduler < matlab.mixin.Copyable
 			PRBNeed = zeros(length(Users),1);
 			for iUser = 1:length(Users)
 				user = Users(iUser);
-				modOrd = ModOrdTable(user.Rx.CQI.wideBand);
+				% Find latest available wideband CQI value for this UE at the eNodeB 
+				latestCqi = obj.getLatestUserCqi(user.NCellID);
+				modOrd = ModOrdTable(latestCqi);
 				rtxSchedulingFlag = obj.HarqActive && rtxInfo(iUser).proto ~= 0;
 				
 				if ~rtxSchedulingFlag
@@ -408,27 +415,28 @@ classdef Scheduler < matlab.mixin.Copyable
 		
 		function obj = updateUsers(obj)
 			% Synchronize the list of scheduled users to that of the associated users of the eNodeB.
-			associatedUsers = [obj.enbObj.AssociatedUsers.UeId];
-			
+			associatedUsers = [obj.enbObj.AssociatedUsers];
+			associatedUsersCQI = [associatedUsers.CQI];
+			eligibleUsers = [associatedUsers([associatedUsersCQI.wideBand] > 0).UeId];
 			
 			% If the list of scheduled users is empty, add all associated users
 			if isempty(obj.ScheduledUsers)
 				% Add users
-				for UeIdx = 1:length(associatedUsers)
-					obj.addUser(associatedUsers(UeIdx));
+				for UeIdx = 1:length(eligibleUsers)
+					obj.addUser(eligibleUsers(UeIdx));
 				end
 				
 				% If not empty, find out which ones to add
-			elseif any(~ismember(associatedUsers, obj.ScheduledUsers))
-				toAdd = associatedUsers(~ismember(associatedUsers, obj.ScheduledUsers));
+			elseif any(~ismember(eligibleUsers, obj.ScheduledUsers))
+				toAdd = eligibleUsers(~ismember(eligibleUsers, obj.ScheduledUsers));
 				for UeIdx = 1:length(toAdd)
 					obj.addUser(toAdd(UeIdx))
 				end
 			end
 			
 			% Check if any associated Users are no longer associated, thus remove them from the scheduler
-			if any(~ismember(obj.ScheduledUsers, associatedUsers))
-				toRemove = obj.ScheduledUsers(~ismember(obj.ScheduledUsers, associatedUsers));
+			if any(~ismember(obj.ScheduledUsers, eligibleUsers))
+				toRemove = obj.ScheduledUsers(~ismember(obj.ScheduledUsers, eligibleUsers));
 				for UeIdx = 1:length(toRemove)
 					obj.removeUser(toRemove(UeIdx))
 				end
@@ -447,6 +455,11 @@ classdef Scheduler < matlab.mixin.Copyable
 			% Update the number of active PRBs based on the mask
 			% TODO: add mask
 			
+		end
+
+		function cqi = getLatestUserCqi(obj, userId)
+			associatedUserInfo = obj.enbObj.AssociatedUsers([obj.enbObj.AssociatedUsers.UeId] == userId);
+			cqi = associatedUserInfo.CQI.wideBand; 
 		end
 		
 	end

@@ -12,6 +12,7 @@ classdef MonsterLog < matlab.mixin.Copyable
 		logToFile = false;
 		logFile = 'monster.log'
 		logInBlack = 0;
+		logStore = [];
 	end
 
 	methods
@@ -38,6 +39,14 @@ classdef MonsterLog < matlab.mixin.Copyable
 
 			% Check preferences for colours
 			obj.logInBlack = Config.Logs.logInBlack;
+
+			% Check whether we need to set up the log store to log in memory only
+			if strcmp(Config.Runtime.mode, 'app')
+				logStore = struct('active', true, 'messages', strings(Config.Logs.logCount, 1), 'iLogLatest', 0);
+			else
+				logStore = struct('active', false, 'messages', [], 'iLogLatest', -1);
+			end
+			obj.logStore = logStore;
 
 		end
 
@@ -118,8 +127,20 @@ classdef MonsterLog < matlab.mixin.Copyable
 			logMsg = strrep(msg, sprintf('\n'), spacedNewLine);
 			logMsg = [logMsg '\n'];
 
+			if obj.logStore.active
+				iLog = obj.logStore.iLogLatest + 1;
+				% Once the counter reaches the end, pop the oldest log and fix the index
+				if iLog > length(obj.logStore.messages)
+					obj.logStore.messages = [obj.logStore.messages(2:end); msg];
+					obj.logStore.iLogLatest = length(obj.logStore.messages);
+				else
+					obj.logStore.messages(iLog) = msg;
+					obj.logStore.iLogLatest = iLog;
+				end
+			end
+
 			%If we need to log to file, we open it in append mode
-			if obj.logToFile
+			if obj.logToFile && ~obj.logStore.active
 				fileId = fopen(obj.logFile, 'a');
 				fprintf(fileId, logMsg);
 				fclose(fileId);
@@ -129,7 +150,7 @@ classdef MonsterLog < matlab.mixin.Copyable
 			if strcmp(msgLogLevel, 'ERR')
 				me = MException(errType, logMsg);
 				throwAsCaller(me);
-			elseif obj.logToFile == 2 || obj.logToFile == 0
+			elseif obj.logToFile == 2 || obj.logToFile == 0 && ~obj.logStore.active
 				% Log to console if logToFile is 0 or 2 (log both on file and terminal)
 				if strcmp(msgLogLevel, 'NFO') || obj.logInBlack
 					fprintf(1, logMsg);

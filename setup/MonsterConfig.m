@@ -55,6 +55,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Runtime = struct();
 			Runtime.simulationRounds = 10;
 			Runtime.seed = 126;
+			Runtime.mode = 'default'; % default | app depending on code execution
 			obj.Runtime = Runtime;
 
 			% Logs configuration
@@ -65,6 +66,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
 			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logCount = 100; 
 			obj.Logs = Logs;
 
 			% Properties related to drawing and plotting

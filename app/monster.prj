@@ -1,0 +1,199 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="4225043090" file="C:\Users\matart\ohi\monster\app\monster.prj" location="C:\Users\matart\ohi\monster\app" name="monster" preferred-package-location="C:\Users\matart\ohi\monster\app\monster\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>monster</param.appname>
+    <param.icon>${PROJECT_ROOT}\monster_resources\icon.ico</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\monster_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\monster_resources\icon_32.png</file>
+      <file>${PROJECT_ROOT}\monster_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\monster_resources\icon_16.png</file>
+    </param.icons>
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>M. Artuso, J.Thrane, M. Bech</param.authnamewatermark>
+    <param.email>matart@fotonik.dtu.dk</param.email>
+    <param.company>Technical University of Denmark</param.company>
+    <param.summary>MONSTeR is a framework built around the LTE system toolbox available in Matlab (https://github.com/Sonohi/monster)</param.summary>
+    <param.description>MONSTeR (MObile Networks SimulaToR) is a framework built around the LTE system toolbox available in MATLAB. It uses functions from the toolbox to perform complete DL and UL processing of the main data channel. It also simulates a multi-UE and multi-eNodeB scenario.
+
+This app and its GUI only export a limited subset of MONSTeR functionalities, access the whole set cloning the project and using it Matlab (https://github.com/Sonohi/monster)</param.description>
+    <param.screenshot>${PROJECT_ROOT}\resources\images\icon.png</param.screenshot>
+    <param.guid />
+    <param.installpath.string>\Technical University of Denmark\monster\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo />
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\monster\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\monster\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\monster\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\monster</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>monster_install</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text>Syntax 
+	  -? 
+	 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 input arguments</param.help.text>
+    <unset>
+      <param.version />
+      <param.email />
+      <param.company />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\monster.mlapp</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>C:\Users\matart\ohi\monster\layout\dk_2800_dtu_campus_roads.shp</file>
+      <file>C:\Users\matart\ohi\monster\traffic\fullBuffer.csv</file>
+      <file>C:\Users\matart\ohi\monster\traffic\fullBuffer.mat</file>
+      <file>C:\Users\matart\ohi\monster\traffic\videoStreaming.csv</file>
+      <file>C:\Users\matart\ohi\monster\traffic\videoStreaming.mat</file>
+      <file>C:\Users\matart\ohi\monster\traffic\webBrowsing.csv</file>
+      <file>C:\Users\matart\ohi\monster\traffic\webBrowsing.mat</file>
+    </fileset.resources>
+    <fileset.package />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\resources\images\logo_large.png</file>
+      <file>C:\Users\matart\ohi\monster\backhaul\applyBackhaulDelay.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\3GPP38901\buildingloss3gpp38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\3GPP38901\indoorloss3gpp38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\3GPP38901\losProb3gpp38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\3GPP38901\loss3gpp38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\3GPP38901\lsp3gpp38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\Monster3GPP38901.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\MonsterChannel.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\utils\fresnelZone.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\utils\getElevationProfile.m</file>
+      <file>C:\Users\matart\ohi\monster\channel\utils\thermalLoss.m</file>
+      <file>C:\Users\matart\ohi\monster\enb\enbReceiverModule.m</file>
+      <file>C:\Users\matart\ohi\monster\enb\enbTransmitterModule.m</file>
+      <file>C:\Users\matart\ohi\monster\enb\EvolvedNodeB.m</file>
+      <file>C:\Users\matart\ohi\monster\enb\Site.m</file>
+      <file>C:\Users\matart\ohi\monster\layout\BaseCell.m</file>
+      <file>C:\Users\matart\ohi\monster\layout\generateManhattanGrid.m</file>
+      <file>C:\Users\matart\ohi\monster\layout\MacroCell.m</file>
+      <file>C:\Users\matart\ohi\monster\layout\MicroCell.m</file>
+      <file>C:\Users\matart\ohi\monster\layout\NetworkLayout.m</file>
+      <file>C:\Users\matart\ohi\monster\logs\cprintf.m</file>
+      <file>C:\Users\matart\ohi\monster\logs\MonsterLog.m</file>
+      <file>C:\Users\matart\ohi\monster\mac\harq\HarqRx.m</file>
+      <file>C:\Users\matart\ohi\monster\mac\harq\HarqTx.m</file>
+      <file>C:\Users\matart\ohi\monster\mac\Scheduler.m</file>
+      <file>C:\Users\matart\ohi\monster\mobility\Mobility.m</file>
+      <file>C:\Users\matart\ohi\monster\Monster.m</file>
+      <file>C:\Users\matart\ohi\monster\phy\AntennaArray.m</file>
+      <file>C:\Users\matart\ohi\monster\phy\AntennaElement.m</file>
+      <file>C:\Users\matart\ohi\monster\phy\refreshUsersAssociation.m</file>
+      <file>C:\Users\matart\ohi\monster\phy\VivaldiAntenna\importPattern.m</file>
+      <file>C:\Users\matart\ohi\monster\phy\VivaldiAntenna\VivaldiAntenna.m</file>
+      <file>C:\Users\matart\ohi\monster\results\MetricRecorder.m</file>
+      <file>C:\Users\matart\ohi\monster\rlc\arq\ArqRx.m</file>
+      <file>C:\Users\matart\ohi\monster\rlc\arq\ArqTx.m</file>
+      <file>C:\Users\matart\ohi\monster\rlc\handleHangover.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\MonsterConfig.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupChannel.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupNetworkLayout.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupResults.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupSites.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupTraffic.m</file>
+      <file>C:\Users\matart\ohi\monster\setup\setupUsers.m</file>
+      <file>C:\Users\matart\ohi\monster\traffic\loadFullBufferTraffic.m</file>
+      <file>C:\Users\matart\ohi\monster\traffic\loadVideoStreamingTraffic.m</file>
+      <file>C:\Users\matart\ohi\monster\traffic\loadWebBrowsingTraffic.m</file>
+      <file>C:\Users\matart\ohi\monster\traffic\TrafficGenerator.m</file>
+      <file>C:\Users\matart\ohi\monster\ue\ueReceiverModule.m</file>
+      <file>C:\Users\matart\ohi\monster\ue\ueTransmitterModule.m</file>
+      <file>C:\Users\matart\ohi\monster\ue\UserEquipment.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\generateMimoConfig.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\lookuptables\MCSTable.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\lookuptables\ModOrdTable.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\createLayoutPlot.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\createLogicLayoutPlot.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\createPHYplot.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\plotAssociationTable.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\plotConstDiagramDL.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotlib\plotSpectrums.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\plotLogicLayout.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\refMeasurements.m</file>
+      <file>C:\Users\matart\ohi\monster\utils\setPower.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\monster\for_testing" name="monster.exe" optional="false">C:\Users\matart\ohi\monster\app\monster\for_testing\monster.exe</file>
+      <file location="${PROJECT_ROOT}\monster\for_testing" name="readme.txt" optional="true">C:\Users\matart\ohi\monster\app\monster\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\monster\for_testing" name="splash.png" optional="false">C:\Users\matart\ohi\monster\app\monster\for_testing\splash.png</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2019b</root>
+      <toolboxes>
+        <toolbox name="fixedpoint" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
