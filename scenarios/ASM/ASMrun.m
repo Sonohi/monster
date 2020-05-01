@@ -1,9 +1,11 @@
-clear all 
+clear all
+close all
 
 %% Get configuration
 Config = MonsterConfig(); % Get template config parameters
 
-Config.Logs.logToFile = 1; % 0 only console | 1 only file | 2 both
+Config.Logs.logToFile = 2; % 0 only console | 1 only file | 2 both
+SimulationPlot.runtimePlot = 1; 
 
 %ASM paper duplication
 Config.Scenario = 'ASM_reproduction';
@@ -38,20 +40,43 @@ Config.Mobility.Velocity = 0.01;
 Config.Traffic.primary = 'fullBuffer';
 Config.Traffic.mix = 0; %0-> no mix, only primary
 Config.Traffic.arrivalDistribution = 'Poisson'; % Static | Uniform | Poisson
-Config.Traffic.poissonLambda = 60;
+Config.Traffic.poissonLambda = 9;
 
 %Simulation bandwidth: 20 MHz for TDD, 10 MHz+10 MHz for FDD
-Config.Ue.number = 20; %TODO: 14 different from 1 to 60
+Config.Ue.number = 30; %TODO: 14 different from 1 to 60
 Config.Ue.height = 1.5; %meters
 
 Logger = MonsterLog(Config);
+Logger.log('(MAIN) configured simulations and started initialisation', 'NFO');
     
 % Setup objects
+
+Logger.log('(MAIN) creating main simulation instance', 'NFO');
 Simulation = Monster(Config, Logger);
+Simulation.Logger.log('(MAIN) main simulation instance created', 'NFO');
+
 for iRound = 0:(Config.Runtime.simulationRounds - 1)
     Simulation.setupRound(iRound);
+    
+	Simulation.Logger.log(sprintf('(MAIN) simulation round %i, time elapsed %f s, time left %f s',...
+		Simulation.Runtime.currentRound, Simulation.Runtime.currentTime, ...
+		Simulation.Runtime.remainingTime ), 'NFO');	
+    
     Simulation.run();
+    
+	Simulation.Logger.log(sprintf('(MAIN) completed simulation round %i. %i rounds left' ,....
+		Simulation.Runtime.currentRound, Simulation.Runtime.remainingRounds), 'NFO');
+    
     Simulation.collectResults();
+    
+	Simulation.Logger.log('(MAIN) collected simulation round results', 'NFO');
+    
     Simulation.clean();
+    
+	if iRound ~= Simulation.Runtime.totalRounds - 1
+		Simulation.Logger.log('(MAIN) cleaned parameters for next round', 'NFO');
+	else
+		Simulation.Logger.log('(MAIN) simulation completed', 'NFO');
+	end
 end
 
