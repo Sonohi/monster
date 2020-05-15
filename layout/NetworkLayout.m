@@ -74,7 +74,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 					'LineStyle', '-.');
 			elseif strcmp(Config.Terrain.type, 'geo')
 				for iRoad = 1:length(obj.Terrain.roads)
-					plot(Plot.LayoutAxes, obj.Terrain.roads(iRoad).y, obj.Terrain.roads(iRoad).x, 'Color','#85adad');
+					plot(Plot.LayoutAxes, obj.Terrain.roads(iRoad).y, obj.Terrain.roads(iRoad).x, 'Color', colorHex2Rgb('#85adad'));
 				end
 			end
 			
@@ -137,7 +137,7 @@ classdef NetworkLayout < matlab.mixin.Copyable
 							xyHex(j,1) = cHex(1) + cellRadius*cos(j*theta);
 							xyHex(j,2) = cHex(2) + cellRadius*sin(j*theta);
 						end
-						l = line(Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', '#293d3d');
+						l = line(Plot.LayoutAxes,xyHex(:,1),xyHex(:,2), 'Color', colorHex2Rgb('#293d3d'));
 						set(get(get(l,'Annotation'),'LegendInformation'),'IconDisplayStyle','off')
 					end
 				end

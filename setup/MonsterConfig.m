@@ -65,7 +65,7 @@ classdef MonsterConfig < matlab.mixin.Copyable
 			Logs.dateFormat = 'yyyy-mm-dd_HH.MM.SS';
 			Logs.logLevel = 'NFO';
 			Logs.logPath = 'logs/';
-			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat));
+			Logs.logFile = strcat(Logs.logPath, datestr(datetime, Logs.dateFormat), '.log');
 			Logs.logCount = 100; 
 			obj.Logs = Logs;
 
